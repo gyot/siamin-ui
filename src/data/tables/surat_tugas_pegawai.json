@@ -1,0 +1,26 @@
+﻿[
+  {
+    "id": 1,
+    "id_surat_tugas": 1,
+    "id_pegawai": 1,
+    "peran": "penanggung_jawab"
+  },
+  {
+    "id": 2,
+    "id_surat_tugas": 1,
+    "id_pegawai": 2,
+    "peran": "ketua_panitia"
+  },
+  {
+    "id": 3,
+    "id_surat_tugas": 2,
+    "id_pegawai": 3,
+    "peran": "anggota_panitia"
+  },
+  {
+    "id": 4,
+    "id_surat_tugas": 2,
+    "id_pegawai": 2,
+    "peran": "penanggung_jawab"
+  }
+]

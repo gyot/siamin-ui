@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "kode_unit": "BA",
+    "nama_unit": "Biro Administrasi",
+    "jenis_unit": "utama",
+    "tahun": 2026,
+    "keterangan": "Biro yang menangani administrasi dan manajemen umum",
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": 2,
+    "kode_unit": "BPE",
+    "nama_unit": "Bidang Program dan Evaluasi",
+    "jenis_unit": "utama",
+    "tahun": 2026,
+    "keterangan": "Bidang yang mengurus program, perencanaan dan evaluasi kegiatan",
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": 3,
+    "kode_unit": "BKI",
+    "nama_unit": "Bidang Kemitraan Internasional",
+    "jenis_unit": "utama",
+    "tahun": 2026,
+    "keterangan": "Bidang yang menangani kemitraan strategis dengan pihak internasional",
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  }
+]

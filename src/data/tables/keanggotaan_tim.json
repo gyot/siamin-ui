@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "id_pegawai": 1,
+    "unit_kerja_id": 1,
+    "sub_unit_kerja_id": null,
+    "peran": "Ketua",
+    "tahun": 2026,
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": 2,
+    "id_pegawai": 2,
+    "unit_kerja_id": 2,
+    "sub_unit_kerja_id": 3,
+    "peran": "Koordinator",
+    "tahun": 2026,
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": 3,
+    "id_pegawai": 3,
+    "unit_kerja_id": 2,
+    "sub_unit_kerja_id": 4,
+    "peran": "Anggota",
+    "tahun": 2026,
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": 4,
+    "id_pegawai": 1,
+    "unit_kerja_id": 3,
+    "sub_unit_kerja_id": null,
+    "peran": "Wali Wilayah",
+    "tahun": 2026,
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  }
+]

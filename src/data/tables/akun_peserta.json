@@ -1,0 +1,42 @@
+[
+  {
+    "id_akun_peserta": 1,
+    "id_peserta": 1,
+    "username": "budi.santoso",
+    "password": "$2b$10$hashedpassword1",
+    "last_login": "2026-01-21T08:00:00Z",
+    "status": "aktif",
+    "created_at": "2025-02-01T00:00:00Z",
+    "updated_at": "2025-02-01T00:00:00Z"
+  },
+  {
+    "id_akun_peserta": 2,
+    "id_peserta": 2,
+    "username": "siti.nurhayati",
+    "password": "$2b$10$hashedpassword2",
+    "last_login": "2026-01-20T15:30:00Z",
+    "status": "aktif",
+    "created_at": "2025-02-01T00:00:00Z",
+    "updated_at": "2025-02-01T00:00:00Z"
+  },
+  {
+    "id_akun_peserta": 3,
+    "id_peserta": 3,
+    "username": "ahmad.ridho",
+    "password": "$2b$10$hashedpassword3",
+    "last_login": "2026-01-21T10:15:00Z",
+    "status": "aktif",
+    "created_at": "2025-02-01T00:00:00Z",
+    "updated_at": "2025-02-01T00:00:00Z"
+  },
+  {
+    "id_akun_peserta": 4,
+    "id_peserta": 4,
+    "username": "rina.wijaya",
+    "password": "$2b$10$hashedpassword4",
+    "last_login": "2026-01-19T12:00:00Z",
+    "status": "aktif",
+    "created_at": "2025-03-01T00:00:00Z",
+    "updated_at": "2025-03-01T00:00:00Z"
+  }
+]

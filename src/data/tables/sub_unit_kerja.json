@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "unit_kerja_id": 1,
+    "nama_sub_unit": "Bagian Tata Usaha",
+    "fungsi": "Menangani tata usaha, administrasi umum, dan surat-menyurat",
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": 2,
+    "unit_kerja_id": 1,
+    "nama_sub_unit": "Bagian Kepegawaian",
+    "fungsi": "Menangani masalah kepegawaian, pengembangan SDM, dan kesejahteraan pegawai",
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": 3,
+    "unit_kerja_id": 2,
+    "nama_sub_unit": "Seksi Perencanaan",
+    "fungsi": "Menangani perencanaan program tahunan, rencana kerja, dan strategi",
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": 4,
+    "unit_kerja_id": 2,
+    "nama_sub_unit": "Seksi Evaluasi",
+    "fungsi": "Menangani evaluasi pelaksanaan program, monitoring, dan pelaporan",
+    "created_at": "2023-01-01T00:00:00Z",
+    "updated_at": "2024-01-15T10:30:00Z"
+  }
+]

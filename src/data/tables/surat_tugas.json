@@ -1,0 +1,24 @@
+[
+  {
+    "id_surat_tugas": 1,
+    "id_kegiatan": "K001",
+    "nomor_surat": "ST-001/2025",
+    "tanggal_surat": "2025-02-01",
+    "id_penandatangan": 1,
+    "status": "diterbitkan",
+    "file_surat": "https://api.example.com/surat-tugas/ST-001-2025.pdf",
+    "created_at": "2025-02-01T00:00:00Z",
+    "updated_at": "2025-02-01T10:00:00Z"
+  },
+  {
+    "id_surat_tugas": 2,
+    "id_kegiatan": "K002",
+    "nomor_surat": "ST-002/2025",
+    "tanggal_surat": "2025-03-10",
+    "id_penandatangan": 1,
+    "status": "draft",
+    "file_surat": "https://api.example.com/surat-tugas/ST-002-2025.pdf",
+    "created_at": "2025-03-05T00:00:00Z",
+    "updated_at": "2025-03-08T14:30:00Z"
+  }
+]

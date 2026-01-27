@@ -1,0 +1,28 @@
+[
+  {
+    "id_sertifikat": 1,
+    "id_kegiatan": "K001",
+    "id_peserta": 1,
+    "nomor_sertifikat": "CERT-2025-001",
+    "tanggal_ttd": "2025-02-28",
+    "id_penandatangan": 1,
+    "template": "template_1",
+    "status": "terbit",
+    "peran": "Peserta",
+    "created_at": "2025-02-28T00:00:00Z",
+    "updated_at": "2025-02-28T14:00:00Z"
+  },
+  {
+    "id_sertifikat": 2,
+    "id_kegiatan": "K001",
+    "id_peserta": 2,
+    "nomor_sertifikat": "CERT-2025-002",
+    "tanggal_ttd": "2025-02-28",
+    "id_penandatangan": 1,
+    "template": "template_1",
+    "status": "draft",
+    "peran": "Peserta",
+    "created_at": "2025-02-20T00:00:00Z",
+    "updated_at": "2025-02-25T10:30:00Z"
+  }
+]
