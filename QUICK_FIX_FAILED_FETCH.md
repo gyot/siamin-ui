@@ -42,7 +42,7 @@ Test-NetConnection backend-siamin.bpmpntb.id -Port 443
 ### Step 3: Run Diagnostic (2 min)
 Copy-paste this in browser console:
 ```javascript
-fetch('https://backend-siamin.bpmpntb.id/api/v1/kegiatan')
+fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan')
   .then(r => console.log('✅ Connected, Status:', r.status))
   .catch(e => console.error('❌ Error:', e.message))
 ```
@@ -97,7 +97,7 @@ $request.GetResponse()
 **A. If using self-signed certificate (development):**
 ```javascript
 // Temporary - test with curl instead
-// curl -k https://backend-siamin.bpmpntb.id/api/v1/kegiatan
+// curl -k https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan
 ```
 
 **B. If production (should have valid cert):**

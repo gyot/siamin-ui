@@ -41,12 +41,12 @@ Local:   http://localhost:5173/
 
 **Should see:**
 ```
-POST https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin
+POST https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin
 ```
 
 **NOT:**
 ```
-POST http://127.0.0.1:8000/api/v1/auth/login-admin
+POST http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin
 ```
 
 ---
@@ -82,14 +82,14 @@ Backend at `https://backend-siamin.bpmpntb.id` needs to:
 ### Before (Wrong - shows in error)
 ```
 [Auth] Attempting admin login via API...
-POST http://127.0.0.1:8000/api/v1/auth/login-admin ← WRONG!
+POST http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin ← WRONG!
 CORS policy: No 'Access-Control-Allow-Origin' header
 ```
 
 ### After (Correct - what we want)
 ```
 [Auth] Attempting admin login via API...
-POST https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin ← CORRECT!
+POST https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin ← CORRECT!
 (If CORS enabled on backend → will work)
 ```
 

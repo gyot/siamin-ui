@@ -348,7 +348,7 @@ export default router
 
 ### Test Admin Login
 ```javascript
-fetch('http://127.0.0.1:8000/api/v1/auth/login-admin', {
+fetch('http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json'
@@ -368,7 +368,7 @@ fetch('http://127.0.0.1:8000/api/v1/auth/login-admin', {
 ### Test Protected Endpoint
 ```javascript
 const token = localStorage.getItem('auth_token')
-fetch('http://127.0.0.1:8000/api/v1/kegiatan', {
+fetch('http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan', {
   headers: {
     'Authorization': `Bearer ${token}`
   }
@@ -380,7 +380,7 @@ fetch('http://127.0.0.1:8000/api/v1/kegiatan', {
 ### Test Logout
 ```javascript
 const token = localStorage.getItem('auth_token')
-fetch('http://127.0.0.1:8000/api/v1/auth/logout', {
+fetch('http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/logout', {
   method: 'POST',
   headers: {
     'Authorization': `Bearer ${token}`,

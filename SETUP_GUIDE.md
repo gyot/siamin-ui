@@ -92,7 +92,7 @@ Login Form (Vue Component)
          ↓
   API Service (Fetch API)
          ↓
-  POST /api/v1/auth/login-admin or login-peserta
+  POST /import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin or login-peserta
          ↓
   Response: {token, user}
          ↓
@@ -136,21 +136,21 @@ All endpoints return JSON response:
 ```
 
 #### Admin Login
-- **URL:** `POST /api/v1/auth/login-admin`
+- **URL:** `POST /import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin`
 - **Parameters:** 
   - `email` (string, required)
   - `password` (string, required)
 - **Returns:** Token + Admin user data
 
 #### Peserta Login
-- **URL:** `POST /api/v1/auth/login-peserta`
+- **URL:** `POST /import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-peserta`
 - **Parameters:**
   - `username` (string, required)
   - `password` (string, required)
 - **Returns:** Token + Peserta user data
 
 #### Logout
-- **URL:** `POST /api/v1/auth/logout`
+- **URL:** `POST /import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/logout`
 - **Headers:** `Authorization: Bearer {token}`
 - **Returns:** Success message
 
@@ -214,7 +214,7 @@ database/seeders/
 
 ## Troubleshooting
 
-### Issue: "Cannot POST /api/v1/auth/login-admin"
+### Issue: "Cannot POST /import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin"
 
 **Solution:** 
 - Ensure Laravel server is running on port 8000
@@ -319,12 +319,12 @@ CREATE TABLE akun_peserta (
 Use curl or Postman:
 ```bash
 # Admin Login
-curl -X POST http://localhost:8000/api/v1/auth/login-admin \
+curl -X POST http://localhost:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@kemkominfo.go.id","password":"password123"}'
 
 # Peserta Login
-curl -X POST http://localhost:8000/api/v1/auth/login-peserta \
+curl -X POST http://localhost:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-peserta \
   -H "Content-Type: application/json" \
   -d '{"username":"testpeserta","password":"password123"}'
 ```

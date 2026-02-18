@@ -71,9 +71,9 @@ Peserta Credentials:
 
 ### API Endpoints Created
 ```
-POST /api/v1/auth/login-admin     (Admin authentication)
-POST /api/v1/auth/login-peserta   (Peserta authentication)
-POST /api/v1/auth/logout          (Protected - token revocation)
+POST /import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin     (Admin authentication)
+POST /import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-peserta   (Peserta authentication)
+POST /import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/logout          (Protected - token revocation)
 ```
 
 ### Response Format

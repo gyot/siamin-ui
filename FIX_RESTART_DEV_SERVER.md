@@ -53,7 +53,7 @@ Setelah restart, pastikan API menggunakan endpoint yang benar.
 Di browser console (F12):
 ```javascript
 // Paste ini di console
-fetch('https://backend-siamin.bpmpntb.id/api/v1/kegiatan')
+fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan')
   .then(r => {
     console.log('✅ URL correct!')
     console.log('Status:', r.status)
@@ -67,12 +67,12 @@ fetch('https://backend-siamin.bpmpntb.id/api/v1/kegiatan')
 
 **Before (Old):**
 ```
-POST http://127.0.0.1:8000/api/v1/auth/login-admin
+POST http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin
 ```
 
 **After (New):**
 ```
-POST https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin
+POST https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin
 ```
 
 ---

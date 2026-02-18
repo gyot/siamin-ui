@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { fetchAPI } from '@/services/api'
 import { mockLoginAdmin, mockLoginPeserta } from '@/services/mockApi'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://backend-siamin.bpmpntb.id/api/v1/'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL+'/api/v1/' || 'https://backend-siamin.bpmpntb.id/'
 
 export const useAuthStore = defineStore('auth', () => {
   const currentUser = ref(null)

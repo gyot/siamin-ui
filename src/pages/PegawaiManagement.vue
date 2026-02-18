@@ -7,12 +7,27 @@
           <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">Manajemen Pegawai & User</h1>
           <p class="text-xs sm:text-sm text-gray-600">Kelola data pegawai dan akun user admin</p>
         </div>
-        <button
-          @click="showAddPegawaiModal = true"
-          class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base"
-        >
-          + Tambah Pegawai
-        </button>
+        <div class="flex gap-2">
+          <button
+            @click="$refs.fileInput?.click()"
+            class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
+          >
+            Import Excel
+          </button>
+          <input
+            ref="fileInput"
+            type="file"
+            accept=".xlsx,.xls"
+            @change="handleImportFile"
+            style="display: none"
+          />
+          <button
+            @click="showAddPegawaiModal = true"
+            class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base"
+          >
+            + Tambah Pegawai
+          </button>
+        </div>
       </div>
 
       <!-- Filter dan Search -->
@@ -759,6 +774,7 @@
 <script>
 import { ref, computed } from 'vue'
 import database from '@/data/index.js'
+import * as XLSX from 'xlsx'
 
 export default {
   name: 'PegawaiManagement',
@@ -1052,6 +1068,98 @@ export default {
       return subUnit ? subUnit.nama_sub_unit : null
     }
 
+    const fileInput = ref(null)
+
+    const handleImportFile = async (e) => {
+      const file = e.target.files?.[0]
+      if (!file) return
+
+      try {
+        const buffer = await file.arrayBuffer()
+        const workbook = XLSX.read(buffer, { type: 'array' })
+        const sheet = workbook.Sheets[workbook.SheetNames[0]]
+        const data = XLSX.utils.sheet_to_json(sheet)
+
+        if (data.length === 0) {
+          alert('File Excel kosong')
+          return
+        }
+
+        // Expected headers
+        const expectedHeaders = [
+          'nip', 'nama', 'tempat_lahir', 'tanggal_lahir', 'tmt_cpns',
+          'tmt_pangkat', 'pangkat', 'golongan', 'nama_jabatan', 'tmt_jabatan',
+          'pendidikan_terakhir', 'jurusan', 'tempat_pendidikan', 'tahun_lulus',
+          'latihan_jabatan', 'status_kepegawaian', 'status'
+        ]
+
+        // Validate headers
+        const firstRow = data[0]
+        const actualHeaders = Object.keys(firstRow)
+        const missingHeaders = expectedHeaders.filter(h => !actualHeaders.includes(h))
+
+        if (missingHeaders.length > 0) {
+          alert(`Header yang hilang: ${missingHeaders.join(', ')}`)
+          return
+        }
+
+        // Import data
+        let importedCount = 0
+        let skippedCount = 0
+
+        data.forEach(row => {
+          // Skip rows with empty nip or nama
+          if (!row.nip || !row.nama) {
+            skippedCount++
+            return
+          }
+
+          // Check if NIP already exists
+          if (pegawai.value.some(p => p.nip?.toString() === row.nip?.toString())) {
+            console.warn(`NIP ${row.nip} sudah ada, skip`)
+            skippedCount++
+            return
+          }
+
+          const newId = Math.max(...pegawai.value.map(p => p.id_pegawai || 0), 0) + 1
+          pegawai.value.push({
+            id_pegawai: newId,
+            nip: row.nip?.toString() || '',
+            nama: row.nama?.toString() || '',
+            tempat_lahir: row.tempat_lahir?.toString() || '',
+            tanggal_lahir: row.tanggal_lahir?.toString() || '',
+            tmt_cpns: row.tmt_cpns?.toString() || '',
+            tmt_pangkat: row.tmt_pangkat?.toString() || '',
+            pangkat: row.pangkat?.toString() || '',
+            golongan: row.golongan?.toString() || '',
+            nama_jabatan: row.nama_jabatan?.toString() || '',
+            tmt_jabatan: row.tmt_jabatan?.toString() || '',
+            unit_kerja: row.unit_kerja?.toString() || '',
+            pendidikan_terakhir: row.pendidikan_terakhir?.toString() || '',
+            jurusan: row.jurusan?.toString() || '',
+            tempat_pendidikan: row.tempat_pendidikan?.toString() || '',
+            tahun_lulus: row.tahun_lulus?.toString() || '',
+            masa_kerja_tahun: row.masa_kerja_tahun?.toString() || '',
+            masa_kerja_bulan: row.masa_kerja_bulan?.toString() || '',
+            latihan_jabatan: row.latihan_jabatan?.toString() || '',
+            perkiraan_pensiun: row.perkiraan_pensiun?.toString() || '',
+            status_kepegawaian: row.status_kepegawaian?.toString() || 'PNS',
+            status: row.status?.toString() || 'aktif',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          importedCount++
+        })
+
+        const message = `${importedCount} data pegawai berhasil diimpor${skippedCount > 0 ? `. ${skippedCount} baris diabaikan (NIP kosong, duplikat, atau data tidak lengkap)` : ''}`
+        alert(message)
+        fileInput.value.value = '' // Reset file input
+      } catch (error) {
+        console.error('Error import file:', error)
+        alert('Gagal mengimpor file: ' + error.message)
+      }
+    }
+
     return {
       pegawai,
       users,
@@ -1087,7 +1195,9 @@ export default {
       getUnitKerjaName,
       getSubUnitName,
       resetFormPegawai,
-      validateFormUser
+      validateFormUser,
+      fileInput,
+      handleImportFile
     }
   }
 }

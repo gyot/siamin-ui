@@ -33,8 +33,8 @@ export const fetchAPI = async (endpoint, options = {}) => {
 - Endpoint mapping updated to use ENDPOINTS object keys
 
 **Login Endpoints:**
-- `loginAdmin`: POST to `/api/v1/auth/login-admin`
-- `loginPeserta`: POST to `/api/v1/auth/login-peserta`
+- `loginAdmin`: POST to `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin`
+- `loginPeserta`: POST to `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-peserta`
 
 ### 3. Updated Login Component (src/pages/Login.vue)
 - Fixed handleLogin() to properly await auth store methods

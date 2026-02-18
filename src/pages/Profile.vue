@@ -507,7 +507,7 @@ export default {
     const loadProfile = async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}me`,
+          `${import.meta.env.VITE_API_BASE_URL+'/api/v1/'}me`,
           {
             headers: {
               'Accept': 'application/json',

@@ -93,7 +93,7 @@ Access-Control-Allow-Credentials: true
 
 ```bash
 # Test CORS headers
-curl -X OPTIONS https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin \
+curl -X OPTIONS https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin \
   -H "Origin: http://localhost:5173" \
   -H "Access-Control-Request-Method: POST" \
   -H "Access-Control-Request-Headers: Content-Type" \
@@ -137,7 +137,7 @@ No frontend changes needed - just need backend to enable CORS.
 ### Test 1: Check CORS Headers
 ```javascript
 // In browser console
-fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
+fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {
   method: 'OPTIONS'
 })
 .then(r => {
@@ -150,7 +150,7 @@ fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
 ### Test 2: Try Login
 ```javascript
 // Should work now if CORS is enabled
-fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
+fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json'

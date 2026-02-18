@@ -52,9 +52,9 @@ php artisan serve --port=8000
 ## API Endpoints
 
 ```
-POST /api/v1/auth/login-admin         → {token, user}
-POST /api/v1/auth/login-peserta       → {token, user}
-POST /api/v1/auth/logout (protected)  → {success}
+POST /import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin         → {token, user}
+POST /import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-peserta       → {token, user}
+POST /import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/logout (protected)  → {success}
 ```
 
 ---

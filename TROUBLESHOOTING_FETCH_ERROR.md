@@ -24,7 +24,7 @@
 **Option A: Using Browser Console**
 ```javascript
 // Test if API is reachable
-fetch('https://backend-siamin.bpmpntb.id/api/v1/kegiatan')
+fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan')
   .then(r => {
     console.log('Status:', r.status)
     return r.json()
@@ -36,10 +36,10 @@ fetch('https://backend-siamin.bpmpntb.id/api/v1/kegiatan')
 **Option B: Using PowerShell**
 ```powershell
 # Test API connectivity
-Invoke-WebRequest -Uri "https://backend-siamin.bpmpntb.id/api/v1/kegiatan" -Method GET -UseBasicParsing
+Invoke-WebRequest -Uri "https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan" -Method GET -UseBasicParsing
 
 # Or with curl
-curl -v https://backend-siamin.bpmpntb.id/api/v1/kegiatan
+curl -v https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan
 ```
 
 ---
@@ -90,7 +90,7 @@ Failed to fetch (with self-signed cert)
 **B. For Development (Self-Signed)**
 - Test with curl first:
   ```bash
-  curl -k https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin
+  curl -k https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin
   ```
 - If curl works but browser doesn't: browser security blocking self-signed cert
 - Add exception in browser or use proper certificate
@@ -138,7 +138,7 @@ const auth = useAuthStore()
 console.log('API Base URL:', auth.constructor.name)
 
 // Or check api.js directly
-fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {...})
+fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {...})
 ```
 
 ---
@@ -148,7 +148,7 @@ fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {...})
 ### Step 1: Verify API is Running
 ```bash
 # Test basic connectivity
-curl -v https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin
+curl -v https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin
 
 # Should return something (even 404 or 405 is OK, shows API responds)
 # If connection refused = API not running
@@ -157,7 +157,7 @@ curl -v https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin
 
 ### Step 2: Test Login Endpoint
 ```bash
-curl -X POST https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin \
+curl -X POST https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin \
   -H "Content-Type: application/json" \
   -H "Origin: http://localhost:5173" \
   -d '{"email":"admin@example.com","password":"password"}'
@@ -223,7 +223,7 @@ Run diagnostic steps above
 **Cause:** Endpoint doesn't exist
 
 **Fix:**
-- Verify endpoint path: `/api/v1/auth/login-admin`
+- Verify endpoint path: `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin`
 - Check backend API routes
 - Ask backend team for correct endpoint
 

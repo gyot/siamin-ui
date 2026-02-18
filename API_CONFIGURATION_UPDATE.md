@@ -23,7 +23,7 @@ After:   https://backend-siamin.bpmpntb.id/api/v1
 
 The API configuration uses a fallback pattern:
 ```javascript
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://backend-siamin.bpmpntb.id/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL+'/api/v1/' || 'https://backend-siamin.bpmpntb.id/'api/v1'
 ```
 
 ### Priority Order:
@@ -93,7 +93,7 @@ import { api } from '@/services/api'
 ### Test Login
 ```javascript
 // Try login - should connect to production API
-fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
+fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ email: 'admin@...', password: '...' })
@@ -153,7 +153,7 @@ fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
 
 ### 1. Test Login
 ```bash
-curl -X POST https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin \
+curl -X POST https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@...","password":"..."}'
 ```
@@ -161,7 +161,7 @@ curl -X POST https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin \
 ### 2. Test Protected Endpoint
 ```bash
 TOKEN="your_token_here"
-curl -X GET https://backend-siamin.bpmpntb.id/api/v1/kegiatan \
+curl -X GET https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan \
   -H "Authorization: Bearer $TOKEN"
 ```
 

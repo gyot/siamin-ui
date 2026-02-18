@@ -216,7 +216,7 @@
                 
                 <!-- Preview Gambar -->
                 <div v-if="formData.flyer" class="mb-4">
-                  <img :src="formData.flyer" alt="Flyer Preview" class="max-h-48 mx-auto rounded-lg shadow-md" />
+                  <img :src="getFlyerUrl(formData.flyer)" alt="Flyer Preview" class="max-h-48 mx-auto rounded-lg shadow-md" />
                   <button 
                     type="button"
                     @click="removeFlyerImage"
@@ -349,7 +349,7 @@
         
         <!-- Flyer Preview -->
         <div v-if="selectedKegiatan.flyer" class="border border-slate-200 rounded-lg overflow-hidden">
-          <img :src="selectedKegiatan.flyer" alt="Flyer" class="w-full max-h-64 object-cover" />
+          <img :src="getFlyerUrl(selectedKegiatan.flyer)" alt="Flyer" class="w-full max-h-64 object-cover" />
         </div>
 
         <!-- Status Badge -->
@@ -859,18 +859,44 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import database from '../data/index.js'
 import { createSuratTugasTemplate, downloadBlob, processDocxTemplate, parseDocxPreservingFormat, replacePlaceholdersInXml, generateTableXml, replaceTablePlaceholder, generateDocxFromXml, debugXmlStructure } from '../utils/docxUtils'
 import { Packer } from 'docx'
+
+// kegiatan API helpers
+import { listKegiatan, getKegiatan, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
+// authentication store (needed for current user's pegawai id)
+import { useAuthStore } from '@/stores/auth.js'
 
 export default {
   name: 'Kegiatan',
   setup() {
     const router = useRouter()
     const db = database
-    const kegiatan = ref(db.kegiatan || [])
+
+    // auth store reference so we can read currentUser
+    const auth = useAuthStore()
+    const currentUser = computed(() => auth.currentUser || {})
+
+    // start with empty list, we'll fetch from API when component mounts
+    const kegiatan = ref([])
+
+    // helper to retrieve kegiatan from the server (or fallback to local data)
+    const loadKegiatan = async () => {
+      try {
+        const data = await listKegiatan()
+        kegiatan.value = data
+      } catch (err) {
+        console.error('Failed to fetch kegiatan from API, using local data', err)
+        kegiatan.value = db.kegiatan || []
+      }
+    }
+
+    onMounted(() => {
+      loadKegiatan()
+    })
 
     const searchQuery = ref('')
     const activeFilter = ref('all')
@@ -879,10 +905,11 @@ export default {
     const showDetailModal = ref(false)
     const selectedKegiatan = ref(null)
     const editingId = ref(null)
-    const currentUser = ref({ name: 'Admin' })
     const formError = ref('')
     const isDraggingFlyer = ref(false)
     const flyerInput = ref(null)
+    // file object for flyer; used when uploading to API
+    const flyerFile = ref(null)
     const showSuratTugasModal = ref(false)
     const suratTugasSelected = ref(null)
     const showSuratTugasDetailModal = ref(false)
@@ -925,7 +952,9 @@ export default {
       panduan_url: '',
       laporan_url: '',
       surat_menyurat_url: '',
-      status: 'draft'
+      status: 'draft',
+      // automatically assigned from auth
+      id_pegawai: null
     })
 
     const resetForm = () => {
@@ -946,8 +975,10 @@ export default {
         panduan_url: '',
         laporan_url: '',
         surat_menyurat_url: '',
-        status: 'draft'
+        status: 'draft',
+        id_pegawai: null
       }
+      flyerFile.value = null
       formError.value = ''
     }
 
@@ -989,6 +1020,16 @@ export default {
     const getMetodeLabel = (metode) => {
       const labels = { 'daring': 'Daring', 'luring': 'Luring', 'hybrid': 'Hybrid' }
       return labels[metode] || metode
+    }
+
+    // build absolute URL for flyer path returned by backend
+    const getFlyerUrl = (path) => {
+      if (!path) return ''
+      if (path.startsWith('http')) return path
+      // some APIs return storage path without host
+      const base = import.meta.env.VITE_API_BASE_URL || 'https://backend-siamin.bpmpntb.id/'
+      // ensure trailing slash before storage
+      return `${base.replace(/\/api\/?$/, '')}/storage/${path}`
     }
 
     const getStatusLabel = (status) => {
@@ -1069,7 +1110,18 @@ export default {
       return true
     }
 
-    const viewDetail = (id) => {
+    const viewDetail = async (id) => {
+      try {
+        const item = await getKegiatan(id)
+        if (item) {
+          selectedKegiatan.value = { ...item }
+          showDetailModal.value = true
+          return
+        }
+      } catch (err) {
+        console.warn('Failed to load kegiatan from API, falling back to local copy', err)
+      }
+
       const item = kegiatan.value.find(k => k.id_kegiatan === id)
       if (item) {
         selectedKegiatan.value = { ...item }
@@ -1080,6 +1132,8 @@ export default {
     const openEditFromDetail = () => {
       if (selectedKegiatan.value) {
         formData.value = { ...selectedKegiatan.value }
+        // remove any previously selected file
+        flyerFile.value = null
         editingId.value = selectedKegiatan.value.id
         showDetailModal.value = false
         showAddModal.value = true
@@ -1108,6 +1162,7 @@ export default {
     const handleFlyerSelect = async (event) => {
       const file = event.target.files[0]
       if (file) {
+        flyerFile.value = file
         try {
           const base64 = await convertFileToBase64(file)
           formData.value.flyer = base64
@@ -1123,6 +1178,7 @@ export default {
       const files = event.dataTransfer.files
       const file = files[0]
       if (file) {
+        flyerFile.value = file
         try {
           const base64 = await convertFileToBase64(file)
           formData.value.flyer = base64
@@ -1139,6 +1195,7 @@ export default {
         for (let item of items) {
           if (item.type.startsWith('image/')) {
             const file = item.getAsFile()
+            flyerFile.value = file
             try {
               const base64 = await convertFileToBase64(file)
               formData.value.flyer = base64
@@ -1154,43 +1211,90 @@ export default {
 
     const removeFlyerImage = () => {
       formData.value.flyer = ''
+      flyerFile.value = null
       if (flyerInput.value) {
         flyerInput.value.value = ''
       }
     }
 
-    const editKegiatan = (id) => {
-      const item = kegiatan.value.find(k => k.id_kegiatan === id)
-      if (item) {
-        formData.value = { ...item }
-        editingId.value = id
-        showAddModal.value = true
+    const editKegiatan = async (id) => {
+      // fetch fresh data for the item if needed
+      try {
+        const item = await getKegiatan(id)
+        if (item) {
+          formData.value = { ...item }
+          editingId.value = id
+          showAddModal.value = true
+        }
+      } catch (err) {
+        // fallback to local copy
+        const item = kegiatan.value.find(k => k.id_kegiatan === id)
+        if (item) {
+          formData.value = { ...item }
+          editingId.value = id
+          showAddModal.value = true
+        }
       }
     }
 
-    const deleteKegiatan = (id) => {
-      if (confirm('Apakah Anda yakin ingin menghapus kegiatan ini?')) {
+    const deleteKegiatan = async (id) => {
+      if (!confirm('Apakah Anda yakin ingin menghapus kegiatan ini?')) return
+      try {
+        await removeKegiatan(id)
+        kegiatan.value = kegiatan.value.filter(k => k.id_kegiatan !== id)
+      } catch (err) {
+        console.error('Gagal menghapus kegiatan', err)
+        // still remove locally to keep UI responsive
         kegiatan.value = kegiatan.value.filter(k => k.id_kegiatan !== id)
       }
     }
 
-    const saveKegiatan = () => {
+    const saveKegiatan = async () => {
       if (!validateForm()) {
         return
       }
 
-      if (editingId.value) {
-        const index = kegiatan.value.findIndex(k => k.id_kegiatan === editingId.value)
-        if (index !== -1) {
-          kegiatan.value[index] = { id_kegiatan: kegiatan.value[index].id_kegiatan, ...formData.value }
+      try {
+        // ensure the kegiatan record is linked to the current user's pegawai id
+        if (currentUser.value) {
+          formData.value.id_pegawai = currentUser.value.id_pegawai || currentUser.value.id || null
         }
-      } else {
-        const newId = 'K' + String(Math.floor(Math.random() * 1000)).padStart(3, '0')
-        kegiatan.value.push({ id_kegiatan: newId, ...formData.value })
+
+        // build payload; if flyerFile exists we need FormData
+        let payload
+        if (flyerFile.value) {
+          payload = new FormData()
+          // append all fields
+          Object.keys(formData.value).forEach(key => {
+            // skip flyer since it'll be appended separately
+            if (key === 'flyer') return
+            const val = formData.value[key]
+            if (val !== null && val !== undefined) {
+              payload.append(key, val)
+            }
+          })
+          payload.append('flyer', flyerFile.value)
+        } else {
+          payload = { ...formData.value }
+        }
+
+        if (editingId.value) {
+          const updated = await updateKegiatan(editingId.value, payload)
+          const index = kegiatan.value.findIndex(k => k.id_kegiatan === editingId.value)
+          if (index !== -1) {
+            kegiatan.value[index] = updated
+          }
+        } else {
+          const created = await createKegiatan(payload)
+          kegiatan.value.push(created)
+        }
+        showAddModal.value = false
+        editingId.value = null
+        resetForm()
+      } catch (err) {
+        console.error('Failed to save kegiatan', err)
+        formError.value = err.message || 'Gagal menyimpan kegiatan'
       }
-      showAddModal.value = false
-      editingId.value = null
-      resetForm()
     }
 
     // Functions untuk Peserta
@@ -1431,6 +1535,7 @@ export default {
 
     return {
       kegiatan,
+      loadKegiatan,
       searchQuery,
       activeFilter,
       filterTahun,
@@ -1460,6 +1565,7 @@ export default {
       getStatusBadgeClass,
       getPaymentMethodLabel,
       hasResourceUrls,
+      getFlyerUrl,
       viewDetail,
       openEditFromDetail,
       editKegiatan,

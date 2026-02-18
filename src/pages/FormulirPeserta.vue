@@ -2,30 +2,37 @@
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6">
     <div class="max-w-4xl mx-auto">
       <!-- Header -->
-      <div class="mb-8 text-center">
+      <!-- <div class="mb-8 text-center">
         <h1 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">{{ namaKegiatan }}</h1>
         <p class="text-slate-600">Formulir Pendaftaran {{ peran }}</p>
-      </div>
+      </div> -->
 
-      <!-- Info Box -->
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 sm:p-6 mb-6">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
-          <div>
-            <p class="text-slate-600">Kode Kegiatan</p>
-            <p class="font-semibold text-slate-800">{{ kode }}</p>
+      <!-- Kegiatan Detail (baru) -->
+      <div v-if="kegiatan" class="bg-blue-50 border border-blue-200 rounded-lg  p-4 sm:p-6 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div class="flex-1">
+            <h2 class="text-xl font-semibold text-slate-800">Detail Kegiatan</h2>
+            <p class="text-sm text-slate-600">{{ kegiatan.nama_kegiatan }}</p>
+
+            <div class="mt-3 text-sm text-slate-600">
+              <p><strong>Tanggal:</strong> {{ formatDate(kegiatan.tanggal_mulai) }} - {{ formatDate(kegiatan.tanggal_selesai) }}</p>
+              <p><strong>Lokasi:</strong> {{ kegiatan.lokasi || '-' }}</p>
+            </div>
           </div>
-          <div>
-            <p class="text-slate-600">Peran Peserta</p>
-            <p class="font-semibold text-slate-800 capitalize">{{ peran }}</p>
-          </div>
-          <div>
-            <p class="text-slate-600">Status Pendaftaran</p>
-            <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
-              Buka
-            </span>
+
+          <div class="w-full sm:w-48 flex-shrink-0">
+            <img v-if="flyerUrl" :src="flyerUrl" :alt="`Flyer ${kegiatan.nama_kegiatan}`" class="rounded-md object-cover w-full h-32" />
+            <div v-else class="w-full h-32 bg-gray-100 rounded-md flex items-center justify-center text-sm text-slate-500">Tidak ada flyer</div>
           </div>
         </div>
+
+        <div class="mt-4 text-sm text-slate-700">
+          <p class="mt-3 font-semibold">Deskripsi</p>
+          <p class="text-slate-600 whitespace-pre-wrap">{{ kegiatan.deskripsi || '-' }}</p>
+        </div>
       </div>
+
+      
 
       <!-- Form -->
       <div class="bg-white rounded-lg shadow-lg p-6 sm:p-8">
@@ -79,10 +86,26 @@
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Pilih Jenis Kelamin</option>
-                  <option value="Laki-laki">Laki-laki</option>
-                  <option value="Perempuan">Perempuan</option>
+                  <option value="laki-laki">Laki-laki</option>
+                  <option value="perempuan">Perempuan</option>
                 </select>
               </div>
+              <!-- <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">Agama</label>
+                <select
+                  v-model="formData.agama"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Pilih Agama</option>
+                  <option value="Islam">Islam</option>
+                  <option value="Kristen Protestan">Kristen Protestan</option>
+                  <option value="Kristen Katolik">Kristen Katolik</option>
+                  <option value="Hindu">Hindu</option>
+                  <option value="Buddha">Buddha</option>
+                  <option value="Konghucu">Konghucu</option>
+                  <option value="Lainnya">Lainnya</option>
+                </select>
+              </div> -->
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Tempat Lahir</label>
                 <input
@@ -154,13 +177,14 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Kabupaten/Kota</label>
-                <input
+                <label class="block text-sm font-medium text-slate-700 mb-2">Kabupaten / Kota</label>
+                <select
                   v-model="formData.kab_kota"
-                  type="text"
-                  placeholder="Masukkan kabupaten/kota"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                >
+                  <option value="">Pilih Kabupaten/Kota</option>
+                  <option v-for="k in kabKota" :key="k" :value="k">{{ k }}</option>
+                </select>
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Provinsi</label>
@@ -201,11 +225,31 @@
             </div>
           </div>
 
-          <div v-if="metode_pembayaran!='tidak_dibayar' && metode_pembayaran!='tunai'">
+          <div v-if="['transfer','pulsa','transfer_dan_pulsa'].includes(metode_pembayaran)">
             <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b-2 border-blue-500">Data Pembayaran</h3>
-            <div v-if="metode_pembayaran==='transfer_dan_pulsa' || metode_pembayaran==='transfer' || metode_pembayaran==='pulsa'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div v-if=" metode_pembayaran==='transfer_dan_pulsa' || metode_pembayaran==='pulsa'">
-                <label class="block text-sm font-medium text-slate-700 mb-2">Provider Pulsa</label>
+            <div v-if="['transfer_dan_pulsa','transfer','pulsa'].includes(metode_pembayaran)" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              
+              <div v-if="['transfer_dan_pulsa','transfer'].includes(metode_pembayaran)">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Nomor Rekening</label>
+                <input
+                  v-model="formData.nomor_rekening"
+                  type="text"
+                  placeholder="Masukkan nomor rekening"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div v-if="['transfer_dan_pulsa','transfer'].includes(metode_pembayaran)">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Nama Bank</label>
+                <input
+                  v-model="formData.nama_bank"
+                  type="text"
+                  placeholder="Masukkan nama bank"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div v-if="['transfer_dan_pulsa','pulsa'].includes(metode_pembayaran)">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Provider Seluler (untuk penggantian pulsa)</label>
                 <select
                   v-model="formData.provider_pulsa"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -216,25 +260,9 @@
                   <option value="XL">XL Axiata</option>
                   <option value="Tri">Tri</option>
                   <option value="Smartfren">Smartfren</option>
+                  <option value="Axis">Axis</option>
+                  <option value="By.U">By.U</option>
                 </select>
-              </div>
-              <div v-if=" metode_pembayaran==='transfer_dan_pulsa' || metode_pembayaran==='transfer'">
-                <label class="block text-sm font-medium text-slate-700 mb-2">Nomor Rekening</label>
-                <input
-                  v-model="formData.nomor_rekening"
-                  type="text"
-                  placeholder="Masukkan nomor rekening"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div v-if=" metode_pembayaran==='transfer_dan_pulsa' || metode_pembayaran==='transfer'">
-                <label class="block text-sm font-medium text-slate-700 mb-2">Nama Bank</label>
-                <input
-                  v-model="formData.nama_bank"
-                  type="text"
-                  placeholder="Masukkan nama bank"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
               </div>
             </div>
           </div>
@@ -322,10 +350,12 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import database from '@/data/index.js'
 import Swal from 'sweetalert2'
+import { listKegiatan } from '@/services/kegiatan'
+import { postAPI } from '@/services/api'
 
 export default {
   name: 'FormulirPeserta',
@@ -341,8 +371,26 @@ export default {
     const signatureData = ref(null)
     let isDrawing = false
 
-    // Find kegiatan by code/ID
+    // API-backed kegiatan (fallback to local database)
+    const apiKegiatan = ref([])
+
+    const loadKegiatan = async () => {
+      try {
+        const data = await listKegiatan()
+        apiKegiatan.value = data || []
+      } catch (err) {
+        console.warn('Gagal mengambil kegiatan dari API, gunakan lokal', err)
+      }
+    }
+
+    onMounted(() => {
+      loadKegiatan()
+    })
+
+    // Find kegiatan by code/ID (prefer API result)
     const kegiatan = computed(() => {
+      const fromApi = apiKegiatan.value.find(k => String(k.id_kegiatan) === String(kode))
+      if (fromApi) return fromApi
       return database.kegiatan.find(k => k.id_kegiatan === kode)
     })
 
@@ -354,11 +402,44 @@ export default {
       return kegiatan.value?.metode_pembayaran || ''
     })
 
+    const kabKota = ref([
+      'Kabupaten Lombok Barat',
+      'Kabupaten Lombok Tengah',
+      'Kabupaten Lombok Timur',
+      'Kabupaten Lombok Utara',
+      'Kabupaten Sumbawa',
+      'Kabupaten Sumbawa Barat',
+      'Kabupaten Dompu',
+      'Kabupaten Bima',
+      'Kota Mataram',
+      'Kota Bima',
+      'Lainnya'
+    ])
+
+    const formatDate = (dateString) => {
+      if (!dateString) return '-'
+      try {
+        const d = new Date(dateString)
+        return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
+      } catch (e) {
+        return dateString
+      }
+    }
+
+    const flyerUrl = computed(() => {
+      const f = kegiatan.value?.flyer || kegiatan.value?.flyer_path || kegiatan.value?.path || null
+      if (!f) return null
+      if (/^https?:\/\//.test(f)) return f
+      const base = import.meta.env.VITE_API_BASE_URL+'/storage/' || ''
+      return base.replace(/\/$/, '') + '/' + String(f).replace(/^\//, '')
+    })
+
     const formData = ref({
       id_kegiatan: kode,
       nama_lengkap: '',
       nip: '',
       pangkat: '',
+      agama: '',
       gol: '',
       jabatan: '',
       no_hp: '',
@@ -385,6 +466,7 @@ export default {
         nama_lengkap: '',
         nip: '',
         pangkat: '',
+        agama: '',
         gol: '',
         jabatan: '',
         no_hp: '',
@@ -425,33 +507,73 @@ export default {
       return formErrors.value.length === 0
     }
 
-    const submitForm = () => {
+    const base64ToFile = (dataUrl, filename = 'tanda_tangan.png') => {
+      const arr = dataUrl.split(',')
+      const mime = arr[0].match(/:(.*?);/)[1]
+      const bstr = atob(arr[1])
+      let n = bstr.length
+      const u8arr = new Uint8Array(n)
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n)
+      }
+      return new File([u8arr], filename, { type: mime })
+    }
+
+    const submitForm = async () => {
       if (!validateForm()) return
 
-      // Find next ID for peserta
-      const nextId = Math.max(...database.peserta.map(p => p.id_peserta || 0), 0) + 1
-
-      // Add peserta to database with signature
-      database.peserta.push({
-        id_peserta: nextId,
-        ...formData.value,
-        tandatangan: signatureData.value,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+      const fd = new FormData()
+      // Append all formData fields
+      Object.entries(formData.value).forEach(([key, val]) => {
+        if (val !== undefined && val !== null && val !== '') {
+          fd.append(key, val)
+        }
       })
 
-      showSuccessMessage.value = true
-      formErrors.value = []
+      // Append tanda_tangan as file if present (signatureData is data URL)
+      if (signatureData.value) {
+        try {
+          const file = base64ToFile(signatureData.value, `tanda_tangan_${Date.now()}.png`)
+          fd.append('tanda_tangan', file)
+        } catch (e) {
+          console.warn('Gagal konversi tanda_tangan ke file', e)
+        }
+      }
 
-      Swal.fire({
-        title: 'Sukses!',
-        text: 'Pendaftaran Anda telah berhasil disimpan. Terima kasih telah mendaftar.',
-        icon: 'success',
-        confirmButtonText: 'OK'
-      }).then(() => {
+      try {
+        const saved = await postAPI('peserta', fd)
+
+        // Optionally push to local mock DB for offline view
+        const nextId = Math.max(...database.peserta.map(p => p.id_peserta || 0), 0) + 1
+        database.peserta.push({
+          id_peserta: saved.id_peserta || nextId,
+          ...formData.value,
+          tandatangan: signatureData.value,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+        showSuccessMessage.value = true
+        formErrors.value = []
+
+        await Swal.fire({
+          title: 'Sukses!',
+          text: 'Pendaftaran Anda telah berhasil disimpan. Terima kasih telah mendaftar.',
+          icon: 'success',
+          confirmButtonText: 'OK'
+        })
+
         resetForm()
         showSuccessMessage.value = false
-      })
+      } catch (err) {
+        console.error('Gagal menyimpan peserta:', err)
+        Swal.fire({
+          title: 'Gagal',
+          text: err.message || 'Terjadi kesalahan saat menyimpan pendaftaran',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        })
+      }
     }
 
     const startDrawing = (e) => {
@@ -559,7 +681,11 @@ export default {
       peran,
       slugJudul,
       namaKegiatan,
+      kegiatan,
+      flyerUrl,
+      kabKota,
       formData,
+      formatDate,
       formErrors,
       showSuccessMessage,
       metode_pembayaran,

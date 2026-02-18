@@ -138,7 +138,7 @@ console.log(auth.isAuthenticated)
 ```
 1. Login successfully
 2. Open Console and run:
-   fetch('http://127.0.0.1:8000/api/v1/kegiatan', {
+   fetch('http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan', {
      headers: {
        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
      }
@@ -175,7 +175,7 @@ console.log({
 
 ### Manually test login endpoint
 ```javascript
-fetch('http://127.0.0.1:8000/api/v1/auth/login-admin', {
+fetch('http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -210,7 +210,7 @@ location.reload()
 
 ### Admin Login Request
 ```http
-POST http://127.0.0.1:8000/api/v1/auth/login-admin HTTP/1.1
+POST http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin HTTP/1.1
 Content-Type: application/json
 Accept: application/json
 
@@ -238,14 +238,14 @@ Content-Type: application/json
 
 ### Protected Request (with Token)
 ```http
-GET http://127.0.0.1:8000/api/v1/kegiatan HTTP/1.1
+GET http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan HTTP/1.1
 Authorization: Bearer 1|abc123def456ghi789jkl
 Accept: application/json
 ```
 
 ### Logout Request
 ```http
-POST http://127.0.0.1:8000/api/v1/auth/logout HTTP/1.1
+POST http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/logout HTTP/1.1
 Authorization: Bearer 1|abc123def456ghi789jkl
 Content-Type: application/json
 ```
@@ -311,7 +311,7 @@ Run these tests in order:
 npm run dev
 
 # Terminal 2: Check API is running
-curl -X POST http://127.0.0.1:8000/api/v1/auth/login-admin \
+curl -X POST http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin \
   -H "Content-Type: application/json" \
   -d '{"email":"admin@kemkominfo.go.id","password":"password123"}'
 ```

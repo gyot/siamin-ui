@@ -1,5 +1,5 @@
 // API Service Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://backend-siamin.bpmpntb.id/api/v1/'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL+'/api/v1/' || 'https://backend-siamin.bpmpntb.id/'
 
 // API Endpoints mapping
 const ENDPOINTS = {
@@ -76,18 +76,29 @@ export const fetchAPI = async (endpoint, options = {}) => {
 export const postAPI = async (endpoint, payload) => {
   try {
     const url = `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}`
-    
+
+    // include auth header like fetchAPI does
+    const authToken = localStorage.getItem('auth_token')
+    const headers = {
+      'Accept': 'application/json'
+    }
+    // if payload is not FormData, we'll send JSON
+    if (!(payload instanceof FormData)) {
+      headers['Content-Type'] = 'application/json'
+    }
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`
+    }
+
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(payload)
+      headers,
+      body: payload instanceof FormData ? payload : JSON.stringify(payload)
     })
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`)
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`)
     }
 
     const data = await response.json()
@@ -108,14 +119,22 @@ export const postAPI = async (endpoint, payload) => {
 export const updateAPI = async (endpoint, id, payload) => {
   try {
     const url = `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}/${id}`
-    
+
+    const authToken = localStorage.getItem('auth_token')
+    const headers = {
+      'Accept': 'application/json'
+    }
+    if (!(payload instanceof FormData)) {
+      headers['Content-Type'] = 'application/json'
+    }
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`
+    }
+
     const response = await fetch(url, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(payload)
+      headers,
+      body: payload instanceof FormData ? payload : JSON.stringify(payload)
     })
 
     if (!response.ok) {
@@ -139,13 +158,19 @@ export const updateAPI = async (endpoint, id, payload) => {
 export const deleteAPI = async (endpoint, id) => {
   try {
     const url = `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}/${id}`
-    
+
+    const authToken = localStorage.getItem('auth_token')
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`
+    }
+
     const response = await fetch(url, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
+      headers
     })
 
     if (!response.ok) {

@@ -9,7 +9,7 @@ Copy-paste commands ini ke browser console (F12) untuk diagnosa masalah.
 ### Test Basic Connection
 ```javascript
 // Simple test - should show response
-fetch('https://backend-siamin.bpmpntb.id/api/v1/kegiatan', {
+fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan', {
   method: 'GET'
 })
 .then(r => {
@@ -25,7 +25,7 @@ fetch('https://backend-siamin.bpmpntb.id/api/v1/kegiatan', {
 ### Test Login Endpoint
 ```javascript
 // Test login endpoint
-fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
+fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json'
@@ -56,7 +56,7 @@ fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
 ### Check CORS Configuration
 ```javascript
 // Test CORS with preflight
-fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
+fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {
   method: 'OPTIONS',
   headers: {
     'Origin': window.location.origin
@@ -85,7 +85,7 @@ fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
   console.log('Auth Store created')
   
   // Check the actual API endpoint being used
-  const url = 'https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin'
+  const url = 'https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin'
   console.log('Login endpoint:', url)
 })()
 ```
@@ -110,7 +110,7 @@ console.log('user_type:', localStorage.getItem('user_type'))
   try {
     console.log('📝 Attempting login...')
     
-    const response = await fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
+    const response = await fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -174,7 +174,7 @@ console.log('user_type:', localStorage.getItem('user_type'))
   console.log('🔑 Using token:', token.substring(0, 30) + '...')
   
   try {
-    const response = await fetch('https://backend-siamin.bpmpntb.id/api/v1/kegiatan', {
+    const response = await fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -269,7 +269,7 @@ console.log('✅ Cache cleared. Refresh page and try again.')
   console.log('🏥 Checking backend health...')
   
   try {
-    const response = await fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
+    const response = await fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {
       method: 'HEAD'
     }).catch(() => null)
     
@@ -293,14 +293,14 @@ Run these in order:
 ```javascript
 // 1. Check connection
 console.log('Step 1: Testing basic connection...')
-fetch('https://backend-siamin.bpmpntb.id/api/v1/kegiatan')
+fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan')
   .then(r => console.log('✅ Connected, Status:', r.status))
   .catch(e => console.error('❌ Connection failed:', e.message))
 
 // 2. Check CORS
 setTimeout(() => {
   console.log('Step 2: Testing CORS...')
-  fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
+  fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {
     method: 'OPTIONS'
   })
   .then(r => {
@@ -313,7 +313,7 @@ setTimeout(() => {
 // 3. Try login
 setTimeout(() => {
   console.log('Step 3: Testing login...')
-  fetch('https://backend-siamin.bpmpntb.id/api/v1/auth/login-admin', {
+  fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email: 'admin@kemkominfo.go.id', password: 'password123' })

@@ -205,7 +205,7 @@
 
 ### Test Steps
 1. [ ] Login as admin
-2. [ ] Look for POST request to `/api/v1/auth/login-admin`
+2. [ ] Look for POST request to `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin`
 3. [ ] Click on request to view details
 4. [ ] Check Response tab
 

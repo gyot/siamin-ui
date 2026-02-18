@@ -7,12 +7,20 @@
           <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">Manajemen Peserta</h1>
           <p class="text-xs sm:text-sm text-gray-600">Kelola data peserta dari semua kegiatan</p>
         </div>
-        <button
-          @click="showAddModal = true"
-          class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base"
-        >
-          + Tambah Peserta
-        </button>
+        <div class="flex gap-2">
+          <button
+            @click="exportPeserta"
+            class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
+          >
+            Export Excel
+          </button>
+          <button
+            @click="showAddModal = true"
+            class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base"
+          >
+            + Tambah Peserta
+          </button>
+        </div>
       </div>
 
       <!-- Filter dan Search -->
@@ -686,6 +694,7 @@
 <script>
 import { ref, computed, watch } from 'vue'
 import database from '@/data/index.js'
+import * as XLSX from 'xlsx'
 
 export default {
   name: 'Peserta',
@@ -966,6 +975,46 @@ export default {
       showSertifikatModal.value = false
     }
 
+    const exportPeserta = () => {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || ''
+      const buildSignatureUrl = (sig) => {
+        if (!sig) return ''
+        if (typeof sig !== 'string') return ''
+        if (sig.startsWith('http')) return sig
+        if (sig.startsWith('data:')) return sig
+        return apiBase + '/storage/' + sig
+      }
+
+      // Prepare rows with desired fields including signature URL
+      const rows = filteredPeserta.value.map(p => {
+        const signature = p.tanda_tangan_url || p.tanda_tangan || p.tandatangan || ''
+        return {
+          id_peserta: p.id_peserta,
+          id_kegiatan: p.id_kegiatan,
+          nama_kegiatan: getNamaKegiatan(p.id_kegiatan),
+          nama_lengkap: p.nama_lengkap,
+          nip: p.nip || '',
+          email: p.email || '',
+          no_hp: p.no_hp || '',
+          nama_instansi: p.nama_instansi || '',
+          kab_kota: p.kab_kota || '',
+          provinsi: p.provinsi || '',
+          peran: p.peran || '',
+          jenis_kelamin: p.jenis_kelamin || '',
+          nomor_rekening: p.nomor_rekening || '',
+          nama_bank: p.nama_bank || '',
+          provider_pulsa: p.provider_pulsa || '',
+          tanda_tangan_url: buildSignatureUrl(signature)
+        }
+      })
+
+      const ws = XLSX.utils.json_to_sheet(rows)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Peserta')
+      const filename = `peserta_export_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.xlsx`
+      XLSX.writeFile(wb, filename)
+    }
+
     return {
       peserta,
       kegiatan,
@@ -1000,7 +1049,8 @@ export default {
       openSertifikatModal,
       saveSertifikat,
       resetFormPeserta,
-      resetFormSertifikat
+      resetFormSertifikat,
+      exportPeserta
     }
   }
 }

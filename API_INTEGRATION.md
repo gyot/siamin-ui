@@ -92,18 +92,18 @@ Berikut mapping endpoint API ke application:
 
 | Table | Endpoint |
 |-------|----------|
-| users | `/api/v1/users` |
-| pegawai | `/api/v1/pegawai` |
-| kegiatan | `/api/v1/kegiatan` |
-| peserta | `/api/v1/peserta` |
-| sertifikat | `/api/v1/sertifikat` |
-| akun_peserta | `/api/v1/akun-peserta` |
-| surat_tugas | `/api/v1/surat-tugas` |
-| surat_tugas_pegawai | `/api/v1/surat-tugas-pegawai` |
-| unit_kerja | `/api/v1/unit-kerja` |
-| sub_unit_kerja | `/api/v1/sub-unit-kerja` |
-| keanggotaan_tim | `/api/v1/keanggotaan-tim` |
-| log_aktivitas | `/api/v1/log-aktivitas` |
+| users | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'users` |
+| pegawai | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'pegawai` |
+| kegiatan | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan` |
+| peserta | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'peserta` |
+| sertifikat | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'sertifikat` |
+| akun_peserta | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'akun-peserta` |
+| surat_tugas | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'surat-tugas` |
+| surat_tugas_pegawai | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'surat-tugas-pegawai` |
+| unit_kerja | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'unit-kerja` |
+| sub_unit_kerja | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'sub-unit-kerja` |
+| keanggotaan_tim | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'keanggotaan-tim` |
+| log_aktivitas | `/import.meta.env.VITE_API_BASE_URL+'/api/v1/'log-aktivitas` |
 
 ## Error Handling
 
