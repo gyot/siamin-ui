@@ -1,6 +1,9 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6">
     <div class="max-w-4xl mx-auto">
+        <div v-if="isLoadingKegiatan" class="mb-4 p-4 flex items-center justify-center">
+          <Spinner message="Memuat data kegiatan..." />
+        </div>
       <!-- Header -->
       <!-- <div class="mb-8 text-center">
         <h1 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">{{ namaKegiatan }}</h1>
@@ -15,14 +18,18 @@
             <p class="text-sm text-slate-600">{{ kegiatan.nama_kegiatan }}</p>
 
             <div class="mt-3 text-sm text-slate-600">
-              <p><strong>Tanggal:</strong> {{ formatDate(kegiatan.tanggal_mulai) }} - {{ formatDate(kegiatan.tanggal_selesai) }}</p>
+              <p><strong>Tanggal:</strong> {{ formatDate(kegiatan.tanggal_mulai) }} - {{
+                formatDate(kegiatan.tanggal_selesai) }}</p>
               <p><strong>Lokasi:</strong> {{ kegiatan.lokasi || '-' }}</p>
             </div>
           </div>
 
           <div class="w-full sm:w-48 flex-shrink-0">
-            <img v-if="flyerUrl" :src="flyerUrl" :alt="`Flyer ${kegiatan.nama_kegiatan}`" class="rounded-md object-cover w-full h-32" />
-            <div v-else class="w-full h-32 bg-gray-100 rounded-md flex items-center justify-center text-sm text-slate-500">Tidak ada flyer</div>
+            <img v-if="flyerUrl" :src="flyerUrl" :alt="`Flyer ${kegiatan.nama_kegiatan}`"
+              class="rounded-md object-cover w-full h-32" />
+            <div v-else
+              class="w-full h-32 bg-gray-100 rounded-md flex items-center justify-center text-sm text-slate-500">Tidak
+              ada flyer</div>
           </div>
         </div>
 
@@ -32,7 +39,7 @@
         </div>
       </div>
 
-      
+
 
       <!-- Form -->
       <div class="bg-white rounded-lg shadow-lg p-6 sm:p-8">
@@ -43,48 +50,29 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Nama Lengkap *</label>
-                <input
-                  v-model="formData.nama_lengkap"
-                  type="text"
-                  placeholder="Masukkan nama lengkap"
+                <input v-model="formData.nama_lengkap" type="text" placeholder="Masukkan nama lengkap"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+                  required />
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">NIP</label>
-                <input
-                  v-model="formData.nip"
-                  type="text"
-                  placeholder="Masukkan NIP (opsional)"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <input v-model="formData.nip" type="text" placeholder="Masukkan NIP (opsional)"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Email *</label>
-                <input
-                  v-model="formData.email"
-                  type="email"
-                  placeholder="Masukkan email"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+                <label class="block text-sm font-medium text-slate-700 mb-2">Email </label>
+                <input v-model="formData.email" type="email" placeholder="Masukkan email"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">No. HP</label>
-                <input
-                  v-model="formData.no_hp"
-                  type="tel"
-                  placeholder="Masukkan nomor HP"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <input v-model="formData.no_hp" type="tel" placeholder="Masukkan nomor HP"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Jenis Kelamin</label>
-                <select
-                  v-model="formData.jenis_kelamin"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
+                <select v-model="formData.jenis_kelamin"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   <option value="">Pilih Jenis Kelamin</option>
                   <option value="laki-laki">Laki-laki</option>
                   <option value="perempuan">Perempuan</option>
@@ -108,56 +96,88 @@
               </div> -->
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Tempat Lahir</label>
-                <input
-                  v-model="formData.tempat_lahir"
-                  type="text"
-                  placeholder="Masukkan tempat lahir"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <input v-model="formData.tempat_lahir" type="text" placeholder="Masukkan tempat lahir"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Tanggal Lahir</label>
-                <input
-                  v-model="formData.tanggal_lahir"
-                  type="date"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <input v-model="formData.tanggal_lahir" type="date"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">NPWP/NIK</label>
-                <input
-                  v-model="formData.npwp_nik"
-                  type="text"
-                  placeholder="Masukkan NPWP atau NIK"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <input v-model="formData.npwp_nik" type="text" placeholder="Masukkan NPWP atau NIK"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Pangkat</label>
-                <input
-                  v-model="formData.pangkat"
-                  type="text"
-                  placeholder="Masukkan pangkat"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <label class="block text-sm font-medium text-slate-700 mb-2">Pangkat / Golongan</label>
+                <select v-model="formData.pangkat"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option value="">Pilih Pangkat</option>
+
+                  <!-- PNS -->
+                  <optgroup label="Golongan I">
+                    <option value="Juru Muda / Ia">Juru Muda / Ia</option>
+                    <option value="Juru Muda Tingkat I / Ib">Juru Muda Tingkat I / Ib</option>
+                    <option value="Juru / Ic">Juru / Ic</option>
+                    <option value="Juru Tingkat I / Id">Juru Tingkat I / Id</option>
+                  </optgroup>
+
+                  <optgroup label="Golongan II">
+                    <option value="Pengatur Muda / IIa">Pengatur Muda / IIa</option>
+                    <option value="Pengatur Muda Tingkat I / IIb">Pengatur Muda Tingkat I / IIb</option>
+                    <option value="Pengatur / IIc">Pengatur / IIc</option>
+                    <option value="Pengatur Tingkat I / IId">Pengatur Tingkat I / IId</option>
+                  </optgroup>
+
+                  <optgroup label="Golongan III">
+                    <option value="Penata Muda / IIIa">Penata Muda / IIIa</option>
+                    <option value="Penata Muda Tingkat I / IIIb">Penata Muda Tingkat I / IIIb</option>
+                    <option value="Penata / IIIc">Penata / IIIc</option>
+                    <option value="Penata Tingkat I / IIId">Penata Tingkat I / IIId</option>
+                  </optgroup>
+
+                  <optgroup label="Golongan IV">
+                    <option value="Pembina / IVa">Pembina / IVa</option>
+                    <option value="Pembina Tingkat I / IVb">Pembina Tingkat I / IVb</option>
+                    <option value="Pembina Utama Muda / IVc">Pembina Utama Muda / IVc</option>
+                    <option value="Pembina Utama Madya / IVd">Pembina Utama Madya / IVd</option>
+                    <option value="Pembina Utama / IVe">Pembina Utama / IVe</option>
+                  </optgroup>
+
+                  <!-- PPPK -->
+                  <optgroup label="Golongan PPPK">
+                    <option value="PPPK / I">PPPK / I</option>
+                    <option value="PPPK / II">PPPK / II</option>
+                    <option value="PPPK / III">PPPK / III</option>
+                    <option value="PPPK / IV">PPPK / IV</option>
+                    <option value="PPPK / V">PPPK / V</option>
+                    <option value="PPPK / VI">PPPK / VI</option>
+                    <option value="PPPK / VII">PPPK / VII</option>
+                    <option value="PPPK / VIII">PPPK / VIII</option>
+                    <option value="PPPK / IX">PPPK / IX</option>
+                    <option value="PPPK / X">PPPK / X</option>
+                    <option value="PPPK / XI">PPPK / XI</option>
+                    <option value="PPPK / XII">PPPK / XII</option>
+                    <option value="PPPK / XIII">PPPK / XIII</option>
+                    <option value="PPPK / XIV">PPPK / XIV</option>
+                    <option value="PPPK / XV">PPPK / XV</option>
+                    <option value="PPPK / XVI">PPPK / XVI</option>
+                    <option value="PPPK / XVII">PPPK / XVII</option>
+                  </optgroup>
+                </select>
+
+
               </div>
-              <div>
+              <!-- <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Golongan</label>
-                <input
-                  v-model="formData.gol"
-                  type="text"
-                  placeholder="Masukkan golongan"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+                <input v-model="formData.gol" type="text" placeholder="Masukkan golongan"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+              </div> -->
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Jabatan</label>
-                <input
-                  v-model="formData.jabatan"
-                  type="text"
-                  placeholder="Masukkan jabatan"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <input v-model="formData.jabatan" type="text" placeholder="Masukkan jabatan"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
             </div>
           </div>
@@ -168,92 +188,62 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Nama Instansi *</label>
-                <input
-                  v-model="formData.nama_instansi"
-                  type="text"
-                  placeholder="Masukkan nama instansi"
+                <input v-model="formData.nama_instansi" type="text" placeholder="Masukkan nama instansi"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+                  required />
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Kabupaten / Kota</label>
-                <select
-                  v-model="formData.kab_kota"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
+                <select v-model="formData.kab_kota"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   <option value="">Pilih Kabupaten/Kota</option>
                   <option v-for="k in kabKota" :key="k" :value="k">{{ k }}</option>
                 </select>
               </div>
-              <div>
+              <!-- <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Provinsi</label>
-                <input
-                  v-model="formData.provinsi"
-                  type="text"
-                  placeholder="Masukkan provinsi"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <input v-model="formData.provinsi" type="text" placeholder="Masukkan provinsi"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Telepon Instansi</label>
-                <input
-                  v-model="formData.telp_instansi"
-                  type="tel"
-                  placeholder="Masukkan telepon instansi"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <input v-model="formData.telp_instansi" type="tel" placeholder="Masukkan telepon instansi"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Email Instansi</label>
-                <input
-                  v-model="formData.email_instansi"
-                  type="email"
-                  placeholder="Masukkan email instansi"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <input v-model="formData.email_instansi" type="email" placeholder="Masukkan email instansi"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div class="sm:col-span-2">
                 <label class="block text-sm font-medium text-slate-700 mb-2">Alamat Instansi</label>
-                <textarea
-                  v-model="formData.alamat_instansi"
-                  rows="3"
-                  placeholder="Masukkan alamat instansi"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                ></textarea>
-              </div>
+                <textarea v-model="formData.alamat_instansi" rows="3" placeholder="Masukkan alamat instansi"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+              </div> -->
             </div>
           </div>
 
-          <div v-if="['transfer','pulsa','transfer_dan_pulsa'].includes(metode_pembayaran)">
+          <div v-if="['transfer', 'pulsa', 'transfer_dan_pulsa'].includes(metode_pembayaran)">
             <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b-2 border-blue-500">Data Pembayaran</h3>
-            <div v-if="['transfer_dan_pulsa','transfer','pulsa'].includes(metode_pembayaran)" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              
-              <div v-if="['transfer_dan_pulsa','transfer'].includes(metode_pembayaran)">
+            <div v-if="['transfer_dan_pulsa', 'transfer', 'pulsa'].includes(metode_pembayaran)"
+              class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              <div v-if="['transfer_dan_pulsa', 'transfer'].includes(metode_pembayaran)">
                 <label class="block text-sm font-medium text-slate-700 mb-2">Nomor Rekening</label>
-                <input
-                  v-model="formData.nomor_rekening"
-                  type="text"
-                  placeholder="Masukkan nomor rekening"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <input v-model="formData.nomor_rekening" type="text" placeholder="Masukkan nomor rekening"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
-              <div v-if="['transfer_dan_pulsa','transfer'].includes(metode_pembayaran)">
+              <div v-if="['transfer_dan_pulsa', 'transfer'].includes(metode_pembayaran)">
                 <label class="block text-sm font-medium text-slate-700 mb-2">Nama Bank</label>
-                <input
-                  v-model="formData.nama_bank"
-                  type="text"
-                  placeholder="Masukkan nama bank"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <input v-model="formData.nama_bank" type="text" placeholder="Masukkan nama bank"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
 
-              <div v-if="['transfer_dan_pulsa','pulsa'].includes(metode_pembayaran)">
-                <label class="block text-sm font-medium text-slate-700 mb-2">Provider Seluler (untuk penggantian pulsa)</label>
-                <select
-                  v-model="formData.provider_pulsa"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
+              <div v-if="['transfer_dan_pulsa', 'pulsa'].includes(metode_pembayaran)">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Provider Seluler (untuk penggantian
+                  pulsa)</label>
+                <select v-model="formData.provider_pulsa"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   <option value="">Pilih Provider</option>
                   <option value="Telkomsel">Telkomsel</option>
                   <option value="Indosat">Indosat</option>
@@ -269,37 +259,25 @@
 
           <!-- Signature Section -->
           <div>
-            <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b-2 border-blue-500">Tandatangan Digital</h3>
-            <p class="text-sm text-slate-600 mb-4">Silakan tandatangani di area bawah ini dengan menggunakan mouse atau stylus.</p>
-            
+            <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b-2 border-blue-500">Tandatangan Digital
+            </h3>
+            <p class="text-sm text-slate-600 mb-4">Silakan tandatangani di area bawah ini dengan menggunakan mouse atau
+              stylus.</p>
+
             <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 mb-4 bg-slate-50">
-              <canvas
-                ref="signatureCanvas"
-                @mousedown="startDrawing"
-                @mousemove="draw"
-                @mouseup="stopDrawing"
-                @mouseout="stopDrawing"
-                @touchstart="startDrawing"
-                @touchmove="draw"
-                @touchend="stopDrawing"
+              <canvas ref="signatureCanvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
+                @mouseout="stopDrawing" @touchstart="startDrawing" @touchmove="draw" @touchend="stopDrawing"
                 class="w-full border border-slate-300 rounded-lg cursor-crosshair bg-white"
-                style="height: 200px; display: block;"
-              ></canvas>
+                style="height: 200px; display: block;"></canvas>
             </div>
 
             <div class="flex gap-3 mb-4">
-              <button
-                type="button"
-                @click="clearSignature"
-                class="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium text-sm"
-              >
+              <button type="button" @click="clearSignature"
+                class="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium text-sm">
                 Hapus Tandatangan
               </button>
-              <button
-                type="button"
-                @click="downloadSignature"
-                class="flex-1 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors font-medium text-sm"
-              >
+              <button type="button" @click="downloadSignature"
+                class="flex-1 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors font-medium text-sm">
                 Unduh Tandatangan
               </button>
             </div>
@@ -324,17 +302,12 @@
 
           <!-- Buttons -->
           <div class="flex gap-3 justify-end pt-4 border-t">
-            <button
-              type="button"
-              @click="resetForm"
-              class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
-            >
+            <button type="button" @click="resetForm"
+              class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium">
               Bersihkan
             </button>
-            <button
-              type="submit"
-              class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
-            >
+            <button type="submit"
+              class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium">
               Daftar Sekarang
             </button>
           </div>
@@ -356,9 +329,11 @@ import database from '@/data/index.js'
 import Swal from 'sweetalert2'
 import { listKegiatan } from '@/services/kegiatan'
 import { postAPI } from '@/services/api'
+import Spinner from '@/components/Spinner.vue'
 
 export default {
   name: 'FormulirPeserta',
+  components: { Spinner },
   setup() {
     const route = useRoute()
     const kode = route.params.kode
@@ -373,13 +348,17 @@ export default {
 
     // API-backed kegiatan (fallback to local database)
     const apiKegiatan = ref([])
+    const isLoadingKegiatan = ref(false)
 
     const loadKegiatan = async () => {
+      isLoadingKegiatan.value = true
       try {
         const data = await listKegiatan()
         apiKegiatan.value = data || []
       } catch (err) {
         console.warn('Gagal mengambil kegiatan dari API, gunakan lokal', err)
+      } finally {
+        isLoadingKegiatan.value = false
       }
     }
 
@@ -430,7 +409,7 @@ export default {
       const f = kegiatan.value?.flyer || kegiatan.value?.flyer_path || kegiatan.value?.path || null
       if (!f) return null
       if (/^https?:\/\//.test(f)) return f
-      const base = import.meta.env.VITE_API_BASE_URL+'/storage/' || ''
+      const base = import.meta.env.VITE_API_BASE_URL + '/storage/' || ''
       return base.replace(/\/$/, '') + '/' + String(f).replace(/^\//, '')
     })
 
@@ -595,7 +574,7 @@ export default {
 
     const draw = (e) => {
       if (!isDrawing) return
-      
+
       const canvas = signatureCanvas.value
       if (!canvas) return
 
@@ -662,11 +641,11 @@ export default {
       setTimeout(() => {
         const canvas = signatureCanvas.value
         if (!canvas) return
-        
+
         const rect = canvas.getBoundingClientRect()
         canvas.width = rect.width
         canvas.height = rect.height
-        
+
         const ctx = canvas.getContext('2d')
         ctx.fillStyle = '#ffffff'
         ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -691,6 +670,7 @@ export default {
       metode_pembayaran,
       signatureCanvas,
       signatureData,
+      isLoadingKegiatan,
       resetForm,
       validateForm,
       submitForm,

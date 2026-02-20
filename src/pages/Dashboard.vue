@@ -212,6 +212,57 @@
                   <p class="text-lg font-semibold text-slate-900">{{ selectedKegiatan.rincian_kegiatan }}</p>
                 </div>
               </div>
+              <!-- form links -->
+              <div class="mt-6">
+                <p class="text-sm text-slate-600 font-medium">Link Formulir</p>
+                <ul class="list-disc list-inside space-y-1">
+                  <li><a :href="activityLinks.peserta" target="_blank" class="text-blue-600 hover:underline">Peserta</a></li>
+                  <li><a :href="activityLinks.panitia" target="_blank" class="text-blue-600 hover:underline">Panitia</a></li>
+                  <li><a :href="activityLinks.narasumber" target="_blank" class="text-blue-600 hover:underline">Narasumber</a></li>
+                </ul>
+              </div>
+              <!-- peserta controls -->
+              <div class="mt-6">
+                <button
+                  @click="viewPesertaList = !viewPesertaList"
+                  class="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition"
+                >
+                  {{ viewPesertaList ? 'Tutup Data Peserta' : 'Lihat Data Peserta' }}
+                </button>
+              </div>
+              <div v-if="viewPesertaList" class="mt-4">
+                <div class="flex justify-end gap-2 mb-3">
+                  <button
+                    @click="exportPesertaKegiatan"
+                    class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition"
+                  >
+                    Export Excel
+                  </button>
+                </div>
+                <div class="overflow-x-auto max-h-64">
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="bg-slate-100">
+                        <th class="p-2 text-left">Nama</th>
+                        <th class="p-2 text-left">NIP</th>
+                        <th class="p-2 text-left">Email</th>
+                        <th class="p-2 text-left">Peran</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="p in pesertaInSelected" :key="p.id_peserta" class="border-b">
+                        <td class="p-2">{{ p.nama_lengkap }}</td>
+                        <td class="p-2">{{ p.nip }}</td>
+                        <td class="p-2">{{ p.email }}</td>
+                        <td class="p-2">{{ p.peran }}</td>
+                      </tr>
+                      <tr v-if="pesertaInSelected.length === 0">
+                        <td colspan="4" class="p-2 text-center text-slate-500">Tidak ada peserta</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
               <div class="flex gap-3 justify-end mt-6">
                 <button
@@ -229,6 +280,7 @@
 
 <script>
 import { ref, computed } from 'vue'
+import * as XLSX from 'xlsx'
 import { useAuthStore } from '@/stores/auth'
 import database from '@/data/index.js'
 
@@ -238,6 +290,9 @@ export default {
     const authStore = useAuthStore()
     const currentUser = ref(authStore.currentUser)
     
+    // kegiatan list is sourced from API and already filtered by backend
+    // to show only records created by the logged in pegawai (see backend
+    // controller update). keep local copy for offline fallback only.
     const kegiatan = ref(database.kegiatan)
     const peserta = ref(database.peserta)
     const sertifikat = ref(database.sertifikat)
@@ -328,6 +383,79 @@ export default {
       return badgeMap[status] || 'inline-block px-3 py-1 bg-slate-100 text-slate-800 rounded-full font-semibold'
     }
 
+    // slugify helper for building friendly URL segments
+    const slugify = (text) => {
+      if (!text) return ''
+      return String(text)
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+    }
+
+    const buildFormLink = (kode, peran, judul) => {
+      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '')
+        .replace(/\/$/, '')
+      return `${base}/formulir/${kode}/${peran}/${slugify(judul)}`
+    }
+
+    const activityLinks = computed(() => {
+      if (!selectedKegiatan.value) return { peserta: '', panitia: '', narasumber: '' }
+      const kode = selectedKegiatan.value.id_kegiatan || ''
+      const judul = selectedKegiatan.value.nama_kegiatan || ''
+      return {
+        peserta: buildFormLink(kode, 'Peserta', judul),
+        panitia: buildFormLink(kode, 'Panitia', judul),
+        narasumber: buildFormLink(kode, 'Narasumber', judul)
+      }
+    })
+
+    const pesertaInSelected = computed(() => {
+      if (!selectedKegiatan.value) return []
+      return peserta.value.filter(p => String(p.id_kegiatan) === String(selectedKegiatan.value.id_kegiatan))
+    })
+
+    const viewPesertaList = ref(false)
+
+    const exportPesertaKegiatan = () => {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || ''
+      const buildSignatureUrl = (sig) => {
+        if (!sig) return ''
+        if (typeof sig !== 'string') return ''
+        if (sig.startsWith('http')) return sig
+        if (sig.startsWith('data:')) return sig
+        return apiBase + '/storage/' + sig
+      }
+
+      const rows = pesertaInSelected.value.map(p => {
+        const signature = p.tanda_tangan_url || p.tanda_tangan || p.tandatangan || ''
+        return {
+          id_peserta: p.id_peserta,
+          id_kegiatan: p.id_kegiatan,
+          nama_lengkap: p.nama_lengkap,
+          nip: p.nip || '',
+          email: p.email || '',
+          no_hp: p.no_hp || '',
+          nama_instansi: p.nama_instansi || '',
+          kab_kota: p.kab_kota || '',
+          provinsi: p.provinsi || '',
+          peran: p.peran || '',
+          jenis_kelamin: p.jenis_kelamin || '',
+          nomor_rekening: p.nomor_rekening || '',
+          nama_bank: p.nama_bank || '',
+          provider_pulsa: p.provider_pulsa || '',
+          tanda_tangan_url: buildSignatureUrl(signature)
+        }
+      })
+
+      const ws = XLSX.utils.json_to_sheet(rows)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Peserta')
+      const filename = `peserta_export_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.xlsx`
+      XLSX.writeFile(wb, filename)
+    }
+
     const openDetailModal = (k) => {
       selectedKegiatan.value = k
       showDetailModal.value = true
@@ -352,7 +480,11 @@ export default {
       getStatusBadge,
       openDetailModal,
       showDetailModal,
-      selectedKegiatan
+      selectedKegiatan,
+      activityLinks,
+      pesertaInSelected,
+      viewPesertaList,
+      exportPesertaKegiatan
     }
   }
 }

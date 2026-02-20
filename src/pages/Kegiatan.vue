@@ -16,6 +16,10 @@
           </button>
         </div>
 
+        <!-- optionally show current user info for debugging -->
+        <div v-if="currentUser.id_pegawai" class="mb-2 text-xs text-slate-500">
+          Logged in pegawai ID: <strong>{{ currentUser.id_pegawai }}</strong>
+        </div>
         <!-- Filters -->
         <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-4 mb-6">
           <div class="flex flex-col sm:flex-row gap-4">
@@ -60,6 +64,17 @@
           </div>
         </div>
 
+        <!-- Informational Notice: Empty State -->
+        <div v-if="kegiatan.length === 0 && !isLoadingKegiatan" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded text-blue-800 text-sm">
+          Tidak ada kegiatan untuk akun pegawai <strong>{{ currentUser.id_pegawai || 'n/a' }}</strong>.
+          Silakan buat kegiatan baru atau hubungi administrator jika Anda seharusnya punya akses.
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="isLoadingKegiatan" class="mb-4 p-4 flex items-center justify-center">
+          <Spinner message="Memuat data kegiatan..." />
+        </div>
+
         <!-- Table -->
         <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
@@ -70,7 +85,6 @@
                   <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Tanggal</th>
                   <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Lokasi</th>
                   <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Metode</th>
-                  <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Peserta</th>
                   <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
                   <th class="text-right px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Aksi</th>
                 </tr>
@@ -88,7 +102,6 @@
                   <td class="px-5 py-4">
                     <span class="badge bg-slate-100 text-slate-700">{{ getMetodeLabel(k.metode_pelaksanaan) }}</span>
                   </td>
-                  <td class="px-5 py-4 text-sm text-slate-600">{{ k.total_peserta }}</td>
                   <td class="px-5 py-4">
                     <span class="badge" :class="getStatusBadgeClass(k.status)">
                       {{ getStatusLabel(k.status) }}
@@ -101,7 +114,7 @@
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 8.308 4 4 0 010-8.308M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                       </button>
-                      <button @click="createSuratTugas(k.id_kegiatan)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-orange-600" title="Buat Surat Tugas">
+                      <button @click="handleSuratTugas(k.id_kegiatan)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-orange-600" title="Lihat/Buat Surat Tugas">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
@@ -124,13 +137,18 @@
                     </div>
                   </td>
                 </tr>
+                <tr v-if="filteredKegiatan.length === 0 && kegiatan.length > 0">
+                  <td colspan="6" class="px-5 py-8 text-center text-slate-500">
+                    Tidak ada kegiatan yang sesuai dengan filter
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
 
           <!-- Pagination -->
-          <div class="px-5 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p class="text-sm text-slate-500">Menampilkan 1-{{ filteredKegiatan.length }} dari {{ kegiatan.length }} data</p>
+          <div v-if="kegiatan.length > 0" class="px-5 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-sm text-slate-500">Menampilkan {{ filteredKegiatan.length }} dari {{ kegiatan.length }} data</p>
             <div class="flex items-center gap-2">
               <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50" disabled>
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,6 +186,10 @@
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Nama Kegiatan *</label>
               <input type="text" v-model="formData.nama_kegiatan" placeholder="Nama kegiatan" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" required />
+            </div>
+            <div v-if="formData.nama_kegiatan" class="text-sm mt-1">
+              <label class="block text-sm font-medium text-slate-700 mb-1">Pratinjau Link Formulir</label>
+              <a :href="previewLink" target="_blank" class="text-blue-600 break-all">{{ previewLink }}</a>
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Rincian Kegiatan</label>
@@ -357,7 +379,7 @@
           <span class="badge" :class="getStatusBadgeClass(selectedKegiatan.status)">
             {{ getStatusLabel(selectedKegiatan.status) }}
           </span>
-          <span class="text-sm text-slate-500">ID: {{ selectedKegiatan.id }}</span>
+          <span class="text-sm text-slate-500">ID: {{ selectedKegiatan.id_kegiatan }}</span>
         </div>
 
         <!-- Informasi Dasar -->
@@ -421,6 +443,40 @@
           </div>
         </div>
 
+        <!-- Formulir Links -->
+        <div class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Link Formulir Pendaftaran</h4>
+          <div class="space-y-2">
+            <div>
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Peserta</p>
+              <a :href="activityLinks.peserta" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
+                {{ activityLinks.peserta }}
+              </a>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Panitia</p>
+              <a :href="activityLinks.panitia" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
+                {{ activityLinks.panitia }}
+              </a>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Narasumber</p>
+              <a :href="activityLinks.narasumber" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
+                {{ activityLinks.narasumber }}
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Peserta Count Section -->
+        <div class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Data Peserta</h4>
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase mb-1">Total Peserta</p>
+            <p class="text-lg font-semibold text-slate-800">{{ selectedKegiatan.total_peserta }} orang</p>
+          </div>
+        </div>
+
         <!-- Resources URL -->
         <div v-if="hasResourceUrls()" class="border-b border-slate-100 pb-6">
           <h4 class="text-lg font-semibold text-slate-800 mb-4">Resource</h4>
@@ -467,390 +523,150 @@
     </div>
   </div>
 
-  <!-- Modal Buat Surat Tugas -->
-  <div v-if="showSuratTugasModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-      <div class="p-6">
-        <!-- Header -->
-        <div class="mb-6">
-          <h2 class="text-2xl font-bold text-slate-800">Buat Surat Tugas</h2>
-          <p class="text-slate-600 text-sm mt-1">Kegiatan: <strong>{{ suratTugasSelected?.nama_kegiatan }}</strong></p>
-        </div>
-
-        <!-- Error Message -->
-        <div v-if="formError" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          {{ formError }}
-        </div>
-
-        <!-- Form -->
-        <div class="space-y-4">
-          <!-- Nomor Surat -->
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Nomor Surat *</label>
-            <input 
-              v-model="formSuratTugas.nomor_surat"
-              type="text"
-              placeholder="Contoh: ST/001/2025"
-              class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
-              required
-            />
-          </div>
-
-          <!-- Tanggal Surat -->
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Tanggal Surat *</label>
-            <input 
-              v-model="formSuratTugas.tanggal_surat"
-              type="date"
-              class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
-              required
-            />
-          </div>
-
-          <!-- Penandatangan -->
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Penandatangan *</label>
-            <select 
-              v-model="formSuratTugas.id_penandatangan"
-              class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none bg-white"
-              required
-            >
-              <option value="">-- Pilih Penandatangan --</option>
-              <option v-for="pegawai in db.pegawai" :key="pegawai.id_pegawai" :value="pegawai.id_pegawai">
-                {{ pegawai.nama }} ({{ pegawai.nama_jabatan }})
-              </option>
-            </select>
-          </div>
-
-          <!-- Status -->
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Status</label>
-            <select 
-              v-model="formSuratTugas.status"
-              class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none bg-white"
-            >
-              <option value="draft">Draft</option>
-              <option value="dikirim">Dikirim</option>
-              <option value="selesai">Selesai</option>
-            </select>
-          </div>
-
-          <!-- Keterangan -->
-          <div>
-            <label class="block text-sm font-medium text-slate-700 mb-2">Keterangan</label>
-            <textarea 
-              v-model="formSuratTugas.keterangan"
-              placeholder="Keterangan tambahan"
-              class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <!-- Kegiatan Info -->
-          <div class="p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <p class="text-sm text-slate-600">
-              <strong>Kegiatan:</strong> {{ suratTugasSelected?.nama_kegiatan }}<br/>
-              <strong>Tanggal:</strong> {{ formatDate(suratTugasSelected?.tanggal_mulai) }} - {{ formatDate(suratTugasSelected?.tanggal_selesai) }}<br/>
-              <strong>Lokasi:</strong> {{ suratTugasSelected?.lokasi }}
-            </p>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex gap-3 mt-6 pt-4 border-t border-slate-200">
-          <button 
-            @click="closeSuratTugasModal"
-            class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium"
-          >
-            Batal
-          </button>
-          <button 
-            @click="saveSuratTugas"
-            class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium"
-          >
-            Simpan Surat Tugas
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Modal Detail Surat Tugas -->
-  <div v-if="showSuratTugasDetailModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-      <div class="p-6">
-        <!-- Header -->
-        <div class="mb-6 pb-4 border-b border-slate-200">
-          <h2 class="text-2xl font-bold text-slate-800">Detail Surat Tugas</h2>
-          <p class="text-slate-600 text-sm mt-2">Surat tugas berhasil dibuat</p>
-        </div>
+  <div v-if="showSuratTugasModal && selectedSuratTugas" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between p-6 border-b border-slate-100 sticky top-0 bg-white">
+        <h3 class="text-2xl font-bold text-slate-800">Detail Surat Tugas</h3>
+        <button @click="showSuratTugasModal = false" class="text-slate-400 hover:text-slate-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
 
-        <!-- Content -->
-        <div v-if="selectedSuratTugas" class="space-y-4">
-          <!-- Nomor Surat -->
-          <div class="p-4 bg-slate-50 rounded-lg">
-            <p class="text-xs font-medium text-slate-500 uppercase mb-1">Nomor Surat</p>
-            <p class="text-lg font-semibold text-slate-800">{{ selectedSuratTugas.nomor_surat }}</p>
-          </div>
-
-          <!-- Grid Info -->
+      <div class="p-6 space-y-6">
+        <!-- Informasi Dasar -->
+        <div class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Informasi Surat Tugas</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Nomor Surat</p>
+              <p class="text-lg font-semibold text-slate-800">{{ selectedSuratTugas.nomor_surat }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">ID Surat Tugas</p>
+              <p class="text-lg font-semibold text-slate-800">{{ selectedSuratTugas.id_surat_tugas }}</p>
+            </div>
+            <div>
               <p class="text-xs font-medium text-slate-500 uppercase mb-1">Tanggal Surat</p>
-              <p class="text-slate-800 font-medium">{{ formatDate(selectedSuratTugas.tanggal_surat) }}</p>
+              <p class="text-lg font-semibold text-slate-800">{{ formatDate(selectedSuratTugas.tanggal_surat) }}</p>
             </div>
             <div>
               <p class="text-xs font-medium text-slate-500 uppercase mb-1">Status</p>
-              <span class="inline-block px-3 py-1 rounded-full text-sm font-medium" :class="selectedSuratTugas.status === 'draft' ? 'bg-amber-100 text-amber-700' : selectedSuratTugas.status === 'dikirim' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'">
+              <span :class="selectedSuratTugas.status === 'diterbitkan' ? 'badge bg-green-100 text-green-800' : 'badge bg-yellow-100 text-yellow-800'">
                 {{ selectedSuratTugas.status }}
               </span>
             </div>
+            <div class="md:col-span-2">
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">ID Kegiatan</p>
+              <p class="text-slate-700">{{ selectedSuratTugas.id_kegiatan }}</p>
+            </div>
           </div>
+        </div>
 
-          <!-- Penandatangan -->
+        <!-- File & Links -->
+        <div v-if="selectedSuratTugas.file_surat" class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">File Surat</h4>
           <div>
-            <p class="text-xs font-medium text-slate-500 uppercase mb-1">Penandatangan</p>
-            <p class="text-slate-800 font-medium">{{ getPenandatanganName(selectedSuratTugas.id_penandatangan) }}</p>
+            <a :href="selectedSuratTugas.file_surat" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+              </svg>
+              Unduh File Surat Tugas
+            </a>
           </div>
+        </div>
 
-          <!-- Kegiatan -->
-          <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p class="text-xs font-medium text-slate-500 uppercase mb-2">Kegiatan Terkait</p>
-            <div v-if="suratTugasSelected">
-              <p class="text-slate-800 font-medium">{{ suratTugasSelected.nama_kegiatan }}</p>
-              <p class="text-sm text-slate-600 mt-1">
-                {{ formatDate(suratTugasSelected.tanggal_mulai) }} - {{ formatDate(suratTugasSelected.tanggal_selesai) }}
-              </p>
-              <p class="text-sm text-slate-600">{{ suratTugasSelected.lokasi }}</p>
+        <!-- Timestamps -->
+        <div class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Waktu</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Dibuat</p>
+              <p class="text-sm text-slate-700">{{ formatDate(selectedSuratTugas.created_at) }}</p>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Diubah</p>
+              <p class="text-sm text-slate-700">{{ formatDate(selectedSuratTugas.updated_at) }}</p>
             </div>
           </div>
+        </div>
 
-          <!-- Keterangan -->
-          <div v-if="selectedSuratTugas.keterangan">
-            <p class="text-xs font-medium text-slate-500 uppercase mb-2">Keterangan</p>
-            <p class="text-slate-700 whitespace-pre-wrap">{{ selectedSuratTugas.keterangan }}</p>
-          </div>
-
-          <!-- Daftar Tim/Anggota -->
-          <div class="p-4 bg-orange-50 rounded-lg border border-orange-200">
-            <div class="flex items-center justify-between mb-3">
-              <p class="text-xs font-medium text-slate-500 uppercase">Daftar Tim yang Ditunjuk</p>
-              <button 
-                @click="editingDaftarTim = true"
-                class="text-xs px-2 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 font-medium"
-              >
-                Edit
-              </button>
+        <!-- Anggota Surat Tugas -->
+        <div class="pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Anggota Surat Tugas</h4>
+          
+          <!-- Daftar Anggota Existing -->
+          <div class="mb-6">
+            <div v-if="anggotaInSelected.length === 0" class="p-4 bg-slate-50 border border-slate-200 rounded-lg text-center text-slate-600 text-sm mb-4">
+              Belum ada anggota surat tugas
             </div>
-            <div v-if="daftarTim.length > 0" class="overflow-x-auto">
+            <div v-else class="overflow-x-auto mb-4">
               <table class="w-full text-sm">
                 <thead>
-                  <tr class="border-b border-orange-200">
-                    <th class="text-left py-2 px-2 font-semibold text-slate-700">No</th>
-                    <th class="text-left py-2 px-2 font-semibold text-slate-700">Nama</th>
-                    <th class="text-left py-2 px-2 font-semibold text-slate-700">Jabatan</th>
-                    <th class="text-left py-2 px-2 font-semibold text-slate-700">Peran</th>
+                  <tr class="bg-slate-100">
+                    <th class="p-2 text-left">Nama Pegawai</th>
+                    <th class="p-2 text-left">Peran</th>
+                    <th class="p-2 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(item, idx) in daftarTim" :key="idx" class="border-b border-orange-100 hover:bg-orange-100/50">
-                    <td class="py-2 px-2 text-slate-700">{{ idx + 1 }}</td>
-                    <td class="py-2 px-2 text-slate-700 font-medium">{{ item.nama }}</td>
-                    <td class="py-2 px-2 text-slate-700">{{ item.jabatan }}</td>
-                    <td class="py-2 px-2 text-slate-700">{{ item.peran }}</td>
+                  <tr v-for="a in anggotaInSelected" :key="a.id" class="border-b">
+                    <td class="p-2">{{ getNamaPegawai(a.id_pegawai) }}</td>
+                    <td class="p-2">{{ a.peran }}</td>
+                    <td class="p-2 text-center">
+                      <button @click="removeAnggota(a.id)" class="text-red-600 hover:text-red-800 text-sm font-medium">Hapus</button>
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <div v-else class="text-center py-4 text-slate-500">
-              Tidak ada anggota tim
+          </div>
+
+          <!-- Form Tambah Anggota -->
+          <div class="border border-slate-200 rounded-lg p-4 bg-slate-50">
+            <!-- Error messages -->
+            <div v-if="formAnggotaErrors.length" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <ul class="list-disc list-inside text-sm text-red-800">
+                <li v-for="(error, idx) in formAnggotaErrors" :key="idx">{{ error }}</li>
+              </ul>
             </div>
-          </div>
-
-          <!-- Meta Info -->
-          <div class="text-xs text-slate-500 pt-4 border-t border-slate-200">
-            <p>ID Surat: <strong>{{ selectedSuratTugas.id }}</strong></p>
-            <p>Dibuat: <strong>{{ new Date(selectedSuratTugas.created_at).toLocaleString('id-ID') }}</strong></p>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex gap-3 mt-6 pt-4 border-t border-slate-200">
-          <button 
-            @click="closeSuratTugasDetailModal"
-            class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium"
-          >
-            Tutup
-          </button>
-          <button 
-            @click="downloadSuratTugasDocx"
-            class="flex-1 px-4 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium flex items-center justify-center gap-2"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-            </svg>
-            Download DOCX
-          </button>
-          <button 
-            @click="showTemplateUploadModal = true"
-            class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center justify-center gap-2"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Upload Template
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Upload Template DOCX -->
-  <div v-if="showTemplateUploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg max-w-md w-full">
-      <div class="p-6">
-        <!-- Header -->
-        <div class="mb-6">
-          <h2 class="text-xl font-bold text-slate-800">Upload Template DOCX</h2>
-          <p class="text-slate-600 text-sm mt-1">Pilih file template untuk di-proses dengan data surat tugas</p>
-        </div>
-
-        <!-- File Input -->
-        <div class="mb-6">
-          <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center hover:border-blue-400 transition">
-            <input 
-              type="file"
-              accept=".docx"
-              @change="handleTemplateFileSelect"
-              class="hidden"
-              ref="templateFileInput"
-              id="template-file-input"
-            />
-            <label for="template-file-input" class="cursor-pointer block">
-              <svg class="w-8 h-8 mx-auto text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-              </svg>
-              <p class="text-sm text-slate-600">
-                <span class="font-medium text-blue-600">Klik untuk upload</span> atau drag & drop
-              </p>
-              <p class="text-xs text-slate-500 mt-1">File DOCX saja (.docx)</p>
-            </label>
-          </div>
-          
-          <!-- Selected File Info -->
-          <div v-if="selectedTemplateFile" class="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-            <p class="text-sm text-green-700 font-medium">✓ File dipilih:</p>
-            <p class="text-sm text-green-600">{{ selectedTemplateFile.name }}</p>
-          </div>
-        </div>
-
-        <!-- Info -->
-        <div class="mb-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <p class="text-xs text-slate-600 leading-relaxed">
-            <strong>Placeholder yang akan di-replace:</strong><br/>
-            {NOMOR_SURAT}, {KEGIATAN}, {TANGGAL_SURAT}, {LOKASI}, {PENANDATANGAN}, {TANGGAL_PENANDATANGAN}
-          </p>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex gap-3">
-          <button 
-            @click="showTemplateUploadModal = false; selectedTemplateFile = null"
-            class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium"
-          >
-            Batal
-          </button>
-          <button 
-            @click="processUploadedTemplate"
-            :disabled="!selectedTemplateFile"
-            class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-lg font-medium"
-          >
-            Proses & Download
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal Edit Daftar Tim -->
-  <div v-if="editingDaftarTim" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-      <div class="p-6">
-        <!-- Header -->
-        <div class="mb-6 pb-4 border-b border-slate-200">
-          <h2 class="text-2xl font-bold text-slate-800">Edit Daftar Tim</h2>
-          <p class="text-slate-600 text-sm mt-2">Kelola anggota tim yang akan ditunjuk dalam surat tugas</p>
-        </div>
-
-        <!-- Form Input -->
-        <div class="space-y-4 mb-6">
-          <!-- Input Form untuk Anggota Baru -->
-          <div class="p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <p class="text-sm font-medium text-slate-700 mb-3">Tambah Anggota Baru</p>
-            <div class="space-y-2 mb-3">
-              <select 
-                v-model="newTeamMember.id_pegawai"
-                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white"
-              >
-                <option value="">-- Pilih Pegawai --</option>
-                <option v-for="p in db.pegawai" :key="p.id_pegawai" :value="p.id_pegawai">
-                  {{ p.nama }} ({{ p.nama_jabatan }})
-                </option>
-              </select>
-              <select 
-                v-model="newTeamMember.peran"
-                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm bg-white"
-              >
-                <option value="">-- Pilih Peran --</option>
-                <option value="penanggung_jawab">Penanggungjawab</option>
-                <option value="ketua_panitia">Ketua Panitia</option>
-                <option value="panitia">Panitia</option>
-              </select>
-            </div>
-            <button 
-              @click="addTeamMember"
-              class="w-full px-3 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium text-sm"
-            >
-              + Tambah Anggota
-            </button>
-          </div>
-
-          <!-- Daftar Anggota Saat Ini -->
-          <div v-if="daftarTim.length > 0" class="space-y-2">
-            <p class="text-sm font-medium text-slate-700">Anggota Tim ({{ daftarTim.length }})</p>
-            <div v-for="(item, idx) in daftarTim" :key="idx" class="p-3 bg-slate-100 rounded-lg flex items-start justify-between">
-              <div class="flex-1">
-                <p class="font-medium text-slate-800">{{ item.nama }}</p>
-                <p class="text-sm text-slate-600">{{ item.jabatan }}</p>
-                <p class="text-xs text-slate-500">{{ item.peran }}</p>
+            
+            <h5 class="text-sm font-semibold text-slate-800 mb-3">Tambah Anggota</h5>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Pilih Pegawai *</label>
+                <select v-model.number="formAnggota.id_pegawai" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                  <option value="">-- Pilih Pegawai --</option>
+                  <option v-for="p in pegawaiOptions" :key="p.id_pegawai" :value="p.id_pegawai">
+                    {{ p.nama }}
+                  </option>
+                </select>
               </div>
-              <button 
-                @click="removeTeamMember(item.id_pegawai)"
-                class="ml-2 px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium"
-              >
-                Hapus
-              </button>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Peran *</label>
+                <select v-model="formAnggota.peran" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
+                  <option value="penanggung_jawab">Penanggung Jawab</option>
+                  <option value="ketua_panitia">Ketua Panitia</option>
+                  <option value="anggota_panitia">Anggota Panitia</option>
+                  <option value="sekretaris">Sekretaris</option>
+                  <option value="bendahara">Bendahara</option>
+                </select>
+              </div>
+              <div class="flex items-end">
+                <button @click="addAnggota" type="button" class="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                  Tambah
+                </button>
+              </div>
             </div>
-          </div>
-          <div v-else class="text-center py-6 text-slate-500">
-            Tidak ada anggota tim
           </div>
         </div>
 
         <!-- Action Buttons -->
         <div class="flex gap-3 pt-4 border-t border-slate-200">
-          <button 
-            @click="editingDaftarTim = false"
-            class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium"
-          >
-            Batal
-          </button>
-          <button 
-            @click="editingDaftarTim = false"
-            class="flex-1 px-4 py-2.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium"
-          >
-            Selesai
-          </button>
+          <button @click="showSuratTugasModal = false" class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Tutup</button>
+          <button @click="router.push({ name: 'surat-tugas', query: { edit: 'true', id: selectedSuratTugas.id_surat_tugas } })" class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium">Ubah Surat Tugas</button>
         </div>
       </div>
     </div>
@@ -862,35 +678,60 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import database from '../data/index.js'
-import { createSuratTugasTemplate, downloadBlob, processDocxTemplate, parseDocxPreservingFormat, replacePlaceholdersInXml, generateTableXml, replaceTablePlaceholder, generateDocxFromXml, debugXmlStructure } from '../utils/docxUtils'
-import { Packer } from 'docx'
-
-// kegiatan API helpers
-import { listKegiatan, getKegiatan, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
-// authentication store (needed for current user's pegawai id)
 import { useAuthStore } from '@/stores/auth.js'
+import { listKegiatan, getKegiatan, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
+import Spinner from '@/components/Spinner.vue'
 
 export default {
   name: 'Kegiatan',
+  components: { Spinner },
   setup() {
     const router = useRouter()
     const db = database
-
-    // auth store reference so we can read currentUser
     const auth = useAuthStore()
+
+    const slugify = (text) => {
+      if (!text) return ''
+      return String(text)
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+    }
+
+    const buildFormLink = (kode, peran = 'Peserta', judul = '') => {
+      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
+      const slug = slugify(judul)
+      return `${base}/formulir/${kode}/${peran}/${slug}`
+    }
+
+    const enrichWithLink = (k) => {
+      const kode = k.id_kegiatan || k.kode || ''
+      const judul = k.nama_kegiatan || ''
+      const peran = k.peran || 'Peserta'
+      k.link_formulir = buildFormLink(kode, peran, judul)
+    }
+
     const currentUser = computed(() => auth.currentUser || {})
 
-    // start with empty list, we'll fetch from API when component mounts
+    // Fetch kegiatan dari API (sudah difilter berdasarkan pegawai yang login)
     const kegiatan = ref([])
+    const isLoadingKegiatan = ref(false)
 
-    // helper to retrieve kegiatan from the server (or fallback to local data)
     const loadKegiatan = async () => {
+      isLoadingKegiatan.value = true
+      console.debug('[Kegiatan] loadKegiatan start, user:', currentUser.value)
       try {
         const data = await listKegiatan()
-        kegiatan.value = data
+        console.debug('[Kegiatan] raw API response', data)
+        kegiatan.value = data || []
+        kegiatan.value.forEach(enrichWithLink)
       } catch (err) {
-        console.error('Failed to fetch kegiatan from API, using local data', err)
-        kegiatan.value = db.kegiatan || []
+        console.error('[Kegiatan] Failed to fetch kegiatan from API', err)
+        kegiatan.value = []
+      } finally {
+        isLoadingKegiatan.value = false
       }
     }
 
@@ -904,37 +745,16 @@ export default {
     const showAddModal = ref(false)
     const showDetailModal = ref(false)
     const selectedKegiatan = ref(null)
+    const showSuratTugasModal = ref(false)
+    const selectedSuratTugas = ref(null)
     const editingId = ref(null)
     const formError = ref('')
     const isDraggingFlyer = ref(false)
     const flyerInput = ref(null)
-    // file object for flyer; used when uploading to API
     const flyerFile = ref(null)
-    const showSuratTugasModal = ref(false)
-    const suratTugasSelected = ref(null)
-    const showSuratTugasDetailModal = ref(false)
-    const selectedSuratTugas = ref(null)
-    const suratTugasList = ref([])
-    const databaseSuratTugas = ref(db.surat_tugas || [])
-    const showTemplateUploadModal = ref(false)
-    const selectedTemplateFile = ref(null)
-    const editingDaftarTim = ref(false)
-    const databaseSuratTugasPegawai = ref(db.surat_tugas_pegawai || [])
-    const daftarTim = computed(() => {
-      if (!selectedSuratTugas.value) return []
-      const stPegawai = databaseSuratTugasPegawai.value.filter(st => st.id_surat_tugas === selectedSuratTugas.value.id_surat_tugas)
-      return stPegawai.map(st => {
-        const pegawai = db.pegawai.find(p => p.id_pegawai === st.id_pegawai)
-        return {
-          id_pegawai: st.id_pegawai,
-          nama: pegawai?.nama || 'N/A',
-          jabatan: pegawai?.nama_jabatan || 'N/A',
-          peran: st.peran
-        }
-      })
-    })
-    const newTeamMember = ref({ id_pegawai: '', peran: '' })
-    
+    const formAnggota = ref({ id_pegawai: '', peran: 'anggota_panitia' })
+    const formAnggotaErrors = ref([])
+
     const formData = ref({
       nama_kegiatan: '',
       rincian_kegiatan: '',
@@ -953,9 +773,33 @@ export default {
       laporan_url: '',
       surat_menyurat_url: '',
       status: 'draft',
-      // automatically assigned from auth
       id_pegawai: null
     })
+
+    const previewLink = computed(() => {
+      const kode = formData.value.id_kegiatan || editingId.value || ''
+      const peran = formData.value.peran || 'Peserta'
+      const judul = formData.value.nama_kegiatan || ''
+      return buildFormLink(kode, peran, judul)
+    })
+
+    const activityLinks = computed(() => {
+      if (!selectedKegiatan.value) return { peserta: '', panitia: '', narasumber: '' }
+      const kode = selectedKegiatan.value.id_kegiatan || ''
+      const judul = selectedKegiatan.value.nama_kegiatan || ''
+      return {
+        peserta: buildFormLink(kode, 'Peserta', judul),
+        panitia: buildFormLink(kode, 'Panitia', judul),
+        narasumber: buildFormLink(kode, 'Narasumber', judul)
+      }
+    })
+
+    const anggotaInSelected = computed(() => {
+      if (!selectedSuratTugas.value) return []
+      return db.surat_tugas_pegawai.filter(sp => String(sp.id_surat_tugas) === String(selectedSuratTugas.value.id_surat_tugas))
+    })
+
+    const pegawaiOptions = computed(() => db.pegawai || [])
 
     const resetForm = () => {
       formData.value = {
@@ -982,33 +826,26 @@ export default {
       formError.value = ''
     }
 
-    const formSuratTugas = ref({
-      nomor_surat: '',
-      tanggal_surat: new Date().toISOString().split('T')[0],
-      id_kegiatan: null,
-      id_penandatangan: '',
-      status: 'draft',
-      keterangan: ''
-    })
-
-    const resetFormSuratTugas = () => {
-      formSuratTugas.value = {
-        nomor_surat: '',
-        tanggal_surat: new Date().toISOString().split('T')[0],
-        id_kegiatan: null,
-        id_penandatangan: '',
-        status: 'draft',
-        keterangan: ''
-      }
-    }
-
     const filteredKegiatan = computed(() => {
-      return kegiatan.value.filter(k => {
-        const matchSearch = k.nama_kegiatan.toLowerCase().includes(searchQuery.value.toLowerCase())
-        const matchFilter = activeFilter.value === 'all' || k.status === activeFilter.value
-        const matchTahun = !filterTahun.value || (k.tanggal_mulai && new Date(k.tanggal_mulai).getFullYear().toString() === filterTahun.value)
-        return matchSearch && matchFilter && matchTahun
-      })
+      let filtered = [...kegiatan.value]
+      
+      if (searchQuery.value) {
+        filtered = filtered.filter(k => 
+          k.nama_kegiatan.toLowerCase().includes(searchQuery.value.toLowerCase())
+        )
+      }
+      
+      if (activeFilter.value !== 'all') {
+        filtered = filtered.filter(k => k.status === activeFilter.value)
+      }
+      
+      if (filterTahun.value) {
+        filtered = filtered.filter(k => 
+          k.tanggal_mulai && new Date(k.tanggal_mulai).getFullYear().toString() === filterTahun.value
+        )
+      }
+      
+      return filtered
     })
 
     const formatDate = (dateString) => {
@@ -1022,13 +859,10 @@ export default {
       return labels[metode] || metode
     }
 
-    // build absolute URL for flyer path returned by backend
     const getFlyerUrl = (path) => {
       if (!path) return ''
       if (path.startsWith('http')) return path
-      // some APIs return storage path without host
       const base = import.meta.env.VITE_API_BASE_URL || 'https://backend-siamin.bpmpntb.id/'
-      // ensure trailing slash before storage
       return `${base.replace(/\/api\/?$/, '')}/storage/${path}`
     }
 
@@ -1119,9 +953,8 @@ export default {
           return
         }
       } catch (err) {
-        console.warn('Failed to load kegiatan from API, falling back to local copy', err)
+        console.warn('Failed to load kegiatan from API', err)
       }
-
       const item = kegiatan.value.find(k => k.id_kegiatan === id)
       if (item) {
         selectedKegiatan.value = { ...item }
@@ -1132,9 +965,8 @@ export default {
     const openEditFromDetail = () => {
       if (selectedKegiatan.value) {
         formData.value = { ...selectedKegiatan.value }
-        // remove any previously selected file
         flyerFile.value = null
-        editingId.value = selectedKegiatan.value.id
+        editingId.value = selectedKegiatan.value.id_kegiatan
         showDetailModal.value = false
         showAddModal.value = true
       }
@@ -1146,12 +978,10 @@ export default {
           reject(new Error('Ukuran file tidak boleh lebih dari 5MB'))
           return
         }
-
         if (!file.type.startsWith('image/')) {
           reject(new Error('File harus berupa gambar'))
           return
         }
-
         const reader = new FileReader()
         reader.onload = () => resolve(reader.result)
         reader.onerror = () => reject(reader.error)
@@ -1218,16 +1048,15 @@ export default {
     }
 
     const editKegiatan = async (id) => {
-      // fetch fresh data for the item if needed
       try {
         const item = await getKegiatan(id)
         if (item) {
+          enrichWithLink(item)
           formData.value = { ...item }
           editingId.value = id
           showAddModal.value = true
         }
       } catch (err) {
-        // fallback to local copy
         const item = kegiatan.value.find(k => k.id_kegiatan === id)
         if (item) {
           formData.value = { ...item }
@@ -1244,29 +1073,22 @@ export default {
         kegiatan.value = kegiatan.value.filter(k => k.id_kegiatan !== id)
       } catch (err) {
         console.error('Gagal menghapus kegiatan', err)
-        // still remove locally to keep UI responsive
         kegiatan.value = kegiatan.value.filter(k => k.id_kegiatan !== id)
       }
     }
 
     const saveKegiatan = async () => {
-      if (!validateForm()) {
-        return
-      }
+      if (!validateForm()) return
 
       try {
-        // ensure the kegiatan record is linked to the current user's pegawai id
         if (currentUser.value) {
           formData.value.id_pegawai = currentUser.value.id_pegawai || currentUser.value.id || null
         }
 
-        // build payload; if flyerFile exists we need FormData
         let payload
         if (flyerFile.value) {
           payload = new FormData()
-          // append all fields
           Object.keys(formData.value).forEach(key => {
-            // skip flyer since it'll be appended separately
             if (key === 'flyer') return
             const val = formData.value[key]
             if (val !== null && val !== undefined) {
@@ -1280,12 +1102,14 @@ export default {
 
         if (editingId.value) {
           const updated = await updateKegiatan(editingId.value, payload)
+          enrichWithLink(updated)
           const index = kegiatan.value.findIndex(k => k.id_kegiatan === editingId.value)
           if (index !== -1) {
             kegiatan.value[index] = updated
           }
         } else {
           const created = await createKegiatan(payload)
+          enrichWithLink(created)
           kegiatan.value.push(created)
         }
         showAddModal.value = false
@@ -1297,244 +1121,79 @@ export default {
       }
     }
 
-    // Functions untuk Peserta
     const openPesertaList = (id) => {
       router.push({ name: 'kegiatan-peserta', params: { id } })
     }
 
-    // Helper untuk mendapatkan nama penandatangan dari ID pegawai
-    const getPenandatanganName = (idPegawai) => {
-      const pegawai = db.pegawai.find(p => p.id_pegawai === idPegawai)
-      return pegawai ? pegawai.nama : 'N/A'
-    }
-
-    // Fungsi untuk membuat surat tugas berdasarkan kegiatan
-    const createSuratTugas = (idKegiatan) => {
-      const selectedKeg = kegiatan.value.find(k => k.id_kegiatan === idKegiatan)
-      if (!selectedKeg) return
-      
-      // Cek apakah surat tugas untuk kegiatan ini sudah ada di database
-      const existingSuratTugas = databaseSuratTugas.value.find(s => s.id_kegiatan === idKegiatan)
+    const handleSuratTugas = (idKegiatan) => {
+      // Cari surat tugas untuk kegiatan ini
+      const existingSuratTugas = db.surat_tugas.find(st => String(st.id_kegiatan) === String(idKegiatan))
       
       if (existingSuratTugas) {
-        // Jika ada, tampilkan detail surat tugas
+        // Ada surat tugas, tampilkan modal
         selectedSuratTugas.value = existingSuratTugas
-        suratTugasSelected.value = selectedKeg
-        showSuratTugasDetailModal.value = true
-      } else {
-        // Jika tidak ada, tampilkan form untuk membuat baru
-        suratTugasSelected.value = selectedKeg
-        resetFormSuratTugas()
-        formSuratTugas.value.id_kegiatan = idKegiatan
+        formAnggota.value = { id_pegawai: '', peran: 'anggota_panitia' }
         showSuratTugasModal.value = true
+      } else {
+        // Tidak ada, arahkan ke SuratTugasManagement
+        router.push({ name: 'surat-tugas', query: { create: 'true', id_kegiatan: idKegiatan } })
       }
     }
 
-    const saveSuratTugas = () => {
-      if (!formSuratTugas.value.nomor_surat) {
-        formError.value = 'Nomor surat harus diisi'
-        return
-      }
-      if (!formSuratTugas.value.penandatangan) {
-        formError.value = 'Penandatangan harus diisi'
-        return
-      }
+    const addAnggota = () => {
+      formAnggotaErrors.value = []
       
-      // Buat surat tugas baru dengan ID unik
-      const newId = databaseSuratTugas.value.length > 0 
-        ? Math.max(...databaseSuratTugas.value.map(s => s.id_surat_tugas || s.id || 0)) + 1 
-        : 1
-      
-      const newSuratTugas = {
-        id_surat_tugas: newId,
-        id_kegiatan: formSuratTugas.value.id_kegiatan,
-        nomor_surat: formSuratTugas.value.nomor_surat,
-        tanggal_surat: formSuratTugas.value.tanggal_surat,
-        id_penandatangan: formSuratTugas.value.id_penandatangan,
-        status: formSuratTugas.value.status || 'draft',
-        file_surat: '',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+      // Validasi
+      if (!formAnggota.value.id_pegawai) {
+        formAnggotaErrors.value.push('Pegawai wajib dipilih')
+      }
+      if (!formAnggota.value.peran) {
+        formAnggotaErrors.value.push('Peran wajib dipilih')
       }
       
-      // Simpan ke database
-      databaseSuratTugas.value.push(newSuratTugas)
-      db.surat_tugas = databaseSuratTugas.value
-      
-      // Set untuk detail modal
-      selectedSuratTugas.value = newSuratTugas
-      
-      // Tutup modal form dan buka detail modal
-      showSuratTugasModal.value = false
-      showSuratTugasDetailModal.value = true
-      
-      console.log('Surat Tugas Saved:', newSuratTugas)
-    }
+      const pegawai = db.pegawai.find(p => p.id_pegawai === formAnggota.value.id_pegawai)
+      if (formAnggota.value.id_pegawai && !pegawai) {
+        formAnggotaErrors.value.push('Pegawai tidak ditemukan')
+      }
 
-    const closeSuratTugasModal = () => {
-      showSuratTugasModal.value = false
-      resetFormSuratTugas()
-      formError.value = ''
-    }
+      // Cek duplikat
+      const duplicate = anggotaInSelected.value.some(a => a.id_pegawai === formAnggota.value.id_pegawai)
+      if (duplicate) {
+        formAnggotaErrors.value.push('Pegawai ini sudah ditambahkan ke surat tugas ini')
+      }
 
-    const closeSuratTugasDetailModal = () => {
-      showSuratTugasDetailModal.value = false
-      selectedSuratTugas.value = null
-    }
+      if (formAnggotaErrors.value.length > 0) return
 
-    const addTeamMember = () => {
-      if (!newTeamMember.value.id_pegawai || !newTeamMember.value.peran) {
-        alert('Pegawai dan Peran harus dipilih')
-        return
-      }
+      if (!db.surat_tugas_pegawai) db.surat_tugas_pegawai = []
       
-      if (!selectedSuratTugas.value) {
-        alert('Surat tugas tidak ditemukan')
-        return
-      }
-      
-      // Cek apakah pegawai sudah ada di surat tugas ini
-      const exists = databaseSuratTugasPegawai.value.some(
-        st => st.id_surat_tugas === selectedSuratTugas.value.id_surat_tugas && st.id_pegawai === newTeamMember.value.id_pegawai
-      )
-      
-      if (exists) {
-        alert('Pegawai ini sudah ada di surat tugas ini')
-        return
-      }
-      
-      // Tambah ke database
-      const newId = Math.max(...databaseSuratTugasPegawai.value.map(st => st.id || 0), 0) + 1
-      databaseSuratTugasPegawai.value.push({
-        id: newId,
+      const newAnggota = {
+        id: Math.max(...(db.surat_tugas_pegawai.map(a => a.id) || [0]), 0) + 1,
         id_surat_tugas: selectedSuratTugas.value.id_surat_tugas,
-        id_pegawai: newTeamMember.value.id_pegawai,
-        peran: newTeamMember.value.peran
-      })
-      db.surat_tugas_pegawai = databaseSuratTugasPegawai.value
+        id_pegawai: formAnggota.value.id_pegawai,
+        peran: formAnggota.value.peran
+      }
       
-      newTeamMember.value = { id_pegawai: '', peran: '' }
+      db.surat_tugas_pegawai.push(newAnggota)
+      formAnggota.value = { id_pegawai: '', peran: 'anggota_panitia' }
+      formAnggotaErrors.value = []
     }
 
-    const removeTeamMember = (id_pegawai) => {
-      if (!selectedSuratTugas.value) return
-      
-      databaseSuratTugasPegawai.value = databaseSuratTugasPegawai.value.filter(
-        st => !(st.id_surat_tugas === selectedSuratTugas.value.id_surat_tugas && st.id_pegawai === id_pegawai)
-      )
-      db.surat_tugas_pegawai = databaseSuratTugasPegawai.value
-    }
-
-    const downloadSuratTugasDocx = async () => {
-      try {
-        if (!selectedSuratTugas.value || !suratTugasSelected.value) return
-        
-        // Prepare data untuk template
-        const data = {
-          NOMOR_SURAT: selectedSuratTugas.value.nomor_surat || '-',
-          KEGIATAN: suratTugasSelected.value?.nama_kegiatan || '-',
-          TANGGAL_SURAT: formatDate(selectedSuratTugas.value.tanggal_surat) || '-',
-          LOKASI: suratTugasSelected.value?.lokasi || '-',
-          PENANDATANGAN: getPenandatanganName(selectedSuratTugas.value.id_penandatangan) || '-',
-          TANGGAL_PENANDATANGAN: formatDate(selectedSuratTugas.value.tanggal_surat) || '-'
-        }
-        
-        console.log('Downloading default template with data:', data)
-        
-        // Generate template
-        const templateBlob = await createSuratTugasTemplate()
-        
-        // Parse template XML
-        let xmlContent = await parseDocxPreservingFormat(templateBlob)
-        console.log('XML parsed from template, length:', xmlContent.length)
-        
-        // DEBUG: Print XML structure around placeholder
-        debugXmlStructure(xmlContent, 'DAFTAR_TIM')
-        
-        // Replace text placeholders
-        xmlContent = replacePlaceholdersInXml(xmlContent, data)
-        console.log('Text placeholders replaced')
-        
-        // Replace table placeholder dengan daftar tim
-        xmlContent = replaceTablePlaceholder(xmlContent, 'DAFTAR_TIM', daftarTim.value)
-        
-        // Generate DOCX dengan data
-        await generateDocxFromXml(
-          xmlContent,
-          templateBlob,
-          `${selectedSuratTugas.value.nomor_surat}.docx`
-        )
-      } catch (error) {
-        console.error('Error downloading DOCX:', error)
-        alert('Gagal membuat file DOCX. Lihat console untuk detail.')
+    const removeAnggota = (id) => {
+      if (!confirm('Hapus anggota ini?')) return
+      const idx = db.surat_tugas_pegawai.findIndex(a => a.id === id)
+      if (idx !== -1) {
+        db.surat_tugas_pegawai.splice(idx, 1)
       }
     }
 
-    const handleTemplateFileSelect = (event) => {
-      const files = event.target.files
-      if (files && files.length > 0) {
-        selectedTemplateFile.value = files[0]
-      }
-    }
-
-    const processUploadedTemplate = async () => {
-      try {
-        if (!selectedTemplateFile.value) {
-          alert('Pilih file template terlebih dahulu')
-          return
-        }
-        
-        if (!selectedSuratTugas.value || !suratTugasSelected.value) {
-          alert('Data surat tugas tidak lengkap')
-          return
-        }
-        
-        // Prepare data
-        const data = {
-          NOMOR_SURAT: selectedSuratTugas.value.nomor_surat || '-',
-          KEGIATAN: suratTugasSelected.value?.nama_kegiatan || '-',
-          TANGGAL_SURAT: formatDate(selectedSuratTugas.value.tanggal_surat) || '-',
-          LOKASI: suratTugasSelected.value?.lokasi || '-',
-          PENANDATANGAN: getPenandatanganName(selectedSuratTugas.value.id_penandatangan) || '-',
-          TANGGAL_PENANDATANGAN: formatDate(selectedSuratTugas.value.tanggal_surat) || '-'
-        }
-        
-        console.log('Processing template with data:', data)
-        console.log('daftarTim:', daftarTim.value)
-        
-        // 1. Parse template XML
-        let xmlContent = await parseDocxPreservingFormat(selectedTemplateFile.value)
-        console.log('XML parsed, length:', xmlContent.length)
-        
-        // DEBUG: Print XML structure around placeholder
-        debugXmlStructure(xmlContent, 'DAFTAR_TIM')
-        
-        // 2. Replace text placeholders
-        xmlContent = replacePlaceholdersInXml(xmlContent, data)
-        console.log('Text placeholders replaced')
-        
-        // 3. Replace tabel placeholder dengan daftar tim
-        xmlContent = replaceTablePlaceholder(xmlContent, 'DAFTAR_TIM', daftarTim.value)
-        console.log('Table placeholder replaced')
-        
-        // 4. Generate DOCX dengan XML modified
-        await generateDocxFromXml(
-          xmlContent,
-          selectedTemplateFile.value,
-          `${selectedSuratTugas.value.nomor_surat}.docx`
-        )
-        
-        showTemplateUploadModal.value = false
-        selectedTemplateFile.value = null
-        alert('File DOCX berhasil dibuat dan diunduh!')
-      } catch (error) {
-        console.error('Error processing template:', error)
-        alert('Gagal memproses template. Error: ' + error.message)
-      }
+    const getNamaPegawai = (idPegawai) => {
+      const p = db.pegawai.find(peg => String(peg.id_pegawai) === String(idPegawai))
+      return p ? p.nama : '-'
     }
 
     return {
       kegiatan,
+      isLoadingKegiatan,
       loadKegiatan,
       searchQuery,
       activeFilter,
@@ -1576,30 +1235,20 @@ export default {
       handleFlyerPaste,
       removeFlyerImage,
       openPesertaList,
-      getPenandatanganName,
-      createSuratTugas,
+      handleSuratTugas,
       showSuratTugasModal,
-      suratTugasSelected,
-      formSuratTugas,
-      saveSuratTugas,
-      closeSuratTugasModal,
-      resetFormSuratTugas,
-      showSuratTugasDetailModal,
       selectedSuratTugas,
-      closeSuratTugasDetailModal,
-      editingDaftarTim,
-      daftarTim,
-      newTeamMember,
-      addTeamMember,
-      removeTeamMember,
-      downloadSuratTugasDocx,
-      showTemplateUploadModal,
-      selectedTemplateFile,
-      handleTemplateFileSelect,
-      processUploadedTemplate,
-      suratTugasList,
-      databaseSuratTugas,
-      db
+      anggotaInSelected,
+      pegawaiOptions,
+      formAnggota,
+      formAnggotaErrors,
+      addAnggota,
+      removeAnggota,
+      getNamaPegawai,
+      previewLink,
+      activityLinks,
+      resetForm,
+      validateForm
     }
   }
 }

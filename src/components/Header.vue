@@ -14,8 +14,8 @@
             {{ getUserInitial }}
           </div>
           <div class="hidden sm:block">
-            <p class="text-sm font-medium text-slate-800">{{ currentUser?.name || 'Admin' }}</p>
-            <p class="text-xs text-slate-500 capitalize">{{ currentUser?.role || 'admin' }}</p>
+            <p class="text-sm font-medium text-slate-800">{{ currentUser?.pegawai.nama }}</p>
+            <p class="text-xs text-slate-500 capitalize">{{ currentUser?.role }}</p>
           </div>
           <svg 
             :class="['w-4 h-4 text-slate-500 transition', showProfileMenu && 'transform rotate-180']"
@@ -48,7 +48,7 @@
                   {{ getUserInitial }}
                 </div>
                 <div class="flex-1">
-                  <p class="font-semibold text-slate-800">{{ currentUser?.name || 'Administrator' }}</p>
+                  <p class="font-semibold text-slate-800">{{ currentUser?.pegawai.nama || 'Administrator' }}</p>
                   <p class="text-xs text-slate-600">{{ currentUser?.email || 'admin@kemkominfo.go.id' }}</p>
                   <p class="text-xs text-slate-500 mt-1">{{ currentUser?.instansi || 'Kemkominfo' }}</p>
                 </div>
@@ -113,6 +113,21 @@
                   <p class="text-xs text-slate-500">Lihat log aktivitas Anda</p>
                 </div>
               </button>
+
+              <!-- Show Raw User Data (debug) -->
+              <button
+                @click="handleShowUserData"
+                class="w-full px-6 py-3 text-left hover:bg-slate-50 transition flex items-center gap-3 text-slate-700"
+              >
+                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12A9 9 0 1112 3a9 9 0 019 9z"/>
+                </svg>
+                <div class="flex-1 text-sm">
+                  <p class="font-medium">Tampilkan Data User</p>
+                  <p class="text-xs text-slate-500">Lihat objek user (JSON)</p>
+                </div>
+              </button>
             </div>
 
             <!-- Divider -->
@@ -162,6 +177,12 @@ export default {
     const authStore = useAuthStore()
     const showProfileMenu = ref(false)
 
+    // resolved user object (unwrap if Pinia ref)
+    const userObj = computed(() => {
+      if (!props.currentUser) return null
+      return (props.currentUser && props.currentUser.value) ? props.currentUser.value : props.currentUser
+    })
+
     const getUserInitial = computed(() => {
       if (props.currentUser?.name) {
         return props.currentUser.name
@@ -173,6 +194,8 @@ export default {
       }
       return 'A'
     })
+    console.log(getUserInitial);
+    
 
     const handleViewProfile = () => {
       showProfileMenu.value = false
@@ -273,6 +296,18 @@ export default {
       })
     }
 
+    const handleShowUserData = () => {
+      const u = userObj.value || authStore.currentUser || props.currentUser || null
+      const json = u ? JSON.stringify((u && u.value) ? u.value : u, null, 2) : 'null'
+      Swal.fire({
+        title: 'Data User',
+        html: `<pre style="text-align:left; white-space:pre-wrap; word-break:break-word;">${json.replace(/</g, '&lt;')}</pre>`,
+        width: '720px',
+        confirmButtonText: 'Tutup'
+      })
+      showProfileMenu.value = false
+    }
+
     const handleLogout = () => {
       showProfileMenu.value = false
       Swal.fire({
@@ -305,7 +340,8 @@ export default {
       handleSettings,
       handleChangePassword,
       handleActivityLog,
-      handleLogout
+      handleLogout,
+      handleShowUserData
     }
   }
 }

@@ -23,7 +23,7 @@
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Header -->
-      <Header :title="pageTitle" :currentUser="currentUser"/>
+      <Header :title="pageTitle" :currentUser="authCurrentUser"/>
       
       <!-- Page Content -->
       <main class="flex-1 overflow-auto">
@@ -43,6 +43,7 @@
 <script>
 import Sidebar from '@/components/Sidebar.vue'
 import Header from '@/components/Header.vue'
+import { useAuthStore } from '@/stores/auth'
 
 export default {
   components: {
@@ -58,6 +59,33 @@ export default {
         role: 'admin'
       },
       sidebarOpen: false
+    }
+  },
+  created() {
+    // populate currentUser from auth store when layout mounts so Header
+    // always receives the live user object if available
+    try {
+      const auth = useAuthStore()
+      if (auth && auth.currentUser) {
+        // auth.currentUser may be a ref (Pinia composition store) or a plain object.
+        // Prefer the underlying value if present so children receive an plain object
+        // with `name` property instead of a ref wrapper.
+        this.currentUser = (auth.currentUser && auth.currentUser.value) ? auth.currentUser.value : auth.currentUser
+      }
+    } catch (e) {
+      // ignore if store not initialized yet
+      console.debug('Auth store not available in AdminLayout.created', e)
+    }
+  },
+  computed: {
+    // provide a reactive, unwrapped currentUser for child components
+    authCurrentUser() {
+      try {
+        const auth = useAuthStore()
+        return (auth && auth.currentUser && auth.currentUser.value) ? auth.currentUser.value : auth.currentUser
+      } catch (e) {
+        return this.currentUser
+      }
     }
   },
   watch: {
