@@ -82,7 +82,7 @@
               <label class="block text-sm font-medium text-slate-700 mb-2">Email</label>
               <input 
                 v-model="formData.email"
-                type="email" 
+                type="text" 
                 placeholder="admin@instansi.go.id"
                 class="input-field w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:outline-none transition"
                 required
