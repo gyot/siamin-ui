@@ -1,176 +1,215 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { fetchAPI } from '@/services/api'
-import { mockLoginAdmin, mockLoginPeserta } from '@/services/mockApi'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL+'/api/v1/' || 'https://backend-siamin.bpmpntb.id/'
+/**
+ * API BASE URL (AMAN)
+ */
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL || 'https://backend-siamin.bpmpntb.id') +
+  '/api/v1/'
 
 export const useAuthStore = defineStore('auth', () => {
+  /* =======================
+   * STATE
+   * ======================= */
   const currentUser = ref(null)
-  const userType = ref(null) // 'admin' or 'peserta'
-  const token = ref(localStorage.getItem('auth_token') || null)
+  const userType = ref(null) // 'admin' | 'peserta'
+  const token = ref(localStorage.getItem('auth_token'))
   const isLoading = ref(false)
   const error = ref(null)
-  
+
+  /* =======================
+   * GETTERS
+   * ======================= */
   const isAuthenticated = computed(() => !!token.value && !!currentUser.value)
   const isAdmin = computed(() => userType.value === 'admin')
   const isPeserta = computed(() => userType.value === 'peserta')
 
-  // Login untuk admin menggunakan API Sanctum
+  /* =======================
+   * LOGIN ADMIN
+   * ======================= */
   const loginAdmin = async (email, password) => {
     isLoading.value = true
     error.value = null
 
     try {
       console.log('[Auth] Attempting admin login via API...')
-      
+
       const response = await fetch(`${API_BASE_URL}auth/login-admin`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          Accept: 'application/json'
         },
         body: JSON.stringify({ email, password })
       })
 
-      const data = await response.json()
+      const res = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Email atau password tidak valid')
+        throw new Error(res.message || 'Email atau password salah')
       }
 
-      // Validasi response dari Sanctum
-      if (data.success && data.data?.token) {
-        const { token: apiToken, user } = data.data
-
-        token.value = apiToken
-        currentUser.value = user
-        userType.value = 'admin'
-
-        localStorage.setItem('auth_token', apiToken)
-        localStorage.setItem('user_data', JSON.stringify(user))
-        localStorage.setItem('user_type', 'admin')
-
-        return true
+      if (!res?.success || !res?.data?.token || !res?.data?.user) {
+        throw new Error('Format response API tidak valid')
       }
 
-      
-      throw new Error('Respon API tidak valid')
-    } catch (apiError) {
-      console.error('[Auth] ❌ Admin login failed:', apiError.message)
-      error.value = apiError.message || 'Email atau password tidak valid'
+      const { token: apiToken, user } = res.data
+
+      token.value = apiToken
+      currentUser.value = {
+        id: user.id,
+        id_pegawai: user.id_pegawai || user.id,
+        name: user.name ?? user.email ?? 'Admin',
+        email: user.email,
+        role: 'admin'
+      }
+      userType.value = 'admin'
+
+      localStorage.setItem('auth_token', apiToken)
+      localStorage.setItem('user_data', JSON.stringify(currentUser.value))
+      localStorage.setItem('user_type', 'admin')
+
+      console.log('[Auth] ✅ Admin login successful:', {
+        id: currentUser.value.id,
+        id_pegawai: currentUser.value.id_pegawai,
+        name: currentUser.value.name,
+        email: currentUser.value.email
+      })
+      return true
+    } catch (err) {
+      console.error('[Auth] ❌ Admin login failed:', err.message)
+      error.value = err.message
+      throw err
+    } finally {
       isLoading.value = false
-      throw apiError
     }
   }
 
-  // Login untuk peserta menggunakan API Sanctum
+  /* =======================
+   * LOGIN PESERTA
+   * ======================= */
   const loginPeserta = async (username, password) => {
     isLoading.value = true
     error.value = null
 
     try {
       console.log('[Auth] Attempting peserta login via API...')
-      
-      const response = await fetch(`${API_BASE_URL}/auth/login-peserta`, {
+
+      const response = await fetch(`${API_BASE_URL}auth/login-peserta`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          Accept: 'application/json'
         },
         body: JSON.stringify({ username, password })
       })
 
-      const data = await response.json()
+      const res = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || 'Username atau password tidak valid')
+        throw new Error(res.message || 'Username atau password salah')
       }
 
-      // Validasi response dari Sanctum
-      if (data.token && data.user) {
-        token.value = data.token
-        currentUser.value = {
-          id: data.user.id,
-          name: data.user.name,
-          username: data.user.username,
-          nip: data.user.nip,
-          instansi: data.user.instansi || 'Kemkominfo',
-          email: data.user.email,
-          role: 'peserta'
-        }
-        userType.value = 'peserta'
-        
-        // Simpan ke localStorage
-        localStorage.setItem('auth_token', data.token)
-        localStorage.setItem('user_data', JSON.stringify(currentUser.value))
-        localStorage.setItem('user_type', 'peserta')
-        
-        console.log('[Auth] ✅ Peserta login successful:', currentUser.value.name)
-        isLoading.value = false
-        return true
+      if (!res?.token || !res?.user) {
+        throw new Error('Format response API tidak valid')
       }
-      
-      throw new Error('Respon API tidak valid')
-    } catch (apiError) {
-      console.error('[Auth] ❌ Peserta login failed:', apiError.message)
-      error.value = apiError.message || 'Username atau password tidak valid'
+
+      token.value = res.token
+      currentUser.value = {
+        id: res.user.id,
+        name: res.user.name,
+        username: res.user.username,
+        nip: res.user.nip,
+        instansi: res.user.instansi ?? '-',
+        email: res.user.email,
+        role: 'peserta'
+      }
+      userType.value = 'peserta'
+
+      localStorage.setItem('auth_token', res.token)
+      localStorage.setItem('user_data', JSON.stringify(currentUser.value))
+      localStorage.setItem('user_type', 'peserta')
+
+      console.log('[Auth] ✅ Peserta login successful:', currentUser.value.name)
+      return true
+    } catch (err) {
+      console.error('[Auth] ❌ Peserta login failed:', err.message)
+      error.value = err.message
+      throw err
+    } finally {
       isLoading.value = false
-      throw apiError
     }
   }
 
-  // Logout dengan API call
+  /* =======================
+   * LOGOUT
+   * ======================= */
   const logout = async () => {
     try {
-      // Call logout endpoint jika ada token
       if (token.value) {
-        await fetch(`${API_BASE_URL}/auth/logout`, {
+        await fetch(`${API_BASE_URL}auth/logout`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': `Bearer ${token.value}`
+            Accept: 'application/json',
+            Authorization: `Bearer ${token.value}`
           }
         })
       }
-    } catch (error) {
-      console.warn('[Auth] Logout API call failed:', error)
+    } catch (err) {
+      console.warn('[Auth] Logout API failed:', err)
     } finally {
-      // Clear local state regardless of API response
       token.value = null
       currentUser.value = null
       userType.value = null
+
       localStorage.removeItem('auth_token')
       localStorage.removeItem('user_data')
       localStorage.removeItem('user_type')
+
       console.log('[Auth] ✅ User logged out')
     }
   }
 
-  // Restore auth dari localStorage saat app load
+  /* =======================
+   * RESTORE SESSION
+   * ======================= */
   const restoreAuth = () => {
     const savedToken = localStorage.getItem('auth_token')
     const savedUser = localStorage.getItem('user_data')
     const savedType = localStorage.getItem('user_type')
 
-    if (savedToken && savedUser && savedType) {
+    if (!savedToken || !savedUser || !savedType) return
+
+    try {
       token.value = savedToken
       currentUser.value = JSON.parse(savedUser)
       userType.value = savedType
-      console.log('[Auth] ✅ Session restored for:', currentUser.value.name)
+
+      console.log(
+        '[Auth] ✅ Session restored for:',
+        currentUser.value?.name ?? '(no name)'
+      )
+    } catch {
+      console.warn('[Auth] ❌ Failed restoring session, clearing data')
+      logout()
     }
   }
 
   return {
+    // state
     currentUser,
     userType,
     token,
     isLoading,
     error,
+
+    // getters
     isAuthenticated,
     isAdmin,
     isPeserta,
+
+    // actions
     loginAdmin,
     loginPeserta,
     logout,

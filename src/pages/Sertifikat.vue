@@ -11,12 +11,19 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { ActivityEvents } from '@/services/activityLogger'
 
 export default {
   name: 'Sertifikat',
   setup() {
     const currentUser = ref({ name: 'Admin' })
+    
+    // Log page access
+    onMounted(() => {
+      ActivityEvents.ACCESS_PAGE('Manajemen Sertifikat')
+    })
+    
     return { currentUser }
   }
 }

@@ -405,6 +405,55 @@
       </div>
     </div>
 
+    <!-- Riwayat Aktivitas -->
+    <div class="mt-6 max-w-6xl mx-auto">
+      <div class="bg-white rounded-2xl shadow-lg p-6">
+        <h3 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Riwayat Aktivitas
+        </h3>
+
+        <div class="space-y-4">
+          <div v-if="isLoadingActivity" class="text-center py-8">
+            <div class="flex items-center justify-center gap-2">
+              <div class="w-5 h-5 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+              <p class="text-slate-500">Memuat riwayat aktivitas...</p>
+            </div>
+          </div>
+
+          <div v-else-if="activityHistory.length === 0" class="text-center py-8">
+            <p class="text-slate-500">Tidak ada riwayat aktivitas</p>
+          </div>
+
+          <div v-for="(activity, index) in activityHistory" :key="index" class="border-l-4 border-blue-500 pl-4 py-2 hover:bg-slate-50 rounded-r px-3 transition cursor-pointer">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <p class="font-medium text-slate-800">{{ activity.action }}</p>
+                <p class="text-sm text-slate-600">{{ activity.description }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-slate-500">{{ formatActivityTime(activity.timestamp) }}</p>
+                <p class="text-xs text-slate-400">{{ activity.date }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pagination untuk activity -->
+        <div v-if="activityHistory.length > 0" class="flex justify-center mt-6">
+          <div class="flex gap-2">
+            <button class="px-3 py-1 border border-slate-300 rounded hover:bg-slate-100 text-sm">Previous</button>
+            <button class="px-3 py-1 bg-blue-600 text-white rounded text-sm">1</button>
+            <button class="px-3 py-1 border border-slate-300 rounded hover:bg-slate-100 text-sm">2</button>
+            <button class="px-3 py-1 border border-slate-300 rounded hover:bg-slate-100 text-sm">3</button>
+            <button class="px-3 py-1 border border-slate-300 rounded hover:bg-slate-100 text-sm">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Change Password Modal -->
     <div v-if="showChangePassword" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -451,6 +500,7 @@ import { ref, computed, onMounted } from 'vue'
 import Swal from 'sweetalert2'
 import { useAuthStore } from '@/stores/auth'
 import { loadDataFromAPI } from '@/data'
+import { fetchAPI } from '@/services/api'
 
 export default {
   name: 'Profile',
@@ -478,6 +528,56 @@ export default {
       loginCount: 48
     })
 
+    // Riwayat Aktivitas - dimuat dari API
+    const activityHistory = ref([])
+    const isLoadingActivity = ref(false)
+
+    // Fetch log aktivitas dari API
+    const fetchActivityHistory = async () => {
+      try {
+        isLoadingActivity.value = true
+        console.log('[Profile] Fetching activity history from API...')
+        
+        const response = await fetchAPI('log-aktivitas')
+        console.log('[Profile] Activity history response:', response)
+        
+        if (Array.isArray(response)) {
+          activityHistory.value = response
+        } else if (response.data && Array.isArray(response.data)) {
+          activityHistory.value = response.data
+        } else {
+          activityHistory.value = []
+        }
+        
+        console.log(`[Profile] Loaded ${activityHistory.value.length} activity records`)
+      } catch (error) {
+        console.error('[Profile] Error fetching activity history:', error)
+        // Gunakan fallback data jika API gagal
+        activityHistory.value = [
+          {
+            action: 'Login Sistem',
+            description: 'Berhasil masuk ke aplikasi SIAMIN',
+            timestamp: '14:35:22',
+            date: 'Hari ini'
+          },
+          {
+            action: 'Mengakses Dashboard',
+            description: 'Membuka halaman dashboard',
+            timestamp: '14:35:45',
+            date: 'Hari ini'
+          },
+          {
+            action: 'Mengakses Kegiatan',
+            description: 'Melihat daftar kegiatan',
+            timestamp: '14:40:10',
+            date: 'Hari ini'
+          }
+        ]
+      } finally {
+        isLoadingActivity.value = false
+      }
+    }
+
     const pegawaiData = computed(() => {
       if (!pegawaiInfo.value) return null
       return pegawaiInfo.value
@@ -503,6 +603,7 @@ export default {
 
     onMounted(() => {
       loadProfile()
+      fetchActivityHistory()
     })
     const loadProfile = async () => {
       try {
@@ -542,6 +643,10 @@ export default {
         month: 'long',
         day: 'numeric'
       })
+    }
+
+    const formatActivityTime = (timeString) => {
+      return timeString || '-'
     }
 
     const getUserInitial = computed(() => {
@@ -640,10 +745,14 @@ export default {
       passwordForm,
       stats,
       pegawaiData,
+      activityHistory,
+      isLoadingActivity,
+      fetchActivityHistory,
       getUserInitial,
       saveProfile,
       savePassword,
-      formatDate
+      formatDate,
+      formatActivityTime
     }
   }
 }

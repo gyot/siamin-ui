@@ -1,5 +1,7 @@
 // API Service Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL+'/api/v1/' || 'https://backend-siamin.bpmpntb.id/'
+// Build a safe API base URL: prefer VITE_API_BASE_URL, fallback to production host.
+const API_HOST = import.meta.env.VITE_API_BASE_URL || 'https://backend-siamin.bpmpntb.id'
+const API_BASE_URL = API_HOST.replace(/\/$/, '') + '/api/v1/'
 
 // API Endpoints mapping
 const ENDPOINTS = {

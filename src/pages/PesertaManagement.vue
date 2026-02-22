@@ -692,8 +692,9 @@
 </template>
 
 <script>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import database from '@/data/index.js'
+import { ActivityEvents } from '@/services/activityLogger'
 import * as XLSX from 'xlsx'
 
 export default {
@@ -727,6 +728,11 @@ export default {
         filterKegiatan.value = newVal
       }
     }, { immediate: true })
+
+    // Log page access
+    onMounted(() => {
+      ActivityEvents.ACCESS_PAGE('Manajemen Peserta')
+    })
 
     const formPeserta = ref({
       id_peserta: null,
@@ -916,6 +922,8 @@ export default {
         if (index !== -1) {
           peserta.value[index] = { ...formPeserta.value, updated_at: new Date().toISOString() }
         }
+        // Log update
+        ActivityEvents.UPDATE_PESERTA(formPeserta.value.nama_lengkap)
       } else {
         const newId = Math.max(...peserta.value.map(p => p.id_peserta), 0) + 1
         peserta.value.push({
@@ -924,6 +932,8 @@ export default {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
+        // Log creation
+        ActivityEvents.CREATE_PESERTA(formPeserta.value.nama_lengkap)
       }
 
       closeAddModal()
@@ -933,7 +943,10 @@ export default {
       if (confirm('Apakah Anda yakin ingin menghapus peserta ini?')) {
         const index = peserta.value.findIndex(p => p.id_peserta === id)
         if (index !== -1) {
+          const deletedPeserta = peserta.value[index]
           peserta.value.splice(index, 1)
+          // Log deletion
+          ActivityEvents.DELETE_PESERTA(deletedPeserta.nama_lengkap)
         }
       }
     }
@@ -970,6 +983,8 @@ export default {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
+        // Log sertifikat creation
+        ActivityEvents.CREATE_SERTIFIKAT(selectedPeserta.value.nama_lengkap)
       }
 
       showSertifikatModal.value = false
@@ -1013,6 +1028,9 @@ export default {
       XLSX.utils.book_append_sheet(wb, ws, 'Peserta')
       const filename = `peserta_export_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.xlsx`
       XLSX.writeFile(wb, filename)
+      
+      // Log export activity
+      ActivityEvents.EXPORT_DATA(`Peserta (${filteredPeserta.value.length} records)`, 'xlsx')
     }
 
     return {

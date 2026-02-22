@@ -2,8 +2,45 @@
   <div class="p-6 bg-slate-50 min-h-screen">
         <div class="mb-6">
           <h1 class="text-2xl font-bold text-slate-800">Dashboard</h1>
-          <p class="text-slate-500">Selamat datang kembali, {{ currentUser?.name || 'Admin' }}</p>
+          <p class="text-slate-500">Selamat datang kembali, {{ profilePegawai?.nama || 'Admin' }}</p>
           <p class="text-slate-600">Sistem Informasi Administrasi Manajemen Kegiatan (SIAMIN) membantu Anda mengelola kegiatan, peserta, surat tugas, dan sertifikat digital secara terintegrasi.</p>
+        </div>
+
+        <!-- Profile Card -->
+        <div v-if="profilePegawai" class="mb-6 bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="md:col-span-1">
+              <div class="flex flex-col items-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white mb-3">
+                  <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-slate-800 text-center">{{ profilePegawai.nama }}</h3>
+                <p class="text-sm text-slate-500 text-center">{{ profilePegawai.nama_jabatan || profilePegawai.jabatan || '-' }}</p>
+              </div>
+            </div>
+            <div class="md:col-span-2">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <p class="text-xs font-medium text-slate-600 uppercase">NIP</p>
+                  <p class="text-sm font-semibold text-slate-800">{{ profilePegawai.nip || '-' }}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-slate-600 uppercase">Email</p>
+                  <p class="text-sm font-semibold text-slate-800">{{ profilePegawai.email || '-' }}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-slate-600 uppercase">Unit Kerja</p>
+                  <p class="text-sm font-semibold text-slate-800">{{ profilePegawai.unit_kerja || '-' }}</p>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-slate-600 uppercase">Golongan</p>
+                  <p class="text-sm font-semibold text-slate-800">{{ profilePegawai.golongan || '-' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Stats Cards -->
@@ -99,51 +136,98 @@
         <!-- Kegiatan List -->
         <div class="mb-6">
           <h3 class="text-lg font-semibold text-slate-800 mb-4">Daftar Kegiatan</h3>
-          <div v-if="filteredKegiatan.length === 0" class="bg-white rounded-xl p-8 border border-slate-100 shadow-sm text-center">
+          <div v-if="isLoadingKegiatan" class="bg-white rounded-xl p-8 border border-slate-100 shadow-sm text-center">
+            <div class="flex items-center justify-center gap-2">
+              <div class="w-5 h-5 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+              <p class="text-slate-500">Memuat kegiatan...</p>
+            </div>
+          </div>
+          <div v-else-if="filteredKegiatan.length === 0" class="bg-white rounded-xl p-8 border border-slate-100 shadow-sm text-center">
             <p class="text-slate-500">Tidak ada kegiatan yang sesuai dengan filter</p>
           </div>
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div
-              v-for="k in filteredKegiatan"
-              :key="k.id_kegiatan"
-              class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition overflow-hidden"
-            >
-              <div :class="getStatusColor(k.status)" class="h-1"></div>
-              <div class="p-4">
-                <div class="flex items-start justify-between mb-2">
-                  <h4 class="font-semibold text-slate-800 text-sm flex-1">{{ k.nama_kegiatan }}</h4>
-                  <span :class="getStatusBadge(k.status)" class="text-xs whitespace-nowrap ml-2">
-                    {{ formatStatus(k.status) }}
-                  </span>
-                </div>
-                <p class="text-xs text-slate-500 mb-3">{{ k.peserta_ringkasan }}</p>
-                
-                <div class="space-y-2 text-xs text-slate-600 mb-4">
-                  <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                    </svg>
-                    <span>{{ formatDateRange(k.tanggal_mulai, k.tanggal_selesai) }}</span>
+          <div v-else class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div
+                v-for="k in filteredKegiatan"
+                :key="k.id_kegiatan"
+                class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition overflow-hidden"
+              >
+                <div :class="getStatusColor(k.status)" class="h-1"></div>
+                <div class="p-4">
+                  <div class="flex items-start justify-between mb-2">
+                    <h4 class="font-semibold text-slate-800 text-sm flex-1">{{ k.nama_kegiatan }}</h4>
+                    <span :class="getStatusBadge(k.status)" class="text-xs whitespace-nowrap ml-2">
+                      {{ formatStatus(k.status) }}
+                    </span>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    </svg>
-                    <span>{{ k.lokasi }}</span>
+                  <p class="text-xs text-slate-500 mb-3">{{ k.peserta_ringkasan }}</p>
+                  
+                  <div class="space-y-2 text-xs text-slate-600 mb-4">
+                    <div class="flex items-center gap-2">
+                      <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                      <span>{{ formatDateRange(k.tanggal_mulai, k.tanggal_selesai) }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                      </svg>
+                      <span>{{ k.lokasi }}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                      </svg>
+                      <span>{{ k.total_peserta }} Peserta</span>
+                    </div>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                    </svg>
-                    <span>{{ k.total_peserta }} Peserta</span>
-                  </div>
-                </div>
 
+                  <button
+                    @click="openDetailModal(k)"
+                    class="w-full px-3 py-2 bg-blue-500 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Lihat Detail
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div class="flex items-center justify-between bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
+              <div class="text-sm text-slate-600">
+                Menampilkan <span class="font-semibold">{{ (currentPage - 1) * pageSize + 1 }}</span>-<span class="font-semibold">{{ Math.min(currentPage * pageSize, totalKegiatanCount) }}</span> dari <span class="font-semibold">{{ totalKegiatanCount }}</span> kegiatan
+              </div>
+              <div class="flex gap-2">
                 <button
-                  @click="openDetailModal(k)"
-                  class="w-full px-3 py-2 bg-blue-500 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+                  @click="currentPage > 1 && (currentPage = currentPage - 1, fetchKegiatanData())"
+                  :disabled="currentPage <= 1 || isLoadingKegiatan"
+                  class="px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
                 >
-                  Lihat Detail
+                  ← Sebelumnya
+                </button>
+                <div class="flex items-center gap-1">
+                  <button
+                    v-for="page in totalPages"
+                    :key="page"
+                    @click="currentPage = page; fetchKegiatanData()"
+                    :disabled="isLoadingKegiatan"
+                    :class="[
+                      'px-3 py-2 rounded-lg text-sm font-medium transition',
+                      currentPage === page
+                        ? 'bg-blue-600 text-white'
+                        : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
+                    ]"
+                  >
+                    {{ page }}
+                  </button>
+                </div>
+                <button
+                  @click="currentPage < totalPages && (currentPage = currentPage + 1, fetchKegiatanData())"
+                  :disabled="currentPage >= totalPages || isLoadingKegiatan"
+                  class="px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                >
+                  Berikutnya →
                 </button>
               </div>
             </div>
@@ -279,25 +363,93 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import * as XLSX from 'xlsx'
 import { useAuthStore } from '@/stores/auth'
+import { fetchAPI } from '@/services/api'
+import { ActivityEvents } from '@/services/activityLogger'
 import database from '@/data/index.js'
 
 export default {
   name: 'Dashboard',
   setup() {
     const authStore = useAuthStore()
-    const currentUser = ref(authStore.currentUser)
     
-    // kegiatan list is sourced from API and already filtered by backend
-    // to show only records created by the logged in pegawai (see backend
-    // controller update). keep local copy for offline fallback only.
+    // kegiatan list is sourced from API with kegiatan/all endpoint to show
+    // all kegiatan records to all pegawai (not filtered by creator).
+    // keep local copy for offline fallback only.
+    // kegiatan list is sourced from API with kegiatan/all endpoint to show
+    // all kegiatan records to all pegawai (not filtered by creator).
+    // keep local copy for offline fallback only.
     const kegiatan = ref(database.kegiatan)
     const peserta = ref(database.peserta)
     const sertifikat = ref(database.sertifikat)
+    const pegawai = ref(database.pegawai)
+    const users = ref(database.users)
 
-    const totalKegiatan = ref(kegiatan.value.length)
+    console.log('[Dashboard] Initial pegawai data on mount:', {
+      count: pegawai.value.length,
+      firstNames: pegawai.value.slice(0, 3).map(p => ({ id: p.id_pegawai, nama: p.nama }))
+    })
+    console.log('[Dashboard] Initial users data on mount:', {
+      count: users.value.length,
+      records: users.value.slice(0, 3).map(u => ({ id_user: u.id_user, id_pegawai: u.id_pegawai, email: u.email }))
+    })
+
+    // Use computed to get current user directly from authStore (reactive)
+    const currentUser = computed(() => authStore.currentUser)
+
+    // Get profile of logged in pegawai - prioritas dari database pegawai
+    const profilePegawai = computed(() => {
+      try {
+        if (!currentUser.value) {
+          console.warn('[Dashboard] currentUser not available')
+          return null
+        }
+        
+        console.log('[Dashboard] DEBUG - currentUser:', JSON.stringify(currentUser.value))
+        console.log('[Dashboard] DEBUG - pegawai available:', pegawai.value.length, 'records')
+        
+        // Try matching dengan id_pegawai dulu
+        let profile = pegawai.value.find(p => 
+          String(p.id_pegawai) === String(currentUser.value.id_pegawai || currentUser.value.id)
+        )
+        
+        // Jika tidak ketemu, coba matching dengan email
+        if (!profile && currentUser.value.email) {
+          console.log('[Dashboard] id_pegawai/id tidak cocok, mencari dari users...')
+          const userRecord = users.value.find(u => 
+            String(u.email) === String(currentUser.value.email)
+          )
+          if (userRecord) {
+            console.log('[Dashboard] Found user record, id_pegawai:', userRecord.id_pegawai)
+            profile = pegawai.value.find(p => 
+              String(p.id_pegawai) === String(userRecord.id_pegawai)
+            )
+          }
+        }
+        
+        if (profile) {
+          console.log('[Dashboard] ✅ Found pegawai profile:', profile.nama)
+          return profile
+        } else {
+          console.warn('[Dashboard] ❌ No pegawai profile found')
+          console.warn('[Dashboard] currentUser:', currentUser.value)
+          return null
+        }
+      } catch (error) {
+        console.error('[Dashboard] Error computing profilePegawai:', error)
+        return null
+      }
+    })
+
+    // Pagination state
+    const currentPage = ref(1)
+    const pageSize = ref(9) // 3x3 grid
+    const totalKegiatanCount = ref(0)
+    const isLoadingKegiatan = ref(false)
+
+    const totalKegiatan = computed(() => totalKegiatanCount.value)
     const totalPeserta = ref(peserta.value.length)
     const totalSertifikat = ref(sertifikat.value.filter(s => s.status === 'terbit').length)
     const kegiatanBerjalan = computed(() => {
@@ -454,15 +606,117 @@ export default {
       XLSX.utils.book_append_sheet(wb, ws, 'Peserta')
       const filename = `peserta_export_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.xlsx`
       XLSX.writeFile(wb, filename)
+      
+      // Log export activity
+      ActivityEvents.EXPORT_DATA(`Peserta - ${selectedKegiatan.value.nama_kegiatan}`, 'xlsx')
     }
 
     const openDetailModal = (k) => {
       selectedKegiatan.value = k
       showDetailModal.value = true
+      // Log kegiatan detail view
+      ActivityEvents.VIEW_KEGIATAN_DETAIL(k.id_kegiatan, k.nama_kegiatan)
     }
+
+    // Fetch kegiatan dari API server dengan pagination
+    const fetchKegiatanData = async () => {
+      try {
+        isLoadingKegiatan.value = true
+        console.log(`[Dashboard] Fetching kegiatan page ${currentPage.value} (size: ${pageSize.value})...`)
+        
+        // Build query parameters untuk pagination dan filter
+        const params = new URLSearchParams({
+          page: currentPage.value,
+          limit: pageSize.value,
+          search: searchKegiatan.value,
+          tahun: filterTahun.value,
+          status: filterStatus.value
+        })
+        
+        // Filter out empty params
+        Array.from(params.entries()).forEach(([key, value]) => {
+          if (!value) params.delete(key)
+        })
+        
+        const url = `kegiatan/all?${params.toString()}`
+        console.log(`[Dashboard] API URL: ${url}`)
+        
+        const response = await fetchAPI(url)
+        console.log(`[Dashboard] API Response:`, response)
+        
+        // Backend bisa return format:
+        // { data: [...], total: 100, per_page: 9, current_page: 1 }
+        // atau direct array
+        if (Array.isArray(response)) {
+          kegiatan.value = response
+          totalKegiatanCount.value = response.length
+        } else if (response.data) {
+          kegiatan.value = response.data
+          totalKegiatanCount.value = response.total || response.data.length
+        } else {
+          kegiatan.value = []
+          totalKegiatanCount.value = 0
+        }
+        
+        console.log(`[Dashboard] Loaded ${kegiatan.value.length} kegiatan, total: ${totalKegiatanCount.value}`)
+      } catch (error) {
+        console.error('[Dashboard] Error fetching kegiatan:', error)
+        // Fallback ke local data jika API gagal
+        kegiatan.value = database.kegiatan
+        totalKegiatanCount.value = kegiatan.value.length
+      } finally {
+        isLoadingKegiatan.value = false
+      }
+    }
+
+    // Computed untuk total pages
+    const totalPages = computed(() => {
+      return Math.ceil(totalKegiatanCount.value / pageSize.value)
+    })
+
+    // Load kegiatan saat component mount atau saat filter/search berubah
+    onMounted(async () => {
+      // Load pegawai dan users data dari API terlebih dahulu sebelum rendering greeting
+      try {
+        console.log('[Dashboard] 🔄 Loading pegawai data from API...')
+        const pegawaiData = await fetchAPI('pegawai')
+        if (Array.isArray(pegawaiData)) {
+          pegawai.value = pegawaiData
+          console.log('[Dashboard] ✅ Pegawai data loaded:', pegawaiData.length, 'records')
+        }
+      } catch (error) {
+        console.warn('[Dashboard] ⚠️ Failed to load pegawai from API:', error.message)
+      }
+
+      try {
+        console.log('[Dashboard] 🔄 Loading users data from API...')
+        const usersData = await fetchAPI('users')
+        if (Array.isArray(usersData)) {
+          users.value = usersData
+          console.log('[Dashboard] ✅ Users data loaded:', usersData.length, 'records')
+        }
+      } catch (error) {
+        console.warn('[Dashboard] ⚠️ Failed to load users from API:', error.message)
+      }
+
+      // Trigger profilePegawai computed untuk mendapatkan profile yang tepat
+      const profile = profilePegawai.value
+      if (profile) {
+        console.log('[Dashboard] ✅ Profile pegawai ditemukan:', profile.nama)
+      } else {
+        console.warn('[Dashboard] ⚠️ Profile pegawai tidak ditemukan')
+      }
+
+      // Load kegiatan data
+      fetchKegiatanData()
+      
+      // Log dashboard access
+      ActivityEvents.VIEW_DASHBOARD()
+    })
 
     return {
       currentUser,
+      profilePegawai,
       totalKegiatan,
       totalPeserta,
       totalSertifikat,
@@ -484,7 +738,13 @@ export default {
       activityLinks,
       pesertaInSelected,
       viewPesertaList,
-      exportPesertaKegiatan
+      exportPesertaKegiatan,
+      currentPage,
+      pageSize,
+      totalKegiatanCount,
+      totalPages,
+      isLoadingKegiatan,
+      fetchKegiatanData
     }
   }
 }

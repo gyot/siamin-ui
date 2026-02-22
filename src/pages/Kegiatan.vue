@@ -66,7 +66,7 @@
 
         <!-- Informational Notice: Empty State -->
         <div v-if="kegiatan.length === 0 && !isLoadingKegiatan" class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded text-blue-800 text-sm">
-          Tidak ada kegiatan untuk akun pegawai <strong>{{ currentUser.id_pegawai || 'n/a' }}</strong>.
+          Tidak ada kegiatan untuk akun anda.
           Silakan buat kegiatan baru atau hubungi administrator jika Anda seharusnya punya akses.
         </div>
 
@@ -680,6 +680,8 @@ import { useRouter } from 'vue-router'
 import database from '../data/index.js'
 import { useAuthStore } from '@/stores/auth.js'
 import { listKegiatan, getKegiatan, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
+import { fetchAPI } from '@/services/api'
+import { ActivityEvents } from '@/services/activityLogger'
 import Spinner from '@/components/Spinner.vue'
 
 export default {
@@ -715,6 +717,47 @@ export default {
 
     const currentUser = computed(() => auth.currentUser || {})
 
+    // Get profile of logged in pegawai
+    const pegawai = ref(database.pegawai || [])
+    const users = ref(database.users || [])
+    
+    const profilePegawai = computed(() => {
+      try {
+        if (!currentUser.value || !currentUser.value.id) {
+          console.warn('[Kegiatan] currentUser not available')
+          return null
+        }
+        
+        // Try matching dengan id_pegawai dulu
+        let profile = pegawai.value.find(p => 
+          String(p.id_pegawai) === String(currentUser.value.id_pegawai || currentUser.value.id)
+        )
+        
+        // Jika tidak ketemu, coba matching dengan email
+        if (!profile && currentUser.value.email) {
+          const userRecord = users.value.find(u => 
+            String(u.email) === String(currentUser.value.email)
+          )
+          if (userRecord) {
+            profile = pegawai.value.find(p => 
+              String(p.id_pegawai) === String(userRecord.id_pegawai)
+            )
+          }
+        }
+        
+        if (profile) {
+          console.log('[Kegiatan] Found pegawai profile:', profile.nama)
+          return profile
+        } else {
+          console.warn('[Kegiatan] No pegawai profile found')
+          return null
+        }
+      } catch (error) {
+        console.error('[Kegiatan] Error computing profilePegawai:', error)
+        return null
+      }
+    })
+
     // Fetch kegiatan dari API (sudah difilter berdasarkan pegawai yang login)
     const kegiatan = ref([])
     const isLoadingKegiatan = ref(false)
@@ -735,8 +778,33 @@ export default {
       }
     }
 
-    onMounted(() => {
+    onMounted(async () => {
+      // Load pegawai dan users data dari API
+      try {
+        console.log('[Kegiatan] Loading pegawai data from API...')
+        const pegawaiData = await fetchAPI('pegawai')
+        if (Array.isArray(pegawaiData)) {
+          pegawai.value = pegawaiData
+          console.log('[Kegiatan] ✅ Pegawai data loaded:', pegawaiData.length, 'records')
+        }
+      } catch (error) {
+        console.warn('[Kegiatan] Failed to load pegawai from API:', error.message)
+      }
+
+      try {
+        console.log('[Kegiatan] Loading users data from API...')
+        const usersData = await fetchAPI('users')
+        if (Array.isArray(usersData)) {
+          users.value = usersData
+          console.log('[Kegiatan] ✅ Users data loaded:', usersData.length, 'records')
+        }
+      } catch (error) {
+        console.warn('[Kegiatan] Failed to load users from API:', error.message)
+      }
+
       loadKegiatan()
+      // Log page access
+      ActivityEvents.ACCESS_PAGE('Manajemen Kegiatan')
     })
 
     const searchQuery = ref('')
@@ -950,6 +1018,8 @@ export default {
         if (item) {
           selectedKegiatan.value = { ...item }
           showDetailModal.value = true
+          // Log viewing detail
+          ActivityEvents.VIEW_KEGIATAN_DETAIL(id, item.nama_kegiatan)
           return
         }
       } catch (err) {
@@ -959,6 +1029,8 @@ export default {
       if (item) {
         selectedKegiatan.value = { ...item }
         showDetailModal.value = true
+        // Log viewing detail
+        ActivityEvents.VIEW_KEGIATAN_DETAIL(id, item.nama_kegiatan)
       }
     }
 
@@ -1069,11 +1141,21 @@ export default {
     const deleteKegiatan = async (id) => {
       if (!confirm('Apakah Anda yakin ingin menghapus kegiatan ini?')) return
       try {
+        // Get kegiatan name before deleting
+        const kegiatanToDelete = kegiatan.value.find(k => k.id_kegiatan === id)
+        const kegiatanName = kegiatanToDelete?.nama_kegiatan || id
+        
         await removeKegiatan(id)
         kegiatan.value = kegiatan.value.filter(k => k.id_kegiatan !== id)
+        
+        // Log deletion
+        ActivityEvents.DELETE_KEGIATAN(id, kegiatanName)
       } catch (err) {
         console.error('Gagal menghapus kegiatan', err)
         kegiatan.value = kegiatan.value.filter(k => k.id_kegiatan !== id)
+        
+        // Log deletion error
+        ActivityEvents.ERROR_OCCURRED('Gagal menghapus kegiatan', 'Kegiatan.vue - deleteKegiatan')
       }
     }
 
@@ -1107,10 +1189,14 @@ export default {
           if (index !== -1) {
             kegiatan.value[index] = updated
           }
+          // Log update
+          ActivityEvents.UPDATE_KEGIATAN(editingId.value, formData.value.nama_kegiatan)
         } else {
           const created = await createKegiatan(payload)
           enrichWithLink(created)
           kegiatan.value.push(created)
+          // Log creation
+          ActivityEvents.CREATE_KEGIATAN(formData.value.nama_kegiatan)
         }
         showAddModal.value = false
         editingId.value = null
@@ -1118,6 +1204,8 @@ export default {
       } catch (err) {
         console.error('Failed to save kegiatan', err)
         formError.value = err.message || 'Gagal menyimpan kegiatan'
+        // Log error
+        ActivityEvents.ERROR_OCCURRED(err.message || 'Gagal menyimpan kegiatan', 'Kegiatan.vue - saveKegiatan')
       }
     }
 
@@ -1213,6 +1301,7 @@ export default {
       selectedKegiatan,
       editingId,
       currentUser,
+      profilePegawai,
       formData,
       formError,
       isDraggingFlyer,

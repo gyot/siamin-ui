@@ -23,7 +23,7 @@
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Header -->
-      <Header :title="pageTitle" :currentUser="authCurrentUser"/>
+      <Header :title="pageTitle" />
       
       <!-- Page Content -->
       <main class="flex-1 overflow-auto">
