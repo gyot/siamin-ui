@@ -1,6 +1,8 @@
 // API Service Configuration
-// Build a safe API base URL: prefer VITE_API_BASE_URL, fallback to production host.
-const API_HOST = import.meta.env.VITE_API_BASE_URL || 'https://backend-siamin.bpmpntb.id'
+// During development, use local proxy `/api` to avoid CORS.
+// In production, use the actual backend URL.
+const isDev = import.meta.env.DEV
+const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
 const API_BASE_URL = API_HOST.replace(/\/$/, '') + '/api/v1/'
 
 // API Endpoints mapping

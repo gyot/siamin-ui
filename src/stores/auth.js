@@ -2,11 +2,13 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 
 /**
- * API BASE URL (AMAN)
+ * API BASE URL
+ * During development, use local proxy `/api` to bypass CORS.
+ * In production, use the actual backend URL.
  */
-const API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL || 'https://backend-siamin.bpmpntb.id') +
-  '/api/v1/'
+const isDev = import.meta.env.DEV
+const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
+const API_BASE_URL = API_HOST.replace(/\/$/, '') + '/api/v1/'
 
 export const useAuthStore = defineStore('auth', () => {
   /* =======================
@@ -35,7 +37,8 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       console.log('[Auth] Attempting admin login via API...')
 
-      const response = await fetch(`${API_BASE_URL}auth/login-admin`, {
+      const url = isDev ? '/api/v1/auth/login-admin' : `${API_BASE_URL}auth/login-admin`
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +99,8 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       console.log('[Auth] Attempting peserta login via API...')
 
-      const response = await fetch(`${API_BASE_URL}auth/login-peserta`, {
+      const url = isDev ? '/api/v1/auth/login-peserta' : `${API_BASE_URL}auth/login-peserta`
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +152,8 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = async () => {
     try {
       if (token.value) {
-        await fetch(`${API_BASE_URL}auth/logout`, {
+        const url = isDev ? '/api/v1/auth/logout' : `${API_BASE_URL}auth/logout`
+        await fetch(url, {
           method: 'POST',
           headers: {
             Accept: 'application/json',

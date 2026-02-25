@@ -12,14 +12,14 @@ export default defineConfig({
 
   // development proxy to bypass CORS during local testing
   // any request beginning with `/api` will be forwarded to the real
-  // backend (specified by the VITE_API_BASE_URL env variable).
+  // backend. the full path including `/api/v1/...` is preserved.
   server: {
     proxy: {
       '/api': {
         target: process.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id',
         changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        secure: false
+        // no rewrite: keep the full path `/api/v1/...` as is
       }
     }
   }

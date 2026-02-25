@@ -638,7 +638,7 @@ export default {
           if (!value) params.delete(key)
         })
         
-        const url = `kegiatan/all?${params.toString()}`
+        const url = `kegiatan/all`
         console.log(`[Dashboard] API URL: ${url}`)
         
         const response = await fetchAPI(url)

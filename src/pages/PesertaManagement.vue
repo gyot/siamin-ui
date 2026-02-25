@@ -23,6 +23,18 @@
         </div>
       </div>
 
+      <!-- Loading State -->
+      <div v-if="isLoadingPeserta" class="mb-6 p-4 flex items-center justify-center bg-white rounded-lg shadow-md">
+        <div class="flex items-center gap-3">
+          <div class="animate-spin">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+          </div>
+          <p class="text-sm text-gray-600">Memuat data peserta...</p>
+        </div>
+      </div>
+
       <!-- Filter dan Search -->
       <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-6">
         <div :class="kegiatanId ? 'grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'">
@@ -694,6 +706,7 @@
 <script>
 import { ref, computed, watch, onMounted } from 'vue'
 import database from '@/data/index.js'
+import { fetchAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import * as XLSX from 'xlsx'
 
@@ -710,6 +723,7 @@ export default {
     const kegiatan = ref(database.kegiatan)
     const pegawai = ref(database.pegawai)
     const sertifikat = ref(database.sertifikat)
+    const isLoadingPeserta = ref(false)
 
     const showAddModal = ref(false)
     const showDetailModal = ref(false)
@@ -722,16 +736,53 @@ export default {
     const filterKegiatan = ref(props.kegiatanId || '')
     const filterStatus = ref('')
 
+    // Helper function to load peserta from API
+    const loadPesertaFromAPI = async () => {
+      isLoadingPeserta.value = true
+      try {
+        let endpoint = 'peserta'
+        if (props.kegiatanId) {
+          // Load peserta untuk kegiatan tertentu
+          endpoint = `kegiatan/${props.kegiatanId}/peserta`
+        }
+        const data = await fetchAPI(endpoint)
+        peserta.value = Array.isArray(data) ? data : (data.data || [])
+        console.log(`[PesertaManagement] Loaded ${peserta.value.length} peserta from API`)
+      } catch (error) {
+        console.warn('[PesertaManagement] Failed to load peserta from API, using local data:', error)
+        // Keep using local data as fallback
+      } finally {
+        isLoadingPeserta.value = false
+      }
+    }
+
+    // Helper function to load kegiatan from API
+    const loadKegiatanFromAPI = async () => {
+      try {
+        const data = await fetchAPI('kegiatan')
+        kegiatan.value = Array.isArray(data) ? data : (data.data || [])
+        console.log(`[PesertaManagement] Loaded ${kegiatan.value.length} kegiatan from API`)
+      } catch (error) {
+        console.warn('[PesertaManagement] Failed to load kegiatan from API, using local data:', error)
+        // Keep using local data as fallback
+      }
+    }
+
     // Auto-set filter kegiatan if kegiatanId prop is provided
     watch(() => props.kegiatanId, (newVal) => {
       if (newVal) {
         filterKegiatan.value = newVal
+        // Reload peserta when kegiatan changes
+        loadPesertaFromAPI()
       }
     }, { immediate: true })
 
     // Log page access
     onMounted(() => {
       ActivityEvents.ACCESS_PAGE('Manajemen Peserta')
+      // Load data from API
+      loadKegiatanFromAPI()
+      loadPesertaFromAPI()
     })
 
     const formPeserta = ref({
@@ -1038,6 +1089,7 @@ export default {
       kegiatan,
       pegawai,
       sertifikat,
+      isLoadingPeserta,
       showAddModal,
       showDetailModal,
       showSertifikatModal,
@@ -1068,7 +1120,8 @@ export default {
       saveSertifikat,
       resetFormPeserta,
       resetFormSertifikat,
-      exportPeserta
+      exportPeserta,
+      loadPesertaFromAPI
     }
   }
 }
