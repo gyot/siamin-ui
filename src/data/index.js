@@ -92,28 +92,46 @@ export const syncDatabaseWithAPI = async () => {
   }
 }
 
-// Auto-load data dari API dengan JSON fallback saat module diimport
+// ==================================================================================
+// lazy-loading helper
+// the module no longer fetches all tables immediately during import. instead
+// consumer code must call `ensureDataLoaded()` when it actually needs the data.
+// this keeps the initial bundle light and avoids unnecessary API traffic.
+// ==================================================================================
+
 let dataLoadPromise = null
 
-if (typeof window !== 'undefined') {
-  // Only in browser environment
-  console.log('[Data] 🔄 Loading data from API (with JSON fallback)...')
-  
-  // Create promise that resolves when all data is loaded (or fallback used)
-  dataLoadPromise = loadAllDataFromAPI()
-    .then(() => {
-      console.log('[Data] ✅ Data loading complete (API + JSON fallback)')
-      console.log('[Data] Database state:', Object.keys(db).map(k => `${k}: ${db[k]?.length || 0}`).join(', '))
-      return db
-    })
-    .catch(err => {
-      console.error('[Data] ❌ Unexpected error during data loading:', err)
-      console.log('[Data] Using JSON fallback data')
-      return db
-    })
+/**
+ * Trigger a full data sync (API + JSON fallback) if it hasn't been started yet.
+ * callers can `await ensureDataLoaded()` before accessing `database`.
+ * subsequent calls return the same promise so the load happens only once.
+ */
+export const ensureDataLoaded = () => {
+  if (!dataLoadPromise) {
+    console.log('[Data] 🔄 ensureDataLoaded() initiating loadAllDataFromAPI()')
+    dataLoadPromise = loadAllDataFromAPI()
+      .then(() => {
+        console.log('[Data] ✅ Data loading complete (API + JSON fallback)')
+        console.log(
+          '[Data] Database state:',
+          Object.keys(db)
+            .map(k => `${k}: ${db[k]?.length || 0}`)
+            .join(', ')
+        )
+        return db
+      })
+      .catch(err => {
+        console.error('[Data] ❌ Unexpected error during data loading:', err)
+        console.log('[Data] Using JSON fallback data')
+        return db
+      })
+  }
+  return dataLoadPromise
 }
 
-// Export the promise so components can wait if needed
-export const dataReady = dataLoadPromise || Promise.resolve(db)
+// keep a legacy export in case some older code still uses it
+// now `dataReady` is a function; callers must invoke it if they want the
+// promise. nothing happens on import anymore.
+export const dataReady = () => ensureDataLoaded()
 
 export default db

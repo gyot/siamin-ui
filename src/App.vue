@@ -6,7 +6,7 @@
 
 <script>
 import { onMounted } from 'vue'
-import { dataReady } from '@/data/index.js'
+// data is now loaded on demand; components should call ensureDataLoaded()/loadDataFromAPI()
 import { useAuthStore } from '@/stores/auth'
 
 export default {
@@ -20,20 +20,11 @@ export default {
        * ========================= */
       auth.restoreAuth()
 
-      /* =========================
-       * BACKGROUND DATA LOAD
-       * ========================= */
-      console.log('[App] Loading data in background (non-blocking)...')
-      dataReady
-        .then(() => {
-          console.log('[App] ✅ Background data load complete')
-        })
-        .catch(err => {
-          console.warn(
-            '[App] ⚠️ Background data load failed (non-critical):',
-            err.message
-          )
-        })
+      /* Previously the app would eagerly load every table when mounted.  
+         That's been removed to keep startup fast.  data.ts now exposes
+         `ensureDataLoaded()` if you really need to prime the cache; most
+         pages just call `loadDataFromAPI('kegiatan')` or similar when they
+         render. */
     })
 
     return {}

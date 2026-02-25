@@ -13,8 +13,10 @@
 ### 2. Data Loading
 - ✅ Updated `src/data/index.js`
   - Fallback to local JSON data
-  - Auto-load from API on startup
-  - Helper functions: `loadDataFromAPI()`, `loadAllDataFromAPI()`
+  - **Lazy loading:** no longer auto-fetch all tables on import; use
+    `ensureDataLoaded()` or `loadDataFromAPI()` when needed
+  - Helper functions: `loadDataFromAPI()`, `loadAllDataFromAPI()`,
+    `ensureDataLoaded()`
   - Caching mechanism
 
 ### 3. Composables

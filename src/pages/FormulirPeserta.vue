@@ -25,7 +25,7 @@
           </div>
 
           <div class="w-full sm:w-48 flex-shrink-0">
-            <img v-if="flyerUrl" :src="flyerUrl" :alt="`Flyer ${kegiatan.nama_kegiatan}`"
+            <img v-if="flyerUrl" :src="flyerUrl" loading="lazy" :alt="`Flyer ${kegiatan.nama_kegiatan}`"
               class="rounded-md object-cover w-full h-32" />
             <div v-else
               class="w-full h-32 bg-gray-100 rounded-md flex items-center justify-center text-sm text-slate-500">Tidak
@@ -267,8 +267,8 @@
             <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 mb-4 bg-slate-50">
               <canvas ref="signatureCanvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
                 @mouseout="stopDrawing" @touchstart="startDrawing" @touchmove="draw" @touchend="stopDrawing"
-                class="w-full border border-slate-300 rounded-lg cursor-crosshair bg-white"
-                style="height: 200px; display: block;"></canvas>
+                class="w-full border border-slate-300 rounded-lg cursor-crosshair bg-white block"
+                style="height: 200px; display: block; touch-action: none; outline: none;"></canvas>
             </div>
 
             <div class="flex gap-3 mb-4">
@@ -364,6 +364,25 @@ export default {
 
     onMounted(() => {
       loadKegiatan()
+      
+      // initialize canvas dimensions after the DOM is rendered
+      // this ensures the canvas has proper DPI-aware dimensions
+      setTimeout(() => {
+        const canvas = signatureCanvas.value
+        if (!canvas) return
+
+        const rect = canvas.getBoundingClientRect()
+        // set canvas internal resolution
+        canvas.width = rect.width
+        canvas.height = rect.height
+
+        // set up canvas context defaults
+        const ctx = canvas.getContext('2d')
+        ctx.strokeStyle = '#1e293b'
+        ctx.lineWidth = 2
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+      }, 100)
     })
 
     // Find kegiatan by code/ID (prefer API result)
@@ -410,6 +429,7 @@ export default {
       if (!f) return null
       if (/^https?:\/\//.test(f)) return f
       const base = import.meta.env.VITE_API_BASE_URL + '/storage/' || ''
+      // const base = '/storage/' || ''
       return base.replace(/\/$/, '') + '/' + String(f).replace(/^\//, '')
     })
 
@@ -556,6 +576,7 @@ export default {
     }
 
     const startDrawing = (e) => {
+      e.preventDefault() // prevent scrolling and other default behaviors
       isDrawing = true
       const canvas = signatureCanvas.value
       if (!canvas) return
@@ -564,8 +585,14 @@ export default {
       const scaleX = canvas.width / rect.width
       const scaleY = canvas.height / rect.height
 
-      const x = (e.clientX - rect.left) * scaleX || (e.touches && (e.touches[0].clientX - rect.left) * scaleX)
-      const y = (e.clientY - rect.top) * scaleY || (e.touches && (e.touches[0].clientY - rect.top) * scaleY)
+      // determine source of coordinates (mouse or touch)
+      const clientX = e.clientX !== undefined ? e.clientX : e.touches[0]?.clientX
+      const clientY = e.clientY !== undefined ? e.clientY : e.touches[0]?.clientY
+
+      if (clientX === undefined || clientY === undefined) return
+
+      const x = (clientX - rect.left) * scaleX
+      const y = (clientY - rect.top) * scaleY
 
       const ctx = canvas.getContext('2d')
       ctx.beginPath()
@@ -574,6 +601,7 @@ export default {
 
     const draw = (e) => {
       if (!isDrawing) return
+      e.preventDefault() // prevent scrolling and other default behaviors
 
       const canvas = signatureCanvas.value
       if (!canvas) return
@@ -582,18 +610,20 @@ export default {
       const scaleX = canvas.width / rect.width
       const scaleY = canvas.height / rect.height
 
-      const x = (e.clientX - rect.left) * scaleX || (e.touches && (e.touches[0].clientX - rect.left) * scaleX)
-      const y = (e.clientY - rect.top) * scaleY || (e.touches && (e.touches[0].clientY - rect.top) * scaleY)
+      // determine source of coordinates (mouse or touch)
+      const clientX = e.clientX !== undefined ? e.clientX : e.touches[0]?.clientX
+      const clientY = e.clientY !== undefined ? e.clientY : e.touches[0]?.clientY
+
+      if (clientX === undefined || clientY === undefined) return
+
+      const x = (clientX - rect.left) * scaleX
+      const y = (clientY - rect.top) * scaleY
 
       const ctx = canvas.getContext('2d')
       ctx.lineTo(x, y)
-      ctx.lineWidth = 2
-      ctx.lineCap = 'round'
-      ctx.lineJoin = 'round'
-      ctx.strokeStyle = '#1e293b'
       ctx.stroke()
 
-      // Save signature data
+      // save signature data after drawing
       signatureData.value = canvas.toDataURL('image/png')
     }
 

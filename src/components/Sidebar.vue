@@ -50,7 +50,7 @@
         </svg>
         <span class="truncate text-sm">Peserta</span>
       </RouterLink>
-      <RouterLink 
+      <!-- <RouterLink 
         to="/admin/surat-tugas" 
         class="sidebar-item"
         @click="handleClick"
@@ -59,8 +59,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
         <span class="truncate text-sm">Surat Tugas</span>
-      </RouterLink>
-      <RouterLink 
+      </RouterLink> -->
+      <!-- <RouterLink 
         to="/admin/sertifikat" 
         class="sidebar-item"
         @click="handleClick"
@@ -69,10 +69,10 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
         </svg>
         <span class="truncate text-sm">Sertifikat</span>
-      </RouterLink>
+      </RouterLink> -->
 
       <!-- Admin Only Menu -->
-      <div v-if="userRole === 'admin'" class="pt-2 mt-2 border-t border-slate-100">
+      <!-- <div v-if="userRole === 'admin'" class="pt-2 mt-2 border-t border-slate-100">
         <p class="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Admin</p>
         <RouterLink 
           to="/admin/pegawai" 
@@ -104,7 +104,7 @@
           </svg>
           <span class="truncate text-sm">Anggota Tim</span>
         </RouterLink>
-      </div>
+      </div> -->
     </nav>
 
     <!-- Footer -->

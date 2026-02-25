@@ -238,7 +238,7 @@
                 
                 <!-- Preview Gambar -->
                 <div v-if="formData.flyer" class="mb-4">
-                  <img :src="getFlyerUrl(formData.flyer)" alt="Flyer Preview" class="max-h-48 mx-auto rounded-lg shadow-md" />
+                  <img :src="formData.flyer" alt="Flyer Preview" class="max-h-48 mx-auto rounded-lg shadow-md" />
                   <button 
                     type="button"
                     @click="removeFlyerImage"
@@ -305,23 +305,23 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">URL Dokumentasi</label>
-              <input type="url" v-model="formData.dokumentasi_url" placeholder="https://..." class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+              <input type="text" v-model="formData.dokumentasi_url" placeholder="https://..." class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">URL Materi</label>
-              <input type="url" v-model="formData.materi_url" placeholder="https://..." class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+              <input type="text" v-model="formData.materi_url" placeholder="https://..." class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">URL Panduan</label>
-              <input type="url" v-model="formData.panduan_url" placeholder="https://..." class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+              <input type="text" v-model="formData.panduan_url" placeholder="https://..." class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">URL Laporan</label>
-              <input type="url" v-model="formData.laporan_url" placeholder="https://..." class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+              <input type="text" v-model="formData.laporan_url" placeholder="https://..." class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">URL Surat Menyurat</label>
-              <input type="url" v-model="formData.surat_menyurat_url" placeholder="https://..." class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+              <input type="text" v-model="formData.surat_menyurat_url" placeholder="https://..." class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
             </div>
           </div>
         </div>
