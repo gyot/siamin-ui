@@ -1197,6 +1197,7 @@ export default {
           nama_instansi: pesertaData.nama_instansi,
           kegiatan: getNamaKegiatan(pesertaData.id_kegiatan),
           peran: pesertaData.peran || 'Peserta',
+          tanda_tangan_url: pesertaData.tanda_tangan_url || pesertaData.tanda_tangan || pesertaData.tandatangan || '',
 
           // Tambahkan field lain sesuai kebutuhan
         }
