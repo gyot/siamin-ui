@@ -580,6 +580,12 @@
               >
                 Edit Peserta
               </button>
+              <button
+                @click="downloadPesertaDocx(selectedPeserta)"
+                class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Download DOCX
+              </button>
             </div>
           </div>
         </div>
