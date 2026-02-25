@@ -12,11 +12,11 @@
             </div>
             <div>
               <h1 class="text-xl font-bold text-white">SIAMIN</h1>
-              <p class="text-blue-200 text-xs">Kementerian Komunikasi dan Informatika</p>
+              <p class="text-blue-200 text-xs">Kementerian Pendidikan Dasar dan Menengah</p>
             </div>
           </RouterLink>
           <div class="flex items-center gap-3">
-            <RouterLink 
+            <!-- <RouterLink 
               to="/verify-sertifikat" 
               class="hidden sm:flex items-center gap-2 px-4 py-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-lg transition"
             >
@@ -24,7 +24,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h2M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
               </svg>
               <span>Verifikasi Sertifikat</span>
-            </RouterLink>
+            </RouterLink> -->
             <RouterLink 
               to="/login" 
               class="btn-primary px-5 py-2.5 text-white rounded-lg font-medium shadow-lg"
@@ -62,7 +62,7 @@
                 </svg>
                 Login Admin
               </RouterLink>
-              <RouterLink 
+              <!-- <RouterLink 
                 to="/login-peserta" 
                 class="px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold backdrop-blur border border-white/20 transition flex items-center justify-center gap-2"
               >
@@ -70,7 +70,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                 </svg>
                 Login Peserta
-              </RouterLink>
+              </RouterLink> -->
             </div>
           </div>
           
@@ -117,7 +117,7 @@
       </div>
 
       <!-- Stats Section -->
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <!-- <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div class="bg-white/5 backdrop-blur-lg rounded-2xl border border-white/10 p-8">
           <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div class="text-center">
@@ -138,14 +138,14 @@
             </div>
           </div>
         </div>
-      </div>
+      </div> -->
     </main>
 
     <!-- Footer -->
     <footer class="border-t border-white/10 py-8">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p class="text-blue-200 text-sm">© 2025 SIAMIN - Kementerian Komunikasi dan Informatika</p>
+          <p class="text-blue-200 text-sm">© 2025 SIAMIN - Kementerian Pendidikan Dasar dan Menengah</p>
           <div class="flex items-center gap-6">
             <RouterLink to="/verify-sertifikat" class="text-blue-200 hover:text-white text-sm transition">Verifikasi Sertifikat</RouterLink>
             <a href="#" class="text-blue-200 hover:text-white text-sm transition">Bantuan</a>

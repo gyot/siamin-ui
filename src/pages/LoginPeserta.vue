@@ -17,7 +17,7 @@
           </div>
           <div>
             <h1 class="text-2xl font-bold text-white">SIAMIN</h1>
-            <p class="text-emerald-200 text-sm">Kementerian Komunikasi dan Informatika</p>
+            <p class="text-emerald-200 text-sm">Kementerian Pendidikan Dasar dan Menengah</p>
           </div>
         </div>
         <h2 class="text-4xl font-bold text-white leading-tight mb-4">

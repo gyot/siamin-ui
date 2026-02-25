@@ -741,9 +741,7 @@ export default {
     }
   },
   setup(props) {
-    console.log('[PesertaManagement] Component setup initialized')
-    console.log('[PesertaManagement] Props:', props)
-    
+
     const peserta = ref([])
     const kegiatan = ref([])
     const pegawai = ref(database.pegawai)
@@ -768,9 +766,7 @@ export default {
         // Always fetch from /peserta endpoint
         // Filter by kegiatan will be done in frontend
         const endpoint = 'peserta'
-        console.log(`[PesertaManagement] Fetching from endpoint: ${endpoint}`)
         const data = await fetchAPI(endpoint)
-        console.log(`[PesertaManagement] API Response:`, data)
         
         // Handle different response formats
         if (Array.isArray(data)) {
@@ -784,7 +780,6 @@ export default {
           console.warn('[PesertaManagement] Unexpected response format:', data)
         }
         
-        console.log(`[PesertaManagement] Loaded ${peserta.value.length} peserta from API`)
       } catch (error) {
         console.error('[PesertaManagement] Failed to load peserta from API:', error.message)
         console.error('[PesertaManagement] Full error:', error)
@@ -797,9 +792,7 @@ export default {
     // Helper function to load kegiatan from API
     const loadKegiatanFromAPI = async () => {
       try {
-        console.log('[PesertaManagement] Fetching kegiatan from API...')
         const data = await fetchAPI('kegiatan')
-        console.log('[PesertaManagement] Kegiatan API Response:', data)
         
         if (Array.isArray(data)) {
           kegiatan.value = data
@@ -812,7 +805,6 @@ export default {
           console.warn('[PesertaManagement] Unexpected kegiatan response format:', data)
         }
         
-        console.log(`[PesertaManagement] Loaded ${kegiatan.value.length} kegiatan from API`)
       } catch (error) {
         console.error('[PesertaManagement] Failed to load kegiatan from API:', error.message)
         kegiatan.value = []
@@ -822,9 +814,7 @@ export default {
     // Helper function to load sertifikat from API
     const loadSertifikatFromAPI = async () => {
       try {
-        console.log('[PesertaManagement] Fetching sertifikat from API...')
         const data = await fetchAPI('sertifikat')
-        console.log('[PesertaManagement] Sertifikat API Response:', data)
         
         if (Array.isArray(data)) {
           sertifikat.value = data
@@ -837,7 +827,6 @@ export default {
           console.warn('[PesertaManagement] Unexpected sertifikat response format:', data)
         }
         
-        console.log(`[PesertaManagement] Loaded ${sertifikat.value.length} sertifikat from API`)
       } catch (error) {
         console.error('[PesertaManagement] Failed to load sertifikat from API:', error.message)
         sertifikat.value = []
@@ -855,10 +844,8 @@ export default {
 
     // Log page access
     onMounted(() => {
-      console.log('[PesertaManagement] onMounted triggered - Component is now mounted')
       ActivityEvents.ACCESS_PAGE('Manajemen Peserta')
       // Load data from API
-      console.log('[PesertaManagement] Triggering API data loads...')
       loadKegiatanFromAPI()
       loadPesertaFromAPI()
       loadSertifikatFromAPI()

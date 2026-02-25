@@ -15,7 +15,7 @@ export const mockLoginAdmin = async (email, password) => {
         name: 'Admin Test User',
         email: 'admin@kemkominfo.go.id',
         role: 'admin',
-        instansi: 'Kementerian Komunikasi dan Informatika'
+        instansi: 'Kementerian Pendidikan Dasar dan Menengah'
       }
     }
   }

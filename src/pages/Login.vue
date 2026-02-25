@@ -17,7 +17,7 @@
           </div>
           <div>
             <h1 class="text-2xl font-bold text-white">SIAMIN</h1>
-            <p class="text-blue-200 text-sm">Kementerian Komunikasi dan Informatika</p>
+            <p class="text-blue-200 text-sm">Kementerian Pendidikan Dasar dan Menengah</p>
           </div>
         </div>
         <h2 class="text-4xl font-bold text-white leading-tight mb-4">
@@ -145,20 +145,20 @@
             </div>
 
             <!-- Demo Credentials -->
-            <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <!-- <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p class="text-xs font-medium text-blue-900 mb-2">Demo Credentials:</p>
               <p class="text-xs text-blue-700">Email: admin@kemkominfo.go.id</p>
               <p class="text-xs text-blue-700">Password: password123</p>
-            </div>
+            </div> -->
           </form>
 
           <!-- Switch to Peserta Login -->
-          <div class="mt-6 text-center">
+          <!-- <div class="mt-6 text-center">
             <p class="text-slate-600 text-sm">Masuk sebagai peserta?</p>
             <RouterLink to="/login-peserta" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
               Login Peserta
             </RouterLink>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>
