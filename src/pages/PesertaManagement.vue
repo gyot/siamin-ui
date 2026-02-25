@@ -15,6 +15,12 @@
             Export Excel
           </button>
           <button
+            @click="downloadBatchDocxZip"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+          >
+            Download Batch DOCX
+          </button>
+          <button
             @click="showAddModal = true"
             class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base"
           >
@@ -718,6 +724,7 @@ import { ActivityEvents } from '@/services/activityLogger'
 import * as XLSX from 'xlsx'
 import { processDocxTemplate } from '@/utils/docxUtils.js'
 import { PDFDocument } from 'pdf-lib'
+import JSZip from 'jszip'
 
 export default {
   name: 'Peserta',
@@ -1197,6 +1204,36 @@ export default {
       }
     }
 
+    const downloadBatchDocxZip = async () => {
+      const zip = new JSZip()
+      const templateResponse = await fetch('/template_peserta.docx')
+      const templateDocx = await templateResponse.blob()
+      for (const p of filteredPeserta.value) {
+        const data = {
+          nama_lengkap: p.nama_lengkap,
+          nip: p.nip,
+          email: p.email,
+          nama_instansi: p.nama_instansi,
+          kegiatan: getNamaKegiatan(p.id_kegiatan),
+          peran: p.peran || 'Peserta',
+        }
+        // Proses template untuk peserta ini
+        // processDocxTemplate harus bisa return blob jika filename=null
+        const docxBlob = await processDocxTemplate(templateDocx, data, null)
+        zip.file(`peserta_${p.id_peserta}.docx`, docxBlob)
+      }
+      // Generate ZIP dan download
+      const zipBlob = await zip.generateAsync({ type: 'blob' })
+      const url = window.URL.createObjectURL(zipBlob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `peserta_batch_${new Date().toISOString().slice(0,10)}.zip`
+      document.body.appendChild(link)
+      link.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(link)
+    }
+
     return {
       peserta,
       kegiatan,
@@ -1238,7 +1275,8 @@ export default {
       loadKegiatanFromAPI,
       loadSertifikatFromAPI,
       // downloadPesertaPdf,
-      downloadPesertaDocx
+      downloadPesertaDocx,
+      downloadBatchDocxZip
     }
   }
 }
