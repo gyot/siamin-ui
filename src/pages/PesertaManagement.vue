@@ -1199,7 +1199,7 @@ export default {
         const docxFilename = `${pesertaData.peran} - ${pesertaData.nama_lengkap}.docx`
         await processDocxTemplate(templateDocx, data, docxFilename)
       } catch (error) {
-        console.error('Gagal download DOCX peserta:', error)
+        console.error('Gagal download DOCX peserta :', error)
         alert('Gagal download DOCX peserta. Cek template atau data.')
       }
     }
