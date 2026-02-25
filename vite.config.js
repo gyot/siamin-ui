@@ -16,7 +16,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: process.env.VITE_API_BASE_URL || 'https://backend-siamin.bpmpntb.id',
+        target: process.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '')
