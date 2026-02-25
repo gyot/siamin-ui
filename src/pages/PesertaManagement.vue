@@ -165,6 +165,12 @@
                       Sert
                     </button>
                     <button
+                      @click="downloadPesertaDocx(p)"
+                      class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                    >
+                      DOCX
+                    </button>
+                    <button
                       @click="deletePeserta(p.id_peserta)"
                       class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-xs font-semibold whitespace-nowrap"
                     >
@@ -708,7 +714,10 @@ import { ref, computed, watch, onMounted } from 'vue'
 import database from '@/data/index.js'
 import { fetchAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
+
 import * as XLSX from 'xlsx'
+import { processDocxTemplate } from '@/utils/docxUtils.js'
+import { PDFDocument } from 'pdf-lib'
 
 export default {
   name: 'Peserta',
@@ -1140,6 +1149,53 @@ export default {
       // Log export activity
       ActivityEvents.EXPORT_DATA(`Peserta (${filteredPeserta.value.length} records)`, 'xlsx')
     }
+    
+    const dateFormat = (date) => {
+      let bulanFull = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+      let bulanShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+      const bulan = bulanFull // Ganti ke bulanFull jika ingin format bulan lengkap
+      if (!date) return ' '
+      const d = new Date(date)
+      return `${d.getDate().toString().padStart(2,'0')} ${bulan[d.getMonth()]} ${d.getFullYear()}`
+    }
+    // Fungsi download DOCX dari data peserta dengan template DOCX
+    const downloadPesertaDocx = async (pesertaData) => {
+      try {
+        // 1. Ambil template DOCX (misal dari public/template_peserta.docx)
+        const response = await fetch('/template_peserta.docx')
+        const templateDocx = await response.blob()
+
+        // 2. Siapkan data untuk replace
+        const data = {
+          judul_kegiatan: getNamaKegiatan(pesertaData.id_kegiatan),
+          tanggal_mulai: dateFormat(kegiatan.value.find(k => k.id_kegiatan === pesertaData.id_kegiatan)?.tanggal_mulai),
+          tanggal_selesai: dateFormat(kegiatan.value.find(k => k.id_kegiatan ===pesertaData.id_kegiatan)?.tanggal_selesai),
+          waktu : dateFormat(kegiatan.value.find(k => k.id_kegiatan === pesertaData.id_kegiatan)?.tanggal_mulai)+' s.d. '+ dateFormat(kegiatan.value.find(k => k.id_kegiatan === pesertaData.id_kegiatan)?.tanggal_selesai),
+          lokasi: kegiatan.value.find(k => k.id_kegiatan === pesertaData.id_kegiatan)?.lokasi || '-',
+          nama_lengkap: pesertaData.nama_lengkap,
+          nip: pesertaData.nip,
+          pangkat: pesertaData.pangkat,
+          instansi: pesertaData.nama_instansi,
+          jabatan: pesertaData.jabatan,
+          kabupaten_kota: pesertaData.kab_kota,
+          provinsi: pesertaData.provinsi,
+          no_hp: pesertaData.no_hp,
+          email: pesertaData.email,
+          nama_instansi: pesertaData.nama_instansi,
+          kegiatan: getNamaKegiatan(pesertaData.id_kegiatan),
+          peran: pesertaData.peran || 'Peserta',
+
+          // Tambahkan field lain sesuai kebutuhan
+        }
+
+        // 3. Generate DOCX baru dari template
+        const docxFilename = `${pesertaData.peran} - ${pesertaData.nama_lengkap}.docx`
+        await processDocxTemplate(templateDocx, data, docxFilename)
+      } catch (error) {
+        console.error('Gagal download DOCX peserta:', error)
+        alert('Gagal download DOCX peserta. Cek template atau data.')
+      }
+    }
 
     return {
       peserta,
@@ -1180,7 +1236,9 @@ export default {
       exportPeserta,
       loadPesertaFromAPI,
       loadKegiatanFromAPI,
-      loadSertifikatFromAPI
+      loadSertifikatFromAPI,
+      // downloadPesertaPdf,
+      downloadPesertaDocx
     }
   }
 }
