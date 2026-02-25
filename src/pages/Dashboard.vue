@@ -699,6 +699,38 @@ export default {
         console.warn('[Dashboard] ⚠️ Failed to load users from API:', error.message)
       }
 
+      try {
+        console.log('[Dashboard] 🔄 Loading peserta data from API...')
+        const pesertaData = await fetchAPI('peserta')
+        if (Array.isArray(pesertaData)) {
+          peserta.value = pesertaData
+          totalPeserta.value = pesertaData.length
+          console.log('[Dashboard] ✅ Peserta data loaded:', pesertaData.length, 'records')
+        } else if (pesertaData && pesertaData.data && Array.isArray(pesertaData.data)) {
+          peserta.value = pesertaData.data
+          totalPeserta.value = pesertaData.data.length
+          console.log('[Dashboard] ✅ Peserta data loaded:', pesertaData.data.length, 'records')
+        }
+      } catch (error) {
+        console.warn('[Dashboard] ⚠️ Failed to load peserta from API:', error.message)
+      }
+
+      try {
+        console.log('[Dashboard] 🔄 Loading sertifikat data from API...')
+        const sertifikatData = await fetchAPI('sertifikat')
+        if (Array.isArray(sertifikatData)) {
+          sertifikat.value = sertifikatData
+          totalSertifikat.value = sertifikatData.filter(s => s.status === 'terbit').length
+          console.log('[Dashboard] ✅ Sertifikat data loaded:', sertifikatData.length, 'records')
+        } else if (sertifikatData && sertifikatData.data && Array.isArray(sertifikatData.data)) {
+          sertifikat.value = sertifikatData.data
+          totalSertifikat.value = sertifikatData.data.filter(s => s.status === 'terbit').length
+          console.log('[Dashboard] ✅ Sertifikat data loaded:', sertifikatData.data.length, 'records')
+        }
+      } catch (error) {
+        console.warn('[Dashboard] ⚠️ Failed to load sertifikat from API:', error.message)
+      }
+
       // Trigger profilePegawai computed untuk mendapatkan profile yang tepat
       const profile = profilePegawai.value
       if (profile) {

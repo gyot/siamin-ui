@@ -12,6 +12,18 @@
         </router-link>
       </div>
 
+      <!-- Loading State -->
+      <div v-if="isLoadingKegiatan" class="mb-6 p-4 flex items-center justify-center bg-white rounded-lg shadow-md">
+        <div class="flex items-center gap-3">
+          <div class="animate-spin">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+          </div>
+          <p class="text-sm text-gray-600">Memuat data kegiatan...</p>
+        </div>
+      </div>
+
       <!-- Info Kegiatan Header -->
       <div v-if="currentKegiatan" class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6 mb-4 sm:mb-6">
         <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-3 sm:mb-4">{{ currentKegiatan.nama_kegiatan }}</h1>
@@ -35,6 +47,11 @@
         </div>
       </div>
 
+      <!-- Error State -->
+      <div v-else-if="!isLoadingKegiatan" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <p class="text-red-800 text-sm">Kegiatan tidak ditemukan</p>
+      </div>
+
       <!-- Embed Halaman Peserta Management -->
       <PesertaManagement v-if="currentKegiatan" :kegiatan-id="currentKegiatan.id_kegiatan" />
     </div>
@@ -46,6 +63,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import PesertaManagement from './PesertaManagement.vue'
 import database from '@/data/index.js'
+import { fetchAPI } from '@/services/api'
 
 export default {
   name: 'KegiatanPeserta',
@@ -54,8 +72,9 @@ export default {
   },
   setup() {
     const route = useRoute()
-    const kegiatan = ref(database.kegiatan)
+    const kegiatan = ref([])
     const currentKegiatan = ref(null)
+    const isLoadingKegiatan = ref(true)
 
     const getMetodeLabel = (metode) => {
       const labels = {
@@ -71,15 +90,49 @@ export default {
       return new Date(date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
     }
 
-    onMounted(() => {
+    const loadKegiatanFromAPI = async () => {
+      isLoadingKegiatan.value = true
+      try {
+        console.log('[KegiatanPeserta] Loading kegiatan from API...')
+        const data = await fetchAPI('kegiatan')
+        console.log('[KegiatanPeserta] Kegiatan API Response:', data)
+        
+        if (Array.isArray(data)) {
+          kegiatan.value = data
+        } else if (data && Array.isArray(data.data)) {
+          kegiatan.value = data.data
+        } else {
+          kegiatan.value = []
+        }
+        
+        console.log(`[KegiatanPeserta] Loaded ${kegiatan.value.length} kegiatan`)
+        findCurrentKegiatan()
+      } catch (error) {
+        console.error('[KegiatanPeserta] Failed to load kegiatan from API:', error)
+        kegiatan.value = []
+      } finally {
+        isLoadingKegiatan.value = false
+      }
+    }
+
+    const findCurrentKegiatan = () => {
       const kegiatanId = route.params.id
-      currentKegiatan.value = kegiatan.value.find(k => k.id_kegiatan == kegiatanId)
+      console.log('[KegiatanPeserta] Looking for kegiatan ID:', kegiatanId)
+      const found = kegiatan.value.find(k => String(k.id_kegiatan) === String(kegiatanId))
+      console.log('[KegiatanPeserta] Found kegiatan:', found)
+      currentKegiatan.value = found || null
+    }
+
+    onMounted(() => {
+      console.log('[KegiatanPeserta] Component mounted, loading kegiatan...')
+      loadKegiatanFromAPI()
     })
 
     return {
       currentKegiatan,
       getMetodeLabel,
-      formatDate
+      formatDate,
+      isLoadingKegiatan
     }
   }
 }

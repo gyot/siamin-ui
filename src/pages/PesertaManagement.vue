@@ -719,10 +719,13 @@ export default {
     }
   },
   setup(props) {
-    const peserta = ref(database.peserta)
-    const kegiatan = ref(database.kegiatan)
+    console.log('[PesertaManagement] Component setup initialized')
+    console.log('[PesertaManagement] Props:', props)
+    
+    const peserta = ref([])
+    const kegiatan = ref([])
     const pegawai = ref(database.pegawai)
-    const sertifikat = ref(database.sertifikat)
+    const sertifikat = ref([])
     const isLoadingPeserta = ref(false)
 
     const showAddModal = ref(false)
@@ -740,17 +743,30 @@ export default {
     const loadPesertaFromAPI = async () => {
       isLoadingPeserta.value = true
       try {
-        let endpoint = 'peserta'
-        if (props.kegiatanId) {
-          // Load peserta untuk kegiatan tertentu
-          endpoint = `kegiatan/${props.kegiatanId}/peserta`
-        }
+        // Always fetch from /peserta endpoint
+        // Filter by kegiatan will be done in frontend
+        const endpoint = 'peserta'
+        console.log(`[PesertaManagement] Fetching from endpoint: ${endpoint}`)
         const data = await fetchAPI(endpoint)
-        peserta.value = Array.isArray(data) ? data : (data.data || [])
+        console.log(`[PesertaManagement] API Response:`, data)
+        
+        // Handle different response formats
+        if (Array.isArray(data)) {
+          peserta.value = data
+        } else if (data && Array.isArray(data.data)) {
+          peserta.value = data.data
+        } else if (data && data.peserta && Array.isArray(data.peserta)) {
+          peserta.value = data.peserta
+        } else {
+          peserta.value = []
+          console.warn('[PesertaManagement] Unexpected response format:', data)
+        }
+        
         console.log(`[PesertaManagement] Loaded ${peserta.value.length} peserta from API`)
       } catch (error) {
-        console.warn('[PesertaManagement] Failed to load peserta from API, using local data:', error)
-        // Keep using local data as fallback
+        console.error('[PesertaManagement] Failed to load peserta from API:', error.message)
+        console.error('[PesertaManagement] Full error:', error)
+        peserta.value = []
       } finally {
         isLoadingPeserta.value = false
       }
@@ -759,12 +775,50 @@ export default {
     // Helper function to load kegiatan from API
     const loadKegiatanFromAPI = async () => {
       try {
+        console.log('[PesertaManagement] Fetching kegiatan from API...')
         const data = await fetchAPI('kegiatan')
-        kegiatan.value = Array.isArray(data) ? data : (data.data || [])
+        console.log('[PesertaManagement] Kegiatan API Response:', data)
+        
+        if (Array.isArray(data)) {
+          kegiatan.value = data
+        } else if (data && Array.isArray(data.data)) {
+          kegiatan.value = data.data
+        } else if (data && data.kegiatan && Array.isArray(data.kegiatan)) {
+          kegiatan.value = data.kegiatan
+        } else {
+          kegiatan.value = []
+          console.warn('[PesertaManagement] Unexpected kegiatan response format:', data)
+        }
+        
         console.log(`[PesertaManagement] Loaded ${kegiatan.value.length} kegiatan from API`)
       } catch (error) {
-        console.warn('[PesertaManagement] Failed to load kegiatan from API, using local data:', error)
-        // Keep using local data as fallback
+        console.error('[PesertaManagement] Failed to load kegiatan from API:', error.message)
+        kegiatan.value = []
+      }
+    }
+
+    // Helper function to load sertifikat from API
+    const loadSertifikatFromAPI = async () => {
+      try {
+        console.log('[PesertaManagement] Fetching sertifikat from API...')
+        const data = await fetchAPI('sertifikat')
+        console.log('[PesertaManagement] Sertifikat API Response:', data)
+        
+        if (Array.isArray(data)) {
+          sertifikat.value = data
+        } else if (data && Array.isArray(data.data)) {
+          sertifikat.value = data.data
+        } else if (data && data.sertifikat && Array.isArray(data.sertifikat)) {
+          sertifikat.value = data.sertifikat
+        } else {
+          sertifikat.value = []
+          console.warn('[PesertaManagement] Unexpected sertifikat response format:', data)
+        }
+        
+        console.log(`[PesertaManagement] Loaded ${sertifikat.value.length} sertifikat from API`)
+      } catch (error) {
+        console.error('[PesertaManagement] Failed to load sertifikat from API:', error.message)
+        sertifikat.value = []
       }
     }
 
@@ -779,10 +833,13 @@ export default {
 
     // Log page access
     onMounted(() => {
+      console.log('[PesertaManagement] onMounted triggered - Component is now mounted')
       ActivityEvents.ACCESS_PAGE('Manajemen Peserta')
       // Load data from API
+      console.log('[PesertaManagement] Triggering API data loads...')
       loadKegiatanFromAPI()
       loadPesertaFromAPI()
+      loadSertifikatFromAPI()
     })
 
     const formPeserta = ref({
@@ -1121,7 +1178,9 @@ export default {
       resetFormPeserta,
       resetFormSertifikat,
       exportPeserta,
-      loadPesertaFromAPI
+      loadPesertaFromAPI,
+      loadKegiatanFromAPI,
+      loadSertifikatFromAPI
     }
   }
 }
