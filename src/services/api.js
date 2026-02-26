@@ -81,7 +81,7 @@ export const postAPI = async (endpoint, payload) => {
   try {
     const url = `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}`
 
-    // include auth header like fetchAPI does
+    // include auth header like fetchAPI does, KECUALI untuk endpoint peserta
     const authToken = localStorage.getItem('auth_token')
     const headers = {
       'Accept': 'application/json'
@@ -90,7 +90,8 @@ export const postAPI = async (endpoint, payload) => {
     if (!(payload instanceof FormData)) {
       headers['Content-Type'] = 'application/json'
     }
-    if (authToken) {
+    // Hanya tambahkan Authorization jika endpoint bukan peserta
+    if (authToken && endpoint !== 'peserta') {
       headers['Authorization'] = `Bearer ${authToken}`
     }
 
