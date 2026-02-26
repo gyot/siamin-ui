@@ -114,7 +114,12 @@
                 <select v-model="formData.pangkat"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   <option value="">Pilih Pangkat</option>
-
+                  <optgroup label="Non-ASN">
+                    <option value="Non ASN">Non ASN</option>
+                    <option value="Honorer">Honorer</option>
+                    <option value="Swasta">Swasta</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </optgroup>
                   <!-- PNS -->
                   <optgroup label="Golongan I">
                     <option value="Juru Muda / Ia">Juru Muda / Ia</option>
