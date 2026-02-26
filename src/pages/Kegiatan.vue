@@ -238,7 +238,7 @@
                 
                 <!-- Preview Gambar -->
                 <div v-if="formData.flyer" class="mb-4">
-                  <img :src="formData.flyer" alt="Flyer Preview" class="max-h-48 mx-auto rounded-lg shadow-md" />
+                  <img :src="getFlyerUrl(formData.flyer)" alt="Flyer Preview" class="max-h-48 mx-auto rounded-lg shadow-md" />
                   <button 
                     type="button"
                     @click="removeFlyerImage"
@@ -1036,7 +1036,7 @@ export default {
 
     const openEditFromDetail = () => {
       if (selectedKegiatan.value) {
-        formData.value = { ...selectedKegiatan.value }
+        formData.value = normalizeKegiatanFormData(selectedKegiatan.value)
         flyerFile.value = null
         editingId.value = selectedKegiatan.value.id_kegiatan
         showDetailModal.value = false
@@ -1119,19 +1119,69 @@ export default {
       }
     }
 
+    const buildKegiatanPayloadObject = (data, { isUpdate = false } = {}) => {
+      // Kirim hanya field yang memang diperlukan backend untuk create/update.
+      // Hindari mengirim field turunan seperti link_formulir atau metadata lain.
+      const payload = {
+        nama_kegiatan: data.nama_kegiatan,
+        rincian_kegiatan: data.rincian_kegiatan,
+        deskripsi: data.deskripsi,
+        tanggal_mulai: data.tanggal_mulai,
+        tanggal_selesai: data.tanggal_selesai,
+        lokasi: data.lokasi,
+        metode_pelaksanaan: data.metode_pelaksanaan,
+        metode_pembayaran: data.metode_pembayaran,
+        total_peserta: data.total_peserta,
+        peserta_ringkasan: data.peserta_ringkasan,
+        dokumentasi_url: data.dokumentasi_url,
+        materi_url: data.materi_url,
+        panduan_url: data.panduan_url,
+        laporan_url: data.laporan_url,
+        surat_menyurat_url: data.surat_menyurat_url,
+        status: data.status
+      }
+
+      // Untuk create tetap kirim id_pegawai jika ada.
+      if (!isUpdate && data.id_pegawai) {
+        payload.id_pegawai = data.id_pegawai
+      }
+
+      // Buang nilai undefined/null/empty string agar tidak memicu validasi tak perlu.
+      return Object.fromEntries(
+        Object.entries(payload).filter(([, value]) => value !== undefined && value !== null && value !== '')
+      )
+    }
+
+    const toDateInputValue = (value) => {
+      if (!value) return ''
+      const str = String(value)
+      const match = str.match(/^(\d{4}-\d{2}-\d{2})/)
+      if (match) return match[1]
+
+      const date = new Date(str)
+      if (Number.isNaN(date.getTime())) return ''
+      return date.toISOString().slice(0, 10)
+    }
+
+    const normalizeKegiatanFormData = (data) => ({
+      ...data,
+      tanggal_mulai: toDateInputValue(data.tanggal_mulai),
+      tanggal_selesai: toDateInputValue(data.tanggal_selesai)
+    })
+
     const editKegiatan = async (id) => {
       try {
         const item = await getKegiatan(id)
         if (item) {
           enrichWithLink(item)
-          formData.value = { ...item }
+          formData.value = normalizeKegiatanFormData(item)
           editingId.value = id
           showAddModal.value = true
         }
       } catch (err) {
-        const item = kegiatan.value.find(k => k.id_kegiatan === id)
+        const item = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
         if (item) {
-          formData.value = { ...item }
+          formData.value = normalizeKegiatanFormData(item)
           editingId.value = id
           showAddModal.value = true
         }
@@ -1160,6 +1210,7 @@ export default {
     }
 
     const saveKegiatan = async () => {
+      formData.value = normalizeKegiatanFormData(formData.value)
       if (!validateForm()) return
 
       try {
@@ -1167,28 +1218,34 @@ export default {
           formData.value.id_pegawai = currentUser.value.id_pegawai || currentUser.value.id || null
         }
 
+        const normalizedData = normalizeKegiatanFormData(formData.value)
+        const payloadObject = buildKegiatanPayloadObject(normalizedData, { isUpdate: Boolean(editingId.value) })
         let payload
         if (flyerFile.value) {
           payload = new FormData()
-          Object.keys(formData.value).forEach(key => {
-            if (key === 'flyer') return
-            const val = formData.value[key]
+          Object.keys(payloadObject).forEach(key => {
+            const val = payloadObject[key]
             if (val !== null && val !== undefined) {
               payload.append(key, val)
             }
           })
           payload.append('flyer', flyerFile.value)
         } else {
-          payload = { ...formData.value }
+          payload = { ...payloadObject }
         }
 
         if (editingId.value) {
           const updated = await updateKegiatan(editingId.value, payload)
-          enrichWithLink(updated)
-          const index = kegiatan.value.findIndex(k => k.id_kegiatan === editingId.value)
+          enrichWithLink(updated || {})
+          const index = kegiatan.value.findIndex(k => String(k.id_kegiatan) === String(editingId.value))
           if (index !== -1) {
-            kegiatan.value[index] = updated
+            kegiatan.value[index] = {
+              ...kegiatan.value[index],
+              ...(updated || {}),
+              ...normalizedData
+            }
           }
+          await loadKegiatan()
           // Log update
           ActivityEvents.UPDATE_KEGIATAN(editingId.value, formData.value.nama_kegiatan)
         } else {

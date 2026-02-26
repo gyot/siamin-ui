@@ -25,6 +25,21 @@ const ENDPOINTS = {
   subUnitKerja: 'sub-unit-kerja'
 }
 
+const buildApiErrorMessage = (errorData, fallback) => {
+  if (!errorData || typeof errorData !== 'object') return fallback
+  if (errorData.message) {
+    // Sertakan ringkasan error validasi jika tersedia.
+    if (errorData.errors && typeof errorData.errors === 'object') {
+      const details = Object.values(errorData.errors).flat().filter(Boolean)
+      if (details.length > 0) {
+        return `${errorData.message}: ${details.join('; ')}`
+      }
+    }
+    return errorData.message
+  }
+  return fallback
+}
+
 /**
  * Fetch data from API with flexible method support
  * @param {string} endpoint - API endpoint key or full URL
@@ -58,7 +73,7 @@ export const fetchAPI = async (endpoint, options = {}) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`)
+      throw new Error(buildApiErrorMessage(errorData, `API Error: ${response.status} ${response.statusText}`))
     }
 
     const data = await response.json()
@@ -103,7 +118,7 @@ export const postAPI = async (endpoint, payload) => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`)
+      throw new Error(buildApiErrorMessage(errorData, `API Error: ${response.status} ${response.statusText}`))
     }
 
     const data = await response.json()
@@ -136,17 +151,54 @@ export const updateAPI = async (endpoint, id, payload) => {
       headers['Authorization'] = `Bearer ${authToken}`
     }
 
-    const response = await fetch(url, {
+    const putResponse = await fetch(url, {
       method: 'PUT',
       headers,
       body: payload instanceof FormData ? payload : JSON.stringify(payload)
     })
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`)
+    if (putResponse.ok) {
+      const data = await putResponse.json()
+      return data.data || data
     }
 
-    const data = await response.json()
+    // Fallback for backends that only accept POST + method override.
+    const fallbackHeaders = {
+      'Accept': 'application/json'
+    }
+    if (authToken) {
+      fallbackHeaders['Authorization'] = `Bearer ${authToken}`
+    }
+
+    let fallbackBody
+    if (payload instanceof FormData) {
+      const fd = new FormData()
+      for (const [key, value] of payload.entries()) {
+        fd.append(key, value)
+      }
+      fd.append('_method', 'PUT')
+      fallbackBody = fd
+    } else {
+      fallbackHeaders['Content-Type'] = 'application/json'
+      fallbackBody = JSON.stringify({ ...(payload || {}), _method: 'PUT' })
+    }
+
+    const postOverrideResponse = await fetch(url, {
+      method: 'POST',
+      headers: fallbackHeaders,
+      body: fallbackBody
+    })
+
+    if (!postOverrideResponse.ok) {
+      const errorData = await postOverrideResponse.json().catch(() => ({}))
+      throw new Error(
+        buildApiErrorMessage(errorData,
+        `API Error: PUT ${putResponse.status} ${putResponse.statusText}; POST override ${postOverrideResponse.status} ${postOverrideResponse.statusText}`
+        )
+      )
+    }
+
+    const data = await postOverrideResponse.json()
     return data.data || data
   } catch (error) {
     console.error(`Error updating ${endpoint}/${id}:`, error)
