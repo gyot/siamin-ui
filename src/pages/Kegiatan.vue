@@ -930,7 +930,7 @@ export default {
     const getFlyerUrl = (path) => {
       if (!path) return ''
       if (path.startsWith('http')) return path
-      const base = import.meta.env.VITE_API_BASE_URL || 'https://backend-siamin.bpmpntb.id/'
+      const base = import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id/'
       return `${base.replace(/\/api\/?$/, '')}/storage/${path}`
     }
 
