@@ -193,6 +193,19 @@
                   required />
               </div>
               <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">NPSN (jika instansi pendidikan)</label>
+                <input
+                  v-model="formData.npsn"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="8"
+                  placeholder="Masukkan NPSN (angka saja)"
+                  @input="onNpsnInput"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Kabupaten / Kota</label>
                 <select v-model="formData.kab_kota"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -448,6 +461,7 @@ export default {
       tanggal_lahir: '',
       jenis_kelamin: '',
       nama_instansi: '',
+      npsn: '',
       alamat_instansi: '',
       kab_kota: '',
       provinsi: '',
@@ -475,6 +489,7 @@ export default {
         tanggal_lahir: '',
         jenis_kelamin: '',
         nama_instansi: '',
+        npsn: '',
         alamat_instansi: '',
         kab_kota: '',
         provinsi: '',
@@ -502,8 +517,15 @@ export default {
       if (formData.value.email && !emailRegex.test(formData.value.email)) {
         formErrors.value.push('Format email tidak valid')
       }
+      if (formData.value.npsn && !/^\d+$/.test(formData.value.npsn)) {
+        formErrors.value.push('NPSN hanya boleh berisi angka')
+      }
 
       return formErrors.value.length === 0
+    }
+
+    const onNpsnInput = () => {
+      formData.value.npsn = String(formData.value.npsn || '').replace(/\D/g, '')
     }
 
     const base64ToFile = (dataUrl, filename = 'tanda_tangan.png') => {
@@ -703,6 +725,7 @@ export default {
       isLoadingKegiatan,
       resetForm,
       validateForm,
+      onNpsnInput,
       submitForm,
       startDrawing,
       draw,

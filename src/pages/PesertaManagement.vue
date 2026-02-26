@@ -372,6 +372,18 @@
                 />
               </div>
               <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">NPSN (jika instansi pendidikan)</label>
+                <input
+                  v-model="formPeserta.npsn"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="8"
+                  @input="onNpsnInput"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Kegiatan *</label>
                 <select
                   v-model="formPeserta.id_kegiatan"
@@ -724,7 +736,7 @@
 <script>
 import { ref, computed, watch, onMounted } from 'vue'
 import database from '@/data/index.js'
-import { fetchAPI } from '@/services/api'
+import { fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 
 import * as XLSX from 'xlsx'
@@ -866,6 +878,7 @@ export default {
       tanggal_lahir: '',
       jenis_kelamin: '',
       nama_instansi: '',
+      npsn: '',
       alamat_instansi: '',
       kab_kota: '',
       provinsi: '',
@@ -904,6 +917,7 @@ export default {
         tanggal_lahir: '',
         jenis_kelamin: '',
         nama_instansi: '',
+        npsn: '',
         alamat_instansi: '',
         kab_kota: '',
         provinsi: '',
@@ -938,7 +952,14 @@ export default {
       if (!formPeserta.value.email) formErrors.value.push('Email wajib diisi')
       if (!formPeserta.value.nama_instansi) formErrors.value.push('Nama instansi wajib diisi')
       if (!formPeserta.value.id_kegiatan) formErrors.value.push('Kegiatan wajib dipilih')
+      if (formPeserta.value.npsn && !/^\d+$/.test(formPeserta.value.npsn)) {
+        formErrors.value.push('NPSN hanya boleh berisi angka')
+      }
       return formErrors.value.length === 0
+    }
+
+    const onNpsnInput = () => {
+      formPeserta.value.npsn = String(formPeserta.value.npsn || '').replace(/\D/g, '')
     }
 
     const validateFormSertifikat = () => {
@@ -1031,39 +1052,36 @@ export default {
       resetFormPeserta()
     }
 
-    const savePeserta = () => {
+    const savePeserta = async () => {
       if (!validateFormPeserta()) return
+      const payload = { ...formPeserta.value }
 
-      if (editingPeserta.value) {
-        const index = peserta.value.findIndex(p => p.id_peserta === formPeserta.value.id_peserta)
-        if (index !== -1) {
-          peserta.value[index] = { ...formPeserta.value, updated_at: new Date().toISOString() }
+      try {
+        if (editingPeserta.value) {
+          await updateAPI('peserta', formPeserta.value.id_peserta, payload)
+          ActivityEvents.UPDATE_PESERTA(formPeserta.value.nama_lengkap)
+        } else {
+          await postAPI('peserta', payload)
+          ActivityEvents.CREATE_PESERTA(formPeserta.value.nama_lengkap)
         }
-        // Log update
-        ActivityEvents.UPDATE_PESERTA(formPeserta.value.nama_lengkap)
-      } else {
-        const newId = Math.max(...peserta.value.map(p => p.id_peserta), 0) + 1
-        peserta.value.push({
-          ...formPeserta.value,
-          id_peserta: newId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        // Log creation
-        ActivityEvents.CREATE_PESERTA(formPeserta.value.nama_lengkap)
+        await loadPesertaFromAPI()
+        closeAddModal()
+      } catch (error) {
+        console.error('[PesertaManagement] Gagal menyimpan peserta:', error)
+        alert(error.message || 'Gagal menyimpan data peserta ke API')
       }
-
-      closeAddModal()
     }
 
-    const deletePeserta = (id) => {
+    const deletePeserta = async (id) => {
       if (confirm('Apakah Anda yakin ingin menghapus peserta ini?')) {
-        const index = peserta.value.findIndex(p => p.id_peserta === id)
-        if (index !== -1) {
-          const deletedPeserta = peserta.value[index]
-          peserta.value.splice(index, 1)
-          // Log deletion
-          ActivityEvents.DELETE_PESERTA(deletedPeserta.nama_lengkap)
+        const deletedPeserta = peserta.value.find(p => p.id_peserta === id)
+        try {
+          await deleteAPI('peserta', id)
+          ActivityEvents.DELETE_PESERTA(deletedPeserta?.nama_lengkap || `ID ${id}`)
+          await loadPesertaFromAPI()
+        } catch (error) {
+          console.error('[PesertaManagement] Gagal menghapus peserta:', error)
+          alert(error.message || 'Gagal menghapus data peserta dari API')
         }
       }
     }
@@ -1258,6 +1276,7 @@ export default {
       openDetailModal,
       openEditModal,
       closeAddModal,
+      onNpsnInput,
       savePeserta,
       deletePeserta,
       openSertifikatModal,
