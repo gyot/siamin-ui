@@ -355,6 +355,8 @@ export default {
   setup() {
     const route = useRoute()
     const kode = route.params.kode
+    // Debug kode route
+    console.log('[FormulirPeserta] kode dari route:', kode)
     const peran = route.params.peran
     const slugJudul = route.params.slugJudul
 
@@ -373,6 +375,8 @@ export default {
       try {
         const data = await listKegiatan()
         apiKegiatan.value = data || []
+        // Debug hasil API
+        console.log('[FormulirPeserta] hasil listKegiatan:', data)
       } catch (err) {
         console.warn('Gagal mengambil kegiatan dari API, gunakan lokal', err)
       } finally {
@@ -405,9 +409,28 @@ export default {
 
     // Find kegiatan by code/ID (prefer API result)
     const kegiatan = computed(() => {
-      const fromApi = apiKegiatan.value.find(k => String(k.id_kegiatan) === String(kode))
-      if (fromApi) return fromApi
-      return database.kegiatan.find(k => k.id_kegiatan === kode)
+      // Cari dengan toleransi: id_kegiatan bisa string/number, kode dari route juga
+      const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
+      const kodeNorm = norm(kode)
+      // Cek di API
+      let fromApi = apiKegiatan.value.find(k => norm(k.id_kegiatan) === kodeNorm)
+      if (!fromApi) {
+        // Coba juga jika id_kegiatan di API adalah number dan kode bisa dikonversi ke number
+        fromApi = apiKegiatan.value.find(k => String(k.id_kegiatan) === String(kode))
+      }
+      if (fromApi) {
+        console.log('[FormulirPeserta] ditemukan kegiatan dari API:', fromApi)
+        return fromApi
+      }
+      // Cek di database lokal
+      let fromDb = database.kegiatan.find(k => norm(k.id_kegiatan) === kodeNorm)
+      if (!fromDb) {
+        fromDb = database.kegiatan.find(k => String(k.id_kegiatan) === String(kode))
+      }
+      if (fromDb) {
+        console.log('[FormulirPeserta] ditemukan kegiatan dari database:', fromDb)
+      }
+      return fromDb
     })
 
     const namaKegiatan = computed(() => {

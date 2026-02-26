@@ -9,8 +9,17 @@ import { fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
 /**
  * @returns {Promise<Array>} all kegiatan records
  */
-export const listKegiatan = () => {
-  return fetchAPI('kegiatan')
+export const listKegiatan = async () => {
+  let data = await fetchAPI('kegiatan')
+  if (!Array.isArray(data) || data.length === 0) {
+    // Coba endpoint /kegiatan/all jika /kegiatan kosong
+    try {
+      data = await fetchAPI('kegiatan/all')
+    } catch (e) {
+      // Biarkan error jika tetap gagal
+    }
+  }
+  return data
 }
 
 /**
