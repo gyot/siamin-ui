@@ -804,7 +804,7 @@ export default {
     // Helper function to load kegiatan from API
     const loadKegiatanFromAPI = async () => {
       try {
-        const data = await fetchAPI('kegiatan')
+        const data = await fetchAPI('kegiatan/all')
         
         if (Array.isArray(data)) {
           kegiatan.value = data
@@ -1184,12 +1184,20 @@ export default {
         const templateDocx = await response.blob()
 
         // 2. Siapkan data untuk replace
+        // Fungsi pencarian kegiatan toleran tipe data
+        const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
+        const cariKegiatan = (id) => {
+          let found = kegiatan.value.find(k => norm(k.id_kegiatan) === norm(id))
+          if (!found) found = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
+          return found
+        }
+        const keg = cariKegiatan(pesertaData.id_kegiatan) || {}
         const data = {
-          judul_kegiatan: getNamaKegiatan(pesertaData.id_kegiatan),
-          tanggal_mulai: dateFormat(kegiatan.value.find(k => k.id_kegiatan === pesertaData.id_kegiatan)?.tanggal_mulai),
-          tanggal_selesai: dateFormat(kegiatan.value.find(k => k.id_kegiatan ===pesertaData.id_kegiatan)?.tanggal_selesai),
-          waktu : dateFormat(kegiatan.value.find(k => k.id_kegiatan === pesertaData.id_kegiatan)?.tanggal_mulai)+' s.d. '+ dateFormat(kegiatan.value.find(k => k.id_kegiatan === pesertaData.id_kegiatan)?.tanggal_selesai),
-          lokasi: kegiatan.value.find(k => k.id_kegiatan === pesertaData.id_kegiatan)?.lokasi || '-',
+          judul_kegiatan: keg.nama_kegiatan || getNamaKegiatan(pesertaData.id_kegiatan),
+          tanggal_mulai: dateFormat(keg.tanggal_mulai),
+          tanggal_selesai: dateFormat(keg.tanggal_selesai),
+          waktu : dateFormat(keg.tanggal_mulai)+' s.d. '+ dateFormat(keg.tanggal_selesai),
+          lokasi: keg.lokasi || '-',
           nama_lengkap: pesertaData.nama_lengkap,
           nip: pesertaData.nip,
           pangkat: pesertaData.pangkat,
@@ -1200,10 +1208,9 @@ export default {
           no_hp: pesertaData.no_hp,
           email: pesertaData.email,
           nama_instansi: pesertaData.nama_instansi,
-          kegiatan: getNamaKegiatan(pesertaData.id_kegiatan),
+          kegiatan: keg.nama_kegiatan || getNamaKegiatan(pesertaData.id_kegiatan),
           peran: pesertaData.peran || 'Peserta',
           tanda_tangan_url: pesertaData.tanda_tangan_url || pesertaData.tanda_tangan || pesertaData.tandatangan || '',
-
           // Tambahkan field lain sesuai kebutuhan
         }
 

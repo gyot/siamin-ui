@@ -94,9 +94,17 @@ export default {
       isLoadingKegiatan.value = true
       try {
         console.log('[KegiatanPeserta] Loading kegiatan from API...')
-        const data = await fetchAPI('kegiatan')
+        let data = await fetchAPI('kegiatan')
         console.log('[KegiatanPeserta] Kegiatan API Response:', data)
-        
+        if (!Array.isArray(data) || data.length === 0) {
+          // Coba endpoint /kegiatan/all jika /kegiatan kosong
+          try {
+            data = await fetchAPI('kegiatan/all')
+            console.log('[KegiatanPeserta] Kegiatan API Response dari /all:', data)
+          } catch (e) {
+            // Biarkan error jika tetap gagal
+          }
+        }
         if (Array.isArray(data)) {
           kegiatan.value = data
         } else if (data && Array.isArray(data.data)) {
@@ -104,7 +112,6 @@ export default {
         } else {
           kegiatan.value = []
         }
-        
         console.log(`[KegiatanPeserta] Loaded ${kegiatan.value.length} kegiatan`)
         findCurrentKegiatan()
       } catch (error) {
@@ -118,8 +125,25 @@ export default {
     const findCurrentKegiatan = () => {
       const kegiatanId = route.params.id
       console.log('[KegiatanPeserta] Looking for kegiatan ID:', kegiatanId)
-      const found = kegiatan.value.find(k => String(k.id_kegiatan) === String(kegiatanId))
-      console.log('[KegiatanPeserta] Found kegiatan:', found)
+      // Toleransi: id_kegiatan bisa string/number, case-insensitive
+      const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
+      const idNorm = norm(kegiatanId)
+      let found = kegiatan.value.find(k => norm(k.id_kegiatan) === idNorm)
+      if (!found) {
+        found = kegiatan.value.find(k => String(k.id_kegiatan) === String(kegiatanId))
+      }
+      if (!found) {
+        // Fallback ke database lokal jika tidak ditemukan di API
+        found = database.kegiatan.find(k => norm(k.id_kegiatan) === idNorm)
+        if (!found) {
+          found = database.kegiatan.find(k => String(k.id_kegiatan) === String(kegiatanId))
+        }
+        if (found) {
+          console.log('[KegiatanPeserta] Found kegiatan from local database:', found)
+        }
+      } else {
+        console.log('[KegiatanPeserta] Found kegiatan from API:', found)
+      }
       currentKegiatan.value = found || null
     }
 

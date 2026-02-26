@@ -15,6 +15,10 @@ export const listKegiatan = async () => {
     // Coba endpoint /kegiatan/all jika /kegiatan kosong
     try {
       data = await fetchAPI('kegiatan/all')
+      // Jika respons API berupa { success: true, data: [...] }, ambil data.data
+      if (data && Array.isArray(data.data)) {
+        data = data.data
+      }
     } catch (e) {
       // Biarkan error jika tetap gagal
     }
