@@ -24,7 +24,7 @@ const router = createRouter({
  history:createWebHistory(),
  routes:[
   {path:'/',component:Landing},
-  {path:'/login',component:Login},
+  {path:'/laman-masuk',component:Login},
   {path:'/login-peserta',component:LoginPeserta},
   {path:'/formulir/:kode/:peran/:slugJudul',component:FormulirPeserta},
   {path:'/lihat-tandatangan/:id',component:LihatTandatangan},

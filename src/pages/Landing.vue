@@ -5,15 +5,7 @@
       <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex items-center justify-between">
           <RouterLink to="/" class="flex items-center gap-3">
-            <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-              <svg class="w-8 h-8 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-              </svg>
-            </div>
-            <div>
-              <h1 class="text-xl font-bold text-white">SIAMIN</h1>
-              <p class="text-blue-200 text-xs">Kementerian Pendidikan Dasar dan Menengah</p>
-            </div>
+            <img src="/src/assets/logo.png" alt="Logo SIAMIN" class="h-16 object-contain">
           </RouterLink>
           <div class="flex items-center gap-3">
             <!-- <RouterLink 
@@ -25,12 +17,12 @@
               </svg>
               <span>Verifikasi Sertifikat</span>
             </RouterLink> -->
-            <RouterLink 
+            <!-- <RouterLink 
               to="/login" 
               class="btn-primary px-5 py-2.5 text-white rounded-lg font-medium shadow-lg"
             >
               Login
-            </RouterLink>
+            </RouterLink> -->
           </div>
         </div>
       </nav>
@@ -53,7 +45,7 @@
               Platform terintegrasi untuk mengelola kegiatan, peserta, surat tugas, dan sertifikat digital secara efisien dan transparan.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <RouterLink 
+              <!-- <RouterLink 
                 to="/login" 
                 class="btn-primary px-8 py-3.5 text-white rounded-xl font-semibold shadow-xl flex items-center justify-center gap-2"
               >
@@ -61,7 +53,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                 </svg>
                 Login Admin
-              </RouterLink>
+              </RouterLink> -->
               <!-- <RouterLink 
                 to="/login-peserta" 
                 class="px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold backdrop-blur border border-white/20 transition flex items-center justify-center gap-2"
@@ -76,41 +68,66 @@
           
           <!-- Feature Cards -->
           <div class="grid grid-cols-2 gap-4">
+            <!-- Timker Pendidikan Anak Usia Dini -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
+              <div class="w-12 h-12 bg-pink-400 rounded-xl flex items-center justify-center mb-4">
+                <!-- Icon anak usia dini: baby/child -->
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="8" r="4" stroke-width="2"/>
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20c0-2.5 3.5-4 8-4s8 1.5 8 4"/>
+                </svg>
+              </div>
+              <h3 class="text-white font-semibold mb-2">Timker Pendidikan Anak Usia Dini</h3>
+              <p class="text-blue-200 text-sm">Fokus pada pengembangan dan pengelolaan program pendidikan anak usia dini secara holistik dan inklusif.</p>
+            </div>
+            <!-- Timker Sekolah Dasar -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
+              <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mb-4">
+                <!-- Icon sekolah dasar: book -->
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v13H4z"/>
+                </svg>
+              </div>
+              <h3 class="text-white font-semibold mb-2">Timker Sekolah Dasar</h3>
+              <p class="text-blue-200 text-sm">Bertanggung jawab atas pelaksanaan dan inovasi pendidikan tingkat sekolah dasar.</p>
+            </div>
+            <!-- Timker Sekolah Menengah Pertama -->
             <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
               <div class="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mb-4">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                <!-- Icon SMP: graduation cap -->
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 14v7"/>
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M7 19c0-1.657 2.239-3 5-3s5 1.343 5 3"/>
                 </svg>
               </div>
-              <h3 class="text-white font-semibold mb-2">Manajemen Kegiatan</h3>
-              <p class="text-blue-200 text-sm">Kelola semua kegiatan dalam satu platform terintegrasi</p>
+              <h3 class="text-white font-semibold mb-2">Timker Sekolah Menengah Pertama</h3>
+              <p class="text-blue-200 text-sm">Mengelola program dan kegiatan pendidikan untuk jenjang sekolah menengah pertama.</p>
             </div>
+            <!-- Timker Sekolah Menengah -->
             <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
-              <div class="w-12 h-12 bg-emerald-500 rounded-xl flex items-center justify-center mb-4">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+              <div class="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mb-4">
+                <!-- Icon SMA: school building -->
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <rect x="3" y="10" width="18" height="8" rx="2" stroke-width="2"/>
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 4v6m-6 0V4m12 6V4"/>
                 </svg>
               </div>
-              <h3 class="text-white font-semibold mb-2">Data Peserta</h3>
-              <p class="text-blue-200 text-sm">Pengelolaan data peserta yang terstruktur dan aman</p>
+              <h3 class="text-white font-semibold mb-2">Timker Sekolah Menengah</h3>
+              <p class="text-blue-200 text-sm">Bertugas dalam pengembangan dan pengawasan pendidikan tingkat menengah atas.</p>
             </div>
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
-              <div class="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center mb-4">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            <!-- Timker Subbag Umum -->
+            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition col-span-2">
+              <div class="w-12 h-12 bg-gray-500 rounded-xl flex items-center justify-center mb-4">
+                <!-- Icon umum: cog/settings -->
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="3" stroke-width="2"/>
+                  <path stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33h.09a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51h.09a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v.09a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
                 </svg>
               </div>
-              <h3 class="text-white font-semibold mb-2">Surat Tugas</h3>
-              <p class="text-blue-200 text-sm">Administrasi surat tugas digital yang efisien</p>
-            </div>
-            <div class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition">
-              <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mb-4">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
-                </svg>
-              </div>
-              <h3 class="text-white font-semibold mb-2">Sertifikat Digital</h3>
-              <p class="text-blue-200 text-sm">Penerbitan sertifikat dengan QR Code verifikasi</p>
+              <h3 class="text-white font-semibold mb-2">Timker Subbag Umum</h3>
+              <p class="text-blue-200 text-sm">Mendukung operasional, administrasi, dan layanan umum untuk kelancaran seluruh program kerja.</p>
             </div>
           </div>
         </div>
