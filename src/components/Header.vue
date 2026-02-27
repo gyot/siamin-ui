@@ -67,7 +67,7 @@
               {{ user.name }}
             </p>
             <p class="text-xs text-slate-600">
-              {{ user.email }}
+              {{ user.unit_kerja_id || '-' }}
             </p>
             <p class="text-xs text-slate-500 mt-1">
               {{ user.instansi || '-' }}

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import unit_kerja from '../services/unit_kerja'
 
 /**
  * API BASE URL
@@ -63,6 +64,7 @@ export const useAuthStore = defineStore('auth', () => {
       currentUser.value = {
         id: user.id,
         id_pegawai: user.id_pegawai || user.id,
+        unit_kerja_id:currentUser.value?.id_tim || user.id_tim || null,
         name: user.name ?? user.email ?? 'Admin',
         email: user.email,
         role: 'admin'

@@ -34,6 +34,10 @@ export const getKegiatan = (id) => {
   return fetchAPI(`kegiatan/${id}`)
 }
 
+export const getKegiatanTim = (id) => {
+  return fetchAPI(`kegiatan/tim/${id}`)
+}
+
 /**
  * @param {Object} payload - new kegiatan attributes
  * @returns {Promise<Object>} created kegiatan

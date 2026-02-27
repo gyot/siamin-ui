@@ -6,8 +6,8 @@
             <p class="text-slate-500">Kelola semua kegiatan yang ada</p>
           </div>
           <button 
-            @click="showAddModal = true" 
-            class="btn-primary px-5 py-2.5 text-white rounded-lg font-medium shadow flex items-center gap-2 w-fit"
+            @click="showAddModal = true; editingId = null; resetForm()" 
+             class="btn-primary px-5 py-2.5 text-white rounded-lg font-medium shadow flex items-center gap-2 w-fit"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -191,10 +191,10 @@
               <label class="block text-sm font-medium text-slate-700 mb-1">Pratinjau Link Formulir</label>
               <a :href="previewLink" target="_blank" class="text-blue-600 break-all">{{ previewLink }}</a>
             </div>
-            <div>
+            <!-- <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Rincian Kegiatan</label>
               <textarea v-model="formData.rincian_kegiatan" placeholder="Deskripsi detail kegiatan" rows="3" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
-            </div>
+            </div> -->
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Deskripsi</label>
               <textarea v-model="formData.deskripsi" placeholder="Deskripsi tambahan kegiatan" rows="3" class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
@@ -394,10 +394,10 @@
               <p class="text-xs font-medium text-slate-500 uppercase">Total Peserta</p>
               <p class="text-slate-800 font-medium">{{ selectedKegiatan.total_peserta }} orang</p>
             </div>
-            <div class="md:col-span-2">
+            <!-- <div class="md:col-span-2">
               <p class="text-xs font-medium text-slate-500 uppercase mb-1">Rincian Kegiatan</p>
               <p class="text-slate-700">{{ selectedKegiatan.rincian_kegiatan || '-' }}</p>
-            </div>
+            </div> -->
             <div class="md:col-span-2">
               <p class="text-xs font-medium text-slate-500 uppercase mb-1">Deskripsi</p>
               <p class="text-slate-700">{{ selectedKegiatan.deskripsi || '-' }}</p>
@@ -679,7 +679,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import database from '../data/index.js'
 import { useAuthStore } from '@/stores/auth.js'
-import { listKegiatan, getKegiatan, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
+import { listKegiatan, getKegiatan, getKegiatanTim, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
 import { fetchAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Spinner from '@/components/Spinner.vue'
@@ -766,7 +766,7 @@ export default {
       isLoadingKegiatan.value = true
       console.debug('[Kegiatan] loadKegiatan start, user:', currentUser.value)
       try {
-        const data = await listKegiatan()
+        const data = await getKegiatanTim(currentUser.value.unit_kerja_id)
         console.debug('[Kegiatan] raw API response', data)
         kegiatan.value = data || []
         kegiatan.value.forEach(enrichWithLink)
