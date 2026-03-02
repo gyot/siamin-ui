@@ -3,7 +3,7 @@
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-slate-800">Dashboard</h1>
       <p class="text-slate-500">Selamat datang kembali, {{ profilePegawai?.nama || 'Admin' }}</p>
-      <p class="text-slate-600">Sistem Informasi Administrasi Manajemen Kegiatan (SIMAIK) membantu Anda mengelola
+      <p class="text-slate-600">Sistem Manajemen Informasi Kegiatan (SIMAIK) membantu Anda mengelola
         kegiatan, peserta, surat tugas, dan sertifikat digital secara terintegrasi.</p>
     </div>
 
