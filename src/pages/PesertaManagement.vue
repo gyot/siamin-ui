@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-3 sm:p-4 md:p-6">
+  <div class="min-h-screen bg-white p-3 sm:p-4 md:p-6">
     <div class="max-w-7xl mx-auto">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
@@ -14,18 +14,18 @@
           >
             Export Excel
           </button>
-          <button
+          <!-- <button
             @click="downloadBatchDocxZip"
             class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
           >
             Download Batch DOCX
-          </button>
-          <button
+          </button> -->
+          <!-- <button
             @click="showAddModal = true"
             class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base"
           >
             + Tambah Peserta
-          </button>
+          </button> -->
         </div>
       </div>
 
@@ -42,7 +42,7 @@
       </div>
 
       <!-- Filter dan Search -->
-      <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-6">
+      <div class="bg-white rounded-lg p-3 sm:p-4 mb-6">
         <div :class="kegiatanId ? 'grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'">
           <div>
             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Cari Nama</label>

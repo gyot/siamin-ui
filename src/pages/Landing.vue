@@ -5,7 +5,7 @@
       <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex items-center justify-between">
           <RouterLink to="/" class="flex items-center gap-3">
-            <img src="/src/assets/logo.png" alt="Logo SIAMIN" class="h-16 object-contain">
+            <img src="/src/assets/logo.png" alt="Logo SIMAIK" class="h-16 object-contain">
           </RouterLink>
           <div class="flex items-center gap-3">
             <!-- <RouterLink 
@@ -32,6 +32,24 @@
     <main class="relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div class="grid lg:grid-cols-2 gap-12 items-center">
+          <!-- Feature Cards -->
+          <div class="grid grid-cols-2 gap-4 mb-10 lg:mb-0">
+            <button v-for="card in timkerCards" :key="card.id"
+              class="text-left bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition"
+              :class="{ 'col-span-2': card.fullWidth, 'ring-2 ring-cyan-300/70': selectedTimker && selectedTimker.id === card.id }"
+              @click="selectTimker(card); loadKegiatan(card.id)" type="button">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4" :class="card.iconBg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">d
+                  <path v-for="(path, index) in card.iconPaths" :key="`${card.id}-${index}`" v-bind="path" />
+                  <circle v-for="(circle, index) in card.iconCircles || []" :key="`${card.id}-c-${index}`"
+                    v-bind="circle" />
+                  <rect v-for="(rect, index) in card.iconRects || []" :key="`${card.id}-r-${index}`" v-bind="rect" />
+                </svg>
+              </div>
+              <h3 class="text-white font-semibold mb-2">{{ card.name }}</h3>
+              <p class="text-blue-200 text-sm">{{ card.description }}</p>
+            </button>
+          </div>
           <!-- welcome / daftar kegiatan -->
           <div class="text-center lg:text-left">
             <template v-if="!selectedTimker">
@@ -41,9 +59,12 @@
                 Sistem Terintegrasi
               </div>
               <h2 class="text-4xl lg:text-5xl font-bold text-white leading-tight mb-6">
-                <b class="text-yellow-400">S</b>istem <b class="text-yellow-400">I</b>nformasi<br />
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300"><b class="text-yellow-400">A</b>dministrasi
-                  Ke<b class="text-yellow-400">gi</b>atan</span>
+                <b class="text-yellow-400">SIMAIK</b>
+              </h2>
+              <h2 class="text-4xl lg:text-5xl font-bold text-white leading-tight mb-6">
+                (<b class="text-yellow-400">Si</b>stem <b class="text-yellow-400">Ma</b>najemen<br />
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300"><b class="text-yellow-400">I</b>nformasi
+                  <b class="text-yellow-400">K</b>egiatan</span>)
               </h2>
               <p class="text-blue-100 text-lg mb-8 leading-relaxed">
                 Platform terintegrasi untuk mengelola kegiatan, peserta, surat tugas, dan sertifikat digital secara
@@ -136,25 +157,8 @@
               </div>
             </template>
           </div>
+          
 
-          <!-- Feature Cards -->
-          <div class="grid grid-cols-2 gap-4">
-            <button v-for="card in timkerCards" :key="card.id"
-              class="text-left bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition"
-              :class="{ 'col-span-2': card.fullWidth, 'ring-2 ring-cyan-300/70': selectedTimker && selectedTimker.id === card.id }"
-              @click="selectTimker(card); loadKegiatan(card.id)" type="button">
-              <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4" :class="card.iconBg">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path v-for="(path, index) in card.iconPaths" :key="`${card.id}-${index}`" v-bind="path" />
-                  <circle v-for="(circle, index) in card.iconCircles || []" :key="`${card.id}-c-${index}`"
-                    v-bind="circle" />
-                  <rect v-for="(rect, index) in card.iconRects || []" :key="`${card.id}-r-${index}`" v-bind="rect" />
-                </svg>
-              </div>
-              <h3 class="text-white font-semibold mb-2">{{ card.name }}</h3>
-              <p class="text-blue-200 text-sm">{{ card.description }}</p>
-            </button>
-          </div>
         </div>
       </div>
 
@@ -228,12 +232,12 @@
             <p class="text-blue-200">Total Peserta</p>
             <p class="text-white">{{ selectedKegiatanDetail.total_peserta ?? '-' }}</p><br>
             <p class="text-blue-200">Link Biodata</p>
-            <strong class="text-white">Peserta:</strong> <br> <a :href="`https://siamin.bpmpntb.id/formulir/${selectedKegiatanDetail.id_kegiatan ?? '-'}/Peserta/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
-              class="text-cyan-300 hover:text-cyan-200 break-all">https://siamin.bpmpntb.id/formulir/{{ selectedKegiatanDetail.id_kegiatan ?? '-' }}/Peserta/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}</a><br>
-            <strong class="text-white">Panitia:</strong> <br> <a :href="`https://siamin.bpmpntb.id/formulir/${selectedKegiatanDetail.id_kegiatan ?? '-'}/Panitia/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
-              class="text-cyan-300 hover:text-cyan-200 break-all">https://siamin.bpmpntb.id/formulir/{{ selectedKegiatanDetail.id_kegiatan ?? '-' }}/Panitia/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}</a><br>
-            <strong class="text-white">Narasumber:</strong> <br> <a :href="`https://siamin.bpmpntb.id/formulir/${selectedKegiatanDetail.id_kegiatan ?? '-'}/Narasumber/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
-              class="text-cyan-300 hover:text-cyan-200 break-all">https://siamin.bpmpntb.id/formulir/{{ selectedKegiatanDetail.id_kegiatan ?? '-' }}/Narasumber/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}</a>
+            <strong class="text-white">Peserta:</strong> <br> <a :href="`formulir/${selectedKegiatanDetail.id_kegiatan ?? '-'}/Peserta/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
+              class="text-cyan-300 hover:text-cyan-200 break-all">{{ baseUrl}}/formulir/Peserta/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}</a><br>
+            <strong class="text-white">Panitia:</strong> <br> <a :href="`${baseUrl}formulir/${selectedKegiatanDetail.id_kegiatan ?? '-'}/Panitia/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
+              class="text-cyan-300 hover:text-cyan-200 break-all">{{ baseUrl}}/formulir/Panitia/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}</a><br>
+            <strong class="text-white">Narasumber:</strong> <br> <a :href="`${baseUrl}formulir/${selectedKegiatanDetail.id_kegiatan ?? '-'}/Narasumber/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
+              class="text-cyan-300 hover:text-cyan-200 break-all">{{ baseUrl}}/formulir/Narasumber/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}</a>
           </div>
 
           <!-- <div class="bg-white/5 rounded-lg p-3 border border-white/10">
@@ -257,11 +261,11 @@
               <strong class="text-white">Panduan: </strong><a v-if="selectedKegiatanDetail.panduan_url" :href="selectedKegiatanDetail.panduan_url" target="_blank"
                 class="block text-cyan-300 hover:text-cyan-200 break-all">{{
                   selectedKegiatanDetail.panduan_url }}</a>
-              <strong class="text-white">Laporan: </strong><a v-if="selectedKegiatanDetail.laporan_url" :href="selectedKegiatanDetail.laporan_url" target="_blank"
+              <!-- <strong class="text-white">Laporan: </strong><a v-if="selectedKegiatanDetail.laporan_url" :href="selectedKegiatanDetail.laporan_url" target="_blank"
                 class="block text-cyan-300 hover:text-cyan-200 break-all">{{ selectedKegiatanDetail.laporan_url }}</a>
               <strong class="text-white">Surat Menyurat: </strong><a v-if="selectedKegiatanDetail.surat_menyurat_url" :href="selectedKegiatanDetail.surat_menyurat_url"
                 target="_blank" class="block text-cyan-300 hover:text-cyan-200 break-all"> {{
-                  selectedKegiatanDetail.surat_menyurat_url }}</a>
+                  selectedKegiatanDetail.surat_menyurat_url }}</a> -->
               <p v-if="!hasAnyResourceUrl(selectedKegiatanDetail)" class="text-blue-100">Tidak ada resource URL.</p>
             </div>
           </div>
@@ -273,7 +277,7 @@
     <footer class="border-t border-white/10 py-8">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p class="text-blue-200 text-sm">© 2025 SIAMIN - Kementerian Pendidikan Dasar dan Menengah</p>
+          <p class="text-blue-200 text-sm">© 2025 SIMAIK - Kementerian Pendidikan Dasar dan Menengah BPMP Nusa Tenggara Barat</p>
           <div class="flex items-center gap-6">
             <RouterLink to="/verify-sertifikat" class="text-blue-200 hover:text-white text-sm transition">Verifikasi
               Sertifikat</RouterLink>
@@ -301,6 +305,7 @@ export default {
     const selectedKegiatanDetail = ref(null)
     const currentPage = ref(1)
     const itemsPerPage = 4
+    const baseUrl =  window.location.origin
     function slugify(text) {
       if (!text) return ''
       return String(text)
@@ -590,7 +595,8 @@ export default {
       openKegiatanDetail,
       closeKegiatanDetail,
       prevPage,
-      nextPage
+      nextPage,
+      baseUrl
     }
   }
 }

@@ -12,7 +12,7 @@
           </svg>
         </div>
         <div class="min-w-0">
-          <h1 class="font-bold text-slate-800 truncate text-sm sm:text-base">SIAMIN</h1>
+          <h1 class="font-bold text-slate-800 truncate text-sm sm:text-base">SIMAIK</h1>
           <p class="text-xs text-slate-500 truncate">v1.2.0</p>
         </div>
       </div>

@@ -3,7 +3,7 @@
   <div class="h-full w-full flex flex-col lg:flex-row bg-slate-50">
     <!-- Mobile Header with Toggle -->
     <div class="lg:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
-      <h1 class="font-bold text-slate-800">SIAMIN</h1>
+      <h1 class="font-bold text-slate-800">SIMAIK</h1>
       <button 
         @click="sidebarOpen = !sidebarOpen"
         class="p-2 hover:bg-slate-100 rounded-lg transition"
@@ -55,7 +55,7 @@ export default {
       pageTitle: 'Dashboard',
       currentUser: {
         name: 'Admin',
-        email: 'admin@siamin.com',
+        email: 'admin@simaik.com',
         role: 'admin'
       },
       sidebarOpen: false

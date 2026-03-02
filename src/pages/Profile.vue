@@ -556,7 +556,7 @@ export default {
         activityHistory.value = [
           {
             action: 'Login Sistem',
-            description: 'Berhasil masuk ke aplikasi SIAMIN',
+            description: 'Berhasil masuk ke aplikasi SIMAIK',
             timestamp: '14:35:22',
             date: 'Hari ini'
           },
