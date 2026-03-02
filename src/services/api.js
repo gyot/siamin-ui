@@ -1,9 +1,12 @@
+import dbJSON from '@/data/database.json'
+
 // API Service Configuration
 // During development, use local proxy `/api` to avoid CORS.
 // In production, use the actual backend URL.
 const isDev = import.meta.env.DEV
 const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
 const API_BASE_URL = API_HOST.replace(/\/$/, '') + '/api/v1/'
+let apiReadUnavailable = false
 
 // API Endpoints mapping
 const ENDPOINTS = {
@@ -40,6 +43,25 @@ const buildApiErrorMessage = (errorData, fallback) => {
   return fallback
 }
 
+const normalizeEndpoint = (endpoint = '') =>
+  String(endpoint)
+    .replace(/^https?:\/\/[^/]+\/api\/v1\//, '')
+    .replace(/^\/?api\/v1\//, '')
+    .replace(/^\/+|\/+$/g, '')
+
+const getLocalFallbackData = (endpoint) => {
+  const normalized = normalizeEndpoint(endpoint)
+  if (!normalized) return null
+
+  if (normalized === 'unit-kerja') return dbJSON.unit_kerja || []
+  if (normalized === 'kegiatan' || normalized === 'kegiatan/all') return dbJSON.kegiatan || []
+  if (normalized.startsWith('kegiatan/tim/')) return dbJSON.kegiatan || []
+  if (normalized === 'pegawai') return dbJSON.pegawai || []
+  if (normalized === 'users') return dbJSON.users || []
+
+  return null
+}
+
 /**
  * Fetch data from API with flexible method support
  * @param {string} endpoint - API endpoint key or full URL
@@ -48,6 +70,12 @@ const buildApiErrorMessage = (errorData, fallback) => {
  */
 export const fetchAPI = async (endpoint, options = {}) => {
   try {
+    const method = (options.method || 'GET').toUpperCase()
+    if (isDev && method === 'GET' && apiReadUnavailable) {
+      const cachedFallback = getLocalFallbackData(endpoint)
+      if (cachedFallback !== null) return cachedFallback
+    }
+
     const url = endpoint.startsWith('http') 
       ? endpoint 
       : `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}`
@@ -81,6 +109,16 @@ export const fetchAPI = async (endpoint, options = {}) => {
     // Handle both direct array responses and paginated responses
     return Array.isArray(data) ? data : (data.data || data)
   } catch (error) {
+    const method = (options.method || 'GET').toUpperCase()
+    if (isDev && method === 'GET') {
+      apiReadUnavailable = true
+      const fallback = getLocalFallbackData(endpoint)
+      if (fallback !== null) {
+        console.warn(`[API] Fallback local data used for ${endpoint}`)
+        return fallback
+      }
+    }
+
     console.error(`Error fetching from ${endpoint}:`, error)
     throw error
   }
