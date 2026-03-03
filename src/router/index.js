@@ -18,6 +18,7 @@ import Login from '../pages/Login.vue'
 import LoginPeserta from '../pages/LoginPeserta.vue'
 import FormulirPeserta from '../pages/FormulirPeserta.vue'
 import DaftarPesertaPublik from '../pages/DaftarPesertaPublik.vue'
+import KegiatanDetailPublik from '../pages/KegiatanDetailPublik.vue'
 import LihatTandatangan from '../pages/LihatTandatangan.vue'
 import DataSyncMonitor from '../pages/DataSyncMonitor.vue'
 import { fetchAPI } from '@/services/api'
@@ -68,6 +69,14 @@ const router = createRouter({
     meta:{
       title: 'Daftar Pengisi Biodata',
       description: 'Daftar pengisi biodata kegiatan yang sudah mengisi formulir.'
+    }
+  },
+  {
+    path:'/kegiatan/:kode/:slugJudul?',
+    component:KegiatanDetailPublik,
+    meta:{
+      title: 'Detail Kegiatan',
+      description: 'Informasi detail kegiatan publik.'
     }
   },
   {
@@ -156,7 +165,7 @@ router.beforeEach(async (to, from, next) => {
   let routeTitle = resolveMetaValue(to.meta?.title, to)
   let routeDescription = resolveMetaValue(to.meta?.description, to)
 
-  if (to.path.startsWith('/formulir/') || to.path.startsWith('/daftar-peserta/')) {
+  if (to.path.startsWith('/formulir/') || to.path.startsWith('/daftar-peserta/') || to.path.startsWith('/kegiatan/')) {
     const kegiatan = await findKegiatanByKode(to.params.kode)
     const namaKegiatan = kegiatan?.nama_kegiatan || unslugify(to.params.slugJudul)
 
@@ -166,6 +175,9 @@ router.beforeEach(async (to, from, next) => {
     } else if (to.path.startsWith('/daftar-peserta/')) {
       routeTitle = `Daftar Peserta - ${namaKegiatan || 'Kegiatan'}`
       routeDescription = `Daftar peserta kegiatan ${namaKegiatan || ''}.`
+    } else if (to.path.startsWith('/kegiatan/')) {
+      routeTitle = `Detail Kegiatan - ${namaKegiatan || 'Kegiatan'}`
+      routeDescription = `Informasi detail kegiatan ${namaKegiatan || ''}.`
     }
   }
 

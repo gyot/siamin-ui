@@ -66,9 +66,23 @@
             <p class="font-semibold text-slate-800">
               {{ user.name }}
             </p>
-            <p class="text-xs text-slate-600">
-              {{ user.unit_kerja_id || '-' }}
-            </p>
+            <div class="mt-2 flex flex-wrap gap-1.5">
+              <span
+                v-for="(unit, idx) in userUnitKerjaList"
+                :key="`${unit.unit_kerja_id || idx}-${unit.kode_unit || ''}`"
+                class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[11px]"
+              >
+                {{ unit.kode_unit || unit.unit_kerja_id }} - {{ unit.nama_unit || 'Unit Kerja' }}
+              </span>
+              <span
+                v-for="(unitId, idx) in userUnitKerjaIdList"
+                :key="`id-${unitId || idx}`"
+                class="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px]"
+              >
+                ID {{ unitId }}
+              </span>
+              <span v-if="userUnitKerjaList.length === 0 && userUnitKerjaIdList.length === 0" class="text-xs text-slate-600">-</span>
+            </div>
             <p class="text-xs text-slate-500 mt-1">
               {{ user.instansi || '-' }}
             </p>
@@ -133,6 +147,17 @@ export default {
      * USER DATA (AMAN)
      * ========================= */
     const user = computed(() => authStore.currentUser)
+    const userUnitKerjaList = computed(() => {
+      const fromStore = Array.isArray(authStore.unit_kerja) ? authStore.unit_kerja : []
+      if (fromStore.length > 0) return fromStore
+      const fromUser = Array.isArray(user.value?.unit_kerja) ? user.value.unit_kerja : []
+      return fromUser
+    })
+    const userUnitKerjaIdList = computed(() => {
+      const fromStore = Array.isArray(authStore.unit_kerja_id) ? authStore.unit_kerja_id : []
+      if (fromStore.length > 0) return fromStore
+      return Array.isArray(user.value?.unit_kerja_id) ? user.value.unit_kerja_id : []
+    })
 
     const userInitial = computed(() => {
       if (!user.value?.name) return 'A'
@@ -175,6 +200,8 @@ export default {
     return {
       showProfileMenu,
       user,
+      userUnitKerjaList,
+      userUnitKerjaIdList,
       userInitial,
       handleLogout,
       handleShowUserData

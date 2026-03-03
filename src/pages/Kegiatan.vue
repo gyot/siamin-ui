@@ -77,14 +77,15 @@
               </th>
               <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Tanggal</th>
               <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Lokasi</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Unit Kerja</th>
               <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Metode</th>
               <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
               <th class="text-right px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            <tr colspans="6" v-if="isLoadingKegiatan" class="table-row">
-              <td colspan="6" class="px-5 py-4">
+            <tr colspans="7" v-if="isLoadingKegiatan" class="table-row">
+              <td colspan="7" class="px-5 py-4">
                 <div class="flex items-center gap-3 justify-center">
                   <div class="animate-spin">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,6 +109,7 @@
                 {{ formatDate(k.tanggal_mulai) }} s/d {{ formatDate(k.tanggal_selesai) }}
               </td>
               <td class="px-5 py-4 text-sm text-slate-600">{{ k.lokasi }}</td>
+              <td class="px-5 py-4 text-sm text-slate-600">{{ getUnitKerjaLabel(k) }}</td>
               <td class="px-5 py-4">
                 <span class="badge bg-slate-100 text-slate-700">{{ getMetodeLabel(k.metode_pelaksanaan) }}</span>
               </td>
@@ -169,7 +171,7 @@
               </td>
             </tr>
             <tr v-if="filteredKegiatan.length === 0 && kegiatan.length > 0">
-              <td colspan="6" class="px-5 py-8 text-center text-slate-500">
+              <td colspan="7" class="px-5 py-8 text-center text-slate-500">
                 Tidak ada kegiatan yang sesuai dengan filter
               </td>
             </tr>
@@ -237,6 +239,22 @@
               <label class="block text-sm font-medium text-slate-700 mb-2">Deskripsi</label>
               <textarea v-model="formData.deskripsi" placeholder="Deskripsi tambahan kegiatan" rows="3"
                 class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Unit Kerja *</label>
+              <select
+                v-model="formData.unit_kerja_id"
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none bg-white"
+                :disabled="userUnitKerjaOptions.length === 0"
+              >
+                <option value="" disabled>Pilih unit kerja</option>
+                <option v-for="unit in userUnitKerjaOptions" :key="unit.unit_kerja_id" :value="unit.unit_kerja_id">
+                  {{ unit.kode_unit ? `${unit.kode_unit} - ` : '' }}{{ unit.nama_unit || `Unit ${unit.unit_kerja_id}` }}
+                </option>
+              </select>
+              <p v-if="userUnitKerjaOptions.length === 0" class="text-xs text-amber-600 mt-1">
+                Unit kerja user belum tersedia. Silakan login ulang.
+              </p>
             </div>
           </div>
         </div>
@@ -454,6 +472,10 @@
             <div>
               <p class="text-xs font-medium text-slate-500 uppercase">Total Peserta</p>
               <p class="text-slate-800 font-medium">{{ selectedKegiatan.total_peserta }} orang</p>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-slate-500 uppercase">Unit Kerja</p>
+              <p class="text-slate-800 font-medium">{{ getUnitKerjaLabel(selectedKegiatan) }}</p>
             </div>
             <button @click="openPesertaList(selectedKegiatan.id_kegiatan)"
               class="p-2 bg-green-100 hover:bg-slate-200 rounded-lg text-slate-500 hover:text-green-600"
@@ -836,6 +858,7 @@ export default {
     // Get profile of logged in pegawai
     const pegawai = ref(database.pegawai || [])
     const users = ref(database.users || [])
+    const unitKerjaMaster = ref([])
 
     const profilePegawai = computed(() => {
       try {
@@ -874,6 +897,73 @@ export default {
       }
     })
 
+    const userUnitKerjaOptions = computed(() => {
+      const fromStore = Array.isArray(auth.unit_kerja) ? auth.unit_kerja : []
+      if (fromStore.length > 0) {
+        return fromStore
+          .filter((item) => item?.unit_kerja_id !== null && item?.unit_kerja_id !== undefined && item?.unit_kerja_id !== '')
+          .map((item) => ({
+            unit_kerja_id: item.unit_kerja_id,
+            kode_unit: item.kode_unit || '',
+            nama_unit: item.nama_unit || ''
+          }))
+      }
+
+      const ids = Array.isArray(currentUser.value?.unit_kerja_id) ? currentUser.value.unit_kerja_id : []
+      return ids
+        .filter((id) => id !== null && id !== undefined && id !== '')
+        .map((id) => ({
+          unit_kerja_id: id,
+          kode_unit: unitKerjaMasterMap.value.get(String(id))?.kode_unit || '',
+          nama_unit: unitKerjaMasterMap.value.get(String(id))?.nama_unit || `Unit ${id}`
+        }))
+    })
+
+    const unitKerjaMasterMap = computed(() => {
+      const map = new Map()
+      const rows = Array.isArray(unitKerjaMaster.value) ? unitKerjaMaster.value : []
+      rows.forEach((item) => {
+        const id = item?.unit_kerja_id ?? item?.id
+        if (id === null || id === undefined || id === '') return
+        map.set(String(id), {
+          unit_kerja_id: id,
+          kode_unit: item?.kode_unit || '',
+          nama_unit: item?.nama_unit || item?.nama || ''
+        })
+      })
+      return map
+    })
+
+    const userUnitKerjaMap = computed(() => {
+      const map = new Map()
+      userUnitKerjaOptions.value.forEach((unit) => {
+        if (unit?.unit_kerja_id === null || unit?.unit_kerja_id === undefined) return
+        map.set(String(unit.unit_kerja_id), unit)
+      })
+      return map
+    })
+
+    const getUnitKerjaLabel = (item) => {
+      if (!item) return '-'
+      if (item.nama_unit) return item.nama_unit
+      if (item.unit_kerja) return item.unit_kerja
+
+      const resolvedUnitId = item.unit_kerja_id ?? item.id_tim ?? item.__source_unit_kerja_id ?? null
+      const key = resolvedUnitId !== undefined && resolvedUnitId !== null
+        ? String(resolvedUnitId)
+        : ''
+      if (!key) return '-'
+
+      const unit = userUnitKerjaMap.value.get(key)
+      const unitFromMaster = unitKerjaMasterMap.value.get(key)
+      if (!unit && !unitFromMaster) return `Unit ${key}`
+      const resolved = unit || unitFromMaster
+      if (!resolved) return `Unit ${key}`
+      return resolved.kode_unit
+        ? `${resolved.kode_unit} - ${resolved.nama_unit || `Unit ${key}`}`
+        : (resolved.nama_unit || `Unit ${key}`)
+    }
+
     // Fetch kegiatan dari API (sudah difilter berdasarkan pegawai yang login)
     const kegiatan = ref([])
     const isLoadingKegiatan = ref(false)
@@ -882,9 +972,59 @@ export default {
       isLoadingKegiatan.value = true
       // console.debug('[Kegiatan] loadKegiatan start, user:', currentUser.value)
       try {
-        const data = await getKegiatanTim(currentUser.value.unit_kerja_id)
-        console.log('unit_kerja_id:', currentUser.value.unit_kerja_id);
-        kegiatan.value = data || []
+        console.log('[Kegiatan][Debug] unit_kerja_id user:', currentUser.value?.unit_kerja_id)
+        console.log('[Kegiatan][Debug] unit_kerja user:', auth.unit_kerja)
+
+        const rawUnitKerjaIds = currentUser.value?.unit_kerja_id
+        const unitKerjaIds = Array.isArray(rawUnitKerjaIds)
+          ? rawUnitKerjaIds.filter(v => v !== null && v !== undefined && v !== '')
+          : (rawUnitKerjaIds ? [rawUnitKerjaIds] : [])
+
+        if (unitKerjaIds.length === 0) {
+          kegiatan.value = []
+          return
+        }
+
+        const results = await Promise.all(
+          unitKerjaIds.map(async (id) => {
+            try {
+              const res = await getKegiatanTim(id)
+              const rows = Array.isArray(res) ? res : []
+              return rows.map((item) => {
+                const normalized = { ...(item || {}) }
+                if (normalized.unit_kerja_id === undefined || normalized.unit_kerja_id === null || normalized.unit_kerja_id === '') {
+                  normalized.unit_kerja_id = id
+                }
+                if (normalized.id_tim === undefined || normalized.id_tim === null || normalized.id_tim === '') {
+                  normalized.id_tim = id
+                }
+                normalized.__source_unit_kerja_id = id
+                return normalized
+              })
+            } catch {
+              return []
+            }
+          })
+        )
+
+        const merged = results.flat()
+        merged.forEach((item) => {
+          if ((item.unit_kerja_id === undefined || item.unit_kerja_id === null || item.unit_kerja_id === '') && item.id_tim) {
+            item.unit_kerja_id = item.id_tim
+          }
+        })
+        const deduped = Array.from(
+          new Map(merged.map(item => [String(item.id_kegiatan), item])).values()
+        )
+
+        kegiatan.value = deduped
+        console.log('[Kegiatan][Debug] hasil kegiatan + unit:', kegiatan.value.map(item => ({
+          id_kegiatan: item.id_kegiatan,
+          nama_kegiatan: item.nama_kegiatan,
+          unit_kerja_id: item.unit_kerja_id,
+          id_tim: item.id_tim,
+          __source_unit_kerja_id: item.__source_unit_kerja_id
+        })))
         kegiatan.value.forEach(enrichWithLink)
       } catch (err) {
         // console.error('[Kegiatan] Failed to fetch kegiatan from API', err)
@@ -898,15 +1038,25 @@ export default {
       try {
         isLoadingKegiatan.value = true
 
-        const [pegawaiData, usersData] = await Promise.all([
+        const [pegawaiData, usersData, unitKerjaData] = await Promise.all([
           fetchAPI('pegawai'),
-          fetchAPI('users')
+          fetchAPI('users'),
+          fetchAPI('unit-kerja')
         ])
 
         if (Array.isArray(pegawaiData)) pegawai.value = pegawaiData
         if (Array.isArray(usersData)) users.value = usersData
+        if (Array.isArray(unitKerjaData)) {
+          unitKerjaMaster.value = unitKerjaData
+        } else if (Array.isArray(unitKerjaData?.data)) {
+          unitKerjaMaster.value = unitKerjaData.data
+        }
+        console.log('[Kegiatan][Debug] master unit_kerja:', unitKerjaMaster.value)
 
         await loadKegiatan()
+        if (!formData.value.unit_kerja_id) {
+          formData.value.unit_kerja_id = userUnitKerjaOptions.value[0]?.unit_kerja_id ?? ''
+        }
 
       } catch (e) {
         console.error(e)
@@ -966,6 +1116,7 @@ export default {
       nama_kegiatan: '',
       rincian_kegiatan: '',
       deskripsi: '',
+      unit_kerja_id: '',
       tanggal_mulai: '',
       tanggal_selesai: '',
       lokasi: '',
@@ -1013,6 +1164,7 @@ export default {
         nama_kegiatan: '',
         rincian_kegiatan: '',
         deskripsi: '',
+        unit_kerja_id: userUnitKerjaOptions.value[0]?.unit_kerja_id ?? '',
         tanggal_mulai: '',
         tanggal_selesai: '',
         lokasi: '',
@@ -1115,6 +1267,10 @@ export default {
         formError.value = 'Nama kegiatan harus diisi'
         return false
       }
+      if (!formData.value.unit_kerja_id) {
+        formError.value = 'Unit kerja harus dipilih'
+        return false
+      }
       if (!formData.value.tanggal_mulai) {
         formError.value = 'Tanggal mulai harus diisi'
         return false
@@ -1155,7 +1311,14 @@ export default {
       try {
         const item = await getKegiatan(id)
         if (item) {
-          selectedKegiatan.value = { ...item }
+          const listItem = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
+          const unitFallback = listItem?.unit_kerja_id ?? listItem?.id_tim ?? listItem?.__source_unit_kerja_id ?? null
+          selectedKegiatan.value = {
+            ...item,
+            unit_kerja_id: item.unit_kerja_id ?? unitFallback,
+            id_tim: item.id_tim ?? unitFallback,
+            __source_unit_kerja_id: item.__source_unit_kerja_id ?? unitFallback
+          }
           showDetailModal.value = true
           // Log viewing detail
           ActivityEvents.VIEW_KEGIATAN_DETAIL(id, item.nama_kegiatan)
@@ -1265,6 +1428,8 @@ export default {
         nama_kegiatan: data.nama_kegiatan,
         rincian_kegiatan: data.rincian_kegiatan,
         deskripsi: data.deskripsi,
+        unit_kerja_id: data.unit_kerja_id,
+        id_tim: data.unit_kerja_id,
         tanggal_mulai: data.tanggal_mulai,
         tanggal_selesai: data.tanggal_selesai,
         lokasi: data.lokasi,
@@ -1304,6 +1469,7 @@ export default {
 
     const normalizeKegiatanFormData = (data) => ({
       ...data,
+      unit_kerja_id: data.unit_kerja_id ?? data.id_tim ?? '',
       tanggal_mulai: toDateInputValue(data.tanggal_mulai),
       tanggal_selesai: toDateInputValue(data.tanggal_selesai)
     })
@@ -1524,12 +1690,14 @@ export default {
       currentUser,
       profilePegawai,
       formData,
+      userUnitKerjaOptions,
       formError,
       isDraggingFlyer,
       flyerInput,
       filteredKegiatan,
       formatDate,
       getMetodeLabel,
+      getUnitKerjaLabel,
       getStatusLabel,
       getStatusBadgeClass,
       getPaymentMethodLabel,

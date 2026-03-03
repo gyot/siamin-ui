@@ -32,26 +32,8 @@
     <main class="relative">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
         <div class="grid lg:grid-cols-2 gap-12 items-center">
-          <!-- Feature Cards -->
-          <div class="grid grid-cols-2 gap-4 mb-10 lg:mb-0">
-            <button v-for="card in timkerCards" :key="card.id"
-              class="text-left bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition"
-              :class="{ 'col-span-2': card.fullWidth, 'ring-2 ring-cyan-300/70': selectedTimker && selectedTimker.id === card.id }"
-              @click="selectTimker(card); loadKegiatan(card.id)" type="button">
-              <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4" :class="card.iconBg">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">d
-                  <path v-for="(path, index) in card.iconPaths" :key="`${card.id}-${index}`" v-bind="path" />
-                  <circle v-for="(circle, index) in card.iconCircles || []" :key="`${card.id}-c-${index}`"
-                    v-bind="circle" />
-                  <rect v-for="(rect, index) in card.iconRects || []" :key="`${card.id}-r-${index}`" v-bind="rect" />
-                </svg>
-              </div>
-              <h3 class="text-white font-semibold mb-2">{{ card.name }}</h3>
-              <p class="text-blue-200 text-sm">{{ card.description }}</p>
-            </button>
-          </div>
           <!-- welcome / daftar kegiatan -->
-          <div class="text-center lg:text-left">
+          <div ref="kegiatanSectionRef" class="text-center lg:text-left">
             <template v-if="!selectedTimker">
               <div
                 class="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-500/20 rounded-full text-blue-200 text-sm mb-6">
@@ -126,11 +108,20 @@
                   class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
                   <div class="flex items-start justify-between gap-3 mb-1">
                     <h3 class="text-white font-semibold">{{ item.nama_kegiatan }}</h3>
-                    <button
-                      class="px-3 py-1 rounded-lg text-xs border border-white/20 text-blue-100 hover:bg-white/10 transition"
-                      @click="openKegiatanDetail(item)">
-                      Detail
-                    </button>
+                    <div class="flex items-center gap-2">
+                      <a
+                        :href="buildKegiatanDetailUrl(item)"
+                        target="_blank"
+                        class="px-3 py-1 rounded-lg text-xs border border-cyan-300/40 text-cyan-100 hover:bg-cyan-400/15 transition"
+                      >
+                        Halaman
+                      </a>
+                      <button
+                        class="px-3 py-1 rounded-lg text-xs border border-white/20 text-blue-100 hover:bg-white/10 transition"
+                        @click="openKegiatanDetail(item)">
+                        Detail
+                      </button>
+                    </div>
                   </div>
                   <!-- <p class="text-blue-100 text-sm mb-2">{{ item.rincian_kegiatan || item.deskripsi || '-' }}</p> -->
                   <div class="flex flex-wrap items-center gap-2 text-xs text-blue-200">
@@ -158,6 +149,25 @@
               </div>
             </template>
           </div>
+          <!-- Feature Cards -->
+          <div ref="timkerCardsSectionRef" class="grid grid-cols-2 gap-4 mb-10 lg:mb-0">
+            <button v-for="card in timkerCards" :key="card.id"
+              class="text-left bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition"
+              :class="{ 'col-span-2': card.fullWidth, 'ring-2 ring-cyan-300/70': selectedTimker && selectedTimker.id === card.id }"
+              @click="selectTimker(card); loadKegiatan(card.id)" type="button">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4" :class="card.iconBg">
+                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">d
+                  <path v-for="(path, index) in card.iconPaths" :key="`${card.id}-${index}`" v-bind="path" />
+                  <circle v-for="(circle, index) in card.iconCircles || []" :key="`${card.id}-c-${index}`"
+                    v-bind="circle" />
+                  <rect v-for="(rect, index) in card.iconRects || []" :key="`${card.id}-r-${index}`" v-bind="rect" />
+                </svg>
+              </div>
+              <h3 class="text-white font-semibold mb-2">{{ card.name }}</h3>
+              <p class="text-blue-200 text-sm">{{ card.description }}</p>
+            </button>
+          </div>
+          
 
 
         </div>
@@ -193,11 +203,19 @@
       <div class="w-full max-w-3xl bg-slate-900 border border-white/20 rounded-2xl overflow-hidden">
         <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
           <h3 class="text-white font-semibold text-lg">Detail Kegiatan</h3>
-          <button class="text-blue-100 hover:text-white" @click="closeKegiatanDetail">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          <div class="flex items-center gap-3">
+            <button
+              @click="shareKegiatanDetailFromModal"
+              class="px-3 py-1.5 rounded-lg border border-cyan-300/40 text-cyan-100 hover:bg-cyan-400/15 text-xs sm:text-sm"
+            >
+              Share Halaman
+            </button>
+            <button class="text-blue-100 hover:text-white" @click="closeKegiatanDetail">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
 
         <div v-if="selectedKegiatanDetail" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
@@ -237,6 +255,18 @@
     <p class="text-white text-lg font-semibold">
       {{ selectedKegiatanDetail.total_peserta ?? '-' }}
     </p>
+  </div>
+
+  <!-- Link Halaman -->
+  <div class="mb-6">
+    <p class="text-blue-200 text-sm mb-1">Link Halaman Detail Kegiatan</p>
+    <a
+      :href="buildKegiatanDetailUrl(selectedKegiatanDetail)"
+      target="_blank"
+      class="text-cyan-300 hover:text-cyan-200 break-all"
+    >
+      {{ buildKegiatanDetailUrl(selectedKegiatanDetail) }}
+    </a>
   </div>
 
   <!-- Link Biodata -->
@@ -350,7 +380,7 @@
 </template>
 
 <script>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import QRCode from 'qrcode'
 import { getKegiatanTim } from '@/services/kegiatan'
 import { getUnitKerja } from '@/services/unit_kerja'
@@ -361,6 +391,8 @@ export default {
     const kegiatan = ref([])
     const isLoadingKegiatan = ref(false)
     const selectedTimker = ref(null)
+    const kegiatanSectionRef = ref(null)
+    const timkerCardsSectionRef = ref(null)
     const showKegiatanDetailModal = ref(false)
     const selectedKegiatanDetail = ref(null)
     const qrCodeMap = ref({})
@@ -542,6 +574,12 @@ export default {
       return filteredKegiatan.value.slice(start, start + itemsPerPage)
     })
 
+    const buildKegiatanDetailUrl = (item) => {
+      const idKegiatan = item?.id_kegiatan ?? '-'
+      const slug = slugify(item?.nama_kegiatan || '')
+      return buildPublicUrl(`/kegiatan/${idKegiatan}/${slug}`)
+    }
+
     const biodataLinks = computed(() => {
       const item = selectedKegiatanDetail.value
       if (!item) return []
@@ -643,16 +681,50 @@ export default {
     const selectTimker = (card) => {
       selectedTimker.value = card
       currentPage.value = 1
+      nextTick(() => {
+        kegiatanSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
     }
 
     const resetTimkerSelection = () => {
       selectedTimker.value = null
       currentPage.value = 1
+      nextTick(() => {
+        timkerCardsSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
     }
 
     const openKegiatanDetail = (item) => {
       selectedKegiatanDetail.value = item
       showKegiatanDetailModal.value = true
+    }
+
+    const shareKegiatanDetailFromModal = async () => {
+      const item = selectedKegiatanDetail.value
+      if (!item) return
+
+      const url = buildKegiatanDetailUrl(item)
+      const title = item.nama_kegiatan || 'Detail Kegiatan'
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title,
+            text: 'Detail kegiatan publik',
+            url
+          })
+          return
+        } catch (error) {
+          if (error?.name === 'AbortError') return
+        }
+      }
+
+      try {
+        await navigator.clipboard.writeText(url)
+        alert('Link halaman kegiatan berhasil disalin.')
+      } catch (error) {
+        window.prompt('Salin link halaman kegiatan berikut:', url)
+      }
     }
 
     const closeKegiatanDetail = () => {
@@ -683,6 +755,8 @@ export default {
       kegiatan,
       isLoadingKegiatan,
       selectedTimker,
+      kegiatanSectionRef,
+      timkerCardsSectionRef,
       showKegiatanDetailModal,
       selectedKegiatanDetail,
       biodataLinks,
@@ -692,6 +766,7 @@ export default {
       totalPages,
       formatDate,
       slugify,
+      buildKegiatanDetailUrl,
       getQrCodeUrl,
       getStatusLabel,
       getMetodeLabel,
@@ -700,6 +775,7 @@ export default {
       selectTimker,
       resetTimkerSelection,
       openKegiatanDetail,
+      shareKegiatanDetailFromModal,
       closeKegiatanDetail,
       prevPage,
       nextPage,
