@@ -62,7 +62,7 @@
         <div class="bg-white rounded-2xl shadow-2xl p-8">
           <div class="text-center mb-8">
             <RouterLink to="/" class="flex items-center gap-3">
-              <img src="/src/assets/logo.png" alt="Logo SIAMIN" class="h-16 object-contain">
+              <img src="/src/assets/logo.png" alt="Logo SIMAIK" class="h-16 object-contain">
             </RouterLink>
             <p class="text-slate-500 mt-2">Masuk dengan akun admin Anda</p>
           </div>

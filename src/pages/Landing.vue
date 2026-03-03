@@ -238,6 +238,12 @@
               class="text-cyan-300 hover:text-cyan-200 break-all">{{ baseUrl}}/formulir/Panitia/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}</a><br>
             <strong class="text-white">Narasumber:</strong> <br> <a :href="`${baseUrl}formulir/${selectedKegiatanDetail.id_kegiatan ?? '-'}/Narasumber/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
               class="text-cyan-300 hover:text-cyan-200 break-all">{{ baseUrl}}/formulir/Narasumber/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}</a>
+            <br><br>
+            <strong class="text-white">Daftar Peserta:</strong> <br>
+            <a :href="`${baseUrl}/daftar-peserta/${selectedKegiatanDetail.id_kegiatan ?? '-'}/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
+              class="text-cyan-300 hover:text-cyan-200 break-all">
+              {{ baseUrl }}/daftar-peserta/{{ selectedKegiatanDetail.id_kegiatan ?? '-' }}/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}
+            </a>
           </div>
 
           <!-- <div class="bg-white/5 rounded-lg p-3 border border-white/10">

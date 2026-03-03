@@ -17,6 +17,7 @@ import Landing from '../pages/Landing.vue'
 import Login from '../pages/Login.vue'
 import LoginPeserta from '../pages/LoginPeserta.vue'
 import FormulirPeserta from '../pages/FormulirPeserta.vue'
+import DaftarPesertaPublik from '../pages/DaftarPesertaPublik.vue'
 import LihatTandatangan from '../pages/LihatTandatangan.vue'
 import DataSyncMonitor from '../pages/DataSyncMonitor.vue'
 
@@ -27,6 +28,7 @@ const router = createRouter({
   {path:'/laman-masuk',component:Login},
   {path:'/login-peserta',component:LoginPeserta},
   {path:'/formulir/:kode/:peran/:slugJudul',component:FormulirPeserta},
+  {path:'/daftar-peserta/:kode/:slugJudul?',component:DaftarPesertaPublik},
   {path:'/lihat-tandatangan/:id',component:LihatTandatangan},
   {path:'/data-sync',component:DataSyncMonitor},
  {path:'/admin',component:AdminLayout,meta:{requiresAuth:true,requiresAdmin:true},children:[

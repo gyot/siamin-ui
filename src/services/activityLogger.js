@@ -64,11 +64,11 @@ const getClientIP = async () => {
 export const ActivityEvents = {
   // Authentication
   LOGIN: async (method = 'admin') => {
-    return logActivity('LOGIN', `Berhasil login ke sistem SIAMIN sebagai ${method}`, { method })
+    return logActivity('LOGIN', `Berhasil login ke sistem SIMAIK sebagai ${method}`, { method })
   },
   
   LOGOUT: async () => {
-    return logActivity('LOGOUT', 'Keluar dari sistem SIAMIN')
+    return logActivity('LOGOUT', 'Keluar dari sistem SIMAIK')
   },
 
   // Page Access

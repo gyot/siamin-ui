@@ -846,7 +846,7 @@ export default {
       // console.debug('[Kegiatan] loadKegiatan start, user:', currentUser.value)
       try {
         const data = await getKegiatanTim(currentUser.value.unit_kerja_id)
-        // console.debug('[Kegiatan] raw API response', data)
+        console.log('unit_kerja_id:', currentUser.value.unit_kerja_id);
         kegiatan.value = data || []
         kegiatan.value.forEach(enrichWithLink)
       } catch (err) {
