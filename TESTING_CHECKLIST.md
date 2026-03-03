@@ -1,4 +1,4 @@
-# SIAMIN Login - Testing Checklist
+# SIMAIK Login - Testing Checklist
 
 ## Pre-Test Setup
 

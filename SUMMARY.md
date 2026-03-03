@@ -1,4 +1,4 @@
-# 📋 SIAMIN - Sistem Informasi Administrasi Manajemen Kegiatan
+# 📋 SIMAIK - Sistem Informasi Administrasi Manajemen Kegiatan
 
 ## ✅ IMPLEMENTASI SELESAI
 

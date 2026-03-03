@@ -1,4 +1,4 @@
-# ✅ SELESAI - Halaman Peserta Management SIAMIN
+# ✅ SELESAI - Halaman Peserta Management SIMAIK
 
 ## 📋 RINGKASAN SINGKAT
 

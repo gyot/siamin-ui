@@ -245,7 +245,7 @@ const handleLogout = async () => {
 ```vue
 <template>
   <header v-if="authStore.isAuthenticated" class="header">
-    <div class="logo">SIAMIN</div>
+    <div class="logo">SIMAIK</div>
     
     <div class="user-info">
       <span class="user-name">{{ authStore.currentUser.name }}</span>

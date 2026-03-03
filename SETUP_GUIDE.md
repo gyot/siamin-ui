@@ -1,4 +1,4 @@
-# SIAMIN Admin Dashboard - Complete Setup Guide
+# SIMAIK Admin Dashboard - Complete Setup Guide
 
 ## Problem Fixed
 **Halaman login tidak dapat diklik (Login page not responding)**
@@ -55,7 +55,7 @@ The Vue development server is already running on **http://localhost:5174**
 #### Verify server is running
 Open browser and check: http://localhost:5174
 
-You should see the SIAMIN landing page with login options.
+You should see the SIMAIK landing page with login options.
 
 ---
 

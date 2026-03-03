@@ -133,6 +133,15 @@
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </button> -->
+                  
+                  <button @click="sharePublicPesertaLink(k)"
+                    class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-emerald-600"
+                    title="Share Link Publik Peserta">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8.684 13.342C9.886 12.511 11.342 12 12.914 12c1.572 0 3.028.511 4.23 1.342M9 6.75A2.25 2.25 0 1113.5 6.75 2.25 2.25 0 019 6.75zm6.75 10.5a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zM3.75 15a2.25 2.25 0 114.5 0 2.25 2.25 0 01-4.5 0z" />
+                    </svg>
+                  </button>
                   <button @click="viewDetail(k.id_kegiatan)"
                     class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700" title="Lihat">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -787,6 +796,34 @@ export default {
       return `${base}/formulir/${kode}/${peran}/${slug}`
     }
 
+    const buildPublicPesertaLink = (kode, judul = '') => {
+      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
+      const slug = slugify(judul)
+      return `${base}/daftar-peserta/${kode}/${slug}`
+    }
+
+    const copyText = async (text) => {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text)
+        return true
+      }
+
+      try {
+        const textArea = document.createElement('textarea')
+        textArea.value = text
+        textArea.style.position = 'fixed'
+        textArea.style.opacity = '0'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        const success = document.execCommand('copy')
+        document.body.removeChild(textArea)
+        return success
+      } catch (error) {
+        return false
+      }
+    }
+
     const enrichWithLink = (k) => {
       const kode = k.id_kegiatan || k.kode || ''
       const judul = k.nama_kegiatan || ''
@@ -1387,6 +1424,31 @@ export default {
       }
     }
 
+    const sharePublicPesertaLink = async (kegiatanItem) => {
+      const link = buildPublicPesertaLink(kegiatanItem?.id_kegiatan || '', kegiatanItem?.nama_kegiatan || '')
+      const shareTitle = `Daftar Peserta - ${kegiatanItem?.nama_kegiatan || 'Kegiatan'}`
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: 'Link publik daftar peserta kegiatan',
+            url: link
+          })
+          return
+        } catch (error) {
+          if (error?.name === 'AbortError') return
+        }
+      }
+
+      const copied = await copyText(link)
+      if (copied) {
+        alert('Link publik peserta berhasil disalin ke clipboard.')
+      } else {
+        prompt('Salin link publik peserta berikut:', link)
+      }
+    }
+
     const addAnggota = () => {
       formAnggotaErrors.value = []
 
@@ -1484,6 +1546,7 @@ export default {
       removeFlyerImage,
       openPesertaList,
       handleSuratTugas,
+      sharePublicPesertaLink,
       showSuratTugasModal,
       selectedSuratTugas,
       anggotaInSelected,

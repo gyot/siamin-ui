@@ -26,13 +26,29 @@
       </div>
 
       <div class="bg-white border border-slate-200 rounded-xl shadow-sm p-4 sm:p-5 mb-5">
-        <label class="block text-sm font-medium text-slate-700 mb-2">Cari peserta</label>
-        <input
-          v-model="keyword"
-          type="text"
-          placeholder="Cari nama, email, instansi, atau peran..."
-          class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-slate-700 mb-2">Cari peserta</label>
+            <input
+              v-model="keyword"
+              type="text"
+              placeholder="Cari nama, email, instansi, atau peran..."
+              class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Baris per halaman</label>
+            <select
+              v-model.number="rowsPerPage"
+              class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option :value="10">10</option>
+              <option :value="25">25</option>
+              <option :value="50">50</option>
+              <option :value="100">100</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div v-if="isLoading" class="bg-white border border-slate-200 rounded-xl p-8 text-center text-slate-600">
@@ -43,42 +59,79 @@
         {{ errorMessage }}
       </div>
 
-      <div v-else class="space-y-3">
+      <div v-else class="space-y-4">
         <div v-if="filteredPeserta.length === 0" class="bg-white border border-slate-200 rounded-xl p-8 text-center text-slate-600">
           Belum ada peserta yang mengisi formulir untuk kegiatan ini.
         </div>
 
-        <div
-          v-for="(pesertaItem, index) in filteredPeserta"
-          :key="pesertaItem.id_peserta || `${pesertaItem.id_kegiatan}-${index}`"
-          class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm"
-        >
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p class="text-base font-semibold text-slate-800">{{ pesertaItem.nama_lengkap || '-' }}</p>
-              <p class="text-sm text-slate-600">{{ pesertaItem.email || '-' }}</p>
-            </div>
-            <span class="inline-flex w-fit px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-              {{ pesertaItem.peran || 'Peserta' }}
-            </span>
+        <div v-else class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-100 text-slate-700">
+                <tr>
+                  <th class="px-4 py-3 text-left font-semibold">No</th>
+                  <th class="px-4 py-3 text-left font-semibold cursor-pointer select-none" @click="setSort('nama_lengkap')">
+                    Nama {{ sortIndicator('nama_lengkap') }}
+                  </th>
+                  <th class="px-4 py-3 text-left font-semibold cursor-pointer select-none" @click="setSort('email')">
+                    Email {{ sortIndicator('email') }}
+                  </th>
+                  <th class="px-4 py-3 text-left font-semibold cursor-pointer select-none" @click="setSort('nip')">
+                    NIP {{ sortIndicator('nip') }}
+                  </th>
+                  <th class="px-4 py-3 text-left font-semibold cursor-pointer select-none" @click="setSort('nama_instansi')">
+                    Instansi {{ sortIndicator('nama_instansi') }}
+                  </th>
+                  <th class="px-4 py-3 text-left font-semibold cursor-pointer select-none" @click="setSort('kab_kota')">
+                    Kabupaten/Kota {{ sortIndicator('kab_kota') }}
+                  </th>
+                  <th class="px-4 py-3 text-left font-semibold cursor-pointer select-none" @click="setSort('peran')">
+                    Peran {{ sortIndicator('peran') }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="(pesertaItem, index) in paginatedPeserta"
+                  :key="pesertaItem.id_peserta || `${pesertaItem.id_kegiatan}-${index}`"
+                  class="border-t border-slate-200 hover:bg-slate-50"
+                >
+                  <td class="px-4 py-3 text-slate-700">{{ startRow + index }}</td>
+                  <td class="px-4 py-3 font-medium text-slate-800">{{ pesertaItem.nama_lengkap || '-' }}</td>
+                  <td class="px-4 py-3 text-slate-700">{{ pesertaItem.email || '-' }}</td>
+                  <td class="px-4 py-3 text-slate-700">{{ pesertaItem.nip || '-' }}</td>
+                  <td class="px-4 py-3 text-slate-700">{{ pesertaItem.nama_instansi || '-' }}</td>
+                  <td class="px-4 py-3 text-slate-700">{{ pesertaItem.kab_kota || '-' }}</td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex w-fit px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                      {{ pesertaItem.peran || 'Peserta' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4 text-sm">
-            <div>
-              <p class="text-slate-500">NIP</p>
-              <p class="font-medium text-slate-800">{{ pesertaItem.nip || '-' }}</p>
-            </div>
-            <div>
-              <p class="text-slate-500">No. HP</p>
-              <p class="font-medium text-slate-800">{{ pesertaItem.no_hp || '-' }}</p>
-            </div>
-            <div>
-              <p class="text-slate-500">Instansi</p>
-              <p class="font-medium text-slate-800">{{ pesertaItem.nama_instansi || '-' }}</p>
-            </div>
-            <div>
-              <p class="text-slate-500">Kabupaten/Kota</p>
-              <p class="font-medium text-slate-800">{{ pesertaItem.kab_kota || '-' }}</p>
+          <div class="px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <p class="text-sm text-slate-600">
+              Menampilkan {{ startRow }} - {{ endRow }} dari {{ sortedPeserta.length }} data
+            </p>
+            <div class="flex items-center gap-2">
+              <button
+                class="px-3 py-1.5 text-sm border border-slate-300 rounded-md disabled:opacity-50"
+                :disabled="currentPage === 1"
+                @click="prevPage"
+              >
+                Prev
+              </button>
+              <span class="text-sm text-slate-700">Halaman {{ currentPage }} / {{ totalPages }}</span>
+              <button
+                class="px-3 py-1.5 text-sm border border-slate-300 rounded-md disabled:opacity-50"
+                :disabled="currentPage === totalPages"
+                @click="nextPage"
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>
@@ -88,7 +141,7 @@
 </template>
 
 <script>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchAPI } from '@/services/api'
 import database from '@/data/index.js'
@@ -104,6 +157,10 @@ export default {
     const keyword = ref('')
     const peserta = ref([])
     const kegiatanList = ref([])
+    const currentPage = ref(1)
+    const rowsPerPage = ref(10)
+    const sortBy = ref('nama_lengkap')
+    const sortOrder = ref('asc')
 
     const normalize = (value) => String(value || '').toLowerCase().trim()
 
@@ -161,6 +218,67 @@ export default {
       })
     })
 
+    const sortedPeserta = computed(() => {
+      const data = [...filteredPeserta.value]
+      return data.sort((a, b) => {
+        const left = normalize(a[sortBy.value])
+        const right = normalize(b[sortBy.value])
+        if (left < right) return sortOrder.value === 'asc' ? -1 : 1
+        if (left > right) return sortOrder.value === 'asc' ? 1 : -1
+        return 0
+      })
+    })
+
+    const totalPages = computed(() => {
+      const total = Math.ceil(sortedPeserta.value.length / rowsPerPage.value)
+      return total > 0 ? total : 1
+    })
+
+    const paginatedPeserta = computed(() => {
+      const start = (currentPage.value - 1) * rowsPerPage.value
+      return sortedPeserta.value.slice(start, start + rowsPerPage.value)
+    })
+
+    const startRow = computed(() => {
+      if (sortedPeserta.value.length === 0) return 0
+      return (currentPage.value - 1) * rowsPerPage.value + 1
+    })
+
+    const endRow = computed(() => {
+      if (sortedPeserta.value.length === 0) return 0
+      return Math.min(currentPage.value * rowsPerPage.value, sortedPeserta.value.length)
+    })
+
+    const setSort = (column) => {
+      if (sortBy.value === column) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+        return
+      }
+      sortBy.value = column
+      sortOrder.value = 'asc'
+    }
+
+    const sortIndicator = (column) => {
+      if (sortBy.value !== column) return ''
+      return sortOrder.value === 'asc' ? '▲' : '▼'
+    }
+
+    const prevPage = () => {
+      if (currentPage.value > 1) currentPage.value -= 1
+    }
+
+    const nextPage = () => {
+      if (currentPage.value < totalPages.value) currentPage.value += 1
+    }
+
+    watch([keyword, rowsPerPage], () => {
+      currentPage.value = 1
+    })
+
+    watch(totalPages, (newTotal) => {
+      if (currentPage.value > newTotal) currentPage.value = newTotal
+    })
+
     onMounted(loadData)
 
     return {
@@ -168,7 +286,18 @@ export default {
       errorMessage,
       keyword,
       kegiatan,
-      filteredPeserta
+      filteredPeserta,
+      sortedPeserta,
+      paginatedPeserta,
+      currentPage,
+      rowsPerPage,
+      totalPages,
+      startRow,
+      endRow,
+      setSort,
+      sortIndicator,
+      prevPage,
+      nextPage
     }
   }
 }

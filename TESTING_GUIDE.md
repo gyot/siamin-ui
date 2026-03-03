@@ -1,4 +1,4 @@
-# 🧪 Testing Guide - SIAMIN Peserta Management
+# 🧪 Testing Guide - SIMAIK Peserta Management
 
 ## 📌 Panduan Lengkap Testing Halaman Peserta
 

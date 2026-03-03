@@ -63,7 +63,8 @@
               </h2>
               <h2 class="text-4xl lg:text-5xl font-bold text-white leading-tight mb-6">
                 (<b class="text-yellow-400">Si</b>stem <b class="text-yellow-400">Ma</b>najemen<br />
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300"><b class="text-yellow-400">I</b>nformasi
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300"><b
+                    class="text-yellow-400">I</b>nformasi
                   <b class="text-yellow-400">K</b>egiatan</span>)
               </h2>
               <p class="text-blue-100 text-lg mb-8 leading-relaxed">
@@ -137,7 +138,7 @@
                       formatDate(item.tanggal_selesai) }}</span>
                     <span class="px-2 py-1 rounded-full bg-white/10">{{ item.lokasi || '-' }}</span>
                     <span class="px-2 py-1 rounded-full bg-white/10">{{ getStatusLabel(item.status) }}</span>
-                    
+
                   </div>
                 </article>
               </div>
@@ -157,7 +158,7 @@
               </div>
             </template>
           </div>
-          
+
 
         </div>
       </div>
@@ -228,23 +229,71 @@
               <p class="text-white">{{ selectedKegiatanDetail.peserta_ringkasan || '-' }}</p>
             </div> -->
           </div>
-          <div class="bg-white/5 rounded-lg p-3 border border-white/10">
-            <p class="text-blue-200">Total Peserta</p>
-            <p class="text-white">{{ selectedKegiatanDetail.total_peserta ?? '-' }}</p><br>
-            <p class="text-blue-200">Link Biodata</p>
-            <strong class="text-white">Peserta:</strong> <br> <a :href="`formulir/${selectedKegiatanDetail.id_kegiatan ?? '-'}/Peserta/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
-              class="text-cyan-300 hover:text-cyan-200 break-all">{{ baseUrl}}/formulir/Peserta/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}</a><br>
-            <strong class="text-white">Panitia:</strong> <br> <a :href="`${baseUrl}formulir/${selectedKegiatanDetail.id_kegiatan ?? '-'}/Panitia/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
-              class="text-cyan-300 hover:text-cyan-200 break-all">{{ baseUrl}}/formulir/Panitia/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}</a><br>
-            <strong class="text-white">Narasumber:</strong> <br> <a :href="`${baseUrl}formulir/${selectedKegiatanDetail.id_kegiatan ?? '-'}/Narasumber/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
-              class="text-cyan-300 hover:text-cyan-200 break-all">{{ baseUrl}}/formulir/Narasumber/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}</a>
-            <br><br>
-            <strong class="text-white">Daftar Peserta:</strong> <br>
-            <a :href="`${baseUrl}/daftar-peserta/${selectedKegiatanDetail.id_kegiatan ?? '-'}/${slugify(selectedKegiatanDetail.nama_kegiatan)}`" target="_blank"
-              class="text-cyan-300 hover:text-cyan-200 break-all">
-              {{ baseUrl }}/daftar-peserta/{{ selectedKegiatanDetail.id_kegiatan ?? '-' }}/{{ slugify(selectedKegiatanDetail.nama_kegiatan) }}
-            </a>
+          <div class="bg-white/5 rounded-lg p-4 border border-white/10">
+
+  <!-- Total Peserta -->
+  <div class="mb-6">
+    <p class="text-blue-200 text-sm">Total Peserta</p>
+    <p class="text-white text-lg font-semibold">
+      {{ selectedKegiatanDetail.total_peserta ?? '-' }}
+    </p>
+  </div>
+
+  <!-- Link Biodata -->
+  <p class="text-blue-200 text-sm mb-3">Link Biodata</p>
+
+  <div class="space-y-5">
+
+    <div 
+      v-for="item in biodataLinks" 
+      :key="item.label"
+      class="bg-white/5 border border-white/10 rounded-lg p-4
+             grid grid-cols-1 sm:grid-cols-[auto_1fr] 
+             gap-6 text-sm items-center transition hover:bg-white/10"
+    >
+
+      <!-- Kolom QR -->
+      <div class="flex flex-col items-center sm:items-start">
+        <div class="bg-white p-2 rounded-lg w-fit shadow">
+          <img
+            v-if="getQrCodeUrl(item.url)"
+            :src="getQrCodeUrl(item.url)"
+            :alt="`QR ${item.label}`"
+            class="w-28 h-28 sm:w-36 sm:h-36 object-contain"
+            loading="lazy"
+          />
+
+          <div
+            v-else
+            class="w-28 h-28 sm:w-36 sm:h-36 
+                   flex items-center justify-center 
+                   text-xs text-slate-600 text-center"
+          >
+            Membuat QR...
           </div>
+        </div>
+      </div>
+
+      <!-- Kolom URL -->
+      <div class="flex flex-col h-full">
+         <strong class="text-white mb-3">
+          {{ item.label }}:
+        </strong>
+        <a
+          :href="item.url"
+          target="_blank"
+          class="text-cyan-300 hover:text-cyan-200 
+                 break-all transition duration-200"
+        >
+          {{ item.url }}
+        </a>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
 
           <!-- <div class="bg-white/5 rounded-lg p-3 border border-white/10">
             <p class="text-blue-200 text-sm mb-1">Rincian</p>
@@ -259,12 +308,15 @@
           <div class="bg-white/5 rounded-lg p-3 border border-white/10">
             <p class="text-blue-200 text-sm mb-2">Resource URL</p>
             <div class="space-y-1 text-sm">
-              <strong class="text-white">Dokumentasi:</strong><a v-if="selectedKegiatanDetail.dokumentasi_url" :href="selectedKegiatanDetail.dokumentasi_url" target="_blank"
+              <strong class="text-white">Dokumentasi:</strong><a v-if="selectedKegiatanDetail.dokumentasi_url"
+                :href="selectedKegiatanDetail.dokumentasi_url" target="_blank"
                 class="block text-cyan-300 hover:text-cyan-200 break-all"> {{
                   selectedKegiatanDetail.dokumentasi_url }}</a>
-              <strong class="text-white">Materi: </strong><a v-if="selectedKegiatanDetail.materi_url" :href="selectedKegiatanDetail.materi_url" target="_blank"
+              <strong class="text-white">Materi: </strong><a v-if="selectedKegiatanDetail.materi_url"
+                :href="selectedKegiatanDetail.materi_url" target="_blank"
                 class="block text-cyan-300 hover:text-cyan-200 break-all">{{ selectedKegiatanDetail.materi_url }}</a>
-              <strong class="text-white">Panduan: </strong><a v-if="selectedKegiatanDetail.panduan_url" :href="selectedKegiatanDetail.panduan_url" target="_blank"
+              <strong class="text-white">Panduan: </strong><a v-if="selectedKegiatanDetail.panduan_url"
+                :href="selectedKegiatanDetail.panduan_url" target="_blank"
                 class="block text-cyan-300 hover:text-cyan-200 break-all">{{
                   selectedKegiatanDetail.panduan_url }}</a>
               <!-- <strong class="text-white">Laporan: </strong><a v-if="selectedKegiatanDetail.laporan_url" :href="selectedKegiatanDetail.laporan_url" target="_blank"
@@ -283,7 +335,8 @@
     <footer class="border-t border-white/10 py-8">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-          <p class="text-blue-200 text-sm">© 2025 SIMAIK - Kementerian Pendidikan Dasar dan Menengah BPMP Nusa Tenggara Barat</p>
+          <p class="text-blue-200 text-sm">© 2025 SIMAIK - Kementerian Pendidikan Dasar dan Menengah BPMP Nusa Tenggara
+            Barat</p>
           <div class="flex items-center gap-6">
             <RouterLink to="/verify-sertifikat" class="text-blue-200 hover:text-white text-sm transition">Verifikasi
               Sertifikat</RouterLink>
@@ -297,7 +350,8 @@
 </template>
 
 <script>
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import QRCode from 'qrcode'
 import { getKegiatanTim } from '@/services/kegiatan'
 import { getUnitKerja } from '@/services/unit_kerja'
 
@@ -309,9 +363,11 @@ export default {
     const selectedTimker = ref(null)
     const showKegiatanDetailModal = ref(false)
     const selectedKegiatanDetail = ref(null)
+    const qrCodeMap = ref({})
     const currentPage = ref(1)
     const itemsPerPage = 4
-    const baseUrl =  window.location.origin
+    const baseUrl = window.location.origin
+    const buildPublicUrl = (path = '') => `${baseUrl}/${String(path).replace(/^\/+/, '')}`
     function slugify(text) {
       if (!text) return ''
       return String(text)
@@ -390,7 +446,7 @@ export default {
       return keywords
     }
 
-  
+
     // const timkerCards = [
     //   {
     //     id: 'paud',
@@ -486,6 +542,44 @@ export default {
       return filteredKegiatan.value.slice(start, start + itemsPerPage)
     })
 
+    const biodataLinks = computed(() => {
+      const item = selectedKegiatanDetail.value
+      if (!item) return []
+
+      const idKegiatan = item.id_kegiatan ?? '-'
+      const slug = slugify(item.nama_kegiatan)
+
+      return [
+        { label: 'Peserta', url: buildPublicUrl(`/formulir/${idKegiatan}/Peserta/${slug}`) },
+        { label: 'Panitia', url: buildPublicUrl(`/formulir/${idKegiatan}/Panitia/${slug}`) },
+        { label: 'Narasumber', url: buildPublicUrl(`/formulir/${idKegiatan}/Narasumber/${slug}`) },
+        // { label: 'Daftar Peserta', url: buildPublicUrl(`/daftar-peserta/${idKegiatan}/${slug}`) }
+      ]
+    })
+
+    const generateQrCodes = async () => {
+      const entries = biodataLinks.value || []
+      const nextMap = {}
+
+      await Promise.all(entries.map(async (item) => {
+        try {
+          nextMap[item.url] = await QRCode.toDataURL(item.url, {
+            width: 220,
+            margin: 1
+          })
+        } catch (error) {
+          console.error('[Landing] Gagal generate QR:', error)
+          nextMap[item.url] = ''
+        }
+      }))
+
+      qrCodeMap.value = nextMap
+    }
+
+    const getQrCodeUrl = (url) => {
+      return qrCodeMap.value[url] || ''
+    }
+
     const formatDate = (dateString) => {
       if (!dateString) return '-'
       const date = new Date(dateString)
@@ -564,6 +658,7 @@ export default {
     const closeKegiatanDetail = () => {
       showKegiatanDetailModal.value = false
       selectedKegiatanDetail.value = null
+      qrCodeMap.value = {}
     }
 
     const prevPage = () => {
@@ -579,6 +674,10 @@ export default {
       loadUnitKerja()
     })
 
+    watch(biodataLinks, () => {
+      generateQrCodes()
+    }, { immediate: true })
+
     return {
       timkerCards,
       kegiatan,
@@ -586,12 +685,14 @@ export default {
       selectedTimker,
       showKegiatanDetailModal,
       selectedKegiatanDetail,
+      biodataLinks,
       filteredKegiatan,
       paginatedKegiatan,
       currentPage,
       totalPages,
       formatDate,
       slugify,
+      getQrCodeUrl,
       getStatusLabel,
       getMetodeLabel,
       hasAnyResourceUrl,

@@ -11,7 +11,7 @@
         </RouterLink>
         <div class="flex items-center gap-4 mb-8">
           <!-- <RouterLink to="/" class="flex items-center gap-3">
-            <img src="/src/assets/logo.png" alt="Logo SIAMIN" class="h-16 object-contain">
+            <img src="/src/assets/logo.png" alt="Logo SIMAIK" class="h-16 object-contain">
           </RouterLink> -->
         </div>
         <h2 class="text-4xl font-bold text-white leading-tight mb-4">
