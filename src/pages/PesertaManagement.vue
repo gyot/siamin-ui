@@ -1187,6 +1187,23 @@ export default {
       return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
     }
 
+    const getTemplateCandidateUrls = (templatePath) => {
+      const raw = String(templatePath || '').trim()
+      if (!raw) return []
+      if (/^https?:\/\//i.test(raw)) return [raw]
+
+      const normalizedPath = raw.replace(/^\/+/, '')
+      const sameOriginBase = String(window.location.origin || '').replace(/\/$/, '')
+      const apiBase = String(import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
+      const apiHostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
+
+      // Prioritaskan same-origin agar lolos CORS bila storage disajikan dari domain app.
+      return Array.from(new Set([
+        `${sameOriginBase}/storage/${normalizedPath}`,
+        `${apiHostBase}/storage/${normalizedPath}`
+      ]))
+    }
+
     const findKegiatanById = (id) => {
       const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
       let found = kegiatan.value.find(k => norm(k.id_kegiatan) === norm(id))
@@ -1219,6 +1236,7 @@ export default {
         }
       }
       const templateUrl = getStorageFileUrl(templatePath)
+      const candidateUrls = getTemplateCandidateUrls(templatePath)
 
       if (!templateUrl) {
         throw new Error(`Template biodata untuk kegiatan "${keg?.nama_kegiatan || idKegiatan}" belum tersedia di database`)
@@ -1228,17 +1246,34 @@ export default {
         throw new Error('Template biodata harus berformat .docx untuk generate biodata')
       }
 
-      if (templateBlobCache.has(templateUrl)) {
-        return { blob: templateBlobCache.get(templateUrl), kegiatan: keg || {} }
+      for (const cachedUrl of candidateUrls) {
+        if (templateBlobCache.has(cachedUrl)) {
+          return { blob: templateBlobCache.get(cachedUrl), kegiatan: keg || {} }
+        }
+      }
+      let lastError = null
+
+      for (const url of candidateUrls) {
+        try {
+          const response = await fetch(url, { method: 'GET' })
+          if (!response.ok) {
+            lastError = new Error(`HTTP ${response.status} saat mengambil template dari ${url}`)
+            continue
+          }
+          const blob = await response.blob()
+          templateBlobCache.set(url, blob)
+          return { blob, kegiatan: keg || {} }
+        } catch (error) {
+          lastError = error
+        }
       }
 
-      const response = await fetch(templateUrl, { method: 'GET' })
-      if (!response.ok) {
-        throw new Error(`Gagal mengambil template biodata (${response.status}). Cek akses file storage/public.`)
+      const message = String(lastError?.message || '').toLowerCase()
+      if (message.includes('failed to fetch') || message.includes('cors')) {
+        throw new Error('Template tidak bisa diakses karena CORS. Sediakan file template via domain yang sama (mis. simaik.bpmpntb.id/storage) atau aktifkan CORS pada host storage API.')
       }
-      const blob = await response.blob()
-      templateBlobCache.set(templateUrl, blob)
-      return { blob, kegiatan: keg || {} }
+
+      throw new Error(lastError?.message || 'Gagal mengambil template biodata dari server storage')
     }
 
     // Fungsi download DOCX dari data peserta dengan template DOCX
