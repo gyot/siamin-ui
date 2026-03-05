@@ -43,6 +43,26 @@ const buildApiErrorMessage = (errorData, fallback) => {
   return fallback
 }
 
+const parseErrorResponse = async (response) => {
+  const text = await response.text().catch(() => '')
+  if (!text) return { errorData: {}, rawText: '' }
+  try {
+    return { errorData: JSON.parse(text), rawText: text }
+  } catch {
+    return { errorData: {}, rawText: text }
+  }
+}
+
+const buildHttpError = (response, endpoint, errorData, rawText = '') => {
+  const fallbackBase = `API Error: ${response.status} ${response.statusText}`
+  const fallbackWithEndpoint = `${fallbackBase} (${endpoint})`
+  const parsedMessage = buildApiErrorMessage(errorData, fallbackWithEndpoint)
+  const raw = String(rawText || '').trim()
+  const looksLikeHtml = /<!doctype html|<html[\s>]/i.test(raw)
+  const snippet = raw && !looksLikeHtml ? ` | ${raw.slice(0, 180)}` : ''
+  return new Error(`${parsedMessage}${snippet}`)
+}
+
 const normalizeEndpoint = (endpoint = '') =>
   String(endpoint)
     .replace(/^https?:\/\/[^/]+\/api\/v1\//, '')
@@ -100,8 +120,8 @@ export const fetchAPI = async (endpoint, options = {}) => {
     })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(buildApiErrorMessage(errorData, `API Error: ${response.status} ${response.statusText}`))
+      const { errorData, rawText } = await parseErrorResponse(response)
+      throw buildHttpError(response, endpoint, errorData, rawText)
     }
 
     const data = await response.json()
@@ -155,8 +175,8 @@ export const postAPI = async (endpoint, payload) => {
     })
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(buildApiErrorMessage(errorData, `API Error: ${response.status} ${response.statusText}`))
+      const { errorData, rawText } = await parseErrorResponse(response)
+      throw buildHttpError(response, endpoint, errorData, rawText)
     }
 
     const data = await response.json()
@@ -200,6 +220,13 @@ export const updateAPI = async (endpoint, id, payload) => {
       return data.data || data
     }
 
+    // Jangan fallback jika 401 (token invalid/expired).
+    if (putResponse.status === 401) {
+      const { errorData, rawText } = await parseErrorResponse(putResponse)
+      throw buildHttpError(putResponse, `${endpoint}/${id}`, errorData, rawText)
+    }
+
+
     // Fallback for backends that only accept POST + method override.
     const fallbackHeaders = {
       'Accept': 'application/json'
@@ -228,12 +255,8 @@ export const updateAPI = async (endpoint, id, payload) => {
     })
 
     if (!postOverrideResponse.ok) {
-      const errorData = await postOverrideResponse.json().catch(() => ({}))
-      throw new Error(
-        buildApiErrorMessage(errorData,
-        `API Error: PUT ${putResponse.status} ${putResponse.statusText}; POST override ${postOverrideResponse.status} ${postOverrideResponse.statusText}`
-        )
-      )
+      const { errorData, rawText } = await parseErrorResponse(postOverrideResponse)
+      throw buildHttpError(postOverrideResponse, `${endpoint}/${id}`, errorData, rawText)
     }
 
     const data = await postOverrideResponse.json()
@@ -269,7 +292,8 @@ export const deleteAPI = async (endpoint, id) => {
     })
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`)
+      const { errorData, rawText } = await parseErrorResponse(response)
+      throw buildHttpError(response, `${endpoint}/${id}`, errorData, rawText)
     }
 
     const data = await response.json()

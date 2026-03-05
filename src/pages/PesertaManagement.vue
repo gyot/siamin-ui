@@ -1176,22 +1176,79 @@ export default {
       const d = new Date(date)
       return `${d.getDate().toString().padStart(2,'0')} ${bulan[d.getMonth()]} ${d.getFullYear()}`
     }
+
+    const getStorageFileUrl = (path) => {
+      if (!path) return ''
+      const value = String(path).trim()
+      if (!value) return ''
+      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
+      const apiBase = String(import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
+      const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
+      return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
+    }
+
+    const findKegiatanById = (id) => {
+      const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
+      let found = kegiatan.value.find(k => norm(k.id_kegiatan) === norm(id))
+      if (!found) found = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
+      return found || null
+    }
+
+    const templateBlobCache = new Map()
+
+    const getTemplateBlobByKegiatanId = async (idKegiatan) => {
+      let keg = findKegiatanById(idKegiatan)
+      let templatePath = keg?.template_biodata || keg?.template_biodata_path || ''
+
+      // Pastikan data detail kegiatan terbaru jika field template belum ada di list.
+      if (!templatePath) {
+        try {
+          const detail = await fetchAPI(`kegiatan/${idKegiatan}`)
+          if (detail && !Array.isArray(detail)) {
+            keg = detail
+            templatePath = detail.template_biodata || detail.template_biodata_path || ''
+            const idx = kegiatan.value.findIndex((item) => String(item.id_kegiatan) === String(idKegiatan))
+            if (idx !== -1) {
+              kegiatan.value[idx] = { ...kegiatan.value[idx], ...detail }
+            } else {
+              kegiatan.value.push(detail)
+            }
+          }
+        } catch (error) {
+          // silent, biarkan error utama di bawah yang tampil ke user
+        }
+      }
+      const templateUrl = getStorageFileUrl(templatePath)
+
+      if (!templateUrl) {
+        throw new Error(`Template biodata untuk kegiatan "${keg?.nama_kegiatan || idKegiatan}" belum tersedia di database`)
+      }
+
+      if (!/\.docx(\?|#|$)/i.test(templateUrl)) {
+        throw new Error('Template biodata harus berformat .docx untuk generate biodata')
+      }
+
+      if (templateBlobCache.has(templateUrl)) {
+        return { blob: templateBlobCache.get(templateUrl), kegiatan: keg || {} }
+      }
+
+      const response = await fetch(templateUrl, { method: 'GET' })
+      if (!response.ok) {
+        throw new Error(`Gagal mengambil template biodata (${response.status}). Cek akses file storage/public.`)
+      }
+      const blob = await response.blob()
+      templateBlobCache.set(templateUrl, blob)
+      return { blob, kegiatan: keg || {} }
+    }
+
     // Fungsi download DOCX dari data peserta dengan template DOCX
     const downloadPesertaDocx = async (pesertaData) => {
       try {
-        // 1. Ambil template DOCX (misal dari public/template_peserta.docx)
-        const response = await fetch('/template_peserta.docx')
-        const templateDocx = await response.blob()
+        // 1. Ambil template DOCX dari field kegiatan.template_biodata
+        const { blob: templateDocx, kegiatan: kegRaw } = await getTemplateBlobByKegiatanId(pesertaData.id_kegiatan)
 
         // 2. Siapkan data untuk replace
-        // Fungsi pencarian kegiatan toleran tipe data
-        const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
-        const cariKegiatan = (id) => {
-          let found = kegiatan.value.find(k => norm(k.id_kegiatan) === norm(id))
-          if (!found) found = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
-          return found
-        }
-        const keg = cariKegiatan(pesertaData.id_kegiatan) || {}
+        const keg = kegRaw || {}
         const data = {
           judul_kegiatan: keg.nama_kegiatan || getNamaKegiatan(pesertaData.id_kegiatan),
           tanggal_mulai: dateFormat(keg.tanggal_mulai),
@@ -1219,38 +1276,41 @@ export default {
         await processDocxTemplate(templateDocx, data, docxFilename)
       } catch (error) {
         console.error('Gagal download DOCX peserta :', error)
-        alert('Gagal download DOCX peserta. Cek template atau data.')
+        alert(error.message || 'Gagal download DOCX peserta. Cek template atau data.')
       }
     }
 
     const downloadBatchDocxZip = async () => {
-      const zip = new JSZip()
-      const templateResponse = await fetch('/template_peserta.docx')
-      const templateDocx = await templateResponse.blob()
-      for (const p of filteredPeserta.value) {
-        const data = {
-          nama_lengkap: p.nama_lengkap,
-          nip: p.nip,
-          email: p.email,
-          nama_instansi: p.nama_instansi,
-          kegiatan: getNamaKegiatan(p.id_kegiatan),
-          peran: p.peran || 'Peserta',
+      try {
+        const zip = new JSZip()
+        for (const p of filteredPeserta.value) {
+          const { blob: templateDocx, kegiatan: keg } = await getTemplateBlobByKegiatanId(p.id_kegiatan)
+          const data = {
+            nama_lengkap: p.nama_lengkap,
+            nip: p.nip,
+            email: p.email,
+            nama_instansi: p.nama_instansi,
+            kegiatan: keg?.nama_kegiatan || getNamaKegiatan(p.id_kegiatan),
+            peran: p.peran || 'Peserta',
+          }
+          // processDocxTemplate harus bisa return blob jika filename=null
+          const docxBlob = await processDocxTemplate(templateDocx, data, null)
+          zip.file(`peserta_${p.id_peserta}.docx`, docxBlob)
         }
-        // Proses template untuk peserta ini
-        // processDocxTemplate harus bisa return blob jika filename=null
-        const docxBlob = await processDocxTemplate(templateDocx, data, null)
-        zip.file(`peserta_${p.id_peserta}.docx`, docxBlob)
+        // Generate ZIP dan download
+        const zipBlob = await zip.generateAsync({ type: 'blob' })
+        const url = window.URL.createObjectURL(zipBlob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `peserta_batch_${new Date().toISOString().slice(0,10)}.zip`
+        document.body.appendChild(link)
+        link.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(link)
+      } catch (error) {
+        console.error('Gagal download batch DOCX peserta:', error)
+        alert(error.message || 'Gagal download batch DOCX peserta. Pastikan template biodata .docx sudah diupload pada kegiatan.')
       }
-      // Generate ZIP dan download
-      const zipBlob = await zip.generateAsync({ type: 'blob' })
-      const url = window.URL.createObjectURL(zipBlob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `peserta_batch_${new Date().toISOString().slice(0,10)}.zip`
-      document.body.appendChild(link)
-      link.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(link)
     }
 
     return {

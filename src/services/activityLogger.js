@@ -15,9 +15,13 @@ export const logActivity = async (action, description, metadata = {}) => {
   try {
     const authStore = useAuthStore()
     const currentUser = authStore.currentUser
+    const authToken = authStore.token || localStorage.getItem('auth_token')
     
     if (!currentUser) {
       console.warn('[ActivityLogger] No authenticated user')
+      return
+    }
+    if (!authToken) {
       return
     }
 
@@ -38,6 +42,10 @@ export const logActivity = async (action, description, metadata = {}) => {
     
     return response
   } catch (error) {
+    const msg = String(error?.message || '')
+    if (msg.includes('401') || msg.includes('403')) {
+      return
+    }
     console.error('[ActivityLogger] Error logging activity:', error)
     // Jangan throw error, hanya log ke console
     // Aktivitas seharusnya tetap berjalan meski logging gagal

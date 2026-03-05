@@ -37,6 +37,17 @@
           <p class="mt-3 font-semibold">Deskripsi</p>
           <p class="text-slate-600 whitespace-pre-wrap">{{ kegiatan.deskripsi || '-' }}</p>
         </div>
+
+        <div v-if="biodataTemplateDownloadUrl" class="mt-4">
+          <a
+            :href="biodataTemplateDownloadUrl"
+            target="_blank"
+            download
+            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm"
+          >
+            Download Contoh Template Biodata
+          </a>
+        </div>
       </div>
 
 
@@ -474,6 +485,65 @@ export default {
       return base.replace(/\/$/, '') + '/' + String(f).replace(/^\//, '')
     })
 
+    const getValueByPath = (obj, path) => {
+      if (!obj || !path) return ''
+      return String(path)
+        .split('.')
+        .reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj)
+    }
+
+    const firstNonEmptyValue = (obj, paths = []) => {
+      for (const path of paths) {
+        const value = getValueByPath(obj, path)
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+          return value
+        }
+      }
+      return ''
+    }
+
+    const buildAbsoluteUrl = (rawUrl) => {
+      if (!rawUrl) return ''
+      const value = String(rawUrl).trim()
+      if (!value) return ''
+      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
+      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
+      return `${base}/${value.replace(/^\/+/, '')}`
+    }
+
+    const getStorageFileUrl = (path) => {
+      if (!path) return ''
+      const value = String(path).trim()
+      if (!value) return ''
+      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
+      const apiBase = String(import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
+      const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
+      return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
+    }
+
+    const biodataTemplateDownloadUrl = computed(() => {
+      const item = kegiatan.value
+      if (!item) return ''
+      const roleLower = String(peran || 'Peserta').toLowerCase()
+      const templateUrl = firstNonEmptyValue(item, [
+        'template_biodata',
+        'template_biodata_path',
+        `template_biodata_${roleLower}_url`,
+        `url_template_biodata_${roleLower}`,
+        `contoh_template_biodata_${roleLower}_url`,
+        `link_template_biodata_${roleLower}`,
+        `template_${roleLower}_url`,
+        `contoh_template_${roleLower}_url`,
+        `template_biodata.${roleLower}`,
+        `contoh_template_biodata.${roleLower}`,
+        `templates.${roleLower}.biodata`,
+        `templates.${roleLower}.url`,
+        `template_biodata_url`,
+        `contoh_template_biodata_url`
+      ])
+      return getStorageFileUrl(templateUrl) || buildAbsoluteUrl(templateUrl)
+    })
+
     const formData = ref({
       id_kegiatan: kode,
       nama_lengkap: '',
@@ -742,6 +812,7 @@ export default {
       namaKegiatan,
       kegiatan,
       flyerUrl,
+      biodataTemplateDownloadUrl,
       kabKota,
       formData,
       formatDate,

@@ -95,6 +95,15 @@
             <article v-for="item in biodataLinks" :key="item.label" class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
               <p class="text-xs uppercase tracking-wide text-cyan-200">{{ item.label }}</p>
               <a :href="item.url" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ item.url }}</a>
+              <a
+                v-if="item.templateUrl"
+                :href="item.templateUrl"
+                target="_blank"
+                download
+                class="mt-2 block text-xs text-emerald-300 hover:text-emerald-200 break-all"
+              >
+                Download Contoh Template Biodata
+              </a>
               <div class="mt-3 flex items-center gap-3">
                 <img
                   v-if="getQrCodeUrl(item.url)"
@@ -183,14 +192,98 @@ export default {
       return buildPublicUrl(`/kegiatan/${kode}/${slugify(judul)}`)
     })
 
+    const getValueByPath = (obj, path) => {
+      if (!obj || !path) return ''
+      return String(path)
+        .split('.')
+        .reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj)
+    }
+
+    const firstNonEmptyValue = (obj, paths = []) => {
+      for (const path of paths) {
+        const value = getValueByPath(obj, path)
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+          return value
+        }
+      }
+      return ''
+    }
+
+    const buildAbsoluteUrl = (rawUrl) => {
+      if (!rawUrl) return ''
+      const value = String(rawUrl).trim()
+      if (!value) return ''
+      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
+      return buildPublicUrl(value)
+    }
+
+    const getStorageFileUrl = (path) => {
+      if (!path) return ''
+      const value = String(path).trim()
+      if (!value) return ''
+      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
+      const apiBase = String(import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
+      const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
+      return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
+    }
+
+    const getRoleLinksFromKegiatan = (item, role) => {
+      const roleLower = String(role || '').toLowerCase()
+      const formUrl = firstNonEmptyValue(item, [
+        `link_form_${roleLower}`,
+        `form_${roleLower}_url`,
+        `url_form_${roleLower}`,
+        `link_biodata_${roleLower}`,
+        `url_biodata_${roleLower}`,
+        `biodata_${roleLower}_url`,
+        `formulir_${roleLower}`,
+        `link_formulir_${roleLower}`,
+        `links.${roleLower}.form`,
+        `links.${roleLower}.url`,
+        `link_biodata.${roleLower}`,
+        `form_biodata.${roleLower}`
+      ])
+
+      const templateUrl = firstNonEmptyValue(item, [
+        'template_biodata',
+        'template_biodata_path',
+        `template_biodata_${roleLower}_url`,
+        `url_template_biodata_${roleLower}`,
+        `contoh_template_biodata_${roleLower}_url`,
+        `link_template_biodata_${roleLower}`,
+        `template_${roleLower}_url`,
+        `contoh_template_${roleLower}_url`,
+        `template_biodata.${roleLower}`,
+        `contoh_template_biodata.${roleLower}`,
+        `templates.${roleLower}.biodata`,
+        `templates.${roleLower}.url`,
+        `template_biodata_url`,
+        `contoh_template_biodata_url`
+      ])
+
+      return {
+        formUrl: buildAbsoluteUrl(formUrl),
+        templateUrl: getStorageFileUrl(templateUrl) || buildAbsoluteUrl(templateUrl)
+      }
+    }
+
     const biodataLinks = computed(() => {
       const judul = kegiatan.value?.nama_kegiatan || route.params.slugJudul || ''
       const slug = slugify(judul)
+      const item = kegiatan.value || {}
+      const roles = ['Peserta', 'Panitia', 'Narasumber']
+      const roleLinks = roles.map((role) => {
+        const dbLinks = getRoleLinksFromKegiatan(item, role)
+        return {
+          label: `Form ${role}`,
+          url: dbLinks.formUrl || buildPublicUrl(`/formulir/${kode}/${role}/${slug}`),
+          templateUrl: dbLinks.templateUrl
+        }
+      })
+
       return [
-        { label: 'Form Peserta', url: buildPublicUrl(`/formulir/${kode}/Peserta/${slug}`) },
-        { label: 'Form Panitia', url: buildPublicUrl(`/formulir/${kode}/Panitia/${slug}`) },
-        { label: 'Form Narasumber', url: buildPublicUrl(`/formulir/${kode}/Narasumber/${slug}`) },
-        { label: 'Daftar Peserta', url: buildPublicUrl(`/daftar-peserta/${kode}/${slug}`) }
+        ...roleLinks,
+        { label: 'Daftar Peserta', url: buildPublicUrl(`/daftar-peserta/${kode}/${slug}`), templateUrl: '' }
       ]
     })
 

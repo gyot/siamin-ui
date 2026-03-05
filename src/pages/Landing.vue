@@ -317,6 +317,15 @@
         >
           {{ item.url }}
         </a>
+        <a
+          v-if="item.templateUrl"
+          :href="item.templateUrl"
+          target="_blank"
+          download
+          class="mt-2 text-emerald-300 hover:text-emerald-200 break-all transition duration-200"
+        >
+          Download Contoh Template Biodata
+        </a>
       </div>
 
     </div>
@@ -580,19 +589,97 @@ export default {
       return buildPublicUrl(`/kegiatan/${idKegiatan}/${slug}`)
     }
 
+    const getValueByPath = (obj, path) => {
+      if (!obj || !path) return ''
+      return String(path)
+        .split('.')
+        .reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj)
+    }
+
+    const firstNonEmptyValue = (obj, paths = []) => {
+      for (const path of paths) {
+        const value = getValueByPath(obj, path)
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+          return value
+        }
+      }
+      return ''
+    }
+
+    const buildAbsoluteUrl = (rawUrl) => {
+      if (!rawUrl) return ''
+      const value = String(rawUrl).trim()
+      if (!value) return ''
+      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
+      return buildPublicUrl(value)
+    }
+
+    const getStorageFileUrl = (path) => {
+      if (!path) return ''
+      const value = String(path).trim()
+      if (!value) return ''
+      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
+      const apiBase = String(import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
+      const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
+      return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
+    }
+
+    const getRoleLinksFromKegiatan = (item, role) => {
+      const roleLower = String(role || '').toLowerCase()
+      const formUrl = firstNonEmptyValue(item, [
+        `link_form_${roleLower}`,
+        `form_${roleLower}_url`,
+        `url_form_${roleLower}`,
+        `link_biodata_${roleLower}`,
+        `url_biodata_${roleLower}`,
+        `biodata_${roleLower}_url`,
+        `formulir_${roleLower}`,
+        `link_formulir_${roleLower}`,
+        `links.${roleLower}.form`,
+        `links.${roleLower}.url`,
+        `link_biodata.${roleLower}`,
+        `form_biodata.${roleLower}`
+      ])
+
+      const templateUrl = firstNonEmptyValue(item, [
+        'template_biodata',
+        'template_biodata_path',
+        `template_biodata_${roleLower}_url`,
+        `url_template_biodata_${roleLower}`,
+        `contoh_template_biodata_${roleLower}_url`,
+        `link_template_biodata_${roleLower}`,
+        `template_${roleLower}_url`,
+        `contoh_template_${roleLower}_url`,
+        `template_biodata.${roleLower}`,
+        `contoh_template_biodata.${roleLower}`,
+        `templates.${roleLower}.biodata`,
+        `templates.${roleLower}.url`,
+        `template_biodata_url`,
+        `contoh_template_biodata_url`
+      ])
+
+      return {
+        formUrl: buildAbsoluteUrl(formUrl),
+        templateUrl: getStorageFileUrl(templateUrl) || buildAbsoluteUrl(templateUrl)
+      }
+    }
+
     const biodataLinks = computed(() => {
       const item = selectedKegiatanDetail.value
       if (!item) return []
 
       const idKegiatan = item.id_kegiatan ?? '-'
       const slug = slugify(item.nama_kegiatan)
+      const roles = ['Peserta', 'Panitia', 'Narasumber']
 
-      return [
-        { label: 'Peserta', url: buildPublicUrl(`/formulir/${idKegiatan}/Peserta/${slug}`) },
-        { label: 'Panitia', url: buildPublicUrl(`/formulir/${idKegiatan}/Panitia/${slug}`) },
-        { label: 'Narasumber', url: buildPublicUrl(`/formulir/${idKegiatan}/Narasumber/${slug}`) },
-        // { label: 'Daftar Peserta', url: buildPublicUrl(`/daftar-peserta/${idKegiatan}/${slug}`) }
-      ]
+      return roles.map((role) => {
+        const dbLinks = getRoleLinksFromKegiatan(item, role)
+        return {
+          label: role,
+          url: dbLinks.formUrl || buildPublicUrl(`/formulir/${idKegiatan}/${role}/${slug}`),
+          templateUrl: dbLinks.templateUrl
+        }
+      })
     })
 
     const generateQrCodes = async () => {

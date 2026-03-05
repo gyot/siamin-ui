@@ -311,7 +311,7 @@
                   <p class="text-xs text-slate-500 mt-2">Atau paste gambar (Ctrl+V)</p>
                 </div>
               </div>
-              <p class="text-xs text-slate-500 mt-2">Format: JPG, PNG, GIF. Max 5MB</p>
+              <p class="text-xs text-slate-500 mt-2">Format: JPG, PNG, GIF. Max 2MB</p>
             </div>
           </div>
         </div>
@@ -386,6 +386,38 @@
               <label class="block text-sm font-medium text-slate-700 mb-2">URL Surat Menyurat</label>
               <input type="text" v-model="formData.surat_menyurat_url" placeholder="https://..."
                 class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-700 mb-2">Template Biodata (DOC/DOCX/PDF)</label>
+              <input
+                type="file"
+                ref="templateBiodataInput"
+                @change="handleTemplateBiodataSelect"
+                accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none bg-white"
+              />
+              <p class="text-xs text-slate-500 mt-2">Maksimal 5MB</p>
+              <div v-if="formData.template_biodata || templateBiodataFile" class="mt-2 flex flex-wrap items-center gap-3">
+                <a
+                  v-if="formData.template_biodata && !templateBiodataFile"
+                  :href="getStorageFileUrl(formData.template_biodata)"
+                  target="_blank"
+                  download
+                  class="text-emerald-700 hover:text-emerald-800 underline text-sm break-all"
+                >
+                  Download template saat ini
+                </a>
+                <span v-if="templateBiodataFile" class="text-sm text-slate-700">
+                  File dipilih: {{ templateBiodataFile.name }}
+                </span>
+                <button
+                  type="button"
+                  @click="removeTemplateBiodata"
+                  class="px-3 py-1.5 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition"
+                >
+                  Hapus Template
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -535,28 +567,34 @@
         <div class="border-b border-slate-100 pb-6">
           <h4 class="text-lg font-semibold text-slate-800 mb-4">Link Formulir Pendaftaran</h4>
           <div class="space-y-2">
-            <div>
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Peserta</p>
-              <a :href="activityLinks.peserta" target="_blank"
-                class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
-                {{ activityLinks.peserta }}
+            <div v-for="item in activityLinks" :key="item.role">
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">{{ item.label }}</p>
+              <a :href="item.url" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
+                {{ item.url }}
               </a>
-            </div>
-            <div>
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Panitia</p>
-              <a :href="activityLinks.panitia" target="_blank"
-                class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
-                {{ activityLinks.panitia }}
-              </a>
-            </div>
-            <div>
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Narasumber</p>
-              <a :href="activityLinks.narasumber" target="_blank"
-                class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
-                {{ activityLinks.narasumber }}
+              <a
+                v-if="item.templateUrl"
+                :href="item.templateUrl"
+                target="_blank"
+                download
+                class="mt-1 inline-block text-emerald-700 hover:text-emerald-800 underline text-xs"
+              >
+                Download Contoh Template Biodata
               </a>
             </div>
           </div>
+        </div>
+
+        <div v-if="selectedKegiatan.template_biodata" class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-3">Template Biodata</h4>
+          <a
+            :href="getStorageFileUrl(selectedKegiatan.template_biodata)"
+            target="_blank"
+            download
+            class="text-emerald-700 hover:text-emerald-800 underline text-sm break-all"
+          >
+            Download Contoh Template Biodata
+          </a>
         </div>
 
         <!-- Peserta Count Section -->
@@ -818,6 +856,82 @@ export default {
       return `${base}/formulir/${kode}/${peran}/${slug}`
     }
 
+    const buildAbsoluteUrl = (rawUrl) => {
+      if (!rawUrl) return ''
+      const value = String(rawUrl).trim()
+      if (!value) return ''
+      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
+      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
+      return `${base}/${value.replace(/^\/+/, '')}`
+    }
+
+    const getStorageFileUrl = (path) => {
+      if (!path) return ''
+      const value = String(path).trim()
+      if (!value) return ''
+      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
+      const apiBase = String(import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
+      const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
+      return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
+    }
+
+    const getValueByPath = (obj, path) => {
+      if (!obj || !path) return ''
+      return String(path)
+        .split('.')
+        .reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj)
+    }
+
+    const firstNonEmptyValue = (obj, paths = []) => {
+      for (const path of paths) {
+        const value = getValueByPath(obj, path)
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+          return value
+        }
+      }
+      return ''
+    }
+
+    const getRoleLinksFromKegiatan = (item, role) => {
+      const roleLower = String(role || '').toLowerCase()
+      const formUrl = firstNonEmptyValue(item, [
+        `link_form_${roleLower}`,
+        `form_${roleLower}_url`,
+        `url_form_${roleLower}`,
+        `link_biodata_${roleLower}`,
+        `url_biodata_${roleLower}`,
+        `biodata_${roleLower}_url`,
+        `formulir_${roleLower}`,
+        `link_formulir_${roleLower}`,
+        `links.${roleLower}.form`,
+        `links.${roleLower}.url`,
+        `link_biodata.${roleLower}`,
+        `form_biodata.${roleLower}`
+      ])
+
+      const templateUrl = firstNonEmptyValue(item, [
+        'template_biodata',
+        'template_biodata_path',
+        `template_biodata_${roleLower}_url`,
+        `url_template_biodata_${roleLower}`,
+        `contoh_template_biodata_${roleLower}_url`,
+        `link_template_biodata_${roleLower}`,
+        `template_${roleLower}_url`,
+        `contoh_template_${roleLower}_url`,
+        `template_biodata.${roleLower}`,
+        `contoh_template_biodata.${roleLower}`,
+        `templates.${roleLower}.biodata`,
+        `templates.${roleLower}.url`,
+        `template_biodata_url`,
+        `contoh_template_biodata_url`
+      ])
+
+      return {
+        formUrl: buildAbsoluteUrl(formUrl),
+        templateUrl: getStorageFileUrl(templateUrl) || buildAbsoluteUrl(templateUrl)
+      }
+    }
+
     const buildPublicPesertaLink = (kode, judul = '') => {
       const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
       const slug = slugify(judul)
@@ -850,7 +964,8 @@ export default {
       const kode = k.id_kegiatan || k.kode || ''
       const judul = k.nama_kegiatan || ''
       const peran = k.peran || 'Peserta'
-      k.link_formulir = buildFormLink(kode, peran, judul)
+      const dbLinks = getRoleLinksFromKegiatan(k, peran)
+      k.link_formulir = dbLinks.formUrl || buildFormLink(kode, peran, judul)
     }
 
     const currentUser = computed(() => auth.currentUser || {})
@@ -1109,6 +1224,9 @@ export default {
     const isDraggingFlyer = ref(false)
     const flyerInput = ref(null)
     const flyerFile = ref(null)
+    const templateBiodataInput = ref(null)
+    const templateBiodataFile = ref(null)
+    const isTemplateBiodataCleared = ref(false)
     const formAnggota = ref({ id_pegawai: '', peran: 'anggota_panitia' })
     const formAnggotaErrors = ref([])
 
@@ -1130,6 +1248,7 @@ export default {
       panduan_url: '',
       laporan_url: '',
       surat_menyurat_url: '',
+      template_biodata: '',
       status: 'draft',
       id_pegawai: null
     })
@@ -1142,14 +1261,19 @@ export default {
     })
 
     const activityLinks = computed(() => {
-      if (!selectedKegiatan.value) return { peserta: '', panitia: '', narasumber: '' }
+      if (!selectedKegiatan.value) return []
       const kode = selectedKegiatan.value.id_kegiatan || ''
       const judul = selectedKegiatan.value.nama_kegiatan || ''
-      return {
-        peserta: buildFormLink(kode, 'Peserta', judul),
-        panitia: buildFormLink(kode, 'Panitia', judul),
-        narasumber: buildFormLink(kode, 'Narasumber', judul)
-      }
+      const roles = ['Peserta', 'Panitia', 'Narasumber']
+      return roles.map((role) => {
+        const links = getRoleLinksFromKegiatan(selectedKegiatan.value, role)
+        return {
+          role,
+          label: role,
+          url: links.formUrl || buildFormLink(kode, role, judul),
+          templateUrl: links.templateUrl
+        }
+      })
     })
 
     const anggotaInSelected = computed(() => {
@@ -1178,10 +1302,16 @@ export default {
         panduan_url: '',
         laporan_url: '',
         surat_menyurat_url: '',
+        template_biodata: '',
         status: 'draft',
         id_pegawai: null
       }
       flyerFile.value = null
+      templateBiodataFile.value = null
+      isTemplateBiodataCleared.value = false
+      if (templateBiodataInput.value) {
+        templateBiodataInput.value.value = ''
+      }
       formError.value = ''
     }
 
@@ -1219,10 +1349,7 @@ export default {
     }
 
     const getFlyerUrl = (path) => {
-      if (!path) return ''
-      if (path.startsWith('http')) return path
-      const base = import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id/'
-      return `${base.replace(/\/api\/?$/, '')}/storage/${path}`
+      return getStorageFileUrl(path)
     }
 
     const getStatusLabel = (status) => {
@@ -1340,6 +1467,8 @@ export default {
       if (selectedKegiatan.value) {
         formData.value = normalizeKegiatanFormData(selectedKegiatan.value)
         flyerFile.value = null
+        templateBiodataFile.value = null
+        isTemplateBiodataCleared.value = false
         editingId.value = selectedKegiatan.value.id_kegiatan
         showDetailModal.value = false
         showAddModal.value = true
@@ -1348,8 +1477,8 @@ export default {
 
     const convertFileToBase64 = (file) => {
       return new Promise((resolve, reject) => {
-        if (file.size > 5 * 1024 * 1024) {
-          reject(new Error('Ukuran file tidak boleh lebih dari 5MB'))
+        if (file.size > 2 * 1024 * 1024) {
+          reject(new Error('Ukuran flyer tidak boleh lebih dari 2MB'))
           return
         }
         if (!file.type.startsWith('image/')) {
@@ -1421,6 +1550,35 @@ export default {
       }
     }
 
+    const handleTemplateBiodataSelect = (event) => {
+      const file = event.target.files?.[0]
+      if (!file) return
+
+      const fileName = String(file.name || '').toLowerCase()
+      const isValidExt = fileName.endsWith('.doc') || fileName.endsWith('.docx') || fileName.endsWith('.pdf')
+      /* if (!isValidExt) {
+        formError.value = 'Template biodata harus file DOC, DOCX, atau PDF'
+        return
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        formError.value = 'Ukuran template biodata tidak boleh lebih dari 5MB'
+        return
+      } */
+
+      templateBiodataFile.value = file
+      isTemplateBiodataCleared.value = false
+      formError.value = ''
+    }
+
+    const removeTemplateBiodata = () => {
+      templateBiodataFile.value = null
+      formData.value.template_biodata = ''
+      isTemplateBiodataCleared.value = true
+      if (templateBiodataInput.value) {
+        templateBiodataInput.value.value = ''
+      }
+    }
+
     const buildKegiatanPayloadObject = (data, { isUpdate = false } = {}) => {
       // Kirim hanya field yang memang diperlukan backend untuk create/update.
       // Hindari mengirim field turunan seperti link_formulir atau metadata lain.
@@ -1480,6 +1638,8 @@ export default {
         if (item) {
           enrichWithLink(item)
           formData.value = normalizeKegiatanFormData(item)
+          templateBiodataFile.value = null
+          isTemplateBiodataCleared.value = false
           editingId.value = id
           showAddModal.value = true
         }
@@ -1487,6 +1647,8 @@ export default {
         const item = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
         if (item) {
           formData.value = normalizeKegiatanFormData(item)
+          templateBiodataFile.value = null
+          isTemplateBiodataCleared.value = false
           editingId.value = id
           showAddModal.value = true
         }
@@ -1519,6 +1681,12 @@ export default {
       if (!validateForm()) return
 
       try {
+        const authToken = localStorage.getItem('auth_token')
+        if (!authToken) {
+          formError.value = 'Sesi login tidak ditemukan. Silakan login ulang.'
+          return
+        }
+
         if (currentUser.value) {
           formData.value.id_pegawai = currentUser.value.id_pegawai || currentUser.value.id || null
         }
@@ -1526,7 +1694,8 @@ export default {
         const normalizedData = normalizeKegiatanFormData(formData.value)
         const payloadObject = buildKegiatanPayloadObject(normalizedData, { isUpdate: Boolean(editingId.value) })
         let payload
-        if (flyerFile.value) {
+        const hasFilePayload = Boolean(flyerFile.value || templateBiodataFile.value || isTemplateBiodataCleared.value)
+        if (hasFilePayload) {
           payload = new FormData()
           Object.keys(payloadObject).forEach(key => {
             const val = payloadObject[key]
@@ -1534,7 +1703,14 @@ export default {
               payload.append(key, val)
             }
           })
-          payload.append('flyer', flyerFile.value)
+          if (flyerFile.value) {
+            payload.append('flyer', flyerFile.value)
+          }
+          if (templateBiodataFile.value) {
+            payload.append('template_biodata', templateBiodataFile.value)
+          } else if (isTemplateBiodataCleared.value) {
+            payload.append('template_biodata', '')
+          }
         } else {
           payload = { ...payloadObject }
         }
@@ -1565,9 +1741,18 @@ export default {
         resetForm()
       } catch (err) {
         console.error('Failed to save kegiatan', err)
-        formError.value = err.message || 'Gagal menyimpan kegiatan'
+        const errMessage = String(err?.message || '')
+        if (errMessage.toLowerCase().includes('failed to upload')) {
+          formError.value = 'Upload file gagal. Periksa ukuran/format file dan pastikan konfigurasi server PHP (upload_max_filesize & post_max_size) mencukupi.'
+        } else if (errMessage.includes('403')) {
+          formError.value = `${errMessage} Akses ditolak (403). Pastikan akun Anda berhak ${editingId.value ? 'mengubah' : 'membuat'} kegiatan, token masih valid, dan login sebagai admin.`
+        } else {
+          formError.value = errMessage || 'Gagal menyimpan kegiatan'
+        }
         // Log error
-        ActivityEvents.ERROR_OCCURRED(err.message || 'Gagal menyimpan kegiatan', 'Kegiatan.vue - saveKegiatan')
+        if (!errMessage.includes('403')) {
+          ActivityEvents.ERROR_OCCURRED(formError.value || 'Gagal menyimpan kegiatan', 'Kegiatan.vue - saveKegiatan')
+        }
       }
     }
 
@@ -1703,6 +1888,7 @@ export default {
       getPaymentMethodLabel,
       hasResourceUrls,
       getFlyerUrl,
+      getStorageFileUrl,
       viewDetail,
       openEditFromDetail,
       editKegiatan,
@@ -1712,6 +1898,10 @@ export default {
       handleFlyerDrop,
       handleFlyerPaste,
       removeFlyerImage,
+      templateBiodataInput,
+      templateBiodataFile,
+      handleTemplateBiodataSelect,
+      removeTemplateBiodata,
       openPesertaList,
       handleSuratTugas,
       sharePublicPesertaLink,

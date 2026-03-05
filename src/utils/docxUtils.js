@@ -170,7 +170,7 @@ export const replaceTablePlaceholder = (xmlContent, placeholder, rows) => {
  * @param {string} xmlContent - Modified XML content
  * @param {Blob} originalDocx - Original DOCX for resources
  * @param {string} filename - Output filename
- * @returns {Promise<void>}
+ * @returns {Promise<Blob>}
  */
 export const generateDocxFromXml = async (xmlContent, originalDocx, filename = 'document.docx') => {
   try {
@@ -185,7 +185,10 @@ export const generateDocxFromXml = async (xmlContent, originalDocx, filename = '
     
     // Generate new DOCX
     const newDocxBlob = await zip.generateAsync({ type: 'blob' })
-    downloadBlob(newDocxBlob, filename)
+    if (filename) {
+      downloadBlob(newDocxBlob, filename)
+    }
+    return newDocxBlob
   } catch (error) {
     console.error('Error generating DOCX from XML:', error)
     throw error
@@ -215,7 +218,7 @@ export const downloadBlob = (blob, filename) => {
  * @param {File|Blob} templateDocx - Template DOCX file
  * @param {Object} data - Data untuk replace
  * @param {string} filename - Output filename
- * @returns {Promise<void>}
+ * @returns {Promise<Blob>}
  */
 export const processDocxTemplate = async (templateDocx, data, filename = 'document.docx') => {
   try {
@@ -226,7 +229,7 @@ export const processDocxTemplate = async (templateDocx, data, filename = 'docume
     const modifiedXml = replacePlaceholdersInXml(xmlContent, data)
     
     // 3. Generate DOCX baru dengan structure original
-    await generateDocxFromXml(modifiedXml, templateDocx, filename)
+    return await generateDocxFromXml(modifiedXml, templateDocx, filename)
   } catch (error) {
     console.error('Error processing DOCX template:', error)
     throw error
