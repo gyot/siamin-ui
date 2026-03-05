@@ -1177,113 +1177,25 @@ export default {
       return `${d.getDate().toString().padStart(2,'0')} ${bulan[d.getMonth()]} ${d.getFullYear()}`
     }
 
-    const getStorageFileUrl = (path) => {
-      if (!path) return ''
-      const value = String(path).trim()
-      if (!value) return ''
-      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
-      const apiBase = String(import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
-      const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
-      return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
-    }
-
-    const getTemplateCandidateUrls = (templatePath) => {
-      const raw = String(templatePath || '').trim()
-      if (!raw) return []
-      if (/^https?:\/\//i.test(raw)) return [raw]
-
-      const normalizedPath = raw.replace(/^\/+/, '')
-      const sameOriginBase = String(window.location.origin || '').replace(/\/$/, '')
-      const apiBase = String(import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
-      const apiHostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
-
-      // Prioritaskan same-origin agar lolos CORS bila storage disajikan dari domain app.
-      return Array.from(new Set([
-        `${sameOriginBase}/storage/${normalizedPath}`,
-        `${apiHostBase}/storage/${normalizedPath}`
-      ]))
-    }
-
-    const findKegiatanById = (id) => {
-      const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
-      let found = kegiatan.value.find(k => norm(k.id_kegiatan) === norm(id))
-      if (!found) found = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
-      return found || null
-    }
-
-    const templateBlobCache = new Map()
-
-    const getTemplateBlobByKegiatanId = async (idKegiatan) => {
-      let keg = findKegiatanById(idKegiatan)
-      let templatePath = keg?.template_biodata || keg?.template_biodata_path || ''
-
-      // Pastikan data detail kegiatan terbaru jika field template belum ada di list.
-      if (!templatePath) {
-        try {
-          const detail = await fetchAPI(`kegiatan/${idKegiatan}`)
-          if (detail && !Array.isArray(detail)) {
-            keg = detail
-            templatePath = detail.template_biodata || detail.template_biodata_path || ''
-            const idx = kegiatan.value.findIndex((item) => String(item.id_kegiatan) === String(idKegiatan))
-            if (idx !== -1) {
-              kegiatan.value[idx] = { ...kegiatan.value[idx], ...detail }
-            } else {
-              kegiatan.value.push(detail)
-            }
-          }
-        } catch (error) {
-          // silent, biarkan error utama di bawah yang tampil ke user
-        }
-      }
-      const templateUrl = getStorageFileUrl(templatePath)
-      const candidateUrls = getTemplateCandidateUrls(templatePath)
-
-      if (!templateUrl) {
-        throw new Error(`Template biodata untuk kegiatan "${keg?.nama_kegiatan || idKegiatan}" belum tersedia di database`)
-      }
-
-      if (!/\.docx(\?|#|$)/i.test(templateUrl)) {
-        throw new Error('Template biodata harus berformat .docx untuk generate biodata')
-      }
-
-      for (const cachedUrl of candidateUrls) {
-        if (templateBlobCache.has(cachedUrl)) {
-          return { blob: templateBlobCache.get(cachedUrl), kegiatan: keg || {} }
-        }
-      }
-      let lastError = null
-
-      for (const url of candidateUrls) {
-        try {
-          const response = await fetch(url, { method: 'GET' })
-          if (!response.ok) {
-            lastError = new Error(`HTTP ${response.status} saat mengambil template dari ${url}`)
-            continue
-          }
-          const blob = await response.blob()
-          templateBlobCache.set(url, blob)
-          return { blob, kegiatan: keg || {} }
-        } catch (error) {
-          lastError = error
-        }
-      }
-
-      const message = String(lastError?.message || '').toLowerCase()
-      if (message.includes('failed to fetch') || message.includes('cors')) {
-        throw new Error('Template tidak bisa diakses karena CORS. Sediakan file template via domain yang sama (mis. simaik.bpmpntb.id/storage) atau aktifkan CORS pada host storage API.')
-      }
-
-      throw new Error(lastError?.message || 'Gagal mengambil template biodata dari server storage')
-    }
-
     // Fungsi download DOCX dari data peserta dengan template DOCX
     const downloadPesertaDocx = async (pesertaData) => {
       try {
-        // 1. Ambil template DOCX dari field kegiatan.template_biodata
-        const { blob: templateDocx, kegiatan: kegRaw } = await getTemplateBlobByKegiatanId(pesertaData.id_kegiatan)
+        // 1. Ambil template DOCX lokal dari public/template_peserta.docx
+        const response = await fetch('/template_peserta.docx')
+        if (!response.ok) {
+          throw new Error(`Template lokal tidak ditemukan (${response.status})`)
+        }
+        const templateDocx = await response.blob()
 
         // 2. Siapkan data untuk replace
-        const keg = kegRaw || {}
+        // Fungsi pencarian kegiatan toleran tipe data
+        const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
+        const cariKegiatan = (id) => {
+          let found = kegiatan.value.find(k => norm(k.id_kegiatan) === norm(id))
+          if (!found) found = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
+          return found
+        }
+        const keg = cariKegiatan(pesertaData.id_kegiatan) || {}
         const data = {
           judul_kegiatan: keg.nama_kegiatan || getNamaKegiatan(pesertaData.id_kegiatan),
           tanggal_mulai: dateFormat(keg.tanggal_mulai),
@@ -1311,21 +1223,25 @@ export default {
         await processDocxTemplate(templateDocx, data, docxFilename)
       } catch (error) {
         console.error('Gagal download DOCX peserta :', error)
-        alert(error.message || 'Gagal download DOCX peserta. Cek template atau data.')
+        alert(error.message || 'Gagal download DOCX peserta. Cek template lokal atau data.')
       }
     }
 
     const downloadBatchDocxZip = async () => {
       try {
         const zip = new JSZip()
+        const templateResponse = await fetch('/template_peserta.docx')
+        if (!templateResponse.ok) {
+          throw new Error(`Template lokal tidak ditemukan (${templateResponse.status})`)
+        }
+        const templateDocx = await templateResponse.blob()
         for (const p of filteredPeserta.value) {
-          const { blob: templateDocx, kegiatan: keg } = await getTemplateBlobByKegiatanId(p.id_kegiatan)
           const data = {
             nama_lengkap: p.nama_lengkap,
             nip: p.nip,
             email: p.email,
             nama_instansi: p.nama_instansi,
-            kegiatan: keg?.nama_kegiatan || getNamaKegiatan(p.id_kegiatan),
+            kegiatan: getNamaKegiatan(p.id_kegiatan),
             peran: p.peran || 'Peserta',
           }
           // processDocxTemplate harus bisa return blob jika filename=null
