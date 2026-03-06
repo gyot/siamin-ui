@@ -186,7 +186,7 @@ router.beforeEach(async (to, from, next) => {
 
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
-      next('/login')
+      next('/laman-masuk')
     } else if (to.meta.requiresAdmin && !authStore.isAdmin) {
       next('/login-peserta')
     } else {

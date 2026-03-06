@@ -38,22 +38,12 @@
           <p class="text-slate-600 whitespace-pre-wrap">{{ kegiatan.deskripsi || '-' }}</p>
         </div>
 
-        <div v-if="biodataTemplateDownloadUrl" class="mt-4">
-          <a
-            :href="biodataTemplateDownloadUrl"
-            target="_blank"
-            download
-            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm"
-          >
-            Download Contoh Template Biodata
-          </a>
-        </div>
       </div>
 
 
 
       <!-- Form -->
-      <div class="bg-white rounded-lg shadow-lg p-6 sm:p-8">
+      <div v-if="!isLoadingKegiatan" class="bg-white rounded-lg shadow-lg p-6 sm:p-8">
         <form @submit.prevent="submitForm" class="space-y-6">
           <!-- Data Pribadi Section -->
           <div>
@@ -344,7 +334,7 @@
       </div>
 
       <!-- Footer Info -->
-      <div class="mt-8 text-center text-sm text-slate-600">
+      <div v-if="!isLoadingKegiatan" class="mt-8 text-center text-sm text-slate-600">
         <p>Dengan mengklik "Daftar Sekarang", Anda setuju dengan syarat dan ketentuan yang berlaku.</p>
       </div>
     </div>
@@ -353,7 +343,7 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import database from '@/data/index.js'
 import Swal from 'sweetalert2'
 import { listKegiatan } from '@/services/kegiatan'
@@ -365,6 +355,7 @@ export default {
   components: { Spinner },
   setup() {
     const route = useRoute()
+    const router = useRouter()
     const kode = route.params.kode
     // Debug kode route
     console.log('[FormulirPeserta] kode dari route:', kode)
@@ -387,11 +378,13 @@ export default {
         const data = await listKegiatan()
         apiKegiatan.value = data || []
         // Debug hasil API
-        console.log('[FormulirPeserta] hasil listKegiatan:', data)
+        // console.log('[FormulirPeserta] hasil listKegiatan:', data)
       } catch (err) {
         console.warn('Gagal mengambil kegiatan dari API, gunakan lokal', err)
       } finally {
         isLoadingKegiatan.value = false
+        // Form dirender setelah loading selesai, jadi canvas perlu diinisialisasi ulang.
+        initializeCanvas()
       }
     }
 
@@ -684,6 +677,10 @@ export default {
 
         resetForm()
         showSuccessMessage.value = false
+        const redirectPath = slugJudul
+          ? `/daftar-peserta/${kode}/${slugJudul}`
+          : `/daftar-peserta/${kode}`
+        await router.push(redirectPath)
       } catch (err) {
         console.error('Gagal menyimpan peserta:', err)
         Swal.fire({

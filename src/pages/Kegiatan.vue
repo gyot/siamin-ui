@@ -1058,21 +1058,57 @@ export default {
       return map
     })
 
+    const normalizeUnitKerjaId = (value) => {
+      if (value === null || value === undefined) return ''
+      const str = String(value).trim()
+      if (!str) return ''
+      if (/^\d+$/.test(str)) return String(Number(str))
+      return str.toLowerCase()
+    }
+
+    const resolveKegiatanUnitKerjaId = (item) => {
+      if (!item) return ''
+      return item.unit_kerja_id ?? item.id_tim ?? item.unit_kerja?.unit_kerja_id ?? item.unit_kerja?.id ?? ''
+    }
+
+    const userAllowedUnitKerjaSet = computed(() => {
+      const idsFromCurrentUser = Array.isArray(currentUser.value?.unit_kerja_id)
+        ? currentUser.value.unit_kerja_id
+        : [currentUser.value?.unit_kerja_id]
+      const idsFromStore = Array.isArray(auth.unit_kerja)
+        ? auth.unit_kerja.map((unit) => unit?.unit_kerja_id)
+        : []
+      const allIds = [...idsFromCurrentUser, ...idsFromStore]
+
+      return new Set(
+        allIds
+          .map((id) => normalizeUnitKerjaId(id))
+          .filter((id) => id !== '')
+      )
+    })
+
     const getUnitKerjaLabel = (item) => {
       if (!item) return '-'
       if (item.nama_unit) return item.nama_unit
-      if (item.unit_kerja) return item.unit_kerja
+      if (typeof item.unit_kerja === 'string' && item.unit_kerja.trim()) return item.unit_kerja
+      if (item.unit_kerja && typeof item.unit_kerja === 'object') {
+        const nestedName = item.unit_kerja.nama_unit || item.unit_kerja.nama || ''
+        const nestedCode = item.unit_kerja.kode_unit || ''
+        if (nestedName) {
+          return nestedCode ? `${nestedCode} - ${nestedName}` : nestedName
+        }
+      }
 
-      const resolvedUnitId = item.unit_kerja_id ?? item.id_tim ?? item.__source_unit_kerja_id ?? null
+      const resolvedUnitId = item.unit_kerja_id ?? item.id_tim ?? item.unit_kerja?.unit_kerja_id ?? item.unit_kerja?.id ?? null
       const key = resolvedUnitId !== undefined && resolvedUnitId !== null
         ? String(resolvedUnitId)
         : ''
       if (!key) return '-'
 
-      const unit = userUnitKerjaMap.value.get(key)
       const unitFromMaster = unitKerjaMasterMap.value.get(key)
-      if (!unit && !unitFromMaster) return `Unit ${key}`
-      const resolved = unit || unitFromMaster
+      const unit = userUnitKerjaMap.value.get(key)
+      if (!unitFromMaster && !unit) return `Unit ${key}`
+      const resolved = unitFromMaster || unit
       if (!resolved) return `Unit ${key}`
       return resolved.kode_unit
         ? `${resolved.kode_unit} - ${resolved.nama_unit || `Unit ${key}`}`
@@ -1091,6 +1127,7 @@ export default {
         console.log('[Kegiatan][Debug] unit_kerja user:', auth.unit_kerja)
 
         const rawUnitKerjaIds = currentUser.value?.unit_kerja_id
+        console.log('[Kegiatan][Debug] raw unit_kerja_id:', rawUnitKerjaIds)
         const unitKerjaIds = Array.isArray(rawUnitKerjaIds)
           ? rawUnitKerjaIds.filter(v => v !== null && v !== undefined && v !== '')
           : (rawUnitKerjaIds ? [rawUnitKerjaIds] : [])
@@ -1100,39 +1137,67 @@ export default {
           return
         }
 
-        const results = await Promise.all(
-          unitKerjaIds.map(async (id) => {
-            try {
-              const res = await getKegiatanTim(id)
-              const rows = Array.isArray(res) ? res : []
-              return rows.map((item) => {
-                const normalized = { ...(item || {}) }
-                if (normalized.unit_kerja_id === undefined || normalized.unit_kerja_id === null || normalized.unit_kerja_id === '') {
-                  normalized.unit_kerja_id = id
-                }
-                if (normalized.id_tim === undefined || normalized.id_tim === null || normalized.id_tim === '') {
-                  normalized.id_tim = id
-                }
-                normalized.__source_unit_kerja_id = id
-                return normalized
-              })
-            } catch {
-              return []
-            }
-          })
-        )
+        let merged = []
 
-        const merged = results.flat()
-        merged.forEach((item) => {
-          if ((item.unit_kerja_id === undefined || item.unit_kerja_id === null || item.unit_kerja_id === '') && item.id_tim) {
-            item.unit_kerja_id = item.id_tim
+        try {
+          const allKegiatan = await listKegiatan()
+          const rows = Array.isArray(allKegiatan)
+            ? allKegiatan
+            : (Array.isArray(allKegiatan?.data) ? allKegiatan.data : [])
+          if (rows.length > 0) {
+            merged = rows.map((item) => ({ ...(item || {}) }))
+            console.log('[Kegiatan][Debug] sumber data: listKegiatan()', merged.length)
           }
-        })
+        } catch {
+          // fallback ke endpoint per unit kerja jika listKegiatan gagal
+        }
+
+        if (merged.length === 0) {
+          const results = await Promise.all(
+            unitKerjaIds.map(async (id) => {
+              try {
+                const res = await getKegiatanTim(id)
+                const rows = Array.isArray(res) ? res : []
+                console.log(`[Kegiatan][Debug] getKegiatanTim(${id}) rows:`, rows.length)
+                console.log(`[Kegiatan][Debug] sample getKegiatanTim(${id}):`, rows.slice(0, 3).map((item) => ({
+                  id_kegiatan: item?.id_kegiatan,
+                  unit_kerja_id: item?.unit_kerja_id,
+                  id_tim: item?.id_tim,
+                  unit_kerja: item?.unit_kerja
+                })))
+                return rows.map((item) => {
+                  const normalized = { ...(item || {}) }
+                  normalized.__source_unit_kerja_id = id
+                  return normalized
+                })
+              } catch {
+                return []
+              }
+            })
+          )
+          merged = results.flat()
+        }
+
         const deduped = Array.from(
           new Map(merged.map(item => [String(item.id_kegiatan), item])).values()
         )
 
-        kegiatan.value = deduped
+        kegiatan.value = deduped.filter((item) => {
+          const unitId = normalizeUnitKerjaId(resolveKegiatanUnitKerjaId(item))
+          return unitId !== '' && userAllowedUnitKerjaSet.value.has(unitId)
+        })
+        const droppedByUnit = deduped.filter((item) => {
+          const unitId = normalizeUnitKerjaId(resolveKegiatanUnitKerjaId(item))
+          return !(unitId !== '' && userAllowedUnitKerjaSet.value.has(unitId))
+        })
+        if (droppedByUnit.length > 0) {
+          console.warn('[Kegiatan][Debug] kegiatan dibuang karena unit kerja tidak cocok/invalid:', droppedByUnit.map((item) => ({
+            id_kegiatan: item?.id_kegiatan,
+            unit_kerja_id: item?.unit_kerja_id,
+            id_tim: item?.id_tim,
+            __source_unit_kerja_id: item?.__source_unit_kerja_id
+          })))
+        }
         console.log('[Kegiatan][Debug] hasil kegiatan + unit:', kegiatan.value.map(item => ({
           id_kegiatan: item.id_kegiatan,
           nama_kegiatan: item.nama_kegiatan,
@@ -1316,7 +1381,10 @@ export default {
     }
 
     const filteredKegiatan = computed(() => {
-      let filtered = [...kegiatan.value]
+      let filtered = kegiatan.value.filter((item) => {
+        const unitId = normalizeUnitKerjaId(resolveKegiatanUnitKerjaId(item))
+        return unitId !== '' && userAllowedUnitKerjaSet.value.has(unitId)
+      })
 
       if (searchQuery.value) {
         filtered = filtered.filter(k =>

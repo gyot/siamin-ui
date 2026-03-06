@@ -155,7 +155,7 @@
           <!-- Switch to Admin Login -->
           <div class="mt-6 text-center">
             <p class="text-slate-600 text-sm">Masuk sebagai admin?</p>
-            <RouterLink to="/login" class="text-emerald-600 hover:text-emerald-700 font-medium text-sm">
+            <RouterLink to="/laman-masuk" class="text-emerald-600 hover:text-emerald-700 font-medium text-sm">
               Login Admin
             </RouterLink>
           </div>

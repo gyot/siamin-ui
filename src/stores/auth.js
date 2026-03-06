@@ -93,8 +93,16 @@ export const useAuthStore = defineStore('auth', () => {
    * GETTERS
    * ======================= */
   const isAuthenticated = computed(() => !!token.value && !!currentUser.value)
-  const isAdmin = computed(() => userType.value === 'admin')
-  const isPeserta = computed(() => userType.value === 'peserta')
+  const isAdmin = computed(() => {
+    const type = String(userType.value || '').toLowerCase()
+    const role = String(currentUser.value?.role || '').toLowerCase()
+    return type === 'admin' || type === '1' || role === 'admin' || role === '1'
+  })
+  const isPeserta = computed(() => {
+    const type = String(userType.value || '').toLowerCase()
+    const role = String(currentUser.value?.role || '').toLowerCase()
+    return type === 'peserta' || type === '2' || role === 'peserta' || role === '2'
+  })
 
   const fetchMe = async () => {
     if (!token.value) return null
@@ -162,7 +170,7 @@ export const useAuthStore = defineStore('auth', () => {
       id_pegawai: currentUser.value?.id_pegawai || mePegawai.id_pegawai || null,
       name: currentUser.value?.name || mePegawai.nama || meUser.email || 'User',
       email: currentUser.value?.email || meUser.email || null,
-      role: currentUser.value?.role || meUser.role || userType.value || null
+      role: meUser.role
     }
 
     const finalIds = mergeUnitKerjaIds(unit_kerja_id.value, meUnitKerjaIds)
