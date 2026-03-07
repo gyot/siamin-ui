@@ -29,6 +29,15 @@
               <p class="text-xs uppercase tracking-[0.2em] text-cyan-200/90 mb-3">Detail Kegiatan</p>
               <h1 class="text-2xl sm:text-3xl font-bold leading-tight text-white">{{ kegiatan.nama_kegiatan || '-' }}</h1>
               <p class="text-sm text-blue-100 mt-3">{{ kegiatan.deskripsi || 'Tidak ada deskripsi kegiatan.' }}</p>
+              <div class="mt-4" v-if="resourceLinks.length > 0">
+                <!-- <p class="text-blue-200 text-sm mb-2">Resource URL</p> -->
+                <ul class="space-y-1 text-sm">
+                  <li v-for="item in resourceLinks" :key="item.key">
+                    <span class="text-white">{{ item.label }}: </span>
+                    <a :href="item.url" target="_blank" class="text-cyan-200 hover:text-cyan-100 break-all">{{ item.url }}</a>
+                  </li>
+                </ul>
+              </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5 text-sm">
                 <div class="rounded-xl border border-white/10 bg-white/5 p-3">
@@ -91,11 +100,15 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <p v-if="!isWithinKegiatanDateRange" class="text-amber-200 text-sm mb-4">
+            Link biodata hanya tersedia pada tanggal kegiatan.
+          </p>
+
+          <div v-if="isWithinKegiatanDateRange" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <article v-for="item in biodataLinks" :key="item.label" class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
               <p class="text-xs uppercase tracking-wide text-cyan-200">{{ item.label }}</p>
               <a :href="item.url" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ item.url }}</a>
-              <a
+              <!-- <a
                 v-if="item.templateUrl"
                 :href="item.templateUrl"
                 target="_blank"
@@ -103,7 +116,7 @@
                 class="mt-2 block text-xs text-emerald-300 hover:text-emerald-200 break-all"
               >
                 Download Contoh Template Biodata
-              </a>
+              </a> -->
               <div class="mt-3 flex items-center gap-3">
                 <img
                   v-if="getQrCodeUrl(item.url)"
@@ -191,6 +204,21 @@ export default {
       const judul = kegiatan.value?.nama_kegiatan || route.params.slugJudul || ''
       return buildPublicUrl(`/kegiatan/${kode}/${slugify(judul)}`)
     })
+
+    const toDateOnly = (value) => {
+      if (!value) return null
+      const str = String(value).slice(0, 10)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return null
+      return str
+    }
+
+    const getTodayDateOnly = () => {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
 
     const getValueByPath = (obj, path) => {
       if (!obj || !path) return ''
@@ -287,6 +315,26 @@ export default {
       ]
     })
 
+    const resourceLinks = computed(() => {
+      const item = kegiatan.value || {}
+      const candidates = [
+        { key: 'dokumentasi_url', label: 'Dokumentasi', url: item.dokumentasi_url },
+        { key: 'materi_url', label: 'Materi', url: item.materi_url },
+        { key: 'panduan_url', label: 'Panduan', url: item.panduan_url }
+      ]
+      return candidates
+        .map((entry) => ({ ...entry, url: buildAbsoluteUrl(entry.url) }))
+        .filter((entry) => Boolean(entry.url))
+    })
+
+    const isWithinKegiatanDateRange = computed(() => {
+      const start = toDateOnly(kegiatan.value?.tanggal_mulai)
+      const end = toDateOnly(kegiatan.value?.tanggal_selesai)
+      if (!start || !end) return false
+      const today = getTodayDateOnly()
+      return today >= start && today <= end
+    })
+
     const loadKegiatan = async () => {
       isLoading.value = true
       errorMessage.value = ''
@@ -323,7 +371,10 @@ export default {
     }
 
     const generateQrCodes = async () => {
-      const targets = [detailPageUrl.value, ...biodataLinks.value.map((item) => item.url)].filter(Boolean)
+      const biodataTargets = isWithinKegiatanDateRange.value
+        ? biodataLinks.value.map((item) => item.url)
+        : []
+      const targets = [detailPageUrl.value, ...biodataTargets].filter(Boolean)
       const nextMap = {}
       await Promise.all(targets.map(async (url) => {
         try {
@@ -376,6 +427,8 @@ export default {
       flyerUrl,
       detailPageUrl,
       biodataLinks,
+      resourceLinks,
+      isWithinKegiatanDateRange,
       formatDate,
       getStatusLabel,
       getMetodeLabel,

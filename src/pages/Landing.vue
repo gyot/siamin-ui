@@ -154,9 +154,9 @@
             <button v-for="card in timkerCards" :key="card.id"
               class="text-left bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:bg-white/15 transition"
               :class="{ 'col-span-2': card.fullWidth, 'ring-2 ring-cyan-300/70': selectedTimker && selectedTimker.id === card.id }"
-              @click="selectTimker(card); loadKegiatan(card.id)" type="button">
-              <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4" :class="card.iconBg">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">d
+              @click="handleSelectTimker(card)" type="button">
+              <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 shadow-lg" :class="card.iconBg">
+                <svg class="w-7 h-7" :class="card.iconColor || 'text-white'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path v-for="(path, index) in card.iconPaths" :key="`${card.id}-${index}`" v-bind="path" />
                   <circle v-for="(circle, index) in card.iconCircles || []" :key="`${card.id}-c-${index}`"
                     v-bind="circle" />
@@ -271,8 +271,11 @@
 
   <!-- Link Biodata -->
   <p class="text-blue-200 text-sm mb-3">Link Biodata</p>
+  <p v-if="!isWithinSelectedKegiatanDateRange" class="text-amber-200 text-xs mb-3">
+    Link biodata hanya tersedia pada tanggal kegiatan.
+  </p>
 
-  <div class="space-y-5">
+  <div v-if="isWithinSelectedKegiatanDateRange" class="space-y-5">
 
     <div 
       v-for="item in biodataLinks" 
@@ -317,7 +320,7 @@
         >
           {{ item.url }}
         </a>
-        <a
+        <!-- <a
           v-if="item.templateUrl"
           :href="item.templateUrl"
           target="_blank"
@@ -325,7 +328,7 @@
           class="mt-2 text-emerald-300 hover:text-emerald-200 break-all transition duration-200"
         >
           Download Contoh Template Biodata
-        </a>
+        </a> -->
       </div>
 
     </div>
@@ -400,6 +403,7 @@ export default {
     const kegiatan = ref([])
     const isLoadingKegiatan = ref(false)
     const selectedTimker = ref(null)
+    const activeUnitCode = ref('')
     const kegiatanSectionRef = ref(null)
     const timkerCardsSectionRef = ref(null)
     const showKegiatanDetailModal = ref(false)
@@ -424,14 +428,79 @@ export default {
       ]
     }
 
+    const ICON_VARIANTS = [
+      {
+        iconCircles: [{ cx: '12', cy: '8', r: '3.5', 'stroke-width': '2' }],
+        iconPaths: [{ 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M5 20c0-2.5 3-4 7-4s7 1.5 7 4' }],
+        iconRects: []
+      },
+      {
+        iconCircles: [],
+        iconPaths: [
+          { 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M4 19.5A2.5 2.5 0 016.5 17H20' },
+          { 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M4 4h16v13H4z' }
+        ],
+        iconRects: []
+      },
+      {
+        iconCircles: [],
+        iconPaths: [
+          { 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M12 14l9-5-9-5-9 5 9 5z' },
+          { 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M12 14v7' },
+          { 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M7 19c0-1.657 2.239-3 5-3s5 1.343 5 3' }
+        ],
+        iconRects: []
+      },
+      {
+        iconCircles: [],
+        iconPaths: [{ 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M12 4v6m-6 0V4m12 6V4' }],
+        iconRects: [{ x: '3', y: '10', width: '18', height: '8', rx: '2', 'stroke-width': '2' }]
+      },
+      {
+        iconCircles: [{ cx: '12', cy: '12', r: '3', 'stroke-width': '2' }],
+        iconPaths: [{ 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33h.09a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51h.09a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82v.09a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z' }],
+        iconRects: []
+      }
+    ]
+
+    const getIconConfig = (namaUnit, kodeUnit = '') => {
+      const lower = String(namaUnit || '').toLowerCase()
+      const code = String(kodeUnit || '').trim()
+      if (lower.includes('paud')) {
+        return ICON_VARIANTS[0]
+      }
+      if (lower.includes('sd')) {
+        return ICON_VARIANTS[1]
+      }
+      if (lower.includes('smp')) {
+        return ICON_VARIANTS[2]
+      }
+      if (lower.includes('sma') || lower.includes('smk')) {
+        return ICON_VARIANTS[3]
+      }
+      if (lower.includes('subbag') || lower.includes('umum')) {
+        return ICON_VARIANTS[4]
+      }
+      const lastDigit = Number(String(code).replace(/\D/g, '').slice(-1))
+      if (!Number.isNaN(lastDigit)) return ICON_VARIANTS[lastDigit % ICON_VARIANTS.length]
+      return { iconCircles: [], iconPaths: defaultIcon(), iconRects: [] }
+    }
+
     const buildDefaultTimkerCards = () => ([
-      { id: 'paud', name: 'Timker Pendidikan Anak Usia Dini', description: 'Fokus pada pengembangan dan pengelolaan program pendidikan anak usia dini secara holistik dan inklusif.', iconBg: 'bg-pink-400', fullWidth: false, keywords: ['anak usia dini', 'paud'], iconPaths: defaultIcon() },
-      { id: 'sd', name: 'Timker Sekolah Dasar', description: 'Bertanggung jawab atas pelaksanaan dan inovasi pendidikan tingkat sekolah dasar.', iconBg: 'bg-green-500', fullWidth: false, keywords: ['sekolah dasar', 'sd'], iconPaths: defaultIcon() },
-      { id: 'smp', name: 'Timker Sekolah Menengah Pertama', description: 'Mengelola program dan kegiatan pendidikan untuk jenjang sekolah menengah pertama.', iconBg: 'bg-blue-500', fullWidth: false, keywords: ['sekolah menengah pertama', 'smp'], iconPaths: defaultIcon() },
-      { id: 'sma', name: 'Timker Sekolah Menengah', description: 'Bertugas dalam pengembangan dan pengawasan pendidikan tingkat menengah atas.', iconBg: 'bg-yellow-500', fullWidth: false, keywords: ['sekolah menengah', 'sma', 'smk'], iconPaths: defaultIcon() },
-      { id: 'subbag', name: 'Timker Subbag Umum', description: 'Mendukung operasional, administrasi, dan layanan umum untuk kelancaran seluruh program kerja.', iconBg: 'bg-gray-500', fullWidth: true, keywords: ['subbag umum', 'umum', 'administrasi'], iconPaths: defaultIcon() }
+      { id: 'paud', name: 'Timker Pendidikan Anak Usia Dini', description: 'Fokus pada pengembangan dan pengelolaan program pendidikan anak usia dini secara holistik dan inklusif.', iconBg: 'bg-gradient-to-br from-pink-400 to-rose-500', iconColor: 'text-yellow-100', fullWidth: false, keywords: ['anak usia dini', 'paud'], ...getIconConfig('paud', '001') },
+      { id: 'sd', name: 'Timker Sekolah Dasar', description: 'Bertanggung jawab atas pelaksanaan dan inovasi pendidikan tingkat sekolah dasar.', iconBg: 'bg-gradient-to-br from-emerald-400 to-green-600', iconColor: 'text-lime-100', fullWidth: false, keywords: ['sekolah dasar', 'sd'], ...getIconConfig('sd', '002') },
+      { id: 'smp', name: 'Timker Sekolah Menengah Pertama', description: 'Mengelola program dan kegiatan pendidikan untuk jenjang sekolah menengah pertama.', iconBg: 'bg-gradient-to-br from-sky-400 to-blue-600', iconColor: 'text-cyan-100', fullWidth: false, keywords: ['sekolah menengah pertama', 'smp'], ...getIconConfig('smp', '003') },
+      { id: 'sma', name: 'Timker Sekolah Menengah', description: 'Bertugas dalam pengembangan dan pengawasan pendidikan tingkat menengah atas.', iconBg: 'bg-gradient-to-br from-amber-400 to-orange-500', iconColor: 'text-yellow-50', fullWidth: false, keywords: ['sekolah menengah', 'sma', 'smk'], ...getIconConfig('sma', '004') },
+      { id: 'subbag', name: 'Timker Subbag Umum', description: 'Mendukung operasional, administrasi, dan layanan umum untuk kelancaran seluruh program kerja.', iconBg: 'bg-gradient-to-br from-violet-500 to-fuchsia-600', iconColor: 'text-pink-100', fullWidth: true, keywords: ['subbag umum', 'umum', 'administrasi'], ...getIconConfig('subbag umum', '005') }
     ])
     const timkerCards = ref(buildDefaultTimkerCards())
+    const normalizeUnitCode = (value) => {
+      const raw = String(value ?? '').trim()
+      if (!raw) return ''
+      if (/^\d+$/.test(raw)) return raw.padStart(3, '0')
+      return raw.toLowerCase()
+    }
+
     const loadUnitKerja = async () => {
       try {
         const response = await getUnitKerja()
@@ -445,16 +514,23 @@ export default {
         timkerCards.value = rows.map((item) => {
           const name = item.nama_unit || item.nama || 'Timker'
           const lowerName = String(name).toLowerCase()
+          const kodeUnit = normalizeUnitCode(item.kode_unit || item.unit_kerja_id || item.id || '')
+          const cardId = kodeUnit || item.id || item.id_unit || ''
+          const iconConfig = getIconConfig(name, kodeUnit)
           return {
-            id: item.kode_unit || item.id,
+            id: cardId,
             name,
             description: item.keterangan !== '-'
               ? item.keterangan
               : `Unit kerja ${name}${item.tahun ? ` tahun ${item.tahun}` : ''}`,
-            iconBg: getIconBg(name),
+            kode_unit: kodeUnit,
+            iconBg: getIconBg(name, kodeUnit),
+            iconColor: getIconColor(name, kodeUnit),
             fullWidth: lowerName.includes('subbag') || lowerName.includes('umum'),
             keywords: generateKeywords(name),
-            iconPaths: defaultIcon()
+            iconPaths: iconConfig.iconPaths,
+            iconCircles: iconConfig.iconCircles,
+            iconRects: iconConfig.iconRects
           }
         })
 
@@ -465,13 +541,40 @@ export default {
         timkerCards.value = buildDefaultTimkerCards()
       }
     }
-    const getIconBg = (namaUnit) => {
+    const getPaletteByCode = (kodeUnit = '') => {
+      const code = String(kodeUnit || '').trim()
+      const presets = [
+        { bg: 'bg-gradient-to-br from-pink-400 to-rose-500', color: 'text-yellow-100' },
+        { bg: 'bg-gradient-to-br from-emerald-400 to-green-600', color: 'text-lime-100' },
+        { bg: 'bg-gradient-to-br from-sky-400 to-blue-600', color: 'text-cyan-100' },
+        { bg: 'bg-gradient-to-br from-amber-400 to-orange-500', color: 'text-yellow-50' },
+        { bg: 'bg-gradient-to-br from-violet-500 to-fuchsia-600', color: 'text-pink-100' }
+      ]
+      const lastDigit = Number(code.replace(/\D/g, '').slice(-1))
+      if (Number.isNaN(lastDigit)) return null
+      return presets[lastDigit % presets.length]
+    }
+
+    const getIconBg = (namaUnit, kodeUnit = '') => {
+      const byCode = getPaletteByCode(kodeUnit)
+      if (byCode) return byCode.bg
       const lower = namaUnit.toLowerCase()
-      if (lower.includes('paud')) return 'bg-pink-400'
-      if (lower.includes('sd')) return 'bg-green-500'
-      if (lower.includes('smp')) return 'bg-blue-500'
-      if (lower.includes('sma') || lower.includes('smk')) return 'bg-yellow-500'
-      return 'bg-gray-500'
+      if (lower.includes('paud')) return 'bg-gradient-to-br from-pink-400 to-rose-500'
+      if (lower.includes('sd')) return 'bg-gradient-to-br from-emerald-400 to-green-600'
+      if (lower.includes('smp')) return 'bg-gradient-to-br from-sky-400 to-blue-600'
+      if (lower.includes('sma') || lower.includes('smk')) return 'bg-gradient-to-br from-amber-400 to-orange-500'
+      return 'bg-gradient-to-br from-violet-500 to-fuchsia-600'
+    }
+
+    const getIconColor = (namaUnit, kodeUnit = '') => {
+      const byCode = getPaletteByCode(kodeUnit)
+      if (byCode) return byCode.color
+      const lower = namaUnit.toLowerCase()
+      if (lower.includes('paud')) return 'text-yellow-100'
+      if (lower.includes('sd')) return 'text-lime-100'
+      if (lower.includes('smp')) return 'text-cyan-100'
+      if (lower.includes('sma') || lower.includes('smk')) return 'text-yellow-50'
+      return 'text-pink-100'
     }
 
     const generateKeywords = (namaUnit) => {
@@ -546,34 +649,25 @@ export default {
     //   }
     // ]
 
-    const normalizeText = (val) => String(val || '').toLowerCase()
+    const normalizeCode = (value) => normalizeUnitCode(value)
+    const resolveKegiatanUnitCode = (item) => {
+      return item?.kode_unit
+        ?? item?.unit_kerja_id
+        ?? item?.unit_kerja_kode
+        ?? item?.unit_kerja?.unit_kerja_id
+        ?? item?.unit_kerja?.kode_unit
+        ?? item?.unit_kerja?.kode
+        ?? ''
+    }
 
     const filteredKegiatan = computed(() => {
       if (!selectedTimker.value) return []
-      const keywords = selectedTimker.value.keywords || []
-      const filtered = kegiatan.value.filter((item) => {
-        const candidateFields = [
-          item.timker,
-          item.nama_timker,
-          item.tim_kerja,
-          item.nama_tim_kerja,
-          item.unit_kerja,
-          item.bidang,
-          item.rincian_kegiatan,
-          item.deskripsi,
-          item.nama_kegiatan
-        ]
-        const combined = candidateFields.map(normalizeText).join(' ')
-        return keywords.some((keyword) => combined.includes(normalizeText(keyword)))
+      const selectedUnitCode = normalizeCode(activeUnitCode.value)
+
+      return kegiatan.value.filter((item) => {
+        const itemUnitCode = normalizeCode(resolveKegiatanUnitCode(item))
+        return selectedUnitCode && itemUnitCode && itemUnitCode === selectedUnitCode
       })
-
-      if (filtered.length > 0) return filtered
-
-      const hasAnyTimkerField = kegiatan.value.some((item) => (
-        item.timker || item.nama_timker || item.tim_kerja || item.nama_tim_kerja || item.unit_kerja || item.bidang
-      ))
-
-      return hasAnyTimkerField ? filtered : kegiatan.value
     })
 
     const totalPages = computed(() => Math.max(1, Math.ceil(filteredKegiatan.value.length / itemsPerPage)))
@@ -682,8 +776,32 @@ export default {
       })
     })
 
+    const toDateOnly = (value) => {
+      if (!value) return ''
+      const str = String(value).slice(0, 10)
+      return /^\d{4}-\d{2}-\d{2}$/.test(str) ? str : ''
+    }
+
+    const getTodayDateOnly = () => {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    const isWithinSelectedKegiatanDateRange = computed(() => {
+      const item = selectedKegiatanDetail.value
+      if (!item) return false
+      const start = toDateOnly(item.tanggal_mulai)
+      const end = toDateOnly(item.tanggal_selesai)
+      if (!start || !end) return false
+      const today = getTodayDateOnly()
+      return today >= start && today <= end
+    })
+
     const generateQrCodes = async () => {
-      const entries = biodataLinks.value || []
+      const entries = isWithinSelectedKegiatanDateRange.value ? (biodataLinks.value || []) : []
       const nextMap = {}
 
       await Promise.all(entries.map(async (item) => {
@@ -734,9 +852,7 @@ export default {
     const hasAnyResourceUrl = (item) => Boolean(
       item?.dokumentasi_url ||
       item?.materi_url ||
-      item?.panduan_url ||
-      item?.laporan_url ||
-      item?.surat_menyurat_url
+      item?.panduan_url
     )
 
     // const loadKegiatan = async () => {
@@ -752,17 +868,30 @@ export default {
     //   }
     // }
 
-    const loadKegiatan = async (id) => {
+    const loadKegiatan = async (selected) => {
       isLoadingKegiatan.value = true
       try {
-        const data = await getKegiatanTim(id)
-        kegiatan.value = Array.isArray(data) ? data : []
+        const selectedUnitCode = normalizeCode(selected?.kode_unit || selected?.id)
+        activeUnitCode.value = selectedUnitCode
+        const queryId = selectedUnitCode
+        const data = await getKegiatanTim(queryId)
+        const rows = Array.isArray(data) ? data : []
+
+        kegiatan.value = rows.filter((item) => {
+          const itemUnitCode = normalizeCode(resolveKegiatanUnitCode(item))
+          return selectedUnitCode && itemUnitCode && itemUnitCode === selectedUnitCode
+        })
       } catch (error) {
         console.error('Gagal memuat data kegiatan di landing page:', error)
         kegiatan.value = []
       } finally {
         isLoadingKegiatan.value = false
       }
+    }
+
+    const handleSelectTimker = (card) => {
+      selectTimker(card)
+      loadKegiatan(card)
     }
 
     const selectTimker = (card) => {
@@ -775,6 +904,7 @@ export default {
 
     const resetTimkerSelection = () => {
       selectedTimker.value = null
+      activeUnitCode.value = ''
       currentPage.value = 1
       nextTick(() => {
         timkerCardsSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -847,6 +977,7 @@ export default {
       showKegiatanDetailModal,
       selectedKegiatanDetail,
       biodataLinks,
+      isWithinSelectedKegiatanDateRange,
       filteredKegiatan,
       paginatedKegiatan,
       currentPage,
@@ -859,6 +990,7 @@ export default {
       getMetodeLabel,
       hasAnyResourceUrl,
       loadKegiatan,
+      handleSelectTimker,
       selectTimker,
       resetTimkerSelection,
       openKegiatanDetail,

@@ -75,7 +75,26 @@ const getLocalFallbackData = (endpoint) => {
 
   if (normalized === 'unit-kerja') return dbJSON.unit_kerja || []
   if (normalized === 'kegiatan' || normalized === 'kegiatan/all') return dbJSON.kegiatan || []
-  if (normalized.startsWith('kegiatan/tim/')) return dbJSON.kegiatan || []
+  if (normalized.startsWith('kegiatan/tim/')) {
+    const targetUnitId = normalized.split('/').pop()
+    const rows = dbJSON.kegiatan || []
+    const hasUnitRelation = rows.some((item) =>
+      item?.unit_kerja_id !== undefined ||
+      item?.id_tim !== undefined ||
+      item?.unit_kerja?.unit_kerja_id !== undefined ||
+      item?.unit_kerja?.id !== undefined
+    )
+    if (!hasUnitRelation) return rows
+
+    const target = String(targetUnitId ?? '').trim()
+    return rows.filter((item) => {
+      const itemUnitId = item?.unit_kerja_id
+        ?? item?.id_tim
+        ?? item?.unit_kerja?.unit_kerja_id
+        ?? item?.unit_kerja?.id
+      return String(itemUnitId ?? '').trim() === target
+    })
+  }
   if (normalized === 'pegawai') return dbJSON.pegawai || []
   if (normalized === 'users') return dbJSON.users || []
 

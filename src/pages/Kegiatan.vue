@@ -572,7 +572,7 @@
               <a :href="item.url" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
                 {{ item.url }}
               </a>
-              <a
+              <!-- <a
                 v-if="item.templateUrl"
                 :href="item.templateUrl"
                 target="_blank"
@@ -580,12 +580,12 @@
                 class="mt-1 inline-block text-emerald-700 hover:text-emerald-800 underline text-xs"
               >
                 Download Contoh Template Biodata
-              </a>
+              </a> -->
             </div>
           </div>
         </div>
 
-        <div v-if="selectedKegiatan.template_biodata" class="border-b border-slate-100 pb-6">
+        <!-- <div v-if="selectedKegiatan.template_biodata" class="border-b border-slate-100 pb-6">
           <h4 class="text-lg font-semibold text-slate-800 mb-3">Template Biodata</h4>
           <a
             :href="getStorageFileUrl(selectedKegiatan.template_biodata)"
@@ -595,7 +595,7 @@
           >
             Download Contoh Template Biodata
           </a>
-        </div>
+        </div> -->
 
         <!-- Peserta Count Section -->
         <div class="border-b border-slate-100 pb-6">
