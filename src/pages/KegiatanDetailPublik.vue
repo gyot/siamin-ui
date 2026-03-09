@@ -101,10 +101,10 @@
           </div>
 
           <p v-if="!isWithinKegiatanDateRange" class="text-amber-200 text-sm mb-4">
-            Link biodata hanya tersedia pada tanggal kegiatan.
+            Link tetap ditampilkan. Pengisian biodata hanya tersedia pada tanggal kegiatan.
           </p>
 
-          <div v-if="isWithinKegiatanDateRange" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <article v-for="item in biodataLinks" :key="item.label" class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
               <p class="text-xs uppercase tracking-wide text-cyan-200">{{ item.label }}</p>
               <a :href="item.url" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ item.url }}</a>
@@ -371,9 +371,7 @@ export default {
     }
 
     const generateQrCodes = async () => {
-      const biodataTargets = isWithinKegiatanDateRange.value
-        ? biodataLinks.value.map((item) => item.url)
-        : []
+      const biodataTargets = biodataLinks.value.map((item) => item.url)
       const targets = [detailPageUrl.value, ...biodataTargets].filter(Boolean)
       const nextMap = {}
       await Promise.all(targets.map(async (url) => {

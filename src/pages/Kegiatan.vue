@@ -567,11 +567,19 @@
         <div class="border-b border-slate-100 pb-6">
           <h4 class="text-lg font-semibold text-slate-800 mb-4">Link Formulir Pendaftaran</h4>
           <div class="space-y-2">
-            <div v-for="item in activityLinks" :key="item.role">
+            <div v-for="item in activityLinks" :key="item.role" class="rounded-lg border border-slate-200 p-3">
               <p class="text-xs font-medium text-slate-500 uppercase mb-1">{{ item.label }}</p>
               <a :href="item.url" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
                 {{ item.url }}
               </a>
+              <div class="mt-3">
+                <img
+                  v-if="getActivityQrCodeUrl(item.url)"
+                  :src="getActivityQrCodeUrl(item.url)"
+                  :alt="`QR ${item.label}`"
+                  class="w-24 h-24 rounded bg-white p-1 border border-slate-200"
+                />
+              </div>
               <!-- <a
                 v-if="item.templateUrl"
                 :href="item.templateUrl"
@@ -823,8 +831,9 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import QRCode from 'qrcode'
 import database from '../data/index.js'
 import { useAuthStore } from '@/stores/auth.js'
 import { listKegiatan, getKegiatan, getKegiatanTim, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
@@ -969,6 +978,7 @@ export default {
     }
 
     const currentUser = computed(() => auth.currentUser || {})
+    const activityQrCodeMap = ref({})
 
     // Get profile of logged in pegawai
     const pegawai = ref(database.pegawai || [])
@@ -1340,6 +1350,31 @@ export default {
         }
       })
     })
+
+    const generateActivityQrCodes = async () => {
+      const urls = activityLinks.value
+        .map((item) => item.url)
+        .filter(Boolean)
+      const nextMap = {}
+      await Promise.all(urls.map(async (url) => {
+        try {
+          nextMap[url] = await QRCode.toDataURL(url, { width: 180, margin: 1 })
+        } catch (error) {
+          nextMap[url] = ''
+        }
+      }))
+      activityQrCodeMap.value = nextMap
+    }
+
+    const getActivityQrCodeUrl = (url) => activityQrCodeMap.value[url] || ''
+
+    watch(
+      () => activityLinks.value.map((item) => item.url).join('|'),
+      () => {
+        generateActivityQrCodes()
+      },
+      { immediate: true }
+    )
 
     const anggotaInSelected = computed(() => {
       if (!selectedSuratTugas.value) return []
@@ -1984,6 +2019,7 @@ export default {
       getNamaPegawai,
       previewLink,
       activityLinks,
+      getActivityQrCodeUrl,
       resetForm,
       validateForm
     }
