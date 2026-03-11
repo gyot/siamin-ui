@@ -1145,6 +1145,7 @@ export default {
           nama_lengkap: p.nama_lengkap,
           nip: p.nip || '',
           'pangkat/golongan': p.pangkat || '',
+          jabatan: p.jabatan || '',
           email: p.email || '',
           no_hp: p.no_hp || '',
           nama_instansi: p.nama_instansi || '',
