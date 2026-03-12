@@ -7,10 +7,20 @@ import { ref, computed } from 'vue'
  * In production, use the actual backend URL.
  */
 const isDev = import.meta.env.DEV
-const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
+const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || '')
 const API_BASE_URL = API_HOST.replace(/\/$/, '') + '/api/v1/'
 
 export const useAuthStore = defineStore('auth', () => {
+  const parseJsonResponse = async (response) => {
+    const text = await response.text().catch(() => '')
+    if (!text) return { data: {}, rawText: '' }
+    try {
+      return { data: JSON.parse(text), rawText: text }
+    } catch {
+      return { data: {}, rawText: text }
+    }
+  }
+
   const parseJsonStorage = (key, fallback) => {
     const raw = localStorage.getItem(key)
     if (!raw) return fallback
@@ -200,10 +210,12 @@ export const useAuthStore = defineStore('auth', () => {
         body: JSON.stringify({ email, password })
       })
 
-      const res = await response.json()
+      const { data: res, rawText } = await parseJsonResponse(response)
 
       if (!response.ok) {
-        throw new Error(res.message || 'Email atau password salah')
+        const fallback = `Login gagal: ${response.status} ${response.statusText}`.trim()
+        const message = res?.message || (rawText ? `${fallback} | ${rawText.slice(0, 180)}` : fallback)
+        throw new Error(message || 'Email atau password salah')
       }
 
       if (!res?.success || !res?.data?.token || !res?.data?.user) {
@@ -273,10 +285,12 @@ export const useAuthStore = defineStore('auth', () => {
         body: JSON.stringify({ email: username, username, password })
       })
 
-      const res = await response.json()
+      const { data: res, rawText } = await parseJsonResponse(response)
 
       if (!response.ok) {
-        throw new Error(res.message || 'Username atau password salah')
+        const fallback = `Login gagal: ${response.status} ${response.statusText}`.trim()
+        const message = res?.message || (rawText ? `${fallback} | ${rawText.slice(0, 180)}` : fallback)
+        throw new Error(message || 'Username atau password salah')
       }
 
       const payload = res?.data || res

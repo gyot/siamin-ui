@@ -713,7 +713,7 @@ export default {
       const value = String(path).trim()
       if (!value) return ''
       if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
-      const apiBase = String(import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
+      const apiBase = String(import.meta.env.VITE_API_BASE_URL || '')
       const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
       return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
     }

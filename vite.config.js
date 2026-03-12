@@ -1,8 +1,12 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const apiBase = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000'
+
+  return {
   plugins: [vue()],
   resolve: {
     alias: {
@@ -16,11 +20,12 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: process.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id',
+        target: apiBase,
         changeOrigin: true,
         secure: false
         // no rewrite: keep the full path `/api/v1/...` as is
       }
     }
+  }
   }
 })

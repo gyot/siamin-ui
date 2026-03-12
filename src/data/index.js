@@ -3,7 +3,7 @@ import { fetchAPI } from '@/services/api'
 import dbJSON from './database.json'
 
 // API Base URL
-const API_BASE_URL = 'https://api-siamin.bpmpntb.id/api/v1'
+const API_BASE_URL = '/api/v1'
 
 // Create database object - Will be populated from API or fallback JSON
 const db = {
@@ -135,3 +135,4 @@ export const ensureDataLoaded = () => {
 export const dataReady = () => ensureDataLoaded()
 
 export default db
+

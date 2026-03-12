@@ -358,6 +358,88 @@
           </div>
         </div>
 
+        <!-- Daftar ATK -->
+        <div class="border-b border-slate-100 pb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-lg font-semibold text-slate-800">Daftar ATK</h4>
+          </div>
+
+          <div v-if="atkItems.length > 0" class="mb-4 border border-slate-200 rounded-lg overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                  <th class="text-left px-4 py-2 w-12">No</th>
+                  <th class="text-left px-4 py-2">ATK</th>
+                  <th class="text-left px-4 py-2 w-40">Jumlah</th>
+                  <th class="text-right px-4 py-2 w-20">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr v-for="(item, index) in atkItems" :key="`${item.id || 'new'}-${index}`">
+                  <td class="px-4 py-2">{{ index + 1 }}</td>
+                  <td class="px-4 py-2 text-slate-700">{{ item.nama_atk || '-' }}</td>
+                  <td class="px-4 py-2 text-slate-700">
+                    <span v-if="item.jumlah !== null && item.jumlah !== undefined">{{ item.jumlah }}</span>
+                    <span v-else>-</span>
+                    <span v-if="item.satuan" class="text-slate-500"> {{ item.satuan }}</span>
+                  </td>
+                  <td class="px-4 py-2 text-right">
+                    <button
+                      type="button"
+                      @click="removeAtkItem(index)"
+                      class="text-xs text-red-600 hover:text-red-700"
+                    >
+                      Hapus
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-700 mb-2">Nama ATK *</label>
+              <input
+                v-model="atkForm.nama_atk"
+                type="text"
+                placeholder="Contoh: Kertas A4"
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Jumlah</label>
+              <input
+                v-model="atkForm.jumlah"
+                type="number"
+                min="0"
+                placeholder="0"
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Satuan</label>
+              <input
+                v-model="atkForm.satuan"
+                type="text"
+                placeholder="Contoh: rim, box"
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          <div class="mt-3 flex items-center gap-3">
+            <p v-if="atkError" class="text-xs text-red-600">{{ atkError }}</p>
+            <button
+              type="button"
+              @click="addAtkItem"
+              class="ml-auto px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+            >
+              Tambah ATK
+            </button>
+          </div>
+        </div>
+
         <!-- URL Resources -->
         <div class="border-b border-slate-100 pb-6">
           <h4 class="text-lg font-semibold text-slate-800 mb-4">Resource URL</h4>
@@ -387,16 +469,16 @@
               <input type="text" v-model="formData.surat_menyurat_url" placeholder="https://..."
                 class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
             </div>
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-slate-700 mb-2">Template Biodata (DOC/DOCX/PDF)</label>
+            <!-- <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-700 mb-2">Template Biodata (DOC/DOCX)</label>
               <input
                 type="file"
                 ref="templateBiodataInput"
                 @change="handleTemplateBiodataSelect"
-                accept=".doc,.docx,.pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
+                accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none bg-white"
               />
-              <p class="text-xs text-slate-500 mt-2">Maksimal 5MB</p>
+              <p class="text-xs text-slate-500 mt-2">Maksimal 10MB</p>
               <div v-if="formData.template_biodata || templateBiodataFile" class="mt-2 flex flex-wrap items-center gap-3">
                 <a
                   v-if="formData.template_biodata && !templateBiodataFile"
@@ -418,7 +500,7 @@
                   Hapus Template
                 </button>
               </div>
-            </div>
+            </div> -->
           </div>
         </div>
 
@@ -837,7 +919,7 @@ import QRCode from 'qrcode'
 import database from '../data/index.js'
 import { useAuthStore } from '@/stores/auth.js'
 import { listKegiatan, getKegiatan, getKegiatanTim, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
-import { fetchAPI } from '@/services/api'
+import { fetchAPI, postAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Spinner from '@/components/Spinner.vue'
 
@@ -879,7 +961,7 @@ export default {
       const value = String(path).trim()
       if (!value) return ''
       if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
-      const apiBase = String(import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
+      const apiBase = String(import.meta.env.VITE_API_BASE_URL || '')
       const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
       return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
     }
@@ -1304,6 +1386,9 @@ export default {
     const isTemplateBiodataCleared = ref(false)
     const formAnggota = ref({ id_pegawai: '', peran: 'anggota_panitia' })
     const formAnggotaErrors = ref([])
+    const atkForm = ref({ nama_atk: '', jumlah: '', satuan: '' })
+    const atkItems = ref([])
+    const atkError = ref('')
 
     const formData = ref({
       nama_kegiatan: '',
@@ -1412,6 +1497,9 @@ export default {
       if (templateBiodataInput.value) {
         templateBiodataInput.value.value = ''
       }
+      atkForm.value = { nama_atk: '', jumlah: '', satuan: '' }
+      atkItems.value = []
+      atkError.value = ''
       formError.value = ''
     }
 
@@ -1549,6 +1637,7 @@ export default {
             id_tim: item.id_tim ?? unitFallback,
             __source_unit_kerja_id: item.__source_unit_kerja_id ?? unitFallback
           }
+          loadKegiatanAtkItems(item)
           showDetailModal.value = true
           // Log viewing detail
           ActivityEvents.VIEW_KEGIATAN_DETAIL(id, item.nama_kegiatan)
@@ -1560,13 +1649,14 @@ export default {
       const item = kegiatan.value.find(k => k.id_kegiatan === id)
       if (item) {
         selectedKegiatan.value = { ...item }
+        loadKegiatanAtkItems(item)
         showDetailModal.value = true
         // Log viewing detail
         ActivityEvents.VIEW_KEGIATAN_DETAIL(id, item.nama_kegiatan)
       }
     }
 
-    const openEditFromDetail = () => {
+    const openEditFromDetail = async () => {
       if (selectedKegiatan.value) {
         formData.value = normalizeKegiatanFormData(selectedKegiatan.value)
         flyerFile.value = null
@@ -1575,6 +1665,7 @@ export default {
         editingId.value = selectedKegiatan.value.id_kegiatan
         showDetailModal.value = false
         showAddModal.value = true
+        loadKegiatanAtkItems(selectedKegiatan.value)
       }
     }
 
@@ -1658,15 +1749,15 @@ export default {
       if (!file) return
 
       const fileName = String(file.name || '').toLowerCase()
-      const isValidExt = fileName.endsWith('.doc') || fileName.endsWith('.docx') || fileName.endsWith('.pdf')
-      /* if (!isValidExt) {
-        formError.value = 'Template biodata harus file DOC, DOCX, atau PDF'
+      const isValidExt = fileName.endsWith('.doc') || fileName.endsWith('.docx')
+      if (!isValidExt) {
+        formError.value = 'Template biodata harus file DOC atau DOCX'
         return
       }
-      if (file.size > 5 * 1024 * 1024) {
-        formError.value = 'Ukuran template biodata tidak boleh lebih dari 5MB'
+      if (file.size > 10 * 1024 * 1024) {
+        formError.value = 'Ukuran template biodata tidak boleh lebih dari 10MB'
         return
-      } */
+      }
 
       templateBiodataFile.value = file
       isTemplateBiodataCleared.value = false
@@ -1681,6 +1772,85 @@ export default {
         templateBiodataInput.value.value = ''
       }
     }
+
+    const parseAtkJumlah = (value) => {
+      if (value === '' || value === null || value === undefined) return null
+      const parsed = Number(value)
+      return Number.isNaN(parsed) ? null : parsed
+    }
+
+    const normalizeAtkItem = (item) => {
+      return {
+        nama_atk: String(item?.nama_atk ?? '').trim(),
+        jumlah: parseAtkJumlah(item?.jumlah),
+        satuan: String(item?.satuan ?? '').trim()
+      }
+    }
+
+    const loadKegiatanAtkItems = (item) => {
+      atkError.value = ''
+      if (!item) {
+        atkItems.value = []
+        return
+      }
+
+      let rows = []
+      if (Array.isArray(item?.atk)) {
+        rows = item.atk
+      } else if (Array.isArray(item?.atk_items)) {
+        rows = item.atk_items
+      } else if (typeof item?.atk === 'string') {
+        try {
+          const parsed = JSON.parse(item.atk)
+          if (Array.isArray(parsed)) rows = parsed
+        } catch {
+          rows = []
+        }
+      } else if (typeof item?.atk_items === 'string') {
+        try {
+          const parsed = JSON.parse(item.atk_items)
+          if (Array.isArray(parsed)) rows = parsed
+        } catch {
+          rows = []
+        }
+      }
+
+      atkItems.value = rows.map(normalizeAtkItem)
+    }
+
+    const addAtkItem = () => {
+      const nama = String(atkForm.value.nama_atk || '').trim()
+      const jumlahRaw = atkForm.value.jumlah
+      const jumlahParsed = parseAtkJumlah(jumlahRaw)
+      const satuan = String(atkForm.value.satuan || '').trim()
+
+      if (!nama) {
+        atkError.value = 'Nama ATK wajib diisi'
+        return
+      }
+      if (jumlahRaw !== '' && (jumlahParsed === null || jumlahParsed < 0)) {
+        atkError.value = 'Jumlah harus berupa angka 0 atau lebih'
+        return
+      }
+
+      atkItems.value.push({ nama_atk: nama, jumlah: jumlahParsed, satuan })
+      atkForm.value = { nama_atk: '', jumlah: '', satuan: '' }
+      atkError.value = ''
+    }
+
+    const removeAtkItem = (index) => {
+      atkItems.value.splice(index, 1)
+    }
+
+    const buildAtkPayloadItems = () =>
+      atkItems.value
+        .map(normalizeAtkItem)
+        .filter(item => item.nama_atk)
+        .map(item => ({
+          nama_atk: item.nama_atk,
+          jumlah: item.jumlah ?? null,
+          satuan: item.satuan || null
+        }))
 
     const buildKegiatanPayloadObject = (data, { isUpdate = false } = {}) => {
       // Kirim hanya field yang memang diperlukan backend untuk create/update.
@@ -1745,6 +1915,7 @@ export default {
           isTemplateBiodataCleared.value = false
           editingId.value = id
           showAddModal.value = true
+          loadKegiatanAtkItems(item)
         }
       } catch (err) {
         const item = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
@@ -1754,6 +1925,7 @@ export default {
           isTemplateBiodataCleared.value = false
           editingId.value = id
           showAddModal.value = true
+          loadKegiatanAtkItems(item)
         }
       }
     }
@@ -1796,14 +1968,26 @@ export default {
 
         const normalizedData = normalizeKegiatanFormData(formData.value)
         const payloadObject = buildKegiatanPayloadObject(normalizedData, { isUpdate: Boolean(editingId.value) })
+        const atkPayload = buildAtkPayloadItems()
         let payload
         const hasFilePayload = Boolean(flyerFile.value || templateBiodataFile.value || isTemplateBiodataCleared.value)
-        if (hasFilePayload) {
+        const useMultipart = hasFilePayload || atkPayload.length > 0
+        const shouldSyncAtkSeparately = true
+        if (useMultipart) {
           payload = new FormData()
           Object.keys(payloadObject).forEach(key => {
             const val = payloadObject[key]
             if (val !== null && val !== undefined) {
               payload.append(key, val)
+            }
+          })
+          atkPayload.forEach((item, index) => {
+            payload.append(`atk[${index}][nama_atk]`, item.nama_atk)
+            if (item.jumlah !== null && item.jumlah !== undefined) {
+              payload.append(`atk[${index}][jumlah]`, item.jumlah)
+            }
+            if (item.satuan) {
+              payload.append(`atk[${index}][satuan]`, item.satuan)
             }
           })
           if (flyerFile.value) {
@@ -1816,10 +2000,23 @@ export default {
           }
         } else {
           payload = { ...payloadObject }
+          if (atkPayload.length > 0) {
+            payload.atk = atkPayload
+          } else {
+            payload.atk = []
+          }
         }
 
+        let kegiatanId = editingId.value
+
         if (editingId.value) {
-          const updated = await updateKegiatan(editingId.value, payload)
+          const updated = useMultipart
+            ? await postAPI(`kegiatan/${editingId.value}`, (() => {
+              const fd = payload
+              fd.append('_method', 'PUT')
+              return fd
+            })())
+            : await updateKegiatan(editingId.value, payload)
           enrichWithLink(updated || {})
           const index = kegiatan.value.findIndex(k => String(k.id_kegiatan) === String(editingId.value))
           if (index !== -1) {
@@ -1828,6 +2025,7 @@ export default {
               ...(updated || {}),
               ...normalizedData
             }
+            
           }
           await loadKegiatan()
           // Log update
@@ -1836,9 +2034,15 @@ export default {
           const created = await createKegiatan(payload)
           enrichWithLink(created)
           kegiatan.value.push(created)
+          kegiatanId = created?.id_kegiatan ?? created?.id ?? null
           // Log creation
           ActivityEvents.CREATE_KEGIATAN(formData.value.nama_kegiatan)
         }
+
+        if (shouldSyncAtkSeparately && kegiatanId) {
+          await updateKegiatan(kegiatanId, { atk: atkPayload })
+        }
+
         showAddModal.value = false
         editingId.value = null
         resetForm()
@@ -2005,6 +2209,11 @@ export default {
       templateBiodataFile,
       handleTemplateBiodataSelect,
       removeTemplateBiodata,
+      atkForm,
+      atkItems,
+      atkError,
+      addAtkItem,
+      removeAtkItem,
       openPesertaList,
       handleSuratTugas,
       sharePublicPesertaLink,

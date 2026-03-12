@@ -4,7 +4,7 @@ import dbJSON from '@/data/database.json'
 // During development, use local proxy `/api` to avoid CORS.
 // In production, use the actual backend URL.
 const isDev = import.meta.env.DEV
-const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || 'https://api-siamin.bpmpntb.id')
+const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || '')
 const API_BASE_URL = API_HOST.replace(/\/$/, '') + '/api/v1/'
 let apiReadUnavailable = false
 
