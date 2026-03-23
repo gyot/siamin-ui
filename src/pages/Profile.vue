@@ -499,8 +499,7 @@
 import { ref, computed, onMounted } from 'vue'
 import Swal from 'sweetalert2'
 import { useAuthStore } from '@/stores/auth'
-import { loadDataFromAPI } from '@/data'
-import { fetchAPI } from '@/services/api'
+import { apiClient, fetchAPI } from '@/services/api'
 
 export default {
   name: 'Profile',
@@ -607,17 +606,13 @@ export default {
     })
     const loadProfile = async () => {
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL+'/api/v1/'}me`,
-          {
-            headers: {
-              'Accept': 'application/json',
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-            }
+        const res = await apiClient.get('me', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('auth_token')}`
           }
-        )
+        })
 
-        const json = await res.json()
+        const json = res.data || {}
 
         if (json.success) {
           pegawaiInfo.value = json.data.pegawai

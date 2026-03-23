@@ -9,15 +9,6 @@
           </RouterLink>
           <div class="flex items-center gap-3">
             <!-- <RouterLink 
-              to="/verify-sertifikat" 
-              class="hidden sm:flex items-center gap-2 px-4 py-2 text-blue-100 hover:text-white hover:bg-white/10 rounded-lg transition"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h2M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-              </svg>
-              <span>Verifikasi Sertifikat</span>
-            </RouterLink> -->
-            <!-- <RouterLink 
               to="/login" 
               class="btn-primary px-5 py-2.5 text-white rounded-lg font-medium shadow-lg"
             >
@@ -380,8 +371,13 @@
           <p class="text-blue-200 text-sm">© 2025 SIMAIK - Kementerian Pendidikan Dasar dan Menengah BPMP Nusa Tenggara
             Barat</p>
           <div class="flex items-center gap-6">
-            <RouterLink to="/verify-sertifikat" class="text-blue-200 hover:text-white text-sm transition">Verifikasi
-              Sertifikat</RouterLink>
+            <button
+              type="button"
+              class="text-blue-200 hover:text-white text-sm transition"
+              @click="scrollToKegiatanSection"
+            >
+              Verifikasi Sertifikat
+            </button>
             <a href="#" class="text-blue-200 hover:text-white text-sm transition">Bantuan</a>
             <a href="#" class="text-blue-200 hover:text-white text-sm transition">Kontak</a>
           </div>
@@ -911,6 +907,12 @@ export default {
       })
     }
 
+    const scrollToKegiatanSection = () => {
+      nextTick(() => {
+        timkerCardsSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+    }
+
     const openKegiatanDetail = (item) => {
       selectedKegiatanDetail.value = item
       showKegiatanDetailModal.value = true
@@ -993,6 +995,7 @@ export default {
       handleSelectTimker,
       selectTimker,
       resetTimkerSelection,
+      scrollToKegiatanSection,
       openKegiatanDetail,
       shareKegiatanDetailFromModal,
       closeKegiatanDetail,

@@ -31,16 +31,16 @@ export const replacePlaceholdersInXml = (xmlContent, data) => {
   let result = xmlContent
   
   Object.entries(data).forEach(([key, value]) => {
-    // Escape special regex characters
-    const escapedValue = String(value || '-').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const safeKey = String(key).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const xmlValue = escapeXml(value ?? '-')
     
     // Method 1: Direct replacement jika placeholder dalam satu run
-    const regex1 = new RegExp(`(<w:t[^>]*>)\\{${key}\\}(</w:t>)`, 'g')
-    result = result.replace(regex1, `$1${escapedValue}$2`)
+    const regex1 = new RegExp(`(<w:t[^>]*>)\\{${safeKey}\\}(</w:t>)`, 'g')
+    result = result.replace(regex1, `$1${xmlValue}$2`)
     
     // Method 2: Handle placeholder yang tersebar di multiple runs
-    const regex2 = new RegExp(`\\{${key}\\}`, 'g')
-    result = result.replace(regex2, escapedValue)
+    const regex2 = new RegExp(`\\{${safeKey}\\}`, 'g')
+    result = result.replace(regex2, xmlValue)
   })
   
   return result

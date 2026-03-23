@@ -1,3 +1,4 @@
+import axios from 'axios'
 import dbJSON from '@/data/database.json'
 
 // API Service Configuration
@@ -7,6 +8,13 @@ const isDev = import.meta.env.DEV
 const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || '')
 const API_BASE_URL = API_HOST.replace(/\/$/, '') + '/api/v1/'
 let apiReadUnavailable = false
+
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    Accept: 'application/json'
+  }
+})
 
 // API Endpoints mapping
 const ENDPOINTS = {
@@ -43,18 +51,8 @@ const buildApiErrorMessage = (errorData, fallback) => {
   return fallback
 }
 
-const parseErrorResponse = async (response) => {
-  const text = await response.text().catch(() => '')
-  if (!text) return { errorData: {}, rawText: '' }
-  try {
-    return { errorData: JSON.parse(text), rawText: text }
-  } catch {
-    return { errorData: {}, rawText: text }
-  }
-}
-
-const buildHttpError = (response, endpoint, errorData, rawText = '') => {
-  const fallbackBase = `API Error: ${response.status} ${response.statusText}`
+const buildHttpError = (status, statusText, endpoint, errorData, rawText = '') => {
+  const fallbackBase = `API Error: ${status} ${statusText}`
   const fallbackWithEndpoint = `${fallbackBase} (${endpoint})`
   const parsedMessage = buildApiErrorMessage(errorData, fallbackWithEndpoint)
   const raw = String(rawText || '').trim()
@@ -67,6 +65,7 @@ const normalizeEndpoint = (endpoint = '') =>
   String(endpoint)
     .replace(/^https?:\/\/[^/]+\/api\/v1\//, '')
     .replace(/^\/?api\/v1\//, '')
+    .replace(/^api\/v1\//, '')
     .replace(/^\/+|\/+$/g, '')
 
 const getLocalFallbackData = (endpoint) => {
@@ -101,6 +100,62 @@ const getLocalFallbackData = (endpoint) => {
   return null
 }
 
+const resolveUrl = (endpoint) =>
+  endpoint.startsWith('http')
+    ? endpoint
+    : normalizeEndpoint(ENDPOINTS[endpoint] || endpoint)
+
+const buildHeaders = (headers = {}, includeAuth = true, payload) => {
+  const authToken = localStorage.getItem('auth_token')
+  const nextHeaders = {
+    Accept: 'application/json',
+    ...headers
+  }
+
+  if (!(payload instanceof FormData) && !nextHeaders['Content-Type']) {
+    nextHeaders['Content-Type'] = 'application/json'
+  }
+
+  if (includeAuth && authToken) {
+    nextHeaders.Authorization = `Bearer ${authToken}`
+  }
+
+  return nextHeaders
+}
+
+const normalizeResponseData = (data) => (
+  Array.isArray(data) ? data : (data?.data || data)
+)
+
+const request = async (endpoint, config = {}) => {
+  const url = resolveUrl(endpoint)
+
+  try {
+    const response = await apiClient.request({
+      url,
+      method: config.method || 'GET',
+      data: config.data,
+      headers: config.headers,
+      params: config.params
+    })
+
+    return response.data
+  } catch (error) {
+    const status = error?.response?.status || 0
+    const statusText = error?.response?.statusText || error?.message || 'Request failed'
+    const rawData = error?.response?.data
+    const rawText = typeof rawData === 'string' ? rawData : JSON.stringify(rawData || '')
+    throw buildHttpError(status, statusText, endpoint, rawData, rawText)
+  }
+}
+
+apiClient.interceptors.request.use((config) => {
+  const endpoint = typeof config.url === 'string' ? config.url : ''
+  const includeAuth = config.includeAuth !== false
+  config.headers = buildHeaders(config.headers || {}, includeAuth, config.data)
+  return config
+})
+
 /**
  * Fetch data from API with flexible method support
  * @param {string} endpoint - API endpoint key or full URL
@@ -114,39 +169,13 @@ export const fetchAPI = async (endpoint, options = {}) => {
       const cachedFallback = getLocalFallbackData(endpoint)
       if (cachedFallback !== null) return cachedFallback
     }
-
-    const url = endpoint.startsWith('http') 
-      ? endpoint 
-      : `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}`
-    
-    // Get auth token from localStorage
-    const authToken = localStorage.getItem('auth_token')
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...options.headers
-    }
-    
-    // Add Authorization header if token exists
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`
-    }
-    
-    const response = await fetch(url, {
-      method: options.method || 'GET',
-      headers,
-      ...options
+    const data = await request(endpoint, {
+      method,
+      headers: options.headers,
+      params: options.params,
+      data: options.body
     })
-
-    if (!response.ok) {
-      const { errorData, rawText } = await parseErrorResponse(response)
-      throw buildHttpError(response, endpoint, errorData, rawText)
-    }
-
-    const data = await response.json()
-    
-    // Handle both direct array responses and paginated responses
-    return Array.isArray(data) ? data : (data.data || data)
+    return normalizeResponseData(data)
   } catch (error) {
     const method = (options.method || 'GET').toUpperCase()
     if (isDev && method === 'GET') {
@@ -171,35 +200,12 @@ export const fetchAPI = async (endpoint, options = {}) => {
  */
 export const postAPI = async (endpoint, payload) => {
   try {
-    const url = `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}`
-
-    // include auth header like fetchAPI does, KECUALI untuk endpoint peserta
-    const authToken = localStorage.getItem('auth_token')
-    const headers = {
-      'Accept': 'application/json'
-    }
-    // if payload is not FormData, we'll send JSON
-    if (!(payload instanceof FormData)) {
-      headers['Content-Type'] = 'application/json'
-    }
-    // Hanya tambahkan Authorization jika endpoint bukan peserta
-    if (authToken && endpoint !== 'peserta') {
-      headers['Authorization'] = `Bearer ${authToken}`
-    }
-
-    const response = await fetch(url, {
+    const data = await request(endpoint, {
       method: 'POST',
-      headers,
-      body: payload instanceof FormData ? payload : JSON.stringify(payload)
+      headers: buildHeaders({}, endpoint !== 'peserta', payload),
+      data: payload
     })
-
-    if (!response.ok) {
-      const { errorData, rawText } = await parseErrorResponse(response)
-      throw buildHttpError(response, endpoint, errorData, rawText)
-    }
-
-    const data = await response.json()
-    return data.data || data
+    return data?.data || data
   } catch (error) {
     console.error(`Error posting to ${endpoint}:`, error)
     throw error
@@ -215,71 +221,39 @@ export const postAPI = async (endpoint, payload) => {
  */
 export const updateAPI = async (endpoint, id, payload) => {
   try {
-    const url = `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}/${id}`
+    const resourceEndpoint = `${endpoint}/${id}`
 
-    const authToken = localStorage.getItem('auth_token')
-    const headers = {
-      'Accept': 'application/json'
-    }
-    if (!(payload instanceof FormData)) {
-      headers['Content-Type'] = 'application/json'
-    }
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`
-    }
-
-    const putResponse = await fetch(url, {
-      method: 'PUT',
-      headers,
-      body: payload instanceof FormData ? payload : JSON.stringify(payload)
-    })
-
-    if (putResponse.ok) {
-      const data = await putResponse.json()
-      return data.data || data
-    }
-
-    // Jangan fallback jika 401 (token invalid/expired).
-    if (putResponse.status === 401) {
-      const { errorData, rawText } = await parseErrorResponse(putResponse)
-      throw buildHttpError(putResponse, `${endpoint}/${id}`, errorData, rawText)
-    }
-
-
-    // Fallback for backends that only accept POST + method override.
-    const fallbackHeaders = {
-      'Accept': 'application/json'
-    }
-    if (authToken) {
-      fallbackHeaders['Authorization'] = `Bearer ${authToken}`
-    }
-
-    let fallbackBody
-    if (payload instanceof FormData) {
-      const fd = new FormData()
-      for (const [key, value] of payload.entries()) {
-        fd.append(key, value)
+    try {
+      const data = await request(resourceEndpoint, {
+        method: 'PUT',
+        headers: buildHeaders({}, true, payload),
+        data: payload
+      })
+      return data?.data || data
+    } catch (error) {
+      if (String(error?.message || '').includes('401')) {
+        throw error
       }
-      fd.append('_method', 'PUT')
-      fallbackBody = fd
-    } else {
-      fallbackHeaders['Content-Type'] = 'application/json'
-      fallbackBody = JSON.stringify({ ...(payload || {}), _method: 'PUT' })
+
+      let fallbackPayload
+      if (payload instanceof FormData) {
+        const fd = new FormData()
+        for (const [key, value] of payload.entries()) {
+          fd.append(key, value)
+        }
+        fd.append('_method', 'PUT')
+        fallbackPayload = fd
+      } else {
+        fallbackPayload = { ...(payload || {}), _method: 'PUT' }
+      }
+
+      const data = await request(resourceEndpoint, {
+        method: 'POST',
+        headers: buildHeaders({}, true, fallbackPayload),
+        data: fallbackPayload
+      })
+      return data?.data || data
     }
-
-    const postOverrideResponse = await fetch(url, {
-      method: 'POST',
-      headers: fallbackHeaders,
-      body: fallbackBody
-    })
-
-    if (!postOverrideResponse.ok) {
-      const { errorData, rawText } = await parseErrorResponse(postOverrideResponse)
-      throw buildHttpError(postOverrideResponse, `${endpoint}/${id}`, errorData, rawText)
-    }
-
-    const data = await postOverrideResponse.json()
-    return data.data || data
   } catch (error) {
     console.error(`Error updating ${endpoint}/${id}:`, error)
     throw error
@@ -294,29 +268,10 @@ export const updateAPI = async (endpoint, id, payload) => {
  */
 export const deleteAPI = async (endpoint, id) => {
   try {
-    const url = `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}/${id}`
-
-    const authToken = localStorage.getItem('auth_token')
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    }
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`
-    }
-
-    const response = await fetch(url, {
+    return await request(`${endpoint}/${id}`, {
       method: 'DELETE',
-      headers
+      headers: buildHeaders()
     })
-
-    if (!response.ok) {
-      const { errorData, rawText } = await parseErrorResponse(response)
-      throw buildHttpError(response, `${endpoint}/${id}`, errorData, rawText)
-    }
-
-    const data = await response.json()
-    return data
   } catch (error) {
     console.error(`Error deleting ${endpoint}/${id}:`, error)
     throw error
@@ -328,6 +283,7 @@ export default {
   postAPI,
   updateAPI,
   deleteAPI,
+  apiClient,
   ENDPOINTS,
   API_BASE_URL
 }

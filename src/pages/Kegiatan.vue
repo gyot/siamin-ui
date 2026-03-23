@@ -369,20 +369,24 @@
               <thead class="bg-slate-50 text-slate-600">
                 <tr>
                   <th class="text-left px-4 py-2 w-12">No</th>
-                  <th class="text-left px-4 py-2">ATK</th>
-                  <th class="text-left px-4 py-2 w-40">Jumlah</th>
+                  <th class="text-left px-4 py-2">Nama Barang</th>
+                  <th class="text-left px-4 py-2">Spesifikasi</th>
+                  <th class="text-left px-4 py-2 w-32">Jumlah</th>
+                  <th class="text-left px-4 py-2">Keterangan</th>
                   <th class="text-right px-4 py-2 w-20">Aksi</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
                 <tr v-for="(item, index) in atkItems" :key="`${item.id || 'new'}-${index}`">
                   <td class="px-4 py-2">{{ index + 1 }}</td>
-                  <td class="px-4 py-2 text-slate-700">{{ item.nama_atk || '-' }}</td>
+                  <td class="px-4 py-2 text-slate-700">{{ item.nama_barang || '-' }}</td>
+                  <td class="px-4 py-2 text-slate-700">{{ item.spesifikasi || '-' }}</td>
                   <td class="px-4 py-2 text-slate-700">
                     <span v-if="item.jumlah !== null && item.jumlah !== undefined">{{ item.jumlah }}</span>
                     <span v-else>-</span>
                     <span v-if="item.satuan" class="text-slate-500"> {{ item.satuan }}</span>
                   </td>
+                  <td class="px-4 py-2 text-slate-700">{{ item.keterangan || '-' }}</td>
                   <td class="px-4 py-2 text-right">
                     <button
                       type="button"
@@ -397,13 +401,22 @@
             </table>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-slate-700 mb-2">Nama ATK *</label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Nama Barang *</label>
               <input
-                v-model="atkForm.nama_atk"
+                v-model="atkForm.nama_barang"
                 type="text"
                 placeholder="Contoh: Kertas A4"
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Spesifikasi</label>
+              <input
+                v-model="atkForm.spesifikasi"
+                type="text"
+                placeholder="Contoh: 80 gsm"
                 class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
               />
             </div>
@@ -423,6 +436,15 @@
                 v-model="atkForm.satuan"
                 type="text"
                 placeholder="Contoh: rim, box"
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
+              />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-700 mb-2">Keterangan</label>
+              <textarea
+                v-model="atkForm.keterangan"
+                rows="2"
+                placeholder="Catatan tambahan"
                 class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
               />
             </div>
@@ -530,7 +552,8 @@
         <div class="flex gap-3 pt-4 border-t border-slate-200">
           <button type="button" @click="showAddModal = false"
             class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Batal</button>
-          <button type="submit" class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium">{{ editingId ?
+          <button type="submit" :disabled="isSubmitting"
+            class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium disabled:opacity-70 disabled:cursor-not-allowed">{{ editingId ?
             'Update' : 'Simpan' }}</button>
         </div>
       </form>
@@ -906,6 +929,47 @@
             @click="router.push({ name: 'surat-tugas', query: { edit: 'true', id: selectedSuratTugas.id_surat_tugas } })"
             class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium">Ubah Surat Tugas</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div v-if="isSubmitting" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
+      <div class="flex justify-center mb-4">
+        <div class="w-12 h-12 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin"></div>
+      </div>
+      <h3 class="text-lg font-semibold text-slate-800">Menyimpan kegiatan</h3>
+      <p class="text-sm text-slate-500 mt-2">{{ submitLoadingMessage }}</p>
+    </div>
+  </div>
+
+  <div v-if="submitStatus.visible" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[71] p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+      <div class="flex items-start gap-4">
+        <div
+          class="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+          :class="submitStatus.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+        >
+          <svg v-if="submitStatus.type === 'success'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </div>
+        <div class="flex-1">
+          <h3 class="text-lg font-semibold text-slate-800">{{ submitStatus.title }}</h3>
+          <p class="text-sm text-slate-600 mt-2 whitespace-pre-line">{{ submitStatus.message }}</p>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end">
+        <button
+          type="button"
+          @click="closeSubmitStatus"
+          class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900"
+        >
+          Tutup
+        </button>
       </div>
     </div>
   </div>
@@ -1378,6 +1442,14 @@ export default {
     const selectedSuratTugas = ref(null)
     const editingId = ref(null)
     const formError = ref('')
+    const isSubmitting = ref(false)
+    const submitLoadingMessage = ref('Mohon tunggu, data kegiatan sedang diproses.')
+    const submitStatus = ref({
+      visible: false,
+      type: 'success',
+      title: '',
+      message: ''
+    })
     const isDraggingFlyer = ref(false)
     const flyerInput = ref(null)
     const flyerFile = ref(null)
@@ -1386,7 +1458,15 @@ export default {
     const isTemplateBiodataCleared = ref(false)
     const formAnggota = ref({ id_pegawai: '', peran: 'anggota_panitia' })
     const formAnggotaErrors = ref([])
-    const atkForm = ref({ nama_atk: '', jumlah: '', satuan: '' })
+    const createEmptyAtkForm = () => ({
+      nama_barang: '',
+      spesifikasi: '',
+      jumlah: '',
+      satuan: '',
+      keterangan: ''
+    })
+
+    const atkForm = ref(createEmptyAtkForm())
     const atkItems = ref([])
     const atkError = ref('')
 
@@ -1497,10 +1577,23 @@ export default {
       if (templateBiodataInput.value) {
         templateBiodataInput.value.value = ''
       }
-      atkForm.value = { nama_atk: '', jumlah: '', satuan: '' }
+      atkForm.value = createEmptyAtkForm()
       atkItems.value = []
       atkError.value = ''
       formError.value = ''
+    }
+
+    const showSubmitStatus = ({ type = 'success', title = '', message = '' }) => {
+      submitStatus.value = {
+        visible: true,
+        type,
+        title,
+        message
+      }
+    }
+
+    const closeSubmitStatus = () => {
+      submitStatus.value.visible = false
     }
 
     const filteredKegiatan = computed(() => {
@@ -1781,9 +1874,11 @@ export default {
 
     const normalizeAtkItem = (item) => {
       return {
-        nama_atk: String(item?.nama_atk ?? '').trim(),
+        nama_barang: String(item?.nama_barang ?? item?.nama_atk ?? '').trim(),
+        spesifikasi: String(item?.spesifikasi ?? '').trim(),
         jumlah: parseAtkJumlah(item?.jumlah),
-        satuan: String(item?.satuan ?? '').trim()
+        satuan: String(item?.satuan ?? '').trim(),
+        keterangan: String(item?.keterangan ?? '').trim()
       }
     }
 
@@ -1795,7 +1890,25 @@ export default {
       }
 
       let rows = []
-      if (Array.isArray(item?.atk)) {
+      if (Array.isArray(item?.daftarAtk)) {
+        rows = item.daftarAtk
+      } else if (Array.isArray(item?.daftar_atk)) {
+        rows = item.daftar_atk
+      } else if (typeof item?.daftarAtk === 'string') {
+        try {
+          const parsed = JSON.parse(item.daftarAtk)
+          if (Array.isArray(parsed)) rows = parsed
+        } catch {
+          rows = []
+        }
+      } else if (typeof item?.daftar_atk === 'string') {
+        try {
+          const parsed = JSON.parse(item.daftar_atk)
+          if (Array.isArray(parsed)) rows = parsed
+        } catch {
+          rows = []
+        }
+      } else if (Array.isArray(item?.atk)) {
         rows = item.atk
       } else if (Array.isArray(item?.atk_items)) {
         rows = item.atk_items
@@ -1819,13 +1932,15 @@ export default {
     }
 
     const addAtkItem = () => {
-      const nama = String(atkForm.value.nama_atk || '').trim()
+      const namaBarang = String(atkForm.value.nama_barang || '').trim()
+      const spesifikasi = String(atkForm.value.spesifikasi || '').trim()
       const jumlahRaw = atkForm.value.jumlah
       const jumlahParsed = parseAtkJumlah(jumlahRaw)
       const satuan = String(atkForm.value.satuan || '').trim()
+      const keterangan = String(atkForm.value.keterangan || '').trim()
 
-      if (!nama) {
-        atkError.value = 'Nama ATK wajib diisi'
+      if (!namaBarang) {
+        atkError.value = 'Nama barang ATK wajib diisi'
         return
       }
       if (jumlahRaw !== '' && (jumlahParsed === null || jumlahParsed < 0)) {
@@ -1833,8 +1948,14 @@ export default {
         return
       }
 
-      atkItems.value.push({ nama_atk: nama, jumlah: jumlahParsed, satuan })
-      atkForm.value = { nama_atk: '', jumlah: '', satuan: '' }
+      atkItems.value.push({
+        nama_barang: namaBarang,
+        spesifikasi,
+        jumlah: jumlahParsed,
+        satuan,
+        keterangan
+      })
+      atkForm.value = createEmptyAtkForm()
       atkError.value = ''
     }
 
@@ -1845,11 +1966,13 @@ export default {
     const buildAtkPayloadItems = () =>
       atkItems.value
         .map(normalizeAtkItem)
-        .filter(item => item.nama_atk)
+        .filter(item => item.nama_barang)
         .map(item => ({
-          nama_atk: item.nama_atk,
+          nama_barang: item.nama_barang,
+          spesifikasi: item.spesifikasi || null,
           jumlah: item.jumlah ?? null,
-          satuan: item.satuan || null
+          satuan: item.satuan || null,
+          keterangan: item.keterangan || null
         }))
 
     const buildKegiatanPayloadObject = (data, { isUpdate = false } = {}) => {
@@ -1955,10 +2078,20 @@ export default {
       formData.value = normalizeKegiatanFormData(formData.value)
       if (!validateForm()) return
 
+      isSubmitting.value = true
+      submitLoadingMessage.value = editingId.value
+        ? 'Perubahan kegiatan sedang disimpan ke server.'
+        : 'Kegiatan baru sedang dibuat di server.'
+
       try {
         const authToken = localStorage.getItem('auth_token')
         if (!authToken) {
           formError.value = 'Sesi login tidak ditemukan. Silakan login ulang.'
+          showSubmitStatus({
+            type: 'error',
+            title: 'Simpan gagal',
+            message: formError.value
+          })
           return
         }
 
@@ -1968,11 +2101,10 @@ export default {
 
         const normalizedData = normalizeKegiatanFormData(formData.value)
         const payloadObject = buildKegiatanPayloadObject(normalizedData, { isUpdate: Boolean(editingId.value) })
-        const atkPayload = buildAtkPayloadItems()
+        const daftarAtkPayload = buildAtkPayloadItems()
         let payload
         const hasFilePayload = Boolean(flyerFile.value || templateBiodataFile.value || isTemplateBiodataCleared.value)
-        const useMultipart = hasFilePayload || atkPayload.length > 0
-        const shouldSyncAtkSeparately = true
+        const useMultipart = hasFilePayload || daftarAtkPayload.length > 0
         if (useMultipart) {
           payload = new FormData()
           Object.keys(payloadObject).forEach(key => {
@@ -1981,13 +2113,19 @@ export default {
               payload.append(key, val)
             }
           })
-          atkPayload.forEach((item, index) => {
-            payload.append(`atk[${index}][nama_atk]`, item.nama_atk)
+          daftarAtkPayload.forEach((item, index) => {
+            payload.append(`daftar_atk[${index}][nama_barang]`, item.nama_barang)
+            if (item.spesifikasi) {
+              payload.append(`daftar_atk[${index}][spesifikasi]`, item.spesifikasi)
+            }
             if (item.jumlah !== null && item.jumlah !== undefined) {
-              payload.append(`atk[${index}][jumlah]`, item.jumlah)
+              payload.append(`daftar_atk[${index}][jumlah]`, item.jumlah)
             }
             if (item.satuan) {
-              payload.append(`atk[${index}][satuan]`, item.satuan)
+              payload.append(`daftar_atk[${index}][satuan]`, item.satuan)
+            }
+            if (item.keterangan) {
+              payload.append(`daftar_atk[${index}][keterangan]`, item.keterangan)
             }
           })
           if (flyerFile.value) {
@@ -2000,14 +2138,8 @@ export default {
           }
         } else {
           payload = { ...payloadObject }
-          if (atkPayload.length > 0) {
-            payload.atk = atkPayload
-          } else {
-            payload.atk = []
-          }
+          payload.daftar_atk = daftarAtkPayload
         }
-
-        let kegiatanId = editingId.value
 
         if (editingId.value) {
           const updated = useMultipart
@@ -2030,17 +2162,22 @@ export default {
           await loadKegiatan()
           // Log update
           ActivityEvents.UPDATE_KEGIATAN(editingId.value, formData.value.nama_kegiatan)
+          showSubmitStatus({
+            type: 'success',
+            title: 'Perubahan tersimpan',
+            message: `Kegiatan "${formData.value.nama_kegiatan}" berhasil diperbarui.`
+          })
         } else {
           const created = await createKegiatan(payload)
           enrichWithLink(created)
           kegiatan.value.push(created)
-          kegiatanId = created?.id_kegiatan ?? created?.id ?? null
           // Log creation
           ActivityEvents.CREATE_KEGIATAN(formData.value.nama_kegiatan)
-        }
-
-        if (shouldSyncAtkSeparately && kegiatanId) {
-          await updateKegiatan(kegiatanId, { atk: atkPayload })
+          showSubmitStatus({
+            type: 'success',
+            title: 'Kegiatan berhasil dibuat',
+            message: `Kegiatan "${formData.value.nama_kegiatan}" berhasil disimpan.`
+          })
         }
 
         showAddModal.value = false
@@ -2060,6 +2197,13 @@ export default {
         if (!errMessage.includes('403')) {
           ActivityEvents.ERROR_OCCURRED(formError.value || 'Gagal menyimpan kegiatan', 'Kegiatan.vue - saveKegiatan')
         }
+        showSubmitStatus({
+          type: 'error',
+          title: 'Simpan gagal',
+          message: formError.value || 'Terjadi kesalahan saat menyimpan kegiatan.'
+        })
+      } finally {
+        isSubmitting.value = false
       }
     }
 
@@ -2184,6 +2328,9 @@ export default {
       formData,
       userUnitKerjaOptions,
       formError,
+      isSubmitting,
+      submitLoadingMessage,
+      submitStatus,
       isDraggingFlyer,
       flyerInput,
       filteredKegiatan,
@@ -2230,7 +2377,8 @@ export default {
       activityLinks,
       getActivityQrCodeUrl,
       resetForm,
-      validateForm
+      validateForm,
+      closeSubmitStatus
     }
   }
 }

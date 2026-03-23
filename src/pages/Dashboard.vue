@@ -315,6 +315,11 @@
                 class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition">
                 Export Excel
               </button>
+              <button @click="downloadBatchPesertaDocx"
+                class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                :disabled="pesertaInSelected.length === 0 || isDownloadingBatchDocx">
+                {{ isDownloadingBatchDocx ? 'Menyiapkan DOCX...' : 'Download Batch DOCX' }}
+              </button>
             </div>
             <div class="overflow-x-auto max-h-64">
               <table class="w-full text-sm">
@@ -356,9 +361,12 @@
 <script>
 import { ref, computed, onMounted } from 'vue'
 import * as XLSX from 'xlsx'
+import JSZip from 'jszip'
 import { useAuthStore } from '@/stores/auth'
 import { fetchAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
+import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXml } from '@/utils/docxUtils.js'
+import { getKegiatan } from '@/services/kegiatan'
 import database from '@/data/index.js'
 
 export default {
@@ -377,6 +385,8 @@ export default {
     const sertifikat = ref(database.sertifikat)
     const pegawai = ref(database.pegawai)
     const users = ref(database.users)
+    const kegiatanDetailCache = ref(new Map())
+    const isDownloadingBatchDocx = ref(false)
 
     // console.log('[Dashboard] Initial pegawai data on mount:', {
     //   count: pegawai.value.length,
@@ -570,21 +580,28 @@ export default {
         if (sig.startsWith('data:')) return sig
         return apiBase + '/storage/' + sig
       }
-
+      const getNamaKegiatan = (id) => {
+        const k = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
+        return k ? k.nama_kegiatan : 'Unknown Kegiatan'
+      }
       const rows = pesertaInSelected.value.map(p => {
         const signature = p.tanda_tangan_url || p.tanda_tangan || p.tandatangan || ''
         return {
-          id_peserta: p.id_peserta,
-          id_kegiatan: p.id_kegiatan,
+          nama_kegiatan: getNamaKegiatan(p.id_kegiatan),
           nama_lengkap: p.nama_lengkap,
           nip: p.nip || '',
+          'pangkat/golongan': p.pangkat || '',
+          jabatan: p.jabatan || '',
           email: p.email || '',
           no_hp: p.no_hp || '',
           nama_instansi: p.nama_instansi || '',
+          npsn: p.npsn || '',
+          alamat_instansi: p.alamat_instansi || '',          
           kab_kota: p.kab_kota || '',
           provinsi: p.provinsi || '',
           peran: p.peran || '',
           jenis_kelamin: p.jenis_kelamin || '',
+          tanggal_lahir: p.tanggal_lahir ? new Date(p.tanggal_lahir).toLocaleDateString('id-ID') : '',
           nomor_rekening: p.nomor_rekening || '',
           nama_bank: p.nama_bank || '',
           provider_pulsa: p.provider_pulsa || '',
@@ -600,6 +617,254 @@ export default {
 
       // Log export activity
       ActivityEvents.EXPORT_DATA(`Peserta - ${selectedKegiatan.value.nama_kegiatan}`, 'xlsx')
+    }
+
+    const dateFormatDocx = (date) => {
+      const bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember']
+      if (!date) return ' '
+      const d = new Date(date)
+      if (Number.isNaN(d.getTime())) return ' '
+      return `${d.getDate().toString().padStart(2, '0')} ${bulan[d.getMonth()]} ${d.getFullYear()}`
+    }
+
+    const normalizeAtkJumlah = (value) => {
+      if (value === '' || value === null || value === undefined) return ''
+      const parsed = Number(value)
+      return Number.isNaN(parsed) ? String(value) : String(parsed)
+    }
+
+    const normalizeKegiatanAtkItem = (item) => ({
+      nama_barang: String(item?.nama_barang ?? item?.nama_atk ?? '').trim(),
+      spesifikasi: String(item?.spesifikasi ?? '').trim(),
+      jumlah: normalizeAtkJumlah(item?.jumlah),
+      satuan: String(item?.satuan ?? '').trim(),
+      keterangan: String(item?.keterangan ?? '').trim()
+    })
+
+    const extractKegiatanAtkItems = (kegiatanItem) => {
+      if (!kegiatanItem) return []
+
+      let rows = []
+      if (Array.isArray(kegiatanItem?.daftarAtk)) {
+        rows = kegiatanItem.daftarAtk
+      } else if (Array.isArray(kegiatanItem?.daftar_atk)) {
+        rows = kegiatanItem.daftar_atk
+      } else if (Array.isArray(kegiatanItem?.daftarAtk?.data)) {
+        rows = kegiatanItem.daftarAtk.data
+      } else if (Array.isArray(kegiatanItem?.daftar_atk?.data)) {
+        rows = kegiatanItem.daftar_atk.data
+      } else if (Array.isArray(kegiatanItem?.data?.daftarAtk)) {
+        rows = kegiatanItem.data.daftarAtk
+      } else if (Array.isArray(kegiatanItem?.data?.daftar_atk)) {
+        rows = kegiatanItem.data.daftar_atk
+      } else if (typeof kegiatanItem?.daftarAtk === 'string') {
+        try {
+          const parsed = JSON.parse(kegiatanItem.daftarAtk)
+          if (Array.isArray(parsed)) rows = parsed
+        } catch {
+          rows = []
+        }
+      } else if (typeof kegiatanItem?.daftar_atk === 'string') {
+        try {
+          const parsed = JSON.parse(kegiatanItem.daftar_atk)
+          if (Array.isArray(parsed)) rows = parsed
+        } catch {
+          rows = []
+        }
+      }
+
+      return rows
+        .map(normalizeKegiatanAtkItem)
+        .filter(item => item.nama_barang)
+    }
+
+    const getKegiatanForDocx = async (idKegiatan) => {
+      const cacheKey = String(idKegiatan ?? '')
+      if (!cacheKey) return {}
+
+      if (kegiatanDetailCache.value.has(cacheKey)) {
+        return kegiatanDetailCache.value.get(cacheKey) || {}
+      }
+
+      const listItem = kegiatan.value.find(k => String(k.id_kegiatan) === cacheKey) || {}
+
+      try {
+        const detail = await getKegiatan(idKegiatan)
+        const merged = { ...listItem, ...(detail || {}) }
+        kegiatanDetailCache.value.set(cacheKey, merged)
+        return merged
+      } catch {
+        kegiatanDetailCache.value.set(cacheKey, listItem)
+        return listItem
+      }
+    }
+
+    const getNodeText = (node) => {
+      if (!node) return ''
+      return Array.from(node.getElementsByTagName('w:t'))
+        .map(item => item.textContent || '')
+        .join('')
+        .trim()
+    }
+
+    const setCellText = (cell, text) => {
+      if (!cell) return
+
+      const doc = cell.ownerDocument
+      const textNodes = cell.getElementsByTagName('w:t')
+      const safeText = String(text ?? '')
+
+      if (textNodes.length > 0) {
+        textNodes[0].textContent = safeText
+        if (safeText.includes(' ')) {
+          textNodes[0].setAttribute('xml:space', 'preserve')
+        }
+        for (let i = 1; i < textNodes.length; i += 1) {
+          textNodes[i].textContent = ''
+        }
+        return
+      }
+
+      const namespaceUri = cell.namespaceURI || 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+      let paragraph = cell.getElementsByTagName('w:p')[0]
+      if (!paragraph) {
+        paragraph = doc.createElementNS(namespaceUri, 'w:p')
+        cell.appendChild(paragraph)
+      }
+
+      const run = doc.createElementNS(namespaceUri, 'w:r')
+      const textNode = doc.createElementNS(namespaceUri, 'w:t')
+      if (safeText.includes(' ')) {
+        textNode.setAttribute('xml:space', 'preserve')
+      }
+      textNode.textContent = safeText
+      run.appendChild(textNode)
+      paragraph.appendChild(run)
+    }
+
+    const fillKelengkapanKegiatanTable = (xmlContent, atkItems = []) => {
+      if (!xmlContent) return xmlContent
+
+      const parser = new DOMParser()
+      const xmlDoc = parser.parseFromString(xmlContent, 'application/xml')
+      const tables = Array.from(xmlDoc.getElementsByTagName('w:tbl'))
+      const targetTable = tables.find((table) => getNodeText(table).includes('Kelengkapan Kegiatan'))
+      if (!targetTable) return xmlContent
+
+      const rows = Array.from(targetTable.getElementsByTagName('w:tr'))
+      const headerIndex = rows.findIndex((row) => getNodeText(row).includes('Kelengkapan Kegiatan'))
+      if (headerIndex === -1) return xmlContent
+
+      let dataRows = rows.slice(headerIndex + 1).filter((row) => row.getElementsByTagName('w:tc').length >= 3)
+      if (dataRows.length === 0) return xmlContent
+
+      const rowTemplate = dataRows[dataRows.length - 1].cloneNode(true)
+
+      while (dataRows.length < atkItems.length) {
+        const clonedRow = rowTemplate.cloneNode(true)
+        targetTable.appendChild(clonedRow)
+        dataRows.push(clonedRow)
+      }
+
+      dataRows.forEach((row, index) => {
+        const cells = Array.from(row.getElementsByTagName('w:tc'))
+        if (cells.length < 3) return
+
+        const numberCell = cells[cells.length - 3]
+        const itemCell = cells[cells.length - 2]
+        const qtyCell = cells[cells.length - 1]
+        const item = atkItems[index]
+
+        if (!item) {
+          setCellText(numberCell, '')
+          setCellText(itemCell, '')
+          setCellText(qtyCell, '')
+          return
+        }
+
+        const itemLabelParts = [item.nama_barang]
+        if (item.spesifikasi) itemLabelParts.push(item.spesifikasi)
+        if (item.keterangan) itemLabelParts.push(item.keterangan)
+        const qtyLabel = [item.jumlah, item.satuan].filter(Boolean).join(' ').trim()
+
+        setCellText(numberCell, String(index + 1))
+        setCellText(itemCell, itemLabelParts.filter(Boolean).join(' - '))
+        setCellText(qtyCell, qtyLabel || '-')
+      })
+
+      return new XMLSerializer().serializeToString(xmlDoc)
+    }
+
+    const buildPesertaDocxData = (pesertaData, kegiatanData) => ({
+      judul_kegiatan: kegiatanData.nama_kegiatan || 'Kegiatan',
+      tanggal_mulai: dateFormatDocx(kegiatanData.tanggal_mulai),
+      tanggal_selesai: dateFormatDocx(kegiatanData.tanggal_selesai),
+      waktu: `${dateFormatDocx(kegiatanData.tanggal_mulai)} s.d. ${dateFormatDocx(kegiatanData.tanggal_selesai)}`,
+      lokasi: kegiatanData.lokasi || '-',
+      nama_lengkap: pesertaData.nama_lengkap || '',
+      nip: pesertaData.nip || '',
+      pangkat: pesertaData.pangkat || '',
+      instansi: pesertaData.nama_instansi || '',
+      jabatan: pesertaData.jabatan || '',
+      kabupaten_kota: pesertaData.kab_kota || '',
+      provinsi: pesertaData.provinsi || '',
+      no_hp: pesertaData.no_hp || '',
+      email: pesertaData.email || '',
+      nama_instansi: pesertaData.nama_instansi || '',
+      kegiatan: kegiatanData.nama_kegiatan || 'Kegiatan',
+      peran: pesertaData.peran || 'Peserta',
+      tanda_tangan_url: pesertaData.tanda_tangan_url || pesertaData.tanda_tangan || pesertaData.tandatangan || ''
+    })
+
+    const sanitizeFilename = (value) => String(value || 'file').replace(/[\\/:*?"<>|]+/g, '-').trim()
+
+    const downloadBatchPesertaDocx = async () => {
+      if (!selectedKegiatan.value || pesertaInSelected.value.length === 0) {
+        alert('Tidak ada peserta untuk diunduh.')
+        return
+      }
+
+      isDownloadingBatchDocx.value = true
+
+      try {
+        const templateResponse = await fetch('/template_peserta.docx')
+        if (!templateResponse.ok) {
+          throw new Error(`Template lokal tidak ditemukan (${templateResponse.status})`)
+        }
+
+        const templateDocx = await templateResponse.blob()
+        const kegiatanDetail = await getKegiatanForDocx(selectedKegiatan.value.id_kegiatan)
+        const kegiatanData = { ...(selectedKegiatan.value || {}), ...(kegiatanDetail || {}) }
+        const daftarAtk = extractKegiatanAtkItems(kegiatanData)
+        const zip = new JSZip()
+
+        for (const p of pesertaInSelected.value) {
+          const data = buildPesertaDocxData(p, kegiatanData)
+          const xmlContent = await parseDocxPreservingFormat(templateDocx)
+          const xmlWithPlaceholders = replacePlaceholdersInXml(xmlContent, data)
+          const finalXml = fillKelengkapanKegiatanTable(xmlWithPlaceholders, daftarAtk)
+          const docxBlob = await generateDocxFromXml(finalXml, templateDocx, null)
+          const fileName = `${sanitizeFilename(p.peran || 'Peserta')} - ${sanitizeFilename(p.nama_lengkap || p.id_peserta)}.docx`
+          zip.file(fileName, docxBlob)
+        }
+
+        const zipBlob = await zip.generateAsync({ type: 'blob' })
+        const url = window.URL.createObjectURL(zipBlob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${sanitizeFilename(selectedKegiatan.value.nama_kegiatan || 'peserta')}-docx-batch.zip`
+        document.body.appendChild(link)
+        link.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(link)
+
+        ActivityEvents.EXPORT_DATA(`Peserta - ${selectedKegiatan.value.nama_kegiatan}`, 'docx-zip')
+      } catch (error) {
+        console.error('Gagal download batch DOCX peserta:', error)
+        alert(error.message || 'Gagal download batch DOCX peserta.')
+      } finally {
+        isDownloadingBatchDocx.value = false
+      }
     }
 
     const openDetailModal = (k) => {
@@ -805,6 +1070,8 @@ export default {
       pesertaInSelected,
       viewPesertaList,
       exportPesertaKegiatan,
+      downloadBatchPesertaDocx,
+      isDownloadingBatchDocx,
       currentPage,
       pageSize,
       totalKegiatanCount,
