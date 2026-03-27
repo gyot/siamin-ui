@@ -40,10 +40,10 @@
             <p class="text-xs sm:text-sm text-gray-600 mb-1">Metode Pelaksanaan</p>
             <p class="text-sm sm:text-base font-semibold text-gray-900">{{ getMetodeLabel(currentKegiatan.metode_pelaksanaan) }}</p>
           </div>
-          <div>
+          <!-- <div>
             <p class="text-xs sm:text-sm text-gray-600 mb-1">Total Peserta</p>
             <p class="text-sm sm:text-base font-semibold text-gray-900">{{ currentKegiatan.total_peserta }} orang</p>
-          </div>
+          </div> -->
         </div>
       </div>
 

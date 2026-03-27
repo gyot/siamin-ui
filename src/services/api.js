@@ -182,6 +182,7 @@ export const fetchAPI = async (endpoint, options = {}) => {
       apiReadUnavailable = true
       const fallback = getLocalFallbackData(endpoint)
       if (fallback !== null) {
+        console.error(`[API] Request failed for ${endpoint}:`, error)
         console.warn(`[API] Fallback local data used for ${endpoint}`)
         return fallback
       }

@@ -268,11 +268,11 @@
 
   <div v-if="isWithinSelectedKegiatanDateRange" class="space-y-5">
 
-    <div 
-      v-for="item in biodataLinks" 
+    <div
+      v-for="item in biodataLinks"
       :key="item.label"
       class="bg-white/5 border border-white/10 rounded-lg p-4
-             grid grid-cols-1 sm:grid-cols-[auto_1fr] 
+             grid grid-cols-1 sm:grid-cols-[auto_1fr]
              gap-6 text-sm items-center transition hover:bg-white/10"
     >
 
@@ -289,8 +289,8 @@
 
           <div
             v-else
-            class="w-28 h-28 sm:w-36 sm:h-36 
-                   flex items-center justify-center 
+            class="w-28 h-28 sm:w-36 sm:h-36
+                   flex items-center justify-center
                    text-xs text-slate-600 text-center"
           >
             Membuat QR...
@@ -306,26 +306,107 @@
         <a
           :href="item.url"
           target="_blank"
-          class="text-cyan-300 hover:text-cyan-200 
+          class="text-cyan-300 hover:text-cyan-200
                  break-all transition duration-200"
         >
           {{ item.url }}
         </a>
-        <!-- <a
-          v-if="item.templateUrl"
-          :href="item.templateUrl"
-          target="_blank"
-          download
-          class="mt-2 text-emerald-300 hover:text-emerald-200 break-all transition duration-200"
-        >
-          Download Contoh Template Biodata
-        </a> -->
       </div>
 
     </div>
 
   </div>
+</div>
 
+<!-- Link Evaluasi dan Laporan Evaluasi -->
+<div class="mt-6">
+  <p class="text-blue-200 text-sm mb-3">Link Evaluasi</p>
+  <p v-if="!isLastDayOfKegiatan" class="text-amber-200 text-xs mb-3">
+    Link evaluasi hanya tersedia pada hari terakhir kegiatan.
+  </p>
+  
+  <div v-if="isLastDayOfKegiatan" class="space-y-5">
+    
+    <div
+      class="bg-white/5 border border-white/10 rounded-lg p-4
+             grid grid-cols-1 sm:grid-cols-[auto_1fr]
+             gap-6 text-sm items-center transition hover:bg-white/10"
+    >
+      <!-- Kolom QR -->
+      <div class="flex flex-col items-center sm:items-start">
+        <div class="bg-white p-2 rounded-lg w-fit shadow">
+          <img
+            v-if="qrCodeMap.evaluasiUrl"
+            :src="qrCodeMap.evaluasiUrl"
+            alt="QR Evaluasi"
+            class="w-28 h-28 sm:w-36 sm:h-36 object-contain"
+            loading="lazy"
+          />
+          <div
+            v-else
+            class="w-28 h-28 sm:w-36 sm:h-36
+                   flex items-center justify-center
+                   text-xs text-slate-600 text-center"
+          >
+            Membuat QR...
+          </div>
+        </div>
+      </div>
+
+      <!-- Kolom URL -->
+      <div class="flex flex-col h-full">
+        <strong class="text-white mb-3">Link Evaluasi:</strong>
+        <a
+          :href="evaluasiUrl"
+          target="_blank"
+          class="text-cyan-300 hover:text-cyan-200
+                 break-all transition duration-200"
+        >
+          {{ evaluasiUrl }}
+        </a>
+      </div>
+    </div>
+
+    <!-- <div
+      class="bg-white/5 border border-white/10 rounded-lg p-4
+             grid grid-cols-1 sm:grid-cols-[auto_1fr]
+             gap-6 text-sm items-center transition hover:bg-white/10"
+    >
+      
+      <div class="flex flex-col items-center sm:items-start">
+        <div class="bg-white p-2 rounded-lg w-fit shadow">
+          <img
+            v-if="qrCodeMap.laporanEvaluasiUrl"
+            :src="qrCodeMap.laporanEvaluasiUrl"
+            alt="QR Laporan Evaluasi"
+            class="w-28 h-28 sm:w-36 sm:h-36 object-contain"
+            loading="lazy"
+          />
+          <div
+            v-else
+            class="w-28 h-28 sm:w-36 sm:h-36
+                   flex items-center justify-center
+                   text-xs text-slate-600 text-center"
+          >
+            Membuat QR...
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col h-full">
+        <strong class="text-white mb-3">Laporan Evaluasi:</strong>
+        <a
+          :href="laporanEvaluasiUrl"
+          target="_blank"
+          class="text-cyan-300 hover:text-cyan-200
+                 break-all transition duration-200"
+        >
+          {{ laporanEvaluasiUrl }}
+        </a>
+      </div>
+    </div> -->
+
+  </div>
 </div>
 
           <!-- <div class="bg-white/5 rounded-lg p-3 border border-white/10">
@@ -390,7 +471,7 @@
 <script>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import QRCode from 'qrcode'
-import { getKegiatanTim } from '@/services/kegiatan'
+import { getKegiatanTim, getAllKegiatanTimKegiatan } from '@/services/kegiatan'
 import { getUnitKerja } from '@/services/unit_kerja'
 
 export default {
@@ -530,7 +611,7 @@ export default {
           }
         })
 
-        console.log('Formatted Unit Kerja:', timkerCards)
+        console.log('Formatted Unit Kerja:', timkerCards.value)
 
       } catch (error) {
         console.error('Gagal memuat data unit kerja:', error)
@@ -647,21 +728,19 @@ export default {
 
     const normalizeCode = (value) => normalizeUnitCode(value)
     const resolveKegiatanUnitCode = (item) => {
-      return item?.kode_unit
-        ?? item?.unit_kerja_id
-        ?? item?.unit_kerja_kode
+      return item?.unit_kerja_id
         ?? item?.unit_kerja?.unit_kerja_id
-        ?? item?.unit_kerja?.kode_unit
-        ?? item?.unit_kerja?.kode
-        ?? ''
+        
     }
 
     const filteredKegiatan = computed(() => {
       if (!selectedTimker.value) return []
+      
       const selectedUnitCode = normalizeCode(activeUnitCode.value)
-
+      
       return kegiatan.value.filter((item) => {
         const itemUnitCode = normalizeCode(resolveKegiatanUnitCode(item))
+        console.log(item);
         return selectedUnitCode && itemUnitCode && itemUnitCode === selectedUnitCode
       })
     })
@@ -796,6 +875,33 @@ export default {
       return today >= start && today <= end
     })
 
+    const isLastDayOfKegiatan = computed(() => {
+      const item = selectedKegiatanDetail.value
+      if (!item) return false
+      const end = toDateOnly(item.tanggal_selesai)
+      if (!end) return false
+      const today = getTodayDateOnly()
+      return today === end
+    })
+
+    const evaluasiUrl = computed(() => {
+      const item = selectedKegiatanDetail.value
+      if (!item) return ''
+      const kode = item.id_kegiatan || ''
+      const judul = item.nama_kegiatan || ''
+      const slug = slugify(judul)
+      return buildPublicUrl(`/evaluasi/${kode}/${slug}`)
+    })
+
+    const laporanEvaluasiUrl = computed(() => {
+      const item = selectedKegiatanDetail.value
+      if (!item) return ''
+      const kode = item.id_kegiatan || ''
+      const judul = item.nama_kegiatan || ''
+      const slug = slugify(judul)
+      return buildPublicUrl(`/laporan-evaluasi/${kode}/${slug}`)
+    })
+
     const generateQrCodes = async () => {
       const entries = isWithinSelectedKegiatanDateRange.value ? (biodataLinks.value || []) : []
       const nextMap = {}
@@ -811,6 +917,20 @@ export default {
           nextMap[item.url] = ''
         }
       }))
+
+      // Generate QR codes for evaluation links if it's the last day
+      if (isLastDayOfKegiatan.value) {
+        try {
+          if (evaluasiUrl.value) {
+            nextMap.evaluasiUrl = await QRCode.toDataURL(evaluasiUrl.value, { width: 220, margin: 1 })
+          }
+          if (laporanEvaluasiUrl.value) {
+            nextMap.laporanEvaluasiUrl = await QRCode.toDataURL(laporanEvaluasiUrl.value, { width: 220, margin: 1 })
+          }
+        } catch (error) {
+          console.error('[Landing] Gagal generate QR Evaluasi:', error)
+        }
+      }
 
       qrCodeMap.value = nextMap
     }
@@ -865,12 +985,14 @@ export default {
     // }
 
     const loadKegiatan = async (selected) => {
+      console.log(selected.id);
+      
       isLoadingKegiatan.value = true
       try {
-        const selectedUnitCode = normalizeCode(selected?.kode_unit || selected?.id)
+        const selectedUnitCode = normalizeCode(selected.id)
         activeUnitCode.value = selectedUnitCode
         const queryId = selectedUnitCode
-        const data = await getKegiatanTim(queryId)
+        const data = await getAllKegiatanTimKegiatan(queryId)
         const rows = Array.isArray(data) ? data : []
 
         kegiatan.value = rows.filter((item) => {
@@ -965,7 +1087,7 @@ export default {
       loadUnitKerja()
     })
 
-    watch(biodataLinks, () => {
+    watch([biodataLinks, isLastDayOfKegiatan], () => {
       generateQrCodes()
     }, { immediate: true })
 
@@ -980,6 +1102,10 @@ export default {
       selectedKegiatanDetail,
       biodataLinks,
       isWithinSelectedKegiatanDateRange,
+      isLastDayOfKegiatan,
+      evaluasiUrl,
+      laporanEvaluasiUrl,
+      qrCodeMap,
       filteredKegiatan,
       paginatedKegiatan,
       currentPage,

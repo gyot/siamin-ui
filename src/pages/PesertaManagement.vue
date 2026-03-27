@@ -159,6 +159,13 @@
                 <td class="px-4 py-3 text-xs sm:text-sm">
                   <div class="flex gap-1 justify-center flex-wrap">
                     <button
+                      @click="openBiodataModal(p)"
+                      class="px-2 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                      title="Lihat Biodata"
+                    >
+                      Biodata
+                    </button>
+                    <button
                       @click="openDetailModal(p)"
                       class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-xs font-semibold whitespace-nowrap"
                     >
@@ -228,6 +235,12 @@
             </div>
           </div>
           <div class="flex gap-2 justify-between pt-2">
+            <button
+              @click="openBiodataModal(p)"
+              class="flex-1 px-3 py-2 bg-purple-500 text-white rounded text-xs font-semibold hover:bg-purple-600 transition-colors"
+            >
+              Biodata
+            </button>
             <button
               @click="openDetailModal(p)"
               class="flex-1 px-3 py-2 bg-blue-500 text-white rounded text-xs font-semibold hover:bg-blue-600 transition-colors"
@@ -730,6 +743,199 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Biodata Peserta -->
+    <div v-if="showBiodataModal && selectedPesertaBiodata"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl print:hidden">
+          <h3 class="text-2xl font-bold text-gray-800">Biodata Peserta</h3>
+          <button @click="showBiodataModal = false" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-6 print:p-0">
+          <!-- Print Button -->
+          <div class="flex justify-end mb-4 print:hidden">
+            <button @click="printBiodata"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+              Cetak Biodata
+            </button>
+          </div>
+
+          <!-- Biodata Content -->
+          <div id="biodata-content" class="p-4 bg-white border rounded-lg print:p-0 print:border-0">
+            <div class="text-center mb-6">
+              <h2 class="text-2xl font-bold text-gray-800">BIODATA</h2>
+            </div>
+
+            <div class="mb-6">
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">Kegiatan</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.nama_kegiatan || '-' }}</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">Waktu</div>
+                <div class="text-center">:</div>
+                <div>{{ formatDateRange(selectedPesertaBiodata.tanggal_mulai, selectedPesertaBiodata.tanggal_selesai) }}</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">Tempat</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.lokasi || '-' }}</div>
+              </div>
+            </div>
+
+            <div class="mb-6">
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">1. Nama</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.nama_lengkap || '-' }}</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">2. NIP</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.nip || '-' }}</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">3. Pangkat/Golongan</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.pangkat_golongan || '-' }}</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">4. Nama Instansi</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.nama_instansi || '-' }}</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">5. Jabatan Kedinasan</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.jabatan_kedinasan || '-' }}</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">6. Kabupaten/Kota</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.kabupaten_kota || '-' }}</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">7. No. HP/WhatsApp</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.no_hp || '-' }}</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">8. E-Mail</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.email || '-' }}</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">9. Peran Dalam Kegiatan</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.peran || 'Peserta' }}</div>
+              </div>
+            </div>
+
+            <!-- Tables Section -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+              <!-- Ceklist Kelengkapan Administrasi -->
+              <div>
+                <div class="text-center font-semibold mb-2 border border-gray-300 bg-gray-50 py-1">
+                  Ceklist Kelengkapan Administrasi
+                </div>
+                <table class="w-full border border-gray-300 text-sm">
+                  <thead>
+                    <tr class="bg-gray-100">
+                      <th class="border border-gray-300 px-2 py-1 text-left w-8">No</th>
+                      <th class="border border-gray-300 px-2 py-1 text-left">Dokumen</th>
+                      <th class="border border-gray-300 px-2 py-1 text-center w-10">✓</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(doc, idx) in administrasiDocs" :key="idx">
+                      <td class="border border-gray-300 px-2 py-1">{{ idx + 1 }}</td>
+                      <td class="border border-gray-300 px-2 py-1">{{ doc }}</td>
+                      <td class="border border-gray-300 px-2 py-1 text-center"></td>
+                    </tr>
+                    <!-- <tr v-for="i in 5" :key="`empty-${i}`">
+                      <td class="border border-gray-300 px-2 py-1">{{ administrasiDocs.length + i }}</td>
+                      <td class="border border-gray-300 px-2 py-1"></td>
+                      <td class="border border-gray-300 px-2 py-1 text-center"></td>
+                    </tr> -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Kelengkapan Kegiatan -->
+              <div>
+                <div class="text-center font-semibold mb-2 border border-gray-300 bg-gray-50 py-1">
+                  Kelengkapan Kegiatan
+                </div>
+                <table class="w-full border border-gray-300 text-sm">
+                <thead>
+                  <tr class="bg-gray-100">
+                    <th class="border border-gray-300 px-2 py-1 text-left w-8">No</th>
+                    <th class="border border-gray-300 px-2 py-1 text-left">Nama Barang</th>
+                    <!-- <th class="border border-gray-300 px-2 py-1 text-left">Spesifikasi</th> -->
+                    <th class="border border-gray-300 px-2 py-1 text-center w-20">Jumlah</th>
+                    <!-- <th class="border border-gray-300 px-2 py-1 text-left">Keterangan</th> -->
+                  </tr>
+                </thead>
+                <tbody>
+                  <template v-if="selectedPesertaBiodata.daftar_atk && selectedPesertaBiodata.daftar_atk.length">
+                    <tr v-for="(atk, idx) in selectedPesertaBiodata.daftar_atk" :key="idx">
+                      <td class="border border-gray-300 px-2 py-1">{{ idx + 1 }}</td>
+                      <td class="border border-gray-300 px-2 py-1">{{ atk.nama_barang || '-' }}</td>
+                      <!-- <td class="border border-gray-300 px-2 py-1">{{ atk.spesifikasi || '-' }}</td> -->
+                      <td class="border border-gray-300 px-2 py-1 text-center">
+                        {{ atk.jumlah !== null && atk.jumlah !== undefined ? atk.jumlah : '-' }}
+                        <span v-if="atk.satuan" class="text-gray-600">{{ atk.satuan }}</span>
+                      </td>
+                      <!-- <td class="border border-gray-300 px-2 py-1">{{ atk.keterangan || '-' }}</td> -->
+                    </tr>
+                  </template>
+                  <template v-else>
+                    <tr v-for="i in 5" :key="`empty-atk-${i}`">
+                      <td class="border border-gray-300 px-2 py-1">{{ i }}</td>
+                      <td class="border border-gray-300 px-2 py-1"></td>
+                      <td class="border border-gray-300 px-2 py-1"></td>
+                      <td class="border border-gray-300 px-2 py-1"></td>
+                      <td class="border border-gray-300 px-2 py-1"></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+              </div>
+            </div>
+
+            <!-- Daftar ATK -->
+            <!--  -->
+
+            <!-- Signature Section -->
+            <div class="mt-8 text-right items-end flex flex-col">
+              <div class="mb-4">{{ selectedPesertaBiodata.kabupaten_kota || 'Mataram' }}, {{ formatDate(selectedPesertaBiodata.tanggal_mulai) }}</div>
+              <!-- <div class="font-semibold mb-20">Yang Membuat</div> -->
+              <div><img :src="base +'/storage/'+ selectedPesertaBiodata.tanda_tangan" width="200" srcset=""></div>
+              <div class="font-semibold">{{ selectedPesertaBiodata.nama_lengkap || '-' }}</div>
+              <div>NIP {{ selectedPesertaBiodata.nip || '-' }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-4 border-t border-gray-200 px-6 pb-6 print:hidden">
+          <button @click="showBiodataModal = false"
+            class="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">Tutup</button>
+          <button @click="printBiodata"
+            class="flex-1 bg-blue-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-blue-700">Cetak</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -754,7 +960,7 @@ export default {
     }
   },
   setup(props) {
-
+    const base = import.meta.env.VITE_API_BASE_URL || ''
     const peserta = ref([])
     const kegiatan = ref([])
     const kegiatanDetailCache = ref(new Map())
@@ -765,9 +971,18 @@ export default {
     const showAddModal = ref(false)
     const showDetailModal = ref(false)
     const showSertifikatModal = ref(false)
+    const showBiodataModal = ref(false)
     const editingPeserta = ref(false)
     const selectedPeserta = ref(null)
+    const selectedPesertaBiodata = ref(null)
     const formErrors = ref([])
+    const administrasiDocs = ref([
+      'Surat Tugas',
+      'SPPD',
+      'Tiket Pergi (Pulau Sumbawa)',
+      'Tiket Pulang (Pulau Sumbawa)',
+      'Nota Bensin (Pulau Lombok)'
+    ])
 
     const searchNama = ref('')
     const filterKegiatan = ref(props.kegiatanId || '')
@@ -1035,9 +1250,305 @@ export default {
       return new Date(date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
     }
 
+    const getKegiatanById = (idKegiatan) => {
+      return kegiatan.value.find(k => String(k.id_kegiatan) === String(idKegiatan))
+    }
+
+    const printBiodata = () => {
+      const printContent = document.getElementById('biodata-content')
+      if (!printContent) return
+
+      // Clone the content to manipulate before printing
+      const clonedContent = printContent.cloneNode(true)
+      
+      // Remove print:hidden elements from clone
+      const hiddenElements = clonedContent.querySelectorAll('.print\\:hidden, [class*="print:hidden"]')
+      hiddenElements.forEach(el => el.remove())
+
+      const printWindow = window.open('', '', 'width=1200,height=800')
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Biodata Peserta</title>
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              font-size: 12pt;
+              line-height: 1.6;
+              padding: 15mm;
+              color: #000;
+            }
+            .text-center { text-align: center; }
+            .font-bold { font-weight: bold; }
+            .font-semibold { font-weight: 600; }
+            .mb-6 { margin-bottom: 1.5rem; }
+            .mb-2 { margin-bottom: 0.5rem; }
+            .mt-8 { margin-top: 2rem; }
+            .text-right { text-align: right; }
+            
+            h2 {
+              font-size: 18pt;
+              font-weight: bold;
+              text-align: center;
+              margin-bottom: 20px;
+              text-transform: uppercase;
+            }
+            
+            .info-section {
+              margin-bottom: 20px;
+            }
+            
+            .info-row {
+              display: flex;
+              margin-bottom: 6px;
+            }
+            
+            .info-label {
+              width: 200px;
+              font-weight: 600;
+            }
+            
+            .info-separator {
+              width: 20px;
+              text-align: center;
+            }
+            
+            .info-value {
+              flex: 1;
+            }
+            
+            /* Tables Container - Side by Side */
+            .tables-container {
+              display: flex;
+              gap: 20px;
+              margin-bottom: 30px;
+              page-break-inside: avoid;
+            }
+            
+            .table-box {
+              flex: 1;
+              min-width: 0;
+            }
+            
+            .table-title {
+              text-align: center;
+              font-weight: bold;
+              border: 1px solid #000;
+              background-color: #f5f5f5 !important;
+              padding: 8px;
+              margin-bottom: 0;
+              font-size: 11pt;
+            }
+            
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 0;
+              font-size: 10pt;
+              page-break-inside: avoid;
+            }
+            
+            th, td {
+              border: 1px solid #000;
+              padding: 6px 8px;
+              text-align: left;
+              font-size: 10pt;
+            }
+            
+            th {
+              background-color: #f0f0f0 !important;
+              font-weight: bold;
+              text-align: center;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            
+            .signature-section {
+              margin-top: 40px;
+              text-align: right;
+              page-break-inside: avoid;
+            }
+            
+            @media print {
+              @page {
+                margin: 15mm;
+                size: A4;
+              }
+              body {
+                padding: 15mm;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${generateBiodataHTML(clonedContent)}
+        </body>
+        </html>
+      `)
+      printWindow.document.close()
+      printWindow.focus()
+      setTimeout(() => {
+        printWindow.print()
+        printWindow.close()
+      }, 250)
+    }
+
+    const generateBiodataHTML = (content) => {
+      // Extract data from the cloned content
+      const h2 = content.querySelector('h2')?.textContent || 'BIODATA'
+      
+      // Get info rows
+      const infoRows = content.querySelectorAll('.grid-cols-3')
+      let infoHTML = ''
+      
+      infoRows.forEach((row) => {
+        const cells = row.querySelectorAll('div')
+        if (cells.length >= 3) {
+          infoHTML += `
+            <div class="info-row">
+              <div class="info-label">${cells[0].textContent}</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${cells[2].textContent}</div>
+            </div>
+          `
+        }
+      })
+      
+      // Get tables
+      const tables = content.querySelectorAll('table')
+      let tablesHTML = ''
+      
+      // First two tables side by side (Administrasi & Kelengkapan Kegiatan)
+      if (tables.length >= 2) {
+        const table1Title = tables[0].closest('.grid, div')?.querySelector('.font-semibold')?.textContent || 'Ceklist Kelengkapan Administrasi'
+        const table2Title = tables[1].closest('.grid, div')?.querySelector('.font-semibold')?.textContent || 'Kelengkapan Kegiatan'
+        
+        tablesHTML = `
+          <div class="tables-container">
+            <div class="table-box">
+              <div class="table-title">${table1Title}</div>
+              ${tableToHTML(tables[0])}
+            </div>
+            <div class="table-box">
+              <div class="table-title">${table2Title}</div>
+              ${tableToHTML(tables[1])}
+            </div>
+          </div>
+        `
+      }
+      
+      // Third table (ATK) - full width
+      let atkHTML = ''
+      if (tables.length >= 3) {
+        const atkTitle = tables[2].closest('div')?.querySelector('.font-semibold')?.textContent || 'Daftar ATK'
+        atkHTML = `
+          <div class="mb-6">
+            <div class="table-title" style="margin-bottom: 0;">${atkTitle}</div>
+            ${tableToHTML(tables[2])}
+          </div>
+        `
+      }
+      
+      // Get signature section
+      const signatureSection = content.querySelector('.text-right.mt-8')
+      let signatureHTML = ''
+      if (signatureSection) {
+        signatureHTML = signatureSection.innerHTML
+      }
+      
+      // Split info rows into sections (first 3 = kegiatan info, rest = peserta info)
+      const kegiatanInfo = infoHTML.split('</div>').slice(0, 3).join('</div>') + '</div>'
+      const pesertaInfo = infoHTML.split('</div>').slice(3).join('</div>') + '</div>'
+      
+      return `
+        <div class="text-center mb-6">
+          <h2>${h2}</h2>
+        </div>
+        
+        <div class="info-section">
+          ${kegiatanInfo}
+        </div>
+        
+        <div class="info-section">
+          ${pesertaInfo}
+        </div>
+        
+        ${tablesHTML}
+        
+        ${atkHTML}
+        
+        <div class="signature-section">
+          ${signatureHTML}
+        </div>
+      `
+    }
+
+    const tableToHTML = (table) => {
+      if (!table) return ''
+      
+      let html = '<table><thead><tr>'
+      
+      // Headers
+      const headers = table.querySelectorAll('th')
+      headers.forEach(th => {
+        html += `<th style="background-color: #f0f0f0 !important;">${th.textContent}</th>`
+      })
+      
+      html += '</tr></thead><tbody>'
+      
+      // Rows
+      const rows = table.querySelectorAll('tbody tr')
+      rows.forEach(row => {
+        html += '<tr>'
+        const cells = row.querySelectorAll('td')
+        cells.forEach(td => {
+          html += `<td>${td.textContent}</td>`
+        })
+        html += '</tr>'
+      })
+      
+      html += '</tbody></table>'
+      return html
+    }
+
+    const formatDateRange = (start, end) => {
+      if (!start && !end) return '-'
+      const format = (date) => {
+        if (!date) return ''
+        const d = new Date(date)
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+      }
+      if (start && end) {
+        return `${format(start)} s.d. ${format(end)}`
+      }
+      return format(start) || format(end)
+    }
+
     const openDetailModal = (p) => {
       selectedPeserta.value = p
       showDetailModal.value = true
+    }
+
+    const openBiodataModal = (p) => {
+      const kegiatanData = getKegiatanById(p.id_kegiatan)
+      selectedPesertaBiodata.value = {
+        ...p,
+        nama_kegiatan: getNamaKegiatan(p.id_kegiatan),
+        tanggal_mulai: kegiatanData?.tanggal_mulai || '',
+        tanggal_selesai: kegiatanData?.tanggal_selesai || '',
+        lokasi: kegiatanData?.lokasi || '-',
+        // Get ATK from kegiatan
+        daftar_atk: kegiatanData?.daftar_atk || []
+      }
+      showBiodataModal.value = true
     }
 
     const openEditModal = () => {
@@ -1446,6 +1957,7 @@ export default {
     }
 
     return {
+      base,
       peserta,
       kegiatan,
       pegawai,
@@ -1454,8 +1966,11 @@ export default {
       showAddModal,
       showDetailModal,
       showSertifikatModal,
+      showBiodataModal,
       editingPeserta,
       selectedPeserta,
+      selectedPesertaBiodata,
+      administrasiDocs,
       formErrors,
       searchNama,
       filterKegiatan,
@@ -1469,10 +1984,14 @@ export default {
       filteredPesertaBersertifikat,
       sertifikatPeserta,
       getNamaKegiatan,
+      getKegiatanById,
       getSertifikatStatus,
       getSertifikatBadgeClass,
       formatDate,
+      formatDateRange,
       openDetailModal,
+      openBiodataModal,
+      printBiodata,
       openEditModal,
       closeAddModal,
       onNpsnInput,
@@ -1511,5 +2030,57 @@ export default {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+/* Print Styles */
+@media print {
+  @page {
+    margin: 15mm;
+    size: A4;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  #biodata-content,
+  #biodata-content * {
+    visibility: visible;
+  }
+  
+  #biodata-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 !important;
+    border: none !important;
+  }
+  
+  .print\\:hidden {
+    display: none !important;
+  }
+  
+  .print\\:p-0 {
+    padding: 0 !important;
+  }
+  
+  .print\\:border-0 {
+    border: none !important;
+  }
+  
+  /* Force table colors for print */
+  th {
+    background-color: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .bg-gray-50,
+  .bg-gray-100 {
+    background-color: #f5f5f5 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 </style>

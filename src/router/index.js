@@ -19,6 +19,8 @@ import LoginPeserta from '../pages/LoginPeserta.vue'
 import FormulirPeserta from '../pages/FormulirPeserta.vue'
 import DaftarPesertaPublik from '../pages/DaftarPesertaPublik.vue'
 import KegiatanDetailPublik from '../pages/KegiatanDetailPublik.vue'
+import EvaluasiKegiatan from '../pages/EvaluasiKegiatan.vue'
+import LaporanEvaluasi from '../pages/LaporanEvaluasi.vue'
 import LihatTandatangan from '../pages/LihatTandatangan.vue'
 import DataSyncMonitor from '../pages/DataSyncMonitor.vue'
 import { fetchAPI } from '@/services/api'
@@ -77,6 +79,22 @@ const router = createRouter({
     meta:{
       title: 'Detail Kegiatan',
       description: 'Informasi detail kegiatan publik.'
+    }
+  },
+  {
+    path:'/evaluasi/:kode/:slugJudul?',
+    component:EvaluasiKegiatan,
+    meta:{
+      title: 'Evaluasi Kegiatan',
+      description: 'Formulir evaluasi kegiatan untuk peserta.'
+    }
+  },
+  {
+    path:'/laporan-evaluasi/:kode/:slugJudul?',
+    component:LaporanEvaluasi,
+    meta:{
+      title: 'Laporan Evaluasi Kegiatan',
+      description: 'Laporan dan statistik hasil evaluasi kegiatan.'
     }
   },
   {

@@ -65,7 +65,7 @@
     </div>
 
     <!-- Loading State -->
-    
+
 
     <!-- Table -->
     <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
@@ -77,7 +77,8 @@
               </th>
               <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Tanggal</th>
               <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Lokasi</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Unit Kerja</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Unit Kerja
+              </th>
               <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Metode</th>
               <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
               <th class="text-right px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Aksi</th>
@@ -90,10 +91,11 @@
                   <div class="animate-spin">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
+                      </path>
                     </svg>
                   </div>
-                  <p class="text-sm text-gray-600">Memuat data kegiatan...</p>  
+                  <p class="text-sm text-gray-600">Memuat data kegiatan...</p>
                 </div>
               </td>
             </tr>
@@ -135,7 +137,7 @@
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </button> -->
-                  
+
                   <button @click="sharePublicPesertaLink(k)"
                     class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-emerald-600"
                     title="Share Link Publik Peserta">
@@ -242,11 +244,9 @@
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Unit Kerja *</label>
-              <select
-                v-model="formData.unit_kerja_id"
+              <select v-model="formData.unit_kerja_id"
                 class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none bg-white"
-                :disabled="userUnitKerjaOptions.length === 0"
-              >
+                :disabled="userUnitKerjaOptions.length === 0">
                 <option value="" disabled>Pilih unit kerja</option>
                 <option v-for="unit in userUnitKerjaOptions" :key="unit.unit_kerja_id" :value="unit.unit_kerja_id">
                   {{ unit.kode_unit ? `${unit.kode_unit} - ` : '' }}{{ unit.nama_unit || `Unit ${unit.unit_kerja_id}` }}
@@ -388,11 +388,7 @@
                   </td>
                   <td class="px-4 py-2 text-slate-700">{{ item.keterangan || '-' }}</td>
                   <td class="px-4 py-2 text-right">
-                    <button
-                      type="button"
-                      @click="removeAtkItem(index)"
-                      class="text-xs text-red-600 hover:text-red-700"
-                    >
+                    <button type="button" @click="removeAtkItem(index)" class="text-xs text-red-600 hover:text-red-700">
                       Hapus
                     </button>
                   </td>
@@ -401,17 +397,13 @@
             </table>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Nama Barang *</label>
-              <input
-                v-model="atkForm.nama_barang"
-                type="text"
-                placeholder="Contoh: Kertas A4"
-                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
-              />
+              <input v-model="atkForm.nama_barang" type="text" placeholder="Contoh: Kertas A4"
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
             </div>
-            <div>
+            <!-- <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Spesifikasi</label>
               <input
                 v-model="atkForm.spesifikasi"
@@ -419,27 +411,18 @@
                 placeholder="Contoh: 80 gsm"
                 class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
               />
-            </div>
+            </div> -->
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Jumlah</label>
-              <input
-                v-model="atkForm.jumlah"
-                type="number"
-                min="0"
-                placeholder="0"
-                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
-              />
+              <input v-model="atkForm.jumlah" type="number" min="0" placeholder="0"
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Satuan</label>
-              <input
-                v-model="atkForm.satuan"
-                type="text"
-                placeholder="Contoh: rim, box"
-                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
-              />
+              <input v-model="atkForm.satuan" type="text" placeholder="Contoh: rim, box"
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
             </div>
-            <div class="md:col-span-2">
+            <!-- <div class="md:col-span-2">
               <label class="block text-sm font-medium text-slate-700 mb-2">Keterangan</label>
               <textarea
                 v-model="atkForm.keterangan"
@@ -447,16 +430,13 @@
                 placeholder="Catatan tambahan"
                 class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
               />
-            </div>
+            </div> -->
           </div>
 
           <div class="mt-3 flex items-center gap-3">
             <p v-if="atkError" class="text-xs text-red-600">{{ atkError }}</p>
-            <button
-              type="button"
-              @click="addAtkItem"
-              class="ml-auto px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
-            >
+            <button type="button" @click="addAtkItem"
+              class="ml-auto px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
               Tambah ATK
             </button>
           </div>
@@ -553,8 +533,9 @@
           <button type="button" @click="showAddModal = false"
             class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Batal</button>
           <button type="submit" :disabled="isSubmitting"
-            class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium disabled:opacity-70 disabled:cursor-not-allowed">{{ editingId ?
-            'Update' : 'Simpan' }}</button>
+            class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium disabled:opacity-70 disabled:cursor-not-allowed">{{
+              editingId ?
+                'Update' : 'Simpan' }}</button>
         </div>
       </form>
     </div>
@@ -584,7 +565,7 @@
           <span class="badge" :class="getStatusBadgeClass(selectedKegiatan.status)">
             {{ getStatusLabel(selectedKegiatan.status) }}
           </span>
-          <!-- <span class="text-sm text-slate-500">ID: {{ selectedKegiatan.id_kegiatan }}</span> -->
+          <span class="text-sm text-slate-500">ID: {{ selectedKegiatan.id_kegiatan }}</span>
 
 
           <button @click="handleSuratTugas(selectedKegiatan.id_kegiatan)"
@@ -597,7 +578,7 @@
           </button>
 
         </div>
-        
+
         <!-- Informasi Dasar -->
         <div class="border-b border-slate-100 pb-6">
           <h4 class="text-lg font-semibold text-slate-800 mb-4">Informasi Dasar</h4>
@@ -663,37 +644,54 @@
             </div>
           </div>
         </div>
-        
+
         <div>
           <p class="text-xs font-medium text-slate-500 uppercase">Ringkasan Peserta</p>
           <p class="text-slate-800">{{ selectedKegiatan.peserta_ringkasan || '-' }}</p>
         </div>
+
+
+        <!-- <div class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Laporan dan Evaluasi</h4>
+          <div class="space-y-2">
+            <div class="rounded-lg border border-slate-200 p-3">
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Link Evaluasi</p>
+              <a :href="buildPublicEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan)" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
+                {{ buildPublicEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan) }}
+              </a>
+              <div class="mt-3">
+                <img v-if="getActivityQrCodeUrl(buildPublicEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan))" :src="getActivityQrCodeUrl(buildPublicEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan))"
+                  :alt="`QR Evaluasi`" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
+              </div>
+            </div>
+
+            <div class="rounded-lg border border-slate-200 p-3">
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Laporan Evaluasi</p>
+              <a :href="buildPublicLaporanEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan)" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
+                {{ buildPublicLaporanEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan) }}
+              </a>
+              <div class="mt-3">
+                <img v-if="getActivityQrCodeUrl(buildPublicLaporanEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan))" :src="getActivityQrCodeUrl(buildPublicLaporanEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan))"
+                  :alt="`QR Laporan Evaluasi`" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
+              </div>
+            </div>
+          </div>
+        </div> -->
+
         <!-- Formulir Links -->
         <div class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">Link Formulir Pendaftaran</h4>
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Daftar Tautan</h4>
           <div class="space-y-2">
+
             <div v-for="item in activityLinks" :key="item.role" class="rounded-lg border border-slate-200 p-3">
               <p class="text-xs font-medium text-slate-500 uppercase mb-1">{{ item.label }}</p>
               <a :href="item.url" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
                 {{ item.url }}
               </a>
               <div class="mt-3">
-                <img
-                  v-if="getActivityQrCodeUrl(item.url)"
-                  :src="getActivityQrCodeUrl(item.url)"
-                  :alt="`QR ${item.label}`"
-                  class="w-24 h-24 rounded bg-white p-1 border border-slate-200"
-                />
+                <img v-if="getActivityQrCodeUrl(item.url)" :src="getActivityQrCodeUrl(item.url)"
+                  :alt="`QR ${item.label}`" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
               </div>
-              <!-- <a
-                v-if="item.templateUrl"
-                :href="item.templateUrl"
-                target="_blank"
-                download
-                class="mt-1 inline-block text-emerald-700 hover:text-emerald-800 underline text-xs"
-              >
-                Download Contoh Template Biodata
-              </a> -->
             </div>
           </div>
         </div>
@@ -744,20 +742,6 @@
                 {{ selectedKegiatan.panduan_url }}
               </a>
             </div>
-            <div v-if="selectedKegiatan.laporan_url">
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Laporan</p>
-              <a :href="selectedKegiatan.laporan_url" target="_blank"
-                class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
-                {{ selectedKegiatan.laporan_url }}
-              </a>
-            </div>
-            <div v-if="selectedKegiatan.surat_menyurat_url">
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Surat Menyurat</p>
-              <a :href="selectedKegiatan.surat_menyurat_url" target="_blank"
-                class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
-                {{ selectedKegiatan.surat_menyurat_url }}
-              </a>
-            </div>
           </div>
         </div>
 
@@ -765,6 +749,16 @@
         <div class="flex gap-3 pt-4 border-t border-slate-200">
           <button @click="showDetailModal = false"
             class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Tutup</button>
+          <!-- <button
+            @click="router.push({ name: 'laporan-evaluasi', params: { kode: selectedKegiatan.id_kegiatan, slugJudul: selectedKegiatan.nama_kegiatan } })"
+            class="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition"
+            title="Lihat Laporan Evaluasi">
+            <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Laporan
+          </button> -->
           <button @click="openEditFromDetail()"
             class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium">Edit</button>
         </div>
@@ -933,6 +927,226 @@
     </div>
   </div>
 
+  <!-- Modal Biodata Peserta -->
+  <div v-if="showBiodataModal && selectedPeserta"
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8">
+      <div
+        class="flex items-center justify-between p-6 border-b border-slate-100 sticky top-0 bg-white rounded-t-2xl print:hidden">
+        <h3 class="text-2xl font-bold text-slate-800">Biodata Peserta</h3>
+        <button @click="showBiodataModal = false" class="text-slate-400 hover:text-slate-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 print:p-0">
+        <!-- Print Button -->
+        <div class="flex justify-end mb-4 print:hidden">
+          <button @click="printBiodata"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+            </svg>
+            Cetak Biodata
+          </button>
+        </div>
+
+        <!-- Biodata Content -->
+        <div id="biodata-content" class="p-4 bg-white print:p-0 print:border-0">
+          <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold text-slate-800">BIODATA</h2>
+          </div>
+
+          <div class="mb-6">
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">Kegiatan</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.nama_kegiatan || '-' }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">Waktu</div>
+              <div class="text-center">:</div>
+              <div>{{ formatDateRange(selectedPeserta.tanggal_mulai, selectedPeserta.tanggal_selesai) }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">Tempat</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.lokasi || '-' }}</div>
+            </div>
+          </div>
+
+          <div class="mb-6">
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">1. Nama</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.nama || '-' }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">2. NIP</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.nip || '-' }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">3. Pangkat/Golongan</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.pangkat_golongan || '-' }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">4. Nama Instansi</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.nama_instansi || '-' }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">5. Jabatan Kedinasan</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.jabatan_kedinasan || '-' }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">6. Kabupaten/Kota</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.kabupaten_kota || '-' }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">7. No. HP/WhatsApp</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.no_hp || '-' }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">8. E-Mail</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.email || '-' }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">9. Peran Dalam Kegiatan</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.peran || 'Peserta' }}</div>
+            </div>
+          </div>
+
+          <!-- Tables Section -->
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <!-- Ceklist Kelengkapan Administrasi -->
+            <div>
+              <div class="text-center font-semibold mb-2 border border-slate-300 bg-slate-50 py-1">
+                Ceklist Kelengkapan Administrasi
+              </div>
+              <table class="w-full border border-slate-300 text-sm">
+                <thead>
+                  <tr class="bg-slate-100">
+                    <th class="border border-slate-300 px-2 py-1 text-left w-8">No</th>
+                    <th class="border border-slate-300 px-2 py-1 text-left">Dokumen</th>
+                    <th class="border border-slate-300 px-2 py-1 text-center w-10">✓</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(doc, idx) in administrasiDocs" :key="idx">
+                    <td class="border border-slate-300 px-2 py-1">{{ idx + 1 }}</td>
+                    <td class="border border-slate-300 px-2 py-1">{{ doc }}</td>
+                    <td class="border border-slate-300 px-2 py-1 text-center"></td>
+                  </tr>
+                  <tr v-for="i in 5" :key="`empty-${i}`">
+                    <td class="border border-slate-300 px-2 py-1">{{ administrasiDocs.length + i }}</td>
+                    <td class="border border-slate-300 px-2 py-1"></td>
+                    <td class="border border-slate-300 px-2 py-1 text-center"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Kelengkapan Kegiatan -->
+            <div>
+              <div class="text-center font-semibold mb-2 border border-slate-300 bg-slate-50 py-1">
+                Kelengkapan Kegiatan
+              </div>
+              <table class="w-full border border-slate-300 text-sm">
+                <thead>
+                  <tr class="bg-slate-100">
+                    <th class="border border-slate-300 px-2 py-1 text-left w-8">No</th>
+                    <th class="border border-slate-300 px-2 py-1 text-left">Item</th>
+                    <th class="border border-slate-300 px-2 py-1 text-left">Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="selectedPeserta.kelengkapan_kegiatan && selectedPeserta.kelengkapan_kegiatan.length">
+                    <td class="border border-slate-300 px-2 py-1" colspan="3">
+                      {{ selectedPeserta.kelengkapan_kegiatan }}
+                    </td>
+                  </tr>
+                  <tr v-else v-for="i in 5" :key="`empty-kelengkapan-${i}`">
+                    <td class="border border-slate-300 px-2 py-1">{{ i }}</td>
+                    <td class="border border-slate-300 px-2 py-1"></td>
+                    <td class="border border-slate-300 px-2 py-1"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Daftar ATK -->
+          <div class="mb-6">
+            <div class="text-center font-semibold mb-2 border border-slate-300 bg-slate-50 py-1">
+              Daftar ATK
+            </div>
+            <table class="w-full border border-slate-300 text-sm">
+              <thead>
+                <tr class="bg-slate-100">
+                  <th class="border border-slate-300 px-2 py-1 text-left w-8">No</th>
+                  <th class="border border-slate-300 px-2 py-1 text-left">Nama Barang</th>
+                  <th class="border border-slate-300 px-2 py-1 text-left">Spesifikasi</th>
+                  <th class="border border-slate-300 px-2 py-1 text-center w-20">Jumlah</th>
+                  <th class="border border-slate-300 px-2 py-1 text-left">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template v-if="selectedPeserta.daftar_atk && selectedPeserta.daftar_atk.length">
+                  <tr v-for="(atk, idx) in selectedPeserta.daftar_atk" :key="idx">
+                    <td class="border border-slate-300 px-2 py-1">{{ idx + 1 }}</td>
+                    <td class="border border-slate-300 px-2 py-1">{{ atk.nama_barang || '-' }}</td>
+                    <td class="border border-slate-300 px-2 py-1">{{ atk.spesifikasi || '-' }}</td>
+                    <td class="border border-slate-300 px-2 py-1 text-center">
+                      {{ atk.jumlah !== null && atk.jumlah !== undefined ? atk.jumlah : '-' }}
+                      <span v-if="atk.satuan" class="text-slate-600">{{ atk.satuan }}</span>
+                    </td>
+                    <td class="border border-slate-300 px-2 py-1">{{ atk.keterangan || '-' }}</td>
+                  </tr>
+                </template>
+                <template v-else>
+                  <tr v-for="i in 5" :key="`empty-atk-${i}`">
+                    <td class="border border-slate-300 px-2 py-1">{{ i }}</td>
+                    <td class="border border-slate-300 px-2 py-1"></td>
+                    <td class="border border-slate-300 px-2 py-1"></td>
+                    <td class="border border-slate-300 px-2 py-1"></td>
+                    <td class="border border-slate-300 px-2 py-1"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Signature Section -->
+          <div class="mt-8 text-right">
+            <div class="mb-4">{{ selectedPeserta.kabupaten_kota || 'Mataram' }}, {{
+              formatDate(selectedPeserta.tanggal_mulai) }}
+            </div>
+            <div class="font-semibold mb-20">Yang Membuat</div>
+            <div class="font-semibold">{{ selectedPeserta.nama || '-' }}</div>
+            <div>NIP {{ selectedPeserta.nip || '-' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 pt-4 border-t border-slate-200 px-6 pb-6 print:hidden">
+        <button @click="showBiodataModal = false"
+          class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Tutup</button>
+        <button @click="printBiodata"
+          class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium">Cetak</button>
+      </div>
+    </div>
+  </div>
+
   <div v-if="isSubmitting" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[70] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center">
       <div class="flex justify-center mb-4">
@@ -946,11 +1160,10 @@
   <div v-if="submitStatus.visible" class="fixed inset-0 bg-black/50 flex items-center justify-center z-[71] p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
       <div class="flex items-start gap-4">
-        <div
-          class="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
-          :class="submitStatus.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
-        >
-          <svg v-if="submitStatus.type === 'success'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
+          :class="submitStatus.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+          <svg v-if="submitStatus.type === 'success'" class="w-6 h-6" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
           </svg>
           <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -963,11 +1176,8 @@
         </div>
       </div>
       <div class="mt-6 flex justify-end">
-        <button
-          type="button"
-          @click="closeSubmitStatus"
-          class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900"
-        >
+        <button type="button" @click="closeSubmitStatus"
+          class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900">
           Tutup
         </button>
       </div>
@@ -1091,6 +1301,20 @@ export default {
       const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
       const slug = slugify(judul)
       return `${base}/daftar-peserta/${kode}/${slug}`
+    }
+
+    const buildPublicEvaluasiLink = (kode, judul = '') => {
+
+      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
+      const slug = slugify(judul)
+      return `${base}/evaluasi/${kode}/${slug}`
+    }
+
+    const buildPublicLaporanEvaluasiLink = (kode, judul = '') => {
+      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
+      const slug = slugify(judul)
+      // alert(`Link Laporan Evaluasi untuk kegiatan ${judul}:\n${base}/laporan-evaluasi/${kode}/${slug}`)
+      return `${base}/laporan-evaluasi/${kode}/${slug}`
     }
 
     const copyText = async (text) => {
@@ -1440,6 +1664,15 @@ export default {
     const selectedKegiatan = ref(null)
     const showSuratTugasModal = ref(false)
     const selectedSuratTugas = ref(null)
+    const showBiodataModal = ref(false)
+    const selectedPeserta = ref(null)
+    const administrasiDocs = ref([
+      'Surat Tugas',
+      'SPPD',
+      'Tiket Pergi (Pulau Sumbawa)',
+      'Tiket Pulang (Pulau Sumbawa)',
+      'Nota Bensin (Pulau Lombok)'
+    ])
     const editingId = ref(null)
     const formError = ref('')
     const isSubmitting = ref(false)
@@ -1504,16 +1737,39 @@ export default {
       if (!selectedKegiatan.value) return []
       const kode = selectedKegiatan.value.id_kegiatan || ''
       const judul = selectedKegiatan.value.nama_kegiatan || ''
+      const labels = {
+        peserta: 'Formulir Peserta',
+        panitia: 'Formulir Panitia',
+        narasumber: 'Formulir Narasumber'
+      }
       const roles = ['Peserta', 'Panitia', 'Narasumber']
-      return roles.map((role) => {
-        const links = getRoleLinksFromKegiatan(selectedKegiatan.value, role)
+      const links = roles.map((role) => {
+        const roleLinks = getRoleLinksFromKegiatan(selectedKegiatan.value, role)
         return {
           role,
-          label: role,
-          url: links.formUrl || buildFormLink(kode, role, judul),
-          templateUrl: links.templateUrl
+          label: labels[role.toLowerCase()] || `Formulir ${role}`,
+          url: roleLinks.formUrl || buildFormLink(kode, role, judul),
+          templateUrl: roleLinks.templateUrl
         }
       })
+      
+      // Add Evaluasi and Laporan Evaluasi links
+      
+      links.push({
+        role: 'evaluasi',
+        label: 'Link Evaluasi',
+        url: buildPublicEvaluasiLink(kode, judul),
+        templateUrl: null
+      })
+      links.push({
+        role: 'laporan-evaluasi',
+        label: 'Laporan Evaluasi',
+        url: buildPublicLaporanEvaluasiLink(kode, judul),
+        templateUrl: null
+      })
+      
+      
+      return links
     })
 
     const generateActivityQrCodes = async () => {
@@ -2157,7 +2413,7 @@ export default {
               ...(updated || {}),
               ...normalizedData
             }
-            
+
           }
           await loadKegiatan()
           // Log update
@@ -2209,6 +2465,297 @@ export default {
 
     const openPesertaList = (id) => {
       router.push({ name: 'kegiatan-peserta', params: { id } })
+    }
+
+    const openBiodataModal = (peserta) => {
+      selectedPeserta.value = {
+        ...peserta,
+        nama_kegiatan: peserta.nama_kegiatan || selectedKegiatan.value?.nama_kegiatan || '-',
+        tanggal_mulai: peserta.tanggal_mulai || selectedKegiatan.value?.tanggal_mulai || '',
+        tanggal_selesai: peserta.tanggal_selesai || selectedKegiatan.value?.tanggal_selesai || '',
+        lokasi: peserta.lokasi || selectedKegiatan.value?.lokasi || '-',
+        // Get ATK from kegiatan
+        daftar_atk: selectedKegiatan.value?.daftar_atk || []
+      }
+      showBiodataModal.value = true
+    }
+
+    const printBiodata = () => {
+      const printContent = document.getElementById('biodata-content')
+      if (!printContent) return
+
+      // Clone the content to manipulate before printing
+      const clonedContent = printContent.cloneNode(true)
+
+      // Remove print:hidden elements from clone
+      const hiddenElements = clonedContent.querySelectorAll('.print\\:hidden, [class*="print:hidden"]')
+      hiddenElements.forEach(el => el.remove())
+
+      const printWindow = window.open('', '', 'width=1200,height=800')
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Biodata Peserta</title>
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              font-size: 12pt;
+              line-height: 1.6;
+              padding: 15mm;
+              color: #000;
+            }
+            .text-center { text-align: center; }
+            .font-bold { font-weight: bold; }
+            .font-semibold { font-weight: 600; }
+            .mb-6 { margin-bottom: 1.5rem; }
+            .mb-2 { margin-bottom: 0.5rem; }
+            .mt-8 { margin-top: 2rem; }
+            .text-right { text-align: right; }
+            
+            h2 {
+              font-size: 18pt;
+              font-weight: bold;
+              text-align: center;
+              margin-bottom: 20px;
+              text-transform: uppercase;
+            }
+            
+            .info-section {
+              margin-bottom: 20px;
+            }
+            
+            .info-row {
+              display: flex;
+              margin-bottom: 6px;
+            }
+            
+            .info-label {
+              width: 200px;
+              font-weight: 600;
+            }
+            
+            .info-separator {
+              width: 20px;
+              text-align: center;
+            }
+            
+            .info-value {
+              flex: 1;
+            }
+            
+            /* Tables Container - Side by Side */
+            .tables-container {
+              display: flex;
+              gap: 20px;
+              margin-bottom: 30px;
+              page-break-inside: avoid;
+            }
+            
+            .table-box {
+              flex: 1;
+              min-width: 0;
+            }
+            
+            .table-title {
+              text-align: center;
+              font-weight: bold;
+              border: 1px solid #000;
+              background-color: #f5f5f5 !important;
+              padding: 8px;
+              margin-bottom: 0;
+              font-size: 11pt;
+            }
+            
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 0;
+              font-size: 10pt;
+              page-break-inside: avoid;
+            }
+            
+            th, td {
+              border: 1px solid #000;
+              padding: 6px 8px;
+              text-align: left;
+              font-size: 10pt;
+            }
+            
+            th {
+              background-color: #f0f0f0 !important;
+              font-weight: bold;
+              text-align: center;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            
+            .signature-section {
+              margin-top: 40px;
+              text-align: right;
+              page-break-inside: avoid;
+            }
+            
+            @media print {
+              @page {
+                margin: 15mm;
+                size: A4;
+              }
+              body {
+                padding: 15mm;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          ${generateBiodataHTML(clonedContent)}
+        </body>
+        </html>
+      `)
+      printWindow.document.close()
+      printWindow.focus()
+      setTimeout(() => {
+        printWindow.print()
+        printWindow.close()
+      }, 250)
+    }
+
+    const generateBiodataHTML = (content) => {
+      // Extract data from the cloned content
+      const h2 = content.querySelector('h2')?.textContent || 'BIODATA'
+
+      // Get info rows
+      const infoRows = content.querySelectorAll('.grid-cols-3')
+      let infoHTML = ''
+
+      infoRows.forEach((row) => {
+        const cells = row.querySelectorAll('div')
+        if (cells.length >= 3) {
+          infoHTML += `
+            <div class="info-row">
+              <div class="info-label">${cells[0].textContent}</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${cells[2].textContent}</div>
+            </div>
+          `
+        }
+      })
+
+      // Get tables
+      const tables = content.querySelectorAll('table')
+      let tablesHTML = ''
+
+      // First two tables side by side (Administrasi & Kelengkapan Kegiatan)
+      if (tables.length >= 2) {
+        const table1Title = tables[0].closest('.grid, div')?.querySelector('.font-semibold')?.textContent || 'Ceklist Kelengkapan Administrasi'
+        const table2Title = tables[1].closest('.grid, div')?.querySelector('.font-semibold')?.textContent || 'Kelengkapan Kegiatan'
+
+        tablesHTML = `
+          <div class="tables-container">
+            <div class="table-box">
+              <div class="table-title">${table1Title}</div>
+              ${tableToHTML(tables[0])}
+            </div>
+            <div class="table-box">
+              <div class="table-title">${table2Title}</div>
+              ${tableToHTML(tables[1])}
+            </div>
+          </div>
+        `
+      }
+
+      // Third table (ATK) - full width
+      let atkHTML = ''
+      if (tables.length >= 3) {
+        const atkTitle = tables[2].closest('div')?.querySelector('.font-semibold')?.textContent || 'Daftar ATK'
+        atkHTML = `
+          <div class="mb-6">
+            <div class="table-title" style="margin-bottom: 0;">${atkTitle}</div>
+            ${tableToHTML(tables[2])}
+          </div>
+        `
+      }
+
+      // Get signature section
+      const signatureSection = content.querySelector('.text-right.mt-8')
+      let signatureHTML = ''
+      if (signatureSection) {
+        signatureHTML = signatureSection.innerHTML
+      }
+
+      // Split info rows into sections (first 3 = kegiatan info, rest = peserta info)
+      const kegiatanInfo = infoHTML.split('</div>').slice(0, 3).join('</div>') + '</div>'
+      const pesertaInfo = infoHTML.split('</div>').slice(3).join('</div>') + '</div>'
+
+      return `
+        <div class="text-center mb-6">
+          <h2>${h2}</h2>
+        </div>
+        
+        <div class="info-section">
+          ${kegiatanInfo}
+        </div>
+        
+        <div class="info-section">
+          ${pesertaInfo}
+        </div>
+        
+        ${tablesHTML}
+        
+        ${atkHTML}
+        
+        <div class="signature-section">
+          ${signatureHTML}
+        </div>
+      `
+    }
+
+    const tableToHTML = (table) => {
+      if (!table) return ''
+
+      let html = '<table><thead><tr>'
+
+      // Headers
+      const headers = table.querySelectorAll('th')
+      headers.forEach(th => {
+        html += `<th style="background-color: #f0f0f0 !important;">${th.textContent}</th>`
+      })
+
+      html += '</tr></thead><tbody>'
+
+      // Rows
+      const rows = table.querySelectorAll('tbody tr')
+      rows.forEach(row => {
+        html += '<tr>'
+        const cells = row.querySelectorAll('td')
+        cells.forEach(td => {
+          html += `<td>${td.textContent}</td>`
+        })
+        html += '</tr>'
+      })
+
+      html += '</tbody></table>'
+      return html
+    }
+
+    const formatDateRange = (start, end) => {
+      if (!start && !end) return '-'
+      const format = (date) => {
+        if (!date) return ''
+        const d = new Date(date)
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+      }
+      if (start && end) {
+        return `${format(start)} s.d. ${format(end)}`
+      }
+      return format(start) || format(end)
     }
 
     const handleSuratTugas = (idKegiatan) => {
@@ -2363,9 +2910,18 @@ export default {
       removeAtkItem,
       openPesertaList,
       handleSuratTugas,
+      openBiodataModal,
+      printBiodata,
+      formatDateRange,
       sharePublicPesertaLink,
+      buildPublicEvaluasiLink,
+      buildPublicLaporanEvaluasiLink,
+
       showSuratTugasModal,
       selectedSuratTugas,
+      showBiodataModal,
+      selectedPeserta,
+      administrasiDocs,
       anggotaInSelected,
       pegawaiOptions,
       formAnggota,
@@ -2378,7 +2934,8 @@ export default {
       getActivityQrCodeUrl,
       resetForm,
       validateForm,
-      closeSubmitStatus
+      closeSubmitStatus,
+      buildPublicPesertaLink
     }
   }
 }
@@ -2407,5 +2964,57 @@ export default {
 
 .table-row {
   transition: all 0.2s ease;
+}
+
+/* Print Styles */
+@media print {
+  @page {
+    margin: 15mm;
+    size: A4;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #biodata-content,
+  #biodata-content * {
+    visibility: visible;
+  }
+
+  #biodata-content {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  .print\\:hidden {
+    display: none !important;
+  }
+
+  .print\\:p-0 {
+    padding: 0 !important;
+  }
+
+  .print\\:border-0 {
+    border: none !important;
+  }
+
+  /* Force table colors for print */
+  th {
+    background-color: #f0f0f0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .bg-slate-50,
+  .bg-slate-100 {
+    background-color: #f5f5f5 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
 }
 </style>

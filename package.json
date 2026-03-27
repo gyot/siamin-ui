@@ -9,14 +9,18 @@
   },
   "dependencies": {
     "axios": "^1.13.6",
+    "chart.js": "^4.5.1",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "docx": "^9.5.1",
     "html-docx-js": "^0.3.1",
+    "html2canvas": "^1.4.1",
     "mammoth": "^1.11.0",
     "pdf-lib": "^1.17.1",
     "pinia": "^2.1.7",
     "qrcode": "^1.5.4",
     "sweetalert2": "^11.26.17",
     "vue": "^3.4.0",
+    "vue-chartjs": "^5.3.3",
     "vue-router": "^4.3.0",
     "xlsx": "^0.18.5"
   },

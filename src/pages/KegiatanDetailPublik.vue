@@ -108,15 +108,6 @@
             <article v-for="item in biodataLinks" :key="item.label" class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
               <p class="text-xs uppercase tracking-wide text-cyan-200">{{ item.label }}</p>
               <a :href="item.url" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ item.url }}</a>
-              <!-- <a
-                v-if="item.templateUrl"
-                :href="item.templateUrl"
-                target="_blank"
-                download
-                class="mt-2 block text-xs text-emerald-300 hover:text-emerald-200 break-all"
-              >
-                Download Contoh Template Biodata
-              </a> -->
               <div class="mt-3 flex items-center gap-3">
                 <img
                   v-if="getQrCodeUrl(item.url)"
@@ -132,6 +123,51 @@
                 </button>
               </div>
             </article>
+          </div>
+        </section>
+
+        <!-- Link Evaluasi dan Laporan Evaluasi -->
+        <section v-if="isLastDayOfKegiatan" class="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+          <h2 class="text-lg font-semibold text-white mb-4">Link Evaluasi</h2>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <article class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
+              <p class="text-xs uppercase tracking-wide text-cyan-200">Link Evaluasi</p>
+              <a :href="evaluasiUrl" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ evaluasiUrl }}</a>
+              <div class="mt-3 flex items-center gap-3">
+                <img
+                  v-if="qrCodeMap.evaluasiUrl"
+                  :src="qrCodeMap.evaluasiUrl"
+                  alt="QR Evaluasi"
+                  class="w-20 h-20 rounded bg-white p-1"
+                />
+                <button
+                  @click="copyLink(evaluasiUrl)"
+                  class="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-xs text-blue-100"
+                >
+                  Copy Link
+                </button>
+              </div>
+            </article>
+
+            <!-- <article class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
+              <p class="text-xs uppercase tracking-wide text-cyan-200">Laporan Evaluasi</p>
+              <a :href="laporanEvaluasiUrl" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ laporanEvaluasiUrl }}</a>
+              <div class="mt-3 flex items-center gap-3">
+                <img
+                  v-if="qrCodeMap.laporanEvaluasiUrl"
+                  :src="qrCodeMap.laporanEvaluasiUrl"
+                  alt="QR Laporan Evaluasi"
+                  class="w-20 h-20 rounded bg-white p-1"
+                />
+                <button
+                  @click="copyLink(laporanEvaluasiUrl)"
+                  class="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-xs text-blue-100"
+                >
+                  Copy Link
+                </button>
+              </div>
+            </article> -->
           </div>
         </section>
       </div>
@@ -335,6 +371,25 @@ export default {
       return today >= start && today <= end
     })
 
+    const isLastDayOfKegiatan = computed(() => {
+      const end = toDateOnly(kegiatan.value?.tanggal_selesai)
+      if (!end) return false
+      const today = getTodayDateOnly()
+      return today === end
+    })
+
+    const evaluasiUrl = computed(() => {
+      if (!kegiatan.value) return ''
+      const slug = slugify(kegiatan.value.nama_kegiatan)
+      return buildPublicUrl(`/evaluasi/${kode}/${slug}`)
+    })
+
+    const laporanEvaluasiUrl = computed(() => {
+      if (!kegiatan.value) return ''
+      const slug = slugify(kegiatan.value.nama_kegiatan)
+      return buildPublicUrl(`/laporan-evaluasi/${kode}/${slug}`)
+    })
+
     const loadKegiatan = async () => {
       isLoading.value = true
       errorMessage.value = ''
@@ -381,6 +436,21 @@ export default {
           nextMap[url] = ''
         }
       }))
+
+      // Generate QR codes for evaluation links if it's the last day
+      if (isLastDayOfKegiatan.value) {
+        try {
+          if (evaluasiUrl.value) {
+            nextMap.evaluasiUrl = await QRCode.toDataURL(evaluasiUrl.value, { width: 220, margin: 1 })
+          }
+          if (laporanEvaluasiUrl.value) {
+            nextMap.laporanEvaluasiUrl = await QRCode.toDataURL(laporanEvaluasiUrl.value, { width: 220, margin: 1 })
+          }
+        } catch (error) {
+          console.error('[KegiatanDetailPublik] Gagal generate QR Evaluasi:', error)
+        }
+      }
+
       qrCodeMap.value = nextMap
     }
 
@@ -414,7 +484,7 @@ export default {
 
     onMounted(loadKegiatan)
 
-    watch([detailPageUrl, biodataLinks], () => {
+    watch([detailPageUrl, biodataLinks, isLastDayOfKegiatan], () => {
       generateQrCodes()
     }, { immediate: true })
 
@@ -427,6 +497,10 @@ export default {
       biodataLinks,
       resourceLinks,
       isWithinKegiatanDateRange,
+      isLastDayOfKegiatan,
+      evaluasiUrl,
+      laporanEvaluasiUrl,
+      qrCodeMap,
       formatDate,
       getStatusLabel,
       getMetodeLabel,

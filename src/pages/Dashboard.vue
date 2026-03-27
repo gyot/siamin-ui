@@ -57,7 +57,7 @@
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
-          <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+12%</span>
+          <!-- <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+12%</span> -->
         </div>
         <div class="text-2xl font-bold text-slate-800 mb-1">{{ totalKegiatan }}</div>
         <div class="text-slate-500 text-sm">Total Kegiatan</div>
@@ -70,7 +70,7 @@
                 d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
             </svg>
           </div>
-          <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+8%</span>
+          <!-- <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+8%</span> -->
         </div>
         <div class="text-2xl font-bold text-slate-800 mb-1">{{ totalPeserta }}</div>
         <div class="text-slate-500 text-sm">Total Peserta</div>
@@ -83,7 +83,7 @@
                 d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
             </svg>
           </div>
-          <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+15%</span>
+          <!-- <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+15%</span> -->
         </div>
         <div class="text-2xl font-bold text-slate-800 mb-1">{{ totalSertifikat }}</div>
         <div class="text-slate-500 text-sm">Sertifikat Terbit</div>
@@ -292,15 +292,48 @@
           </div>
           <!-- form links -->
           <div class="mt-6">
-            <p class="text-sm text-slate-600 font-medium">Link Formulir</p>
-            <ul class="list-disc list-inside space-y-1">
-              <li><a :href="activityLinks.peserta" target="_blank" class="text-blue-600 hover:underline">Peserta</a>
-              </li>
-              <li><a :href="activityLinks.panitia" target="_blank" class="text-blue-600 hover:underline">Panitia</a>
-              </li>
-              <li><a :href="activityLinks.narasumber" target="_blank"
-                  class="text-blue-600 hover:underline">Narasumber</a></li>
-            </ul>
+            <p class="text-sm text-slate-600 font-medium mb-3">Daftar Tautan</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="rounded-lg border border-slate-200 p-4 bg-white">
+                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Formulir Peserta</p>
+                <a :href="activityLinks.peserta" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
+                  {{ activityLinks.peserta }}
+                </a>
+                <img v-if="qrCodes.peserta" :src="qrCodes.peserta" alt="QR Peserta" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
+              </div>
+              
+              <div class="rounded-lg border border-slate-200 p-4 bg-white">
+                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Formulir Panitia</p>
+                <a :href="activityLinks.panitia" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
+                  {{ activityLinks.panitia }}
+                </a>
+                <img v-if="qrCodes.panitia" :src="qrCodes.panitia" alt="QR Panitia" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
+              </div>
+              
+              <div class="rounded-lg border border-slate-200 p-4 bg-white">
+                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Formulir Narasumber</p>
+                <a :href="activityLinks.narasumber" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
+                  {{ activityLinks.narasumber }}
+                </a>
+                <img v-if="qrCodes.narasumber" :src="qrCodes.narasumber" alt="QR Narasumber" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
+              </div>
+              
+              <div class="rounded-lg border border-slate-200 p-4 bg-white">
+                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Link Evaluasi</p>
+                <a :href="activityLinks.evaluasi" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
+                  {{ activityLinks.evaluasi }}
+                </a>
+                <img v-if="qrCodes.evaluasi" :src="qrCodes.evaluasi" alt="QR Evaluasi" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
+              </div>
+              
+              <div class="rounded-lg border border-slate-200 p-4 bg-white">
+                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Laporan Evaluasi</p>
+                <a :href="activityLinks.laporanEvaluasi" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
+                  {{ activityLinks.laporanEvaluasi }}
+                </a>
+                <img v-if="qrCodes.laporanEvaluasi" :src="qrCodes.laporanEvaluasi" alt="QR Laporan Evaluasi" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
+              </div>
+            </div>
           </div>
           <!-- peserta controls -->
           <div class="mt-6">
@@ -359,9 +392,10 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import * as XLSX from 'xlsx'
 import JSZip from 'jszip'
+import QRCode from 'qrcode'
 import { useAuthStore } from '@/stores/auth'
 import { fetchAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
@@ -454,7 +488,21 @@ export default {
     const totalPeserta = ref(peserta.value.length)
     const totalSertifikat = ref(sertifikat.value.filter(s => s.status === 'terbit').length)
     const kegiatanBerjalan = computed(() => {
-      return kegiatan.value.filter(k => k.status === 'berjalan').length
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      return kegiatan.value.filter(k => {
+        if (!k.tanggal_mulai || !k.tanggal_selesai) return false
+        
+        const startDate = new Date(k.tanggal_mulai)
+        startDate.setHours(0, 0, 0, 0)
+        
+        const endDate = new Date(k.tanggal_selesai)
+        endDate.setHours(23, 59, 59, 999)
+        
+        // Kegiatan berjalan jika hari ini berada dalam rentang tanggal mulai dan selesai
+        return today >= startDate && today <= endDate
+      }).length
     })
 
     const searchKegiatan = ref('')
@@ -553,16 +601,57 @@ export default {
       return `${base}/formulir/${kode}/${peran}/${slugify(judul)}`
     }
 
+    const buildPublicEvaluasiLink = (kode, judul = '') => {
+      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '')
+        .replace(/\/$/, '')
+      const slug = slugify(judul)
+      return `${base}/evaluasi/${kode}/${slug}`
+    }
+
+    const buildPublicLaporanEvaluasiLink = (kode, judul = '') => {
+      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '')
+        .replace(/\/$/, '')
+      const slug = slugify(judul)
+      return `${base}/laporan-evaluasi/${kode}/${slug}`
+    }
+
     const activityLinks = computed(() => {
-      if (!selectedKegiatan.value) return { peserta: '', panitia: '', narasumber: '' }
+      if (!selectedKegiatan.value) return { peserta: '', panitia: '', narasumber: '', evaluasi: '', laporanEvaluasi: '' }
       const kode = selectedKegiatan.value.id_kegiatan || ''
       const judul = selectedKegiatan.value.nama_kegiatan || ''
       return {
         peserta: buildFormLink(kode, 'Peserta', judul),
         panitia: buildFormLink(kode, 'Panitia', judul),
-        narasumber: buildFormLink(kode, 'Narasumber', judul)
+        narasumber: buildFormLink(kode, 'Narasumber', judul),
+        evaluasi: buildPublicEvaluasiLink(kode, judul),
+        laporanEvaluasi: buildPublicLaporanEvaluasiLink(kode, judul)
       }
     })
+
+    const qrCodes = ref({})
+
+    const generateQrCodes = async () => {
+      if (!selectedKegiatan.value) {
+        qrCodes.value = {}
+        return
+      }
+      const links = activityLinks.value
+      const nextQrCodes = {}
+      await Promise.all(
+        Object.entries(links).map(async ([key, url]) => {
+          try {
+            if (url) {
+              nextQrCodes[key] = await QRCode.toDataURL(url, { width: 180, margin: 1 })
+            }
+          } catch (error) {
+            nextQrCodes[key] = ''
+          }
+        })
+      )
+      qrCodes.value = nextQrCodes
+    }
+
+    watch(() => selectedKegiatan.value?.id_kegiatan, generateQrCodes, { immediate: true })
 
     const pesertaInSelected = computed(() => {
       if (!selectedKegiatan.value) return []
@@ -1067,6 +1156,7 @@ export default {
       showDetailModal,
       selectedKegiatan,
       activityLinks,
+      qrCodes,
       pesertaInSelected,
       viewPesertaList,
       exportPesertaKegiatan,
