@@ -1669,9 +1669,10 @@ export default {
 
       return `
         <div class="signature-section">
-          <div class="signature-meta">${lokasi}, ${tanggal}</div>
-          ${imageUrl ? `<div class="signature-image"><img src="${imageUrl}" alt="Tanda Tangan"></div>` : ''}
-          <div class="signature-name">${p.nama_lengkap || '-'}</div>
+          <div class="signature-meta">${lokasi}, ${tanggal}</div>`+
+          `<br><br>`+
+        //  ` ${imageUrl ? `<div class="signature-image"><img src="${imageUrl}" alt="Tanda Tangan"></div>` : ''}` +
+          `<div class="signature-name">${p.nama_lengkap || '-'}</div>
           <div class="signature-nip">NIP ${p.nip || '-'}</div>
         </div>
       `
