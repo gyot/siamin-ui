@@ -14,12 +14,27 @@
           >
             Export Excel
           </button>
-          <!-- <button
+          <button
             @click="downloadBatchDocxZip"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+            :disabled="isDownloadingBatchDocx || filteredPeserta.length === 0"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Download Batch DOCX
-          </button> -->
+            {{ isDownloadingBatchDocx ? 'Menyiapkan Batch DOCX...' : 'Download Batch DOCX' }}
+          </button>
+          <button
+            @click="openAllBiodataModal"
+            :disabled="filteredPeserta.length === 0"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            Tampilkan Semua Biodata
+          </button>
+          <button
+            @click="printAllBiodata"
+            :disabled="filteredPeserta.length === 0"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            Cetak Semua Biodata
+          </button>
           <!-- <button
             @click="showAddModal = true"
             class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base"
@@ -184,6 +199,7 @@
                       DOCX
                     </button>
                     <button
+                      v-if="isKegiatanCreator(p.id_kegiatan)"
                       @click="deletePeserta(p.id_peserta)"
                       class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-xs font-semibold whitespace-nowrap"
                     >
@@ -254,6 +270,7 @@
               Sertifikat
             </button>
             <button
+              v-if="isKegiatanCreator(p.id_kegiatan)"
               @click="deletePeserta(p.id_peserta)"
               class="flex-1 px-3 py-2 bg-red-500 text-white rounded text-xs font-semibold hover:bg-red-600 transition-colors"
             >
@@ -600,6 +617,7 @@
                 Tutup
               </button>
               <button
+                v-if="canModifySelectedPeserta"
                 @click="openEditModal"
                 class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all"
               >
@@ -749,7 +767,7 @@
       class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8">
         <div class="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl print:hidden">
-          <h3 class="text-2xl font-bold text-gray-800">Biodata Peserta</h3>
+          <h3 class="text-2xl font-bold text-gray-800">Biodata</h3>
           <button @click="showBiodataModal = false" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -905,8 +923,6 @@
                       <td class="border border-gray-300 px-2 py-1">{{ i }}</td>
                       <td class="border border-gray-300 px-2 py-1"></td>
                       <td class="border border-gray-300 px-2 py-1"></td>
-                      <td class="border border-gray-300 px-2 py-1"></td>
-                      <td class="border border-gray-300 px-2 py-1"></td>
                     </tr>
                   </template>
                 </tbody>
@@ -936,11 +952,80 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showAllBiodataModal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-6xl w-full my-8">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl">
+          <h3 class="text-2xl font-bold text-gray-800">Biodata Semua Peserta</h3>
+          <button @click="closeAllBiodataModal" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-6 max-h-[85vh] overflow-y-auto">
+          <div v-if="filteredPeserta.length === 0" class="text-center text-gray-500">
+            Tidak ada peserta untuk ditampilkan.
+          </div>
+
+          <div v-for="(p, index) in filteredPeserta" :key="p.id_peserta || index" class="border border-gray-200 rounded-xl p-4 bg-white">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <div>
+                <p class="text-sm text-slate-500">Peserta {{ index + 1 }}</p>
+                <h4 class="text-lg font-semibold text-slate-900">{{ p.nama_lengkap || '-' }}</h4>
+              </div>
+              <div class="text-sm text-slate-500">ID: {{ p.id_peserta || '-' }}</div>
+            </div>
+
+            <div class="grid gap-3 md:grid-cols-2">
+              <div class="grid grid-cols-[140px_1px_auto] gap-2 items-center">
+                <span class="font-semibold">Kegiatan</span><span>:</span><span>{{ getNamaKegiatan(p.id_kegiatan) }}</span>
+                <span class="font-semibold">Waktu</span><span>:</span><span>{{ formatDateRange(getKegiatanById(p.id_kegiatan)?.tanggal_mulai, getKegiatanById(p.id_kegiatan)?.tanggal_selesai) }}</span>
+                <span class="font-semibold">Tempat</span><span>:</span><span>{{ getKegiatanById(p.id_kegiatan)?.lokasi || '-' }}</span>
+                <span class="font-semibold">Peran</span><span>:</span><span>{{ p.peran || 'Peserta' }}</span>
+                <span class="font-semibold">Jenis Kelamin</span><span>:</span><span>{{ p.jenis_kelamin || '-' }}</span>
+                <span class="font-semibold">Tanggal Lahir</span><span>:</span><span>{{ p.tanggal_lahir ? formatDate(p.tanggal_lahir) : '-' }}</span>
+                <span class="font-semibold">NIP</span><span>:</span><span>{{ p.nip || '-' }}</span>
+                <span class="font-semibold">Pangkat/Golongan</span><span>:</span><span>{{ [p.pangkat, p.gol].filter(Boolean).join(' / ') || '-' }}</span>
+              </div>
+
+              <div class="grid grid-cols-[140px_1px_auto] gap-2 items-center">
+                <span class="font-semibold">Email</span><span>:</span><span>{{ p.email || '-' }}</span>
+                <span class="font-semibold">No. HP</span><span>:</span><span>{{ p.no_hp || '-' }}</span>
+                <span class="font-semibold">Instansi</span><span>:</span><span>{{ p.nama_instansi || '-' }}</span>
+                <span class="font-semibold">NPSN</span><span>:</span><span>{{ p.npsn || '-' }}</span>
+                <span class="font-semibold">Alamat</span><span>:</span><span>{{ p.alamat_instansi || '-' }}</span>
+                <span class="font-semibold">Kabupaten/Kota</span><span>:</span><span>{{ p.kab_kota || p.kabupaten_kota || '-' }}</span>
+                <span class="font-semibold">Provinsi</span><span>:</span><span>{{ p.provinsi || '-' }}</span>
+                <span class="font-semibold">Telepon Instansi</span><span>:</span><span>{{ p.telp_instansi || '-' }}</span>
+                <span class="font-semibold">Email Instansi</span><span>:</span><span>{{ p.email_instansi || '-' }}</span>
+                <span class="font-semibold">NPWP/NIK</span><span>:</span><span>{{ p.npwp_nik || '-' }}</span>
+                <span class="font-semibold">Provider Pulsa</span><span>:</span><span>{{ p.provider_pulsa || '-' }}</span>
+                <span class="font-semibold">Nomor Rekening</span><span>:</span><span>{{ p.nomor_rekening || '-' }}</span>
+                <span class="font-semibold">Nama Bank</span><span>:</span><span>{{ p.nama_bank || '-' }}</span>
+                <span class="font-semibold">No. Surat Tugas</span><span>:</span><span>{{ p.no_surat_tugas || '-' }}</span>
+                <span class="font-semibold">Tanggal Surat Tugas</span><span>:</span><span>{{ p.tanggal_surat_tugas ? formatDate(p.tanggal_surat_tugas) : '-' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-4 border-t border-gray-200 px-6 pb-6">
+          <button @click="closeAllBiodataModal"
+            class="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 font-medium">
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { ref, computed, watch, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import database from '@/data/index.js'
 import { fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
@@ -961,6 +1046,8 @@ export default {
   },
   setup(props) {
     const base = import.meta.env.VITE_API_BASE_URL || ''
+    const authStore = useAuthStore()
+    const currentUser = computed(() => authStore.currentUser || {})
     const peserta = ref([])
     const kegiatan = ref([])
     const kegiatanDetailCache = ref(new Map())
@@ -972,10 +1059,12 @@ export default {
     const showDetailModal = ref(false)
     const showSertifikatModal = ref(false)
     const showBiodataModal = ref(false)
+    const showAllBiodataModal = ref(false)
     const editingPeserta = ref(false)
     const selectedPeserta = ref(null)
     const selectedPesertaBiodata = ref(null)
     const formErrors = ref([])
+    const isDownloadingBatchDocx = ref(false)
     const administrasiDocs = ref([
       'Surat Tugas',
       'SPPD',
@@ -1227,6 +1316,21 @@ export default {
       return k ? k.nama_kegiatan : '-'
     }
 
+    const getPesertaBiodata = (p) => {
+      const kegiatanData = getKegiatanById(p.id_kegiatan) || {}
+      return {
+        ...p,
+        nama_kegiatan: getNamaKegiatan(p.id_kegiatan),
+        tanggal_mulai: kegiatanData.tanggal_mulai || '',
+        tanggal_selesai: kegiatanData.tanggal_selesai || '',
+        lokasi: kegiatanData.lokasi || '-',
+        pangkat_golongan: [p.pangkat, p.gol].filter(Boolean).join(' / ') || '',
+        jabatan_kedinasan: p.jabatan || '',
+        kabupaten_kota: p.kab_kota || p.kabupaten_kota || '',
+        tanda_tangan: p.tanda_tangan || p.tanda_tangan_url || p.tandatangan || ''
+      }
+    }
+
     const getSertifikatStatus = (idPeserta) => {
       const cert = sertifikat.value.find(s => s.id_peserta === idPeserta)
       if (!cert) return 'Belum Bersertifikat'
@@ -1254,6 +1358,68 @@ export default {
       return kegiatan.value.find(k => String(k.id_kegiatan) === String(idKegiatan))
     }
 
+    const currentUserId = computed(() => {
+      return currentUser.value?.id_pegawai || currentUser.value?.id || currentUser.value?.id_user || null
+    })
+
+    const normalizeIdValue = (value) => {
+      if (value === undefined || value === null || value === '') return []
+      if (Array.isArray(value)) return value.filter(v => v !== undefined && v !== null && v !== '')
+      if (typeof value === 'object') {
+        return [value.id, value.id_pegawai, value.id_user, value.user_id].filter(v => v !== undefined && v !== null && v !== '')
+      }
+      return [value]
+    }
+
+    const isKegiatanCreator = (kegiatanId) => {
+      const keg = getKegiatanById(kegiatanId)
+      if (!keg || !currentUserId.value) return false
+      const creatorIds = [
+        ...normalizeIdValue(keg.created_by),
+        ...normalizeIdValue(keg.created_by_id),
+        ...normalizeIdValue(keg.id_user),
+        ...normalizeIdValue(keg.user_id),
+        ...normalizeIdValue(keg.id_pegawai)
+      ]
+      return creatorIds.some(id => String(id) === String(currentUserId.value))
+    }
+
+    const canModifySelectedPeserta = computed(() => {
+      return selectedPeserta.value ? isKegiatanCreator(selectedPeserta.value.id_kegiatan) : false
+    })
+
+    const waitForWindowImages = (win) => {
+      return new Promise((resolve) => {
+        try {
+          const images = win.document.images
+          if (!images || images.length === 0) {
+            resolve()
+            return
+          }
+
+          let loadedCount = 0
+          const total = images.length
+          const finish = () => {
+            loadedCount += 1
+            if (loadedCount >= total) {
+              resolve()
+            }
+          }
+
+          Array.from(images).forEach((img) => {
+            if (img.complete) {
+              finish()
+            } else {
+              img.addEventListener('load', finish)
+              img.addEventListener('error', finish)
+            }
+          })
+        } catch (error) {
+          resolve()
+        }
+      })
+    }
+
     const printBiodata = () => {
       const printContent = document.getElementById('biodata-content')
       if (!printContent) return
@@ -1266,11 +1432,13 @@ export default {
       hiddenElements.forEach(el => el.remove())
 
       const printWindow = window.open('', '', 'width=1200,height=800')
+      if (!printWindow) return
+
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Biodata Peserta</title>
+          <title>Biodata</title>
           <style>
             * {
               margin: 0;
@@ -1394,11 +1562,369 @@ export default {
         </html>
       `)
       printWindow.document.close()
-      printWindow.focus()
-      setTimeout(() => {
+      waitForWindowImages(printWindow).then(() => {
+        printWindow.focus()
         printWindow.print()
         printWindow.close()
-      }, 250)
+      })
+    }
+
+    const getAbsoluteImageUrl = (path) => {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || ''
+      if (!path) return ''
+      if (/^(https?:)?\/\//.test(path) || path.startsWith('data:')) return path
+      if (path.startsWith('/')) {
+        return `${apiBase}${path}`
+      }
+      // Try to preserve explicit /storage path if provided
+      if (!path.includes('/storage/')) {
+        return `${apiBase}/storage/${path}`
+      }
+      try {
+        return new URL(path, apiBase).href
+      } catch {
+        return `${apiBase}/${path}`
+      }
+    }
+
+    const fetchImageAsDataUrl = async (imageUrl) => {
+      if (!imageUrl) return ''
+      try {
+        const response = await fetch(imageUrl)
+        if (!response.ok) return ''
+        const blob = await response.blob()
+        return await new Promise((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result || '')
+          reader.onerror = () => resolve('')
+          reader.readAsDataURL(blob)
+        })
+      } catch (error) {
+        return ''
+      }
+    }
+
+    const buildAdministrasiTableHTML = () => {
+      const rows = administrasiDocs.value.map((doc, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${doc}</td>
+          <td></td>
+        </tr>
+      `).join('')
+
+      return `
+        <div class="table-box">
+          <div class="table-title">Ceklist Kelengkapan Administrasi</div>
+          <table>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Dokumen</th>
+                <th>✓</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      `
+    }
+
+    const buildKelengkapanTableHTML = (daftarAtk) => {
+      const items = (daftarAtk && daftarAtk.length > 0) ? daftarAtk : Array.from({ length: 5 }, () => ({}))
+      const rows = items.map((atk, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>${atk.nama_barang || '-'}</td>
+          <td>${atk.jumlah !== undefined && atk.jumlah !== null ? atk.jumlah : '-'}</td>
+        </tr>
+      `).join('')
+
+      return `
+        <div class="table-box">
+          <div class="table-title">Kelengkapan Kegiatan</div>
+          <table>
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Nama Barang</th>
+                <th>Jumlah</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+        </div>
+      `
+    }
+
+    const buildSignatureSectionHTML = (p, kegiatanData, signatureDataUrl = '') => {
+      const lokasi = p.kab_kota || p.kabupaten_kota || kegiatanData.lokasi || '-'
+      const tanggal = formatDate(kegiatanData.tanggal_mulai)
+      const rawImagePath = p.tanda_tangan || p.tanda_tangan_url || p.tandatangan
+      const imageUrl = signatureDataUrl || getAbsoluteImageUrl(rawImagePath)
+
+      return `
+        <div class="signature-section">
+          <div class="signature-meta">${lokasi}, ${tanggal}</div>
+          ${imageUrl ? `<div class="signature-image"><img src="${imageUrl}" alt="Tanda Tangan"></div>` : ''}
+          <div class="signature-name">${p.nama_lengkap || '-'}</div>
+          <div class="signature-nip">NIP ${p.nip || '-'}</div>
+        </div>
+      `
+    }
+
+    const buildBiodataSectionHTML = (p, index) => {
+      const kegiatanData = getKegiatanById(p.id_kegiatan) || {}
+      const namaKegiatan = getNamaKegiatan(p.id_kegiatan)
+      const pangkatGolongan = [p.pangkat, p.gol].filter(Boolean).join(' / ') || '-'
+      const kabupatenKota = p.kab_kota || p.kabupaten_kota || '-'
+      const peran = p.peran || 'Peserta'
+      const waktu = formatDateRange(kegiatanData.tanggal_mulai, kegiatanData.tanggal_selesai)
+      const lokasi = kegiatanData.lokasi || '-'
+      const daftarAtk = kegiatanData.daftar_atk || []
+
+      return `
+        <div class="biodata-card">
+          <div class="text-center mb-4">
+            <h2>Biodata</h2>
+          </div>
+
+          <div class="info-section mb-4">
+            <div class="info-row">
+              <div class="info-label">Kegiatan</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${namaKegiatan}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Waktu</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${waktu}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Tempat</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${lokasi}</div>
+            </div>
+          </div>
+
+          <div class="info-section">
+            <div class="info-row">
+              <div class="info-label">1. Nama</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${p.nama_lengkap || '-'}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">2. NIP</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${p.nip || '-'}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">3. Pangkat/Golongan</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${pangkatGolongan}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">4. Nama Instansi</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${p.nama_instansi || '-'}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">5. Jabatan Kedinasan</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${p.jabatan_kedinasan || p.jabatan || '-'}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">6. Kabupaten/Kota</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${kabupatenKota}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">7. No. HP/WhatsApp</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${p.no_hp || '-'}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">8. E-Mail</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${p.email || '-'}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">9. Peran Dalam Kegiatan</div>
+              <div class="info-separator">:</div>
+              <div class="info-value">${peran}</div>
+            </div>
+          </div>
+
+          <div class="tables-row">
+            ${buildAdministrasiTableHTML()}
+            ${buildKelengkapanTableHTML(daftarAtk)}
+          </div>
+
+          ${buildSignatureSectionHTML(p, kegiatanData)}
+        </div>
+      `
+    }
+
+    const printAllBiodata = async () => {
+      if (!filteredPeserta.value || filteredPeserta.value.length === 0) return
+
+      const printWindow = window.open('', '', 'width=1200,height=800')
+      if (!printWindow) return
+
+      const title = 'Biodata'
+      const sections = []
+
+      for (let index = 0; index < filteredPeserta.value.length; index += 1) {
+        const p = filteredPeserta.value[index]
+        sections.push(buildBiodataSectionHTML(p, index + 1))
+      }
+
+      const htmlContent = sections.join(`
+        <div class="page-break"></div>
+      `)
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${title}</title>
+          <style>
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            body {
+              font-family: 'Times New Roman', Times, serif;
+              font-size: 12pt;
+              line-height: 1.6;
+              padding: 15mm;
+              color: #000;
+            }
+            .text-center { text-align: center; }
+            h2 {
+              font-size: 18pt;
+              font-weight: bold;
+              margin-bottom: 16px;
+              text-transform: uppercase;
+            }
+            .info-section {
+              margin-bottom: 18px;
+            }
+            .info-row {
+              display: flex;
+              margin-bottom: 6px;
+            }
+            .info-label {
+              width: 220px;
+              font-weight: 600;
+            }
+            .info-separator {
+              width: 20px;
+              text-align: center;
+            }
+            .info-value {
+              flex: 1;
+            }
+            .biodata-card {
+              page-break-inside: avoid;
+            }
+            .tables-row {
+              display: flex;
+              gap: 20px;
+              margin-bottom: 24px;
+              page-break-inside: avoid;
+              flex-wrap: wrap;
+            }
+            .table-box {
+              flex: 1;
+              min-width: 0;
+            }
+            .table-title {
+              font-weight: 600;
+              border: 1px solid #000;
+              background-color: #f5f5f5;
+              padding: 8px;
+              margin-bottom: 8px;
+              text-align: center;
+              font-size: 11pt;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 0;
+              font-size: 10pt;
+              page-break-inside: avoid;
+            }
+            th, td {
+              border: 1px solid #000;
+              padding: 6px 8px;
+              text-align: left;
+              font-size: 10pt;
+            }
+            th {
+              background-color: #f0f0f0 !important;
+              font-weight: bold;
+              text-align: center;
+            }
+            .signature-section {
+              margin-top: 30px;
+              text-align: right;
+              page-break-inside: avoid;
+            }
+            .signature-meta {
+              margin-bottom: 10px;
+              font-weight: 600;
+            }
+            .signature-image img {
+              width: 180px;
+              object-fit: contain;
+              display: block;
+              margin: 0 auto 12px;
+            }
+            .signature-name {
+              font-weight: 600;
+            }
+            .signature-nip {
+              margin-top: 2px;
+            }
+            .page-break {
+              page-break-after: always;
+              margin: 30px 0;
+            }
+            @media print {
+              @page {
+                margin: 15mm;
+                size: A4;
+              }
+              body {
+                padding: 15mm;
+              }
+              .page-break {
+                display: block;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="text-center mb-6"></div>
+          ${htmlContent}
+        </body>
+        </html>
+      `)
+
+      printWindow.document.close()
+      waitForWindowImages(printWindow).then(() => {
+        printWindow.focus()
+        printWindow.print()
+        printWindow.close()
+      })
     }
 
     const generateBiodataHTML = (content) => {
@@ -1549,6 +2075,14 @@ export default {
         daftar_atk: kegiatanData?.daftar_atk || []
       }
       showBiodataModal.value = true
+    }
+
+    const openAllBiodataModal = () => {
+      showAllBiodataModal.value = true
+    }
+
+    const closeAllBiodataModal = () => {
+      showAllBiodataModal.value = false
     }
 
     const openEditModal = () => {
@@ -1920,6 +2454,12 @@ export default {
     }
 
     const downloadBatchDocxZip = async () => {
+      if (filteredPeserta.value.length === 0) {
+        alert('Tidak ada peserta untuk diunduh secara batch.')
+        return
+      }
+
+      isDownloadingBatchDocx.value = true
       try {
         const zip = new JSZip()
         const templateResponse = await fetch('/template_peserta.docx')
@@ -1927,20 +2467,47 @@ export default {
           throw new Error(`Template lokal tidak ditemukan (${templateResponse.status})`)
         }
         const templateDocx = await templateResponse.blob()
+
         for (const p of filteredPeserta.value) {
+          const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
+          const cariKegiatan = (id) => {
+            let found = kegiatan.value.find(k => norm(k.id_kegiatan) === norm(id))
+            if (!found) found = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
+            return found
+          }
+
+          const kegiatanRingkas = cariKegiatan(p.id_kegiatan) || {}
+          const kegiatanDetail = await getKegiatanForDocx(p.id_kegiatan)
+          const keg = { ...kegiatanRingkas, ...kegiatanDetail }
+          const daftarAtk = extractKegiatanAtkItems(keg)
           const data = {
+            judul_kegiatan: keg.nama_kegiatan || getNamaKegiatan(p.id_kegiatan),
+            tanggal_mulai: dateFormat(keg.tanggal_mulai),
+            tanggal_selesai: dateFormat(keg.tanggal_selesai),
+            waktu: dateFormat(keg.tanggal_mulai) + ' s.d. ' + dateFormat(keg.tanggal_selesai),
+            lokasi: keg.lokasi || '-',
             nama_lengkap: p.nama_lengkap,
             nip: p.nip,
+            pangkat: p.pangkat,
+            instansi: p.nama_instansi,
+            jabatan: p.jabatan,
+            kabupaten_kota: p.kab_kota,
+            provinsi: p.provinsi,
+            no_hp: p.no_hp,
             email: p.email,
             nama_instansi: p.nama_instansi,
-            kegiatan: getNamaKegiatan(p.id_kegiatan),
+            kegiatan: keg.nama_kegiatan || getNamaKegiatan(p.id_kegiatan),
             peran: p.peran || 'Peserta',
+            tanda_tangan_url: p.tanda_tangan_url || p.tanda_tangan || p.tandatangan || ''
           }
-          // processDocxTemplate harus bisa return blob jika filename=null
-          const docxBlob = await processDocxTemplate(templateDocx, data, null)
-          zip.file(`peserta_${p.id_peserta}.docx`, docxBlob)
+
+          const xmlContent = await parseDocxPreservingFormat(templateDocx)
+          const xmlWithPlaceholders = replacePlaceholdersInXml(xmlContent, data)
+          const finalXml = fillKelengkapanKegiatanTable(xmlWithPlaceholders, daftarAtk)
+          const docxBlob = await generateDocxFromXml(finalXml, templateDocx, null)
+          zip.file(`peserta_${p.id_peserta || Math.random().toString(36).slice(2, 8)}.docx`, docxBlob)
         }
-        // Generate ZIP dan download
+
         const zipBlob = await zip.generateAsync({ type: 'blob' })
         const url = window.URL.createObjectURL(zipBlob)
         const link = document.createElement('a')
@@ -1953,6 +2520,8 @@ export default {
       } catch (error) {
         console.error('Gagal download batch DOCX peserta:', error)
         alert(error.message || 'Gagal download batch DOCX peserta. Pastikan template biodata .docx sudah diupload pada kegiatan.')
+      } finally {
+        isDownloadingBatchDocx.value = false
       }
     }
 
@@ -1967,6 +2536,7 @@ export default {
       showDetailModal,
       showSertifikatModal,
       showBiodataModal,
+      showAllBiodataModal,
       editingPeserta,
       selectedPeserta,
       selectedPesertaBiodata,
@@ -1994,6 +2564,7 @@ export default {
       printBiodata,
       openEditModal,
       closeAddModal,
+      canModifySelectedPeserta,
       onNpsnInput,
       savePeserta,
       deletePeserta,
@@ -2007,7 +2578,13 @@ export default {
       loadSertifikatFromAPI,
       // downloadPesertaPdf,
       downloadPesertaDocx,
-      downloadBatchDocxZip
+      downloadBatchDocxZip,
+      isDownloadingBatchDocx,
+      openAllBiodataModal,
+      closeAllBiodataModal,
+      printAllBiodata,
+      getPesertaBiodata,
+      isKegiatanCreator
     }
   }
 }

@@ -104,7 +104,7 @@
 
     <!-- Filter Section -->
     <div class="bg-white rounded-xl p-4 border border-slate-100 shadow-sm mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label class="block text-sm font-medium text-slate-700 mb-2">Cari Kegiatan</label>
           <input v-model="searchKegiatan" type="text" placeholder="Ketik nama kegiatan..."
@@ -128,6 +128,16 @@
             <option value="berjalan">Berjalan</option>
             <option value="akan_datang">Akan Datang</option>
             <option value="selesai">Selesai</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-2">Filter Unit Kerja</label>
+          <select v-model="filterUnitKerja"
+            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <option value="">Semua Unit Kerja</option>
+            <option v-for="unit in availableUnitKerja" :key="unit" :value="unit">
+              {{ unit }}
+            </option>
           </select>
         </div>
       </div>
@@ -159,6 +169,11 @@
                 </span>
               </div>
               <p class="text-xs text-slate-500 mb-3">{{ k.peserta_ringkasan }}</p>
+              <div v-if="resolveUnitKerjaName(k)" class="mb-3">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-semibold uppercase tracking-[0.18em]">
+                  {{ resolveUnitKerjaName(k) }}
+                </span>
+              </div>
 
               <div v-if="getDocumentLinks(k).length" class="mb-3">
                 <p class="text-xs font-medium text-slate-500 uppercase mb-2">Dokumen</p>
@@ -194,10 +209,16 @@
                 </div>
               </div>
 
-              <button @click="openDetailModal(k)"
-                class="w-full px-3 py-2 bg-blue-500 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 transition-colors">
-                Lihat Detail
-              </button>
+              <div class="grid grid-cols-2 gap-2">
+                <button @click="openDetailModal(k)"
+                  class="w-full px-3 py-2 bg-blue-500 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 transition-colors">
+                  Lihat Detail
+                </button>
+                <button @click="openPesertaKegiatan(k)"
+                  class="w-full px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
+                  Lihat Data Peserta
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -392,6 +413,7 @@
 
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import * as XLSX from 'xlsx'
 import JSZip from 'jszip'
 import QRCode from 'qrcode'
@@ -418,6 +440,7 @@ export default {
     const sertifikat = ref(database.sertifikat)
     const pegawai = ref(database.pegawai)
     const users = ref(database.users)
+    const unitKerja = ref(database.unit_kerja)
     const kegiatanDetailCache = ref(new Map())
     const isDownloadingBatchDocx = ref(false)
 
@@ -431,7 +454,13 @@ export default {
     // })
 
     // Use computed to get current user directly from authStore (reactive)
+    const router = useRouter()
     const currentUser = computed(() => authStore.currentUser)
+
+    const openPesertaKegiatan = (kegiatanItem) => {
+      if (!kegiatanItem || !kegiatanItem.id_kegiatan) return
+      router.push({ name: 'kegiatan-peserta', params: { id: kegiatanItem.id_kegiatan } })
+    }
 
     // Get profile of logged in pegawai - prioritas dari database pegawai
     const profilePegawai = computed(() => {
@@ -507,6 +536,7 @@ export default {
     const searchKegiatan = ref('')
     const filterTahun = ref(new Date().getFullYear().toString())
     const filterStatus = ref('')
+    const filterUnitKerja = ref('')
     const showDetailModal = ref(false)
     const selectedKegiatan = ref(null)
 
@@ -524,12 +554,71 @@ export default {
       return Array.from(years).sort((a, b) => b - a)
     })
 
+    const getUnitKerjaFromItem = (item) => {
+      if (!item || typeof item !== 'object') return ''
+      const keys = ['unit_kerja', 'timkerja', 'tim_kerja', 'nama_tim', 'team', 'team_name', 'group', 'group_name']
+      for (const key of keys) {
+        if (item[key]) {
+          return String(item[key]).trim()
+        }
+      }
+      return ''
+    }
+
+    const normalizeUnitKerjaName = (unit) => {
+      if (!unit || typeof unit !== 'object') return ''
+      return String(unit.nama_unit || unit.nama_unit_kerja || unit.unit_kerja || unit.name || unit.nama || '').trim()
+    }
+
+    const resolveUnitKerjaName = (item) => {
+      if (!item || typeof item !== 'object') return ''
+      if (typeof item.unit_kerja === 'string' && item.unit_kerja.trim()) return item.unit_kerja.trim()
+      if (item.unit_kerja && typeof item.unit_kerja === 'object') {
+        const fromObject = normalizeUnitKerjaName(item.unit_kerja)
+        if (fromObject) return fromObject
+      }
+
+      const unitId = item.unit_kerja_id ?? item.id_unit_kerja ?? item.unit_kerja?.id ?? item.unit_kerja?.unit_kerja_id
+      if (unitId != null && unitKerja.value.length > 0) {
+        const found = unitKerja.value.find(u =>
+          String(u.id) === String(unitId) ||
+          String(u.kode_unit) === String(unitId) ||
+          String(u.nama_unit) === String(unitId) ||
+          String(u.nama_unit_kerja) === String(unitId)
+        )
+        if (found) {
+          return normalizeUnitKerjaName(found)
+        }
+      }
+
+      return getUnitKerjaFromItem(item)
+    }
+
+    const availableUnitKerja = computed(() => {
+      const values = new Set()
+      unitKerja.value.forEach((unit) => {
+        const label = normalizeUnitKerjaName(unit)
+        if (label) values.add(label)
+      })
+
+      if (values.size === 0) {
+        kegiatan.value.forEach(k => {
+          const unit = getUnitKerjaFromItem(k)
+          if (unit) values.add(unit)
+        })
+      }
+
+      return Array.from(values).sort()
+    })
+
     const filteredKegiatan = computed(() => {
       return kegiatan.value.filter(k => {
         const searchMatch = k.nama_kegiatan.toLowerCase().includes(searchKegiatan.value.toLowerCase())
         const tahunMatch = !filterTahun.value || (k.tanggal_mulai && new Date(k.tanggal_mulai).getFullYear().toString() === filterTahun.value)
         const statusMatch = !filterStatus.value || k.status === filterStatus.value
-        return searchMatch && tahunMatch && statusMatch
+        const unitKerjaValue = resolveUnitKerjaName(k)
+        const unitKerjaMatch = !filterUnitKerja.value || unitKerjaValue === filterUnitKerja.value
+        return searchMatch && tahunMatch && statusMatch && unitKerjaMatch
       })
     })
 
@@ -1140,12 +1229,14 @@ export default {
           pegawaiData,
           usersData,
           pesertaData,
-          sertifikatData
+          sertifikatData,
+          unitKerjaData
         ] = await Promise.all([
           fetchAPI('pegawai'),
           fetchAPI('users'),
           fetchAPI('peserta'),
-          fetchAPI('sertifikat')
+          fetchAPI('sertifikat'),
+          fetchAPI('unit-kerja')
         ])
 
         if (Array.isArray(pegawaiData)) {
@@ -1164,6 +1255,10 @@ export default {
         if (Array.isArray(sertifikatData)) {
           sertifikat.value = sertifikatData
           totalSertifikat.value = sertifikatData.filter(s => s.status === 'terbit').length
+        }
+
+        if (Array.isArray(unitKerjaData)) {
+          unitKerja.value = unitKerjaData
         }
 
         await fetchKegiatanData()
@@ -1186,13 +1281,17 @@ export default {
       searchKegiatan,
       filterTahun,
       filterStatus,
+      filterUnitKerja,
       availableTahun,
+      availableUnitKerja,
       filteredKegiatan,
       formatDate,
       formatDateRange,
       formatStatus,
       getStatusColor,
       getStatusBadge,
+      getUnitKerjaFromItem,
+      resolveUnitKerjaName,
       getDocumentLinks,
       selectedDocumentLinks,
       formLinks,
@@ -1207,6 +1306,7 @@ export default {
       exportPesertaKegiatan,
       downloadBatchPesertaDocx,
       isDownloadingBatchDocx,
+      openPesertaKegiatan,
       currentPage,
       pageSize,
       totalKegiatanCount,
