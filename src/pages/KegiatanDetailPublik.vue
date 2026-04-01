@@ -105,7 +105,7 @@
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <article v-for="item in biodataLinks" :key="item.label" class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
+            <article v-for="item in visibleBiodataLinks" :key="item.label" class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
               <p class="text-xs uppercase tracking-wide text-cyan-200">{{ item.label }}</p>
               <a :href="item.url" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ item.url }}</a>
               <div class="mt-3 flex items-center gap-3">
@@ -351,6 +351,12 @@ export default {
       ]
     })
 
+    const visibleBiodataLinks = computed(() => {
+      return isWithinKegiatanDateRange.value
+        ? biodataLinks.value
+        : biodataLinks.value.filter(item => !item.label.toLowerCase().startsWith('form'))
+    })
+
     const resourceLinks = computed(() => {
       const item = kegiatan.value || {}
       const candidates = [
@@ -495,6 +501,7 @@ export default {
       flyerUrl,
       detailPageUrl,
       biodataLinks,
+      visibleBiodataLinks,
       resourceLinks,
       isWithinKegiatanDateRange,
       isLastDayOfKegiatan,

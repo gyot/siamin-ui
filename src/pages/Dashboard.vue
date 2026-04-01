@@ -160,6 +160,16 @@
               </div>
               <p class="text-xs text-slate-500 mb-3">{{ k.peserta_ringkasan }}</p>
 
+              <div v-if="getDocumentLinks(k).length" class="mb-3">
+                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Dokumen</p>
+                <div class="space-y-1">
+                  <a v-for="link in getDocumentLinks(k)" :key="link.label" :href="link.url" target="_blank"
+                    class="block text-xs text-blue-600 hover:underline truncate">
+                    {{ link.label }}
+                  </a>
+                </div>
+              </div>
+
               <div class="space-y-2 text-xs text-slate-600 mb-4">
                 <div class="flex items-center gap-2">
                   <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -292,47 +302,36 @@
           </div>
           <!-- form links -->
           <div class="mt-6">
-            <p class="text-sm text-slate-600 font-medium mb-3">Daftar Tautan</p>
+            <p class="text-sm text-slate-600 font-medium mb-3">Formulir</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div v-for="link in formLinks" :key="link.label" class="rounded-lg border border-slate-200 p-4 bg-white">
+                <p class="text-xs font-medium text-slate-500 uppercase mb-2">{{ link.label }}</p>
+                <a :href="link.url" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
+                  {{ link.url }}
+                </a>
+                <img v-if="qrCodes[link.key]" :src="qrCodes[link.key]" :alt="`QR ${link.label}`" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
+              </div>
+            </div>
+          </div>
+          <div class="mt-6">
+            <p class="text-sm text-slate-600 font-medium mb-3">Evaluasi</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="rounded-lg border border-slate-200 p-4 bg-white">
-                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Formulir Peserta</p>
-                <a :href="activityLinks.peserta" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
-                  {{ activityLinks.peserta }}
+              <div v-for="link in evaluationLinks" :key="link.label" class="rounded-lg border border-slate-200 p-4 bg-white">
+                <p class="text-xs font-medium text-slate-500 uppercase mb-2">{{ link.label }}</p>
+                <a :href="link.url" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
+                  {{ link.url }}
                 </a>
-                <img v-if="qrCodes.peserta" :src="qrCodes.peserta" alt="QR Peserta" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
+                <img v-if="qrCodes[link.key]" :src="qrCodes[link.key]" :alt="`QR ${link.label}`" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
               </div>
-              
-              <div class="rounded-lg border border-slate-200 p-4 bg-white">
-                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Formulir Panitia</p>
-                <a :href="activityLinks.panitia" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
-                  {{ activityLinks.panitia }}
-                </a>
-                <img v-if="qrCodes.panitia" :src="qrCodes.panitia" alt="QR Panitia" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
-              </div>
-              
-              <div class="rounded-lg border border-slate-200 p-4 bg-white">
-                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Formulir Narasumber</p>
-                <a :href="activityLinks.narasumber" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
-                  {{ activityLinks.narasumber }}
-                </a>
-                <img v-if="qrCodes.narasumber" :src="qrCodes.narasumber" alt="QR Narasumber" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
-              </div>
-              
-              <div class="rounded-lg border border-slate-200 p-4 bg-white">
-                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Link Evaluasi</p>
-                <a :href="activityLinks.evaluasi" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
-                  {{ activityLinks.evaluasi }}
-                </a>
-                <img v-if="qrCodes.evaluasi" :src="qrCodes.evaluasi" alt="QR Evaluasi" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
-              </div>
-              
-              <div class="rounded-lg border border-slate-200 p-4 bg-white">
-                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Laporan Evaluasi</p>
-                <a :href="activityLinks.laporanEvaluasi" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
-                  {{ activityLinks.laporanEvaluasi }}
-                </a>
-                <img v-if="qrCodes.laporanEvaluasi" :src="qrCodes.laporanEvaluasi" alt="QR Laporan Evaluasi" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
-              </div>
+            </div>
+          </div>
+          <div v-if="selectedDocumentLinks.length" class="mt-6">
+            <p class="text-sm text-slate-600 font-medium mb-3">Dokumen Kegiatan</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <a v-for="link in selectedDocumentLinks" :key="link.label" :href="link.url" target="_blank"
+                class="rounded-lg border border-slate-200 p-3 bg-slate-50 text-sm text-blue-600 hover:bg-slate-100 transition break-all">
+                {{ link.label }}
+              </a>
             </div>
           </div>
           <!-- peserta controls -->
@@ -615,6 +614,31 @@ export default {
       return `${base}/laporan-evaluasi/${kode}/${slug}`
     }
 
+    const buildAbsoluteUrl = (url) => {
+      if (!url || typeof url !== 'string') return ''
+      if (/^https?:\/\//i.test(url)) return url
+      return `${window.location.origin.replace(/\/$/, '')}/${url.replace(/^\//, '')}`
+    }
+
+    const getDocumentLinks = (item) => {
+      if (!item || typeof item !== 'object') return []
+      const candidates = [
+        { key: 'dokumentasi_url', label: 'Dokumentasi' },
+        { key: 'materi_url', label: 'Materi' },
+        { key: 'panduan_url', label: 'Panduan' },
+        { key: 'laporan_url', label: 'Laporan' },
+        { key: 'surat_menyurat_url', label: 'Surat Menyurat' }
+      ]
+      return candidates
+        .map(({ key, label }) => ({
+          label,
+          url: buildAbsoluteUrl(item[key])
+        }))
+        .filter(entry => entry.url)
+    }
+
+    const selectedDocumentLinks = computed(() => getDocumentLinks(selectedKegiatan.value))
+
     const activityLinks = computed(() => {
       if (!selectedKegiatan.value) return { peserta: '', panitia: '', narasumber: '', evaluasi: '', laporanEvaluasi: '' }
       const kode = selectedKegiatan.value.id_kegiatan || ''
@@ -626,6 +650,23 @@ export default {
         evaluasi: buildPublicEvaluasiLink(kode, judul),
         laporanEvaluasi: buildPublicLaporanEvaluasiLink(kode, judul)
       }
+    })
+
+    const formLinks = computed(() => {
+      const links = activityLinks.value
+      return [
+        { key: 'peserta', label: 'Formulir Peserta', url: links.peserta },
+        { key: 'panitia', label: 'Formulir Panitia', url: links.panitia },
+        { key: 'narasumber', label: 'Formulir Narasumber', url: links.narasumber }
+      ].filter(entry => entry.url)
+    })
+
+    const evaluationLinks = computed(() => {
+      const links = activityLinks.value
+      return [
+        { key: 'evaluasi', label: 'Link Evaluasi', url: links.evaluasi },
+        { key: 'laporanEvaluasi', label: 'Laporan Evaluasi', url: links.laporanEvaluasi }
+      ].filter(entry => entry.url)
     })
 
     const qrCodes = ref({})
@@ -1152,6 +1193,10 @@ export default {
       formatStatus,
       getStatusColor,
       getStatusBadge,
+      getDocumentLinks,
+      selectedDocumentLinks,
+      formLinks,
+      evaluationLinks,
       openDetailModal,
       showDetailModal,
       selectedKegiatan,
