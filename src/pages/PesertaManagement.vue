@@ -812,7 +812,7 @@
               </div>
             </div>
 
-            <div class="mb-6">
+            <div class="mb-4">
               <div class="grid grid-cols-3 gap-2 mb-2">
                 <div class="font-semibold">1. Nama</div>
                 <div class="text-center">:</div>
@@ -826,7 +826,7 @@
               <div class="grid grid-cols-3 gap-2 mb-2">
                 <div class="font-semibold">3. Pangkat/Golongan</div>
                 <div class="text-center">:</div>
-                <div>{{ selectedPesertaBiodata.pangkat_golongan || '-' }}</div>
+                <div>{{ selectedPesertaBiodata.pangkat || '-' }}</div>
               </div>
               <div class="grid grid-cols-3 gap-2 mb-2">
                 <div class="font-semibold">4. Nama Instansi</div>
@@ -836,12 +836,12 @@
               <div class="grid grid-cols-3 gap-2 mb-2">
                 <div class="font-semibold">5. Jabatan Kedinasan</div>
                 <div class="text-center">:</div>
-                <div>{{ selectedPesertaBiodata.jabatan_kedinasan || '-' }}</div>
+                <div>{{ selectedPesertaBiodata.jabatan || '-' }}</div>
               </div>
               <div class="grid grid-cols-3 gap-2 mb-2">
                 <div class="font-semibold">6. Kabupaten/Kota</div>
                 <div class="text-center">:</div>
-                <div>{{ selectedPesertaBiodata.kabupaten_kota || '-' }}</div>
+                <div>{{ selectedPesertaBiodata.kab_kota || '-' }}</div>
               </div>
               <div class="grid grid-cols-3 gap-2 mb-2">
                 <div class="font-semibold">7. No. HP/WhatsApp</div>
@@ -861,7 +861,7 @@
             </div>
 
             <!-- Tables Section -->
-            <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="grid grid-cols-2 gap-4 mb-4">
               <!-- Ceklist Kelengkapan Administrasi -->
               <div>
                 <div class="text-center font-semibold mb-2 border border-gray-300 bg-gray-50 py-1">
@@ -1450,14 +1450,14 @@ export default {
             body {
               font-family: 'Times New Roman', Times, serif;
               font-size: 12pt;
-              line-height: 1.6;
+              line-height: 1;
               padding: 15mm;
               color: #000;
             }
             .text-center { text-align: center; }
             .font-bold { font-weight: bold; }
             .font-semibold { font-weight: 600; }
-            .mb-6 { margin-bottom: 1.5rem; }
+            .mb-6 { margin-bottom: 1rem; }
             .mb-2 { margin-bottom: 0.5rem; }
             .mt-8 { margin-top: 2rem; }
             .text-right { text-align: right; }
@@ -1670,8 +1670,7 @@ export default {
       return `
         <div class="signature-section">
           <div class="signature-meta">${lokasi}, ${tanggal}</div>`+
-          `<br><br>`+
-        //  ` ${imageUrl ? `<div class="signature-image"><img src="${imageUrl}" alt="Tanda Tangan"></div>` : ''}` +
+         ` ${imageUrl ? `<div class="signature-image"><img src="${imageUrl}" alt="Tanda Tangan"></div>` : ''}` +
           `<div class="signature-name">${p.nama_lengkap || '-'}</div>
           <div class="signature-nip">NIP ${p.nip || '-'}</div>
         </div>
@@ -1803,8 +1802,8 @@ export default {
             }
             body {
               font-family: 'Times New Roman', Times, serif;
-              font-size: 12pt;
-              line-height: 1.6;
+              font-size: 14pt;
+              line-height: 1;
               padding: 15mm;
               color: #000;
             }
@@ -1854,20 +1853,20 @@ export default {
               padding: 8px;
               margin-bottom: 8px;
               text-align: center;
-              font-size: 11pt;
+              font-size: 14pt;
             }
             table {
               width: 100%;
               border-collapse: collapse;
               margin-bottom: 0;
-              font-size: 10pt;
+              font-size: 12pt;
               page-break-inside: avoid;
             }
             th, td {
               border: 1px solid #000;
               padding: 6px 8px;
               text-align: left;
-              font-size: 10pt;
+              font-size: 12pt;
             }
             th {
               background-color: #f0f0f0 !important;
@@ -1875,7 +1874,7 @@ export default {
               text-align: center;
             }
             .signature-section {
-              margin-top: 30px;
+              margin-top: 20px;
               text-align: right;
               page-break-inside: avoid;
             }
@@ -1883,11 +1882,10 @@ export default {
               margin-bottom: 10px;
               font-weight: 600;
             }
-            .signature-image img {
-              width: 180px;
-              object-fit: contain;
-              display: block;
-              margin: 0 auto 12px;
+            .signature-section {
+              margin-top: 20px;
+              text-align: right;
+              page-break-inside: avoid;
             }
             .signature-name {
               font-weight: 600;
@@ -1900,6 +1898,9 @@ export default {
               margin: 30px 0;
             }
             @media print {
+            *{
+              font-size: 16pt !important;
+            }
               @page {
                 margin: 15mm;
                 size: A4;
@@ -2072,6 +2073,7 @@ export default {
         tanggal_mulai: kegiatanData?.tanggal_mulai || '',
         tanggal_selesai: kegiatanData?.tanggal_selesai || '',
         lokasi: kegiatanData?.lokasi || '-',
+        
         // Get ATK from kegiatan
         daftar_atk: kegiatanData?.daftar_atk || []
       }
@@ -2192,6 +2194,7 @@ export default {
           nama_kegiatan: getNamaKegiatan(p.id_kegiatan),
           nama_lengkap: p.nama_lengkap,
           nip: p.nip || '',
+          nik: p.npwp_nik || '',
           'pangkat/golongan': p.pangkat || '',
           jabatan: p.jabatan || '',
           email: p.email || '',
