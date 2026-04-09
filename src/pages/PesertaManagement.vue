@@ -58,7 +58,7 @@
 
       <!-- Filter dan Search -->
       <div class="bg-white rounded-lg p-3 sm:p-4 mb-6">
-        <div :class="kegiatanId ? 'grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'">
+        <div :class="kegiatanId ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4'">
           <div>
             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Cari Nama</label>
             <input
@@ -102,6 +102,18 @@
               <option value="nonaktif">Nonaktif</option>
             </select>
           </div>
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Filter Kabupaten/Kota</label>
+            <select
+              v-model="filterKabKota"
+              class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Semua Kabupaten/Kota</option>
+              <option v-for="kabupaten in uniqueKabKota" :key="kabupaten" :value="kabupaten">
+                {{ kabupaten }}
+              </option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -136,6 +148,7 @@
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">NIP</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Email</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Instansi</th>
+                <th class="px-4 py-3 text-left text-xs sm:text-sm">Kabupaten/Kota</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Kegiatan</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Peran</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Sertifikat</th>
@@ -144,7 +157,7 @@
             </thead>
             <tbody class="divide-y divide-gray-200">
               <tr v-if="filteredPeserta.length === 0" class="hover:bg-gray-50">
-                <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+                <td colspan="10" class="px-4 py-8 text-center text-gray-500">
                   <p class="text-sm sm:text-base">Tidak ada data peserta</p>
                 </td>
               </tr>
@@ -158,6 +171,7 @@
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.nip || '-' }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 truncate">{{ p.email }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 max-w-xs truncate">{{ p.nama_instansi }}</td>
+                <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.kab_kota || '-' }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">
                   {{ getNamaKegiatan(p.id_kegiatan) }}
                 </td>
@@ -1076,6 +1090,7 @@ export default {
     const searchNama = ref('')
     const filterKegiatan = ref(props.kegiatanId || '')
     const filterStatus = ref('')
+    const filterKabKota = ref('')
 
     // Helper function to load peserta from API
     const loadPesertaFromAPI = async () => {
@@ -1279,11 +1294,26 @@ export default {
 
     const filteredPeserta = computed(() => {
       return peserta.value.filter(p => {
-        const namaMatch = p.nama_lengkap.toLowerCase().includes(searchNama.value.toLowerCase())
+        const namaMatch = (p.nama_lengkap || '').toLowerCase().includes(searchNama.value.toLowerCase())
         const kegiatanMatch = !filterKegiatan.value || p.id_kegiatan == filterKegiatan.value
         const statusMatch = !filterStatus.value || (filterStatus.value === 'aktif' && p.id_peserta) || filterStatus.value === 'nonaktif'
-        return namaMatch && kegiatanMatch && statusMatch
+        const kabKotaPeserta = String(p.kab_kota || p.kabupaten_kota || '').trim()
+        const kabKotaMatch = !filterKabKota.value || kabKotaPeserta === filterKabKota.value
+        return namaMatch && kegiatanMatch && statusMatch && kabKotaMatch
       })
+    })
+
+    const uniqueKabKota = computed(() => {
+      const kabupatenSet = new Set()
+
+      peserta.value.forEach((p) => {
+        const kabupaten = String(p.kab_kota || p.kabupaten_kota || '').trim()
+        if (kabupaten) {
+          kabupatenSet.add(kabupaten)
+        }
+      })
+
+      return Array.from(kabupatenSet).sort((a, b) => a.localeCompare(b, 'id'))
     })
 
     const pesertaAktif = computed(() => {
@@ -2549,9 +2579,11 @@ export default {
       searchNama,
       filterKegiatan,
       filterStatus,
+      filterKabKota,
       formPeserta,
       formSertifikat,
       filteredPeserta,
+      uniqueKabKota,
       pesertaAktif,
       pesertaBersertifikat,
       filteredPesertaAktif,

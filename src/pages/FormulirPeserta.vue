@@ -283,27 +283,20 @@
             <p class="text-sm text-slate-600 mb-4">Silakan tandatangani di area bawah ini dengan menggunakan mouse atau
               stylus.</p>
 
-            <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 mb-4 bg-slate-50">
+            <div class="relative border-2 border-dashed border-slate-300 rounded-lg p-4 mb-4 bg-slate-50">
+              <button type="button" @click="clearSignature"
+                class="absolute right-3 top-3 px-2 py-1 bg-white border border-slate-300 text-slate-700 rounded-md text-[11px] font-medium shadow-sm hover:bg-slate-100 transition-colors">
+                Hapus Tandatangan
+              </button>
               <canvas ref="signatureCanvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
                 @mouseout="stopDrawing" @touchstart="startDrawing" @touchmove="draw" @touchend="stopDrawing"
                 class="w-full border border-slate-300 rounded-lg cursor-crosshair bg-white block"
                 style="height: 200px; display: block; touch-action: none; outline: none;"></canvas>
             </div>
 
-            <div class="flex gap-3 mb-4">
-              <button type="button" @click="clearSignature"
-                class="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium text-sm">
-                Hapus Tandatangan
-              </button>
-              <button type="button" @click="downloadSignature"
-                class="flex-1 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors font-medium text-sm">
-                Unduh Tandatangan
-              </button>
-            </div>
-
-            <div v-if="signatureData" class="p-3 bg-green-50 border border-green-200 rounded-lg">
+            <!-- <div v-if="signatureData" class="p-3 bg-green-50 border border-green-200 rounded-lg">
               <p class="text-green-800 text-sm">✓ Tandatangan sudah disimpan</p>
-            </div>
+            </div> -->
           </div>
 
           <!-- Form Errors -->

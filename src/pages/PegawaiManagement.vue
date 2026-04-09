@@ -7,7 +7,7 @@
           <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">Manajemen Pegawai & User</h1>
           <p class="text-xs sm:text-sm text-gray-600">Kelola data pegawai dan akun user admin</p>
         </div>
-        <div class="flex gap-2">
+        <!-- <div class="flex gap-2">
           <button
             @click="$refs.fileInput?.click()"
             class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
@@ -27,7 +27,7 @@
           >
             + Tambah Pegawai
           </button>
-        </div>
+        </div> -->
       </div>
 
       <!-- Filter dan Search -->
@@ -101,7 +101,7 @@
         >
           Data Pegawai
         </button>
-        <button
+        <!-- <button
           @click="activeTab = 'user'"
           :class="[
             'px-4 sm:px-6 py-3 text-sm sm:text-base font-medium border-b-2 transition-colors',
@@ -111,7 +111,7 @@
           ]"
         >
           Data User Admin
-        </button>
+        </button> -->
       </div>
 
       <!-- Tab: Data Pegawai -->
@@ -164,7 +164,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                     </svg>
                   </button>
-                  <button
+                  <!-- <button
                     @click="editPegawai(p.id_pegawai)"
                     class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition mr-2"
                     title="Edit"
@@ -181,7 +181,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
-                  </button>
+                  </button> -->
                 </td>
               </tr>
             </tbody>
@@ -915,7 +915,7 @@ import { ref, computed, onMounted } from 'vue'
 import database from '@/data/index.js'
 import { ActivityEvents } from '@/services/activityLogger'
 import * as XLSX from 'xlsx'
-import { postAPI, updateAPI } from '@/services/api'
+import { fetchAPI, postAPI, updateAPI } from '@/services/api'
 
 export default {
   name: 'PegawaiManagement',
@@ -1007,6 +1007,32 @@ export default {
       }
       editingPegawaiId.value = null
       formErrors.value = []
+    }
+
+    const loadPegawaiFromAPI = async () => {
+      try {
+        const data = await fetchAPI('pegawai')
+        if (Array.isArray(data)) {
+          pegawai.value = data
+        } else {
+          console.warn('Unexpected response for pegawai API:', data)
+        }
+      } catch (error) {
+        console.error('Gagal memuat data pegawai dari API:', error)
+      }
+    }
+
+    const loadUsersFromAPI = async () => {
+      try {
+        const data = await fetchAPI('users')
+        if (Array.isArray(data)) {
+          users.value = data
+        } else {
+          console.warn('Unexpected response for users API:', data)
+        }
+      } catch (error) {
+        console.error('Gagal memuat data user dari API:', error)
+      }
     }
 
     const validateFormPegawai = () => {
@@ -1466,8 +1492,9 @@ export default {
     }
 
     // Log page access
-    onMounted(() => {
+    onMounted(async () => {
       ActivityEvents.ACCESS_PAGE('Manajemen Pegawai & User')
+      await Promise.all([loadPegawaiFromAPI(), loadUsersFromAPI()])
     })
 
     return {
