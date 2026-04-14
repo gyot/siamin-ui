@@ -473,6 +473,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import QRCode from 'qrcode'
 import { getKegiatanTim, getAllKegiatanTimKegiatan } from '@/services/kegiatan'
 import { getUnitKerja } from '@/services/unit_kerja'
+import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
 
 export default {
   name: 'Landing',
@@ -488,8 +489,6 @@ export default {
     const qrCodeMap = ref({})
     const currentPage = ref(1)
     const itemsPerPage = 4
-    const baseUrl = window.location.origin
-    const buildPublicUrl = (path = '') => `${baseUrl}/${String(path).replace(/^\/+/, '')}`
     function slugify(text) {
       if (!text) return ''
       return String(text)
@@ -787,10 +786,7 @@ export default {
       if (!path) return ''
       const value = String(path).trim()
       if (!value) return ''
-      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
-      const apiBase = String(import.meta.env.VITE_API_BASE_URL || '')
-      const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
-      return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
+      return buildStorageUrl(value)
     }
 
     const getRoleLinksFromKegiatan = (item, role) => {
@@ -1126,8 +1122,7 @@ export default {
       shareKegiatanDetailFromModal,
       closeKegiatanDetail,
       prevPage,
-      nextPage,
-      baseUrl
+      nextPage
     }
   }
 }

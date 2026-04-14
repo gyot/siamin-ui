@@ -7,10 +7,12 @@ import dbJSON from '@/data/database.json'
 const isDev = import.meta.env.DEV
 const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || '')
 const API_BASE_URL = API_HOST.replace(/\/$/, '') + '/api/v1/'
+const API_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT || 15000)
 let apiReadUnavailable = false
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: API_TIMEOUT,
   headers: {
     Accept: 'application/json'
   }
@@ -59,6 +61,18 @@ const buildHttpError = (status, statusText, endpoint, errorData, rawText = '') =
   const looksLikeHtml = /<!doctype html|<html[\s>]/i.test(raw)
   const snippet = raw && !looksLikeHtml ? ` | ${raw.slice(0, 180)}` : ''
   return new Error(`${parsedMessage}${snippet}`)
+}
+
+const buildNetworkError = (error, endpoint) => {
+  if (error?.code === 'ECONNABORTED') {
+    return new Error(`API timeout setelah ${API_TIMEOUT}ms (${endpoint})`)
+  }
+
+  if (!error?.response) {
+    return new Error(`Tidak dapat terhubung ke backend (${endpoint})`)
+  }
+
+  return null
 }
 
 const normalizeEndpoint = (endpoint = '') =>
@@ -141,6 +155,11 @@ const request = async (endpoint, config = {}) => {
 
     return response.data
   } catch (error) {
+    const networkError = buildNetworkError(error, endpoint)
+    if (networkError) {
+      throw networkError
+    }
+
     const status = error?.response?.status || 0
     const statusText = error?.response?.statusText || error?.message || 'Request failed'
     const rawData = error?.response?.data

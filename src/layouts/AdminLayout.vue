@@ -1,8 +1,8 @@
 
 <template>
-  <div class="h-full w-full flex flex-col lg:flex-row bg-slate-50">
+  <div class="h-full w-full flex flex-col md:flex-row bg-slate-50">
     <!-- Mobile Header with Toggle -->
-    <div class="lg:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+    <div class="md:hidden bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
       <h1 class="font-bold text-slate-800">SIMAIK</h1>
       <button 
         @click="sidebarOpen = !sidebarOpen"
@@ -35,7 +35,7 @@
     <div 
       v-if="sidebarOpen"
       @click="sidebarOpen = false"
-      class="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+      class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
     />
   </div>
 </template>

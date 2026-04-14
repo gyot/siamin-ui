@@ -423,6 +423,7 @@ import { ActivityEvents } from '@/services/activityLogger'
 import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXml } from '@/utils/docxUtils.js'
 import { getKegiatan } from '@/services/kegiatan'
 import database from '@/data/index.js'
+import { buildPublicUrl as buildAppUrl, buildStorageUrl } from '@/utils/url'
 
 export default {
   name: 'Dashboard',
@@ -684,29 +685,22 @@ export default {
     }
 
     const buildFormLink = (kode, peran, judul) => {
-      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '')
-        .replace(/\/$/, '')
-      return `${base}/formulir/${kode}/${peran}/${slugify(judul)}`
+      return buildAppUrl(`formulir/${kode}/${peran}/${slugify(judul)}`)
     }
 
     const buildPublicEvaluasiLink = (kode, judul = '') => {
-      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '')
-        .replace(/\/$/, '')
       const slug = slugify(judul)
-      return `${base}/evaluasi/${kode}/${slug}`
+      return buildAppUrl(`evaluasi/${kode}/${slug}`)
     }
 
     const buildPublicLaporanEvaluasiLink = (kode, judul = '') => {
-      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '')
-        .replace(/\/$/, '')
       const slug = slugify(judul)
-      return `${base}/laporan-evaluasi/${kode}/${slug}`
+      return buildAppUrl(`laporan-evaluasi/${kode}/${slug}`)
     }
 
     const buildAbsoluteUrl = (url) => {
       if (!url || typeof url !== 'string') return ''
-      if (/^https?:\/\//i.test(url)) return url
-      return `${window.location.origin.replace(/\/$/, '')}/${url.replace(/^\//, '')}`
+      return buildAppUrl(url)
     }
 
     const getDocumentLinks = (item) => {
@@ -791,13 +785,12 @@ export default {
     const viewPesertaList = ref(false)
 
     const exportPesertaKegiatan = () => {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || ''
       const buildSignatureUrl = (sig) => {
         if (!sig) return ''
         if (typeof sig !== 'string') return ''
         if (sig.startsWith('http')) return sig
         if (sig.startsWith('data:')) return sig
-        return apiBase + '/storage/' + sig
+        return buildStorageUrl(sig)
       }
       const getNamaKegiatan = (id) => {
         const k = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
@@ -1046,7 +1039,7 @@ export default {
       isDownloadingBatchDocx.value = true
 
       try {
-        const templateResponse = await fetch('/template_peserta.docx')
+        const templateResponse = await fetch(buildAppUrl('template_peserta.docx'))
         if (!templateResponse.ok) {
           throw new Error(`Template lokal tidak ditemukan (${templateResponse.status})`)
         }

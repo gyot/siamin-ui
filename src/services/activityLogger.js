@@ -2,7 +2,6 @@
  * Activity Logger Service
  * Mencatat setiap aktivitas pengguna ke backend API
  */
-import axios from 'axios'
 import { postAPI } from '@/services/api'
 import { useAuthStore } from '@/stores/auth'
 
@@ -31,7 +30,7 @@ export const logActivity = async (action, description, metadata = {}) => {
       aksi: action,
       deskripsi: description,
       metadata: JSON.stringify(metadata),
-      ip_address: await getClientIP(),
+      ip_address: 'unknown',
       user_agent: navigator.userAgent,
       timestamp: new Date().toISOString()
     }
@@ -50,20 +49,6 @@ export const logActivity = async (action, description, metadata = {}) => {
     console.error('[ActivityLogger] Error logging activity:', error)
     // Jangan throw error, hanya log ke console
     // Aktivitas seharusnya tetap berjalan meski logging gagal
-  }
-}
-
-/**
- * Get client IP address (best effort)
- */
-const getClientIP = async () => {
-  try {
-    const response = await axios.get('https://api.ipify.org?format=json')
-    const data = response.data || {}
-    return data.ip || 'unknown'
-  } catch (error) {
-    console.warn('[ActivityLogger] Could not fetch client IP')
-    return 'unknown'
   }
 }
 

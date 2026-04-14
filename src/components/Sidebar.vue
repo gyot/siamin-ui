@@ -1,7 +1,7 @@
 <template>
   <aside :class="[
-    'fixed lg:static left-0 top-0 h-full w-64 bg-white border-r border-slate-200 flex flex-col overflow-hidden transition-transform duration-300 ease-in-out z-40',
-    !isOpen ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'
+    'fixed md:static left-0 top-0 h-full w-64 bg-white border-r border-slate-200 flex flex-col overflow-hidden transition-transform duration-300 ease-in-out z-40',
+    !isOpen ? '-translate-x-full md:translate-x-0' : 'translate-x-0'
   ]">
     <!-- Logo -->
     <div class="p-4 sm:p-6 border-b border-slate-200 flex-shrink-0">
@@ -165,7 +165,7 @@ export default {
   padding-left: calc(1rem - 3px);
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
   aside {
     box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
   }

@@ -342,6 +342,7 @@ import Swal from 'sweetalert2'
 import { listKegiatan } from '@/services/kegiatan'
 import { postAPI } from '@/services/api'
 import Spinner from '@/components/Spinner.vue'
+import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
 
 export default {
   name: 'FormulirPeserta',
@@ -465,10 +466,7 @@ export default {
     const flyerUrl = computed(() => {
       const f = kegiatan.value?.flyer || kegiatan.value?.flyer_path || kegiatan.value?.path || null
       if (!f) return null
-      if (/^https?:\/\//.test(f)) return f
-      const base = import.meta.env.VITE_API_BASE_URL + '/storage/' || ''
-      // const base = '/storage/' || ''
-      return base.replace(/\/$/, '') + '/' + String(f).replace(/^\//, '')
+      return buildStorageUrl(f)
     })
 
     const getValueByPath = (obj, path) => {
@@ -492,19 +490,14 @@ export default {
       if (!rawUrl) return ''
       const value = String(rawUrl).trim()
       if (!value) return ''
-      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
-      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
-      return `${base}/${value.replace(/^\/+/, '')}`
+      return buildPublicUrl(value)
     }
 
     const getStorageFileUrl = (path) => {
       if (!path) return ''
       const value = String(path).trim()
       if (!value) return ''
-      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
-      const apiBase = String(import.meta.env.VITE_API_BASE_URL || '')
-      const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
-      return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
+      return buildStorageUrl(value)
     }
 
     const biodataTemplateDownloadUrl = computed(() => {

@@ -1049,6 +1049,7 @@ import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXm
 import { PDFDocument } from 'pdf-lib'
 import JSZip from 'jszip'
 import { getKegiatan } from '@/services/kegiatan'
+import { buildPublicUrl, buildStorageUrl, getApiHostBase } from '@/utils/url'
 
 export default {
   name: 'Peserta',
@@ -1059,7 +1060,7 @@ export default {
     }
   },
   setup(props) {
-    const base = import.meta.env.VITE_API_BASE_URL || ''
+    const base = getApiHostBase()
     const authStore = useAuthStore()
     const currentUser = computed(() => authStore.currentUser || {})
     const peserta = ref([])
@@ -1600,21 +1601,12 @@ export default {
     }
 
     const getAbsoluteImageUrl = (path) => {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || ''
       if (!path) return ''
       if (/^(https?:)?\/\//.test(path) || path.startsWith('data:')) return path
       if (path.startsWith('/')) {
-        return `${apiBase}${path}`
+        return buildPublicUrl(path)
       }
-      // Try to preserve explicit /storage path if provided
-      if (!path.includes('/storage/')) {
-        return `${apiBase}/storage/${path}`
-      }
-      try {
-        return new URL(path, apiBase).href
-      } catch {
-        return `${apiBase}/${path}`
-      }
+      return buildStorageUrl(path.replace(/^storage\//, ''))
     }
 
     const fetchImageAsDataUrl = async (imageUrl) => {
@@ -2206,13 +2198,12 @@ export default {
     }
 
     const exportPeserta = () => {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || ''
       const buildSignatureUrl = (sig) => {
         if (!sig) return ''
         if (typeof sig !== 'string') return ''
         if (sig.startsWith('http')) return sig
         if (sig.startsWith('data:')) return sig
-        return apiBase + '/storage/' + sig
+        return buildStorageUrl(sig)
       }
 
       // Prepare rows with desired fields including signature URL
@@ -2435,7 +2426,7 @@ export default {
     const downloadPesertaDocx = async (pesertaData) => {
       try {
         // 1. Ambil template DOCX lokal dari public/template_peserta.docx
-        const response = await fetch('/template_peserta.docx')
+        const response = await fetch(buildPublicUrl('template_peserta.docx'))
         if (!response.ok) {
           throw new Error(`Template lokal tidak ditemukan (${response.status})`)
         }
@@ -2496,7 +2487,7 @@ export default {
       isDownloadingBatchDocx.value = true
       try {
         const zip = new JSZip()
-        const templateResponse = await fetch('/template_peserta.docx')
+        const templateResponse = await fetch(buildPublicUrl('template_peserta.docx'))
         if (!templateResponse.ok) {
           throw new Error(`Template lokal tidak ditemukan (${templateResponse.status})`)
         }

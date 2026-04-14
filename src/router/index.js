@@ -142,6 +142,7 @@ const setMetaTag = (name, content) => {
 }
 
 let kegiatanListCache = null
+let kegiatanListFetchPromise = null
 
 const normalize = (value) => String(value || '').toLowerCase().trim()
 
@@ -154,17 +155,34 @@ const loadKegiatanList = async () => {
     return kegiatanListCache
   }
 
-  try {
-    let data = await fetchAPI('kegiatan')
-    if (!Array.isArray(data) || data.length === 0) {
-      data = await fetchAPI('kegiatan/all')
-    }
+  kegiatanListCache = database.kegiatan || []
 
-    kegiatanListCache = Array.isArray(data)
-      ? data
-      : (Array.isArray(data?.data) ? data.data : [])
-  } catch (error) {
-    kegiatanListCache = database.kegiatan || []
+  if (!kegiatanListFetchPromise) {
+    kegiatanListFetchPromise = fetchAPI('kegiatan')
+      .then((data) => {
+        const resolved = Array.isArray(data)
+          ? data
+          : (Array.isArray(data?.data) ? data.data : [])
+        if (resolved.length > 0) {
+          kegiatanListCache = resolved
+        }
+      })
+      .catch(async () => {
+        try {
+          const data = await fetchAPI('kegiatan/all')
+          const resolved = Array.isArray(data)
+            ? data
+            : (Array.isArray(data?.data) ? data.data : [])
+          if (resolved.length > 0) {
+            kegiatanListCache = resolved
+          }
+        } catch {
+          // keep local fallback cache
+        }
+      })
+      .finally(() => {
+        kegiatanListFetchPromise = null
+      })
   }
 
   return kegiatanListCache
@@ -178,7 +196,7 @@ const findKegiatanByKode = async (kode) => {
 // Route guards
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
-  authStore.restoreAuth() // Restore session saat page reload
+  authStore.restoreAuth() // hydrate sekali, revalidasi berjalan di background
 
   let routeTitle = resolveMetaValue(to.meta?.title, to)
   let routeDescription = resolveMetaValue(to.meta?.description, to)

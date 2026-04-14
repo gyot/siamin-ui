@@ -181,6 +181,7 @@ import { useRoute } from 'vue-router'
 import QRCode from 'qrcode'
 import { fetchAPI } from '@/services/api'
 import database from '@/data/index.js'
+import { buildPublicUrl as buildAppUrl, buildStorageUrl } from '@/utils/url'
 
 export default {
   name: 'KegiatanDetailPublik',
@@ -206,8 +207,7 @@ export default {
     }
 
     const buildPublicUrl = (path = '') => {
-      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
-      return `${base}/${String(path).replace(/^\/+/, '')}`
+      return buildAppUrl(path)
     }
 
     const formatDate = (dateString) => {
@@ -231,9 +231,7 @@ export default {
       if (!flyer) return ''
       if (/^https?:\/\//.test(flyer) || String(flyer).startsWith('data:')) return flyer
 
-      const apiBase = String(import.meta.env.VITE_API_BASE_URL || '')
-      const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
-      return `${hostBase}/storage/${String(flyer).replace(/^\//, '')}`
+      return buildStorageUrl(flyer)
     })
 
     const detailPageUrl = computed(() => {
@@ -286,9 +284,7 @@ export default {
       const value = String(path).trim()
       if (!value) return ''
       if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
-      const apiBase = String(import.meta.env.VITE_API_BASE_URL || '')
-      const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
-      return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
+      return buildStorageUrl(value)
     }
 
     const getRoleLinksFromKegiatan = (item, role) => {

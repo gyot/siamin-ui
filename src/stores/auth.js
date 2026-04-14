@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { apiClient } from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
+  let fetchMePromise = null
   const buildErrorMessage = (error, fallback) => {
     const payload = error?.response?.data
     if (payload?.message) return payload.message
@@ -71,6 +72,8 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('auth_token'))
   const isLoading = ref(false)
   const error = ref(null)
+  const hasRestoredSession = ref(false)
+  const hasRevalidatedSession = ref(false)
 
   const persistUnitKerja = () => {
     localStorage.setItem('unit_kerja_id', JSON.stringify(unit_kerja_id.value))
@@ -102,70 +105,80 @@ export const useAuthStore = defineStore('auth', () => {
 
   const fetchMe = async () => {
     if (!token.value) return null
+    if (fetchMePromise) return fetchMePromise
 
-    const response = await apiClient.get('me', {
-      headers: {
-        Authorization: `Bearer ${token.value}`
+    fetchMePromise = (async () => {
+      const response = await apiClient.get('me', {
+        headers: {
+          Authorization: `Bearer ${token.value}`
+        }
+      })
+
+      const res = response.data || {}
+      if (!res?.success || !res?.data) {
+        throw new Error(res?.message || 'Gagal mengambil profil user')
       }
-    })
 
-    const res = response.data || {}
-    if (!res?.success || !res?.data) {
-      throw new Error(res?.message || 'Gagal mengambil profil user')
-    }
+      const data = res.data || {}
+      const meUser = data.user || {}
+      const mePegawai = data.pegawai || {}
+      let meUnitKerja = Array.isArray(meUser.unit_kerja)
+        ? meUser.unit_kerja
+        : (Array.isArray(data.unit_kerja) ? data.unit_kerja : [])
+      const meUnitKerjaIds = pickNonEmptyIds(
+        meUser.unit_kerja_id,
+        meUnitKerja.map((item) => item?.unit_kerja_id).filter(Boolean),
+        meUser.id_tim,
+        unit_kerja_id.value
+      )
 
-    const data = res.data || {}
-    const meUser = data.user || {}
-    const mePegawai = data.pegawai || {}
-    let meUnitKerja = Array.isArray(meUser.unit_kerja)
-      ? meUser.unit_kerja
-      : (Array.isArray(data.unit_kerja) ? data.unit_kerja : [])
-    const meUnitKerjaIds = pickNonEmptyIds(
-      meUser.unit_kerja_id,
-      meUnitKerja.map((item) => item?.unit_kerja_id).filter(Boolean),
-      meUser.id_tim,
-      unit_kerja_id.value
-    )
-
-    if (meUnitKerja.length === 0) {
-      const idPegawai = currentUser.value?.id_pegawai || mePegawai.id_pegawai || meUser.id_pegawai || currentUser.value?.id
-      if (idPegawai) {
-        try {
-          const unitRes = await apiClient.get(`unit-kerja/user/${idPegawai}`, {
-            headers: {
-              Authorization: `Bearer ${token.value}`
-            }
-          })
-          const unitJson = unitRes.data || {}
-          const payload = unitJson?.data ?? unitJson
-          const rows = Array.isArray(payload)
-            ? payload
-            : (Array.isArray(payload?.data) ? payload.data : [])
-          meUnitKerja = rows.map((item) => ({
-            unit_kerja_id: item.unit_kerja_id ?? item.id ?? item.id_unit ?? null,
-            nama_unit: item.nama_unit ?? item.nama ?? '-',
-            kode_unit: item.kode_unit ?? item.kode ?? ''
-          })).filter((item) => item.unit_kerja_id !== null && item.unit_kerja_id !== undefined)
-        } catch {
-          // fallback silent
+      if (meUnitKerja.length === 0) {
+        const idPegawai = currentUser.value?.id_pegawai || mePegawai.id_pegawai || meUser.id_pegawai || currentUser.value?.id
+        if (idPegawai) {
+          try {
+            const unitRes = await apiClient.get(`unit-kerja/user/${idPegawai}`, {
+              headers: {
+                Authorization: `Bearer ${token.value}`
+              }
+            })
+            const unitJson = unitRes.data || {}
+            const payload = unitJson?.data ?? unitJson
+            const rows = Array.isArray(payload)
+              ? payload
+              : (Array.isArray(payload?.data) ? payload.data : [])
+            meUnitKerja = rows.map((item) => ({
+              unit_kerja_id: item.unit_kerja_id ?? item.id ?? item.id_unit ?? null,
+              nama_unit: item.nama_unit ?? item.nama ?? '-',
+              kode_unit: item.kode_unit ?? item.kode ?? ''
+            })).filter((item) => item.unit_kerja_id !== null && item.unit_kerja_id !== undefined)
+          } catch {
+            // fallback silent
+          }
         }
       }
-    }
 
-    currentUser.value = {
-      ...(currentUser.value || {}),
-      id: currentUser.value?.id || meUser.id_user || meUser.id,
-      id_pegawai: currentUser.value?.id_pegawai || mePegawai.id_pegawai || null,
-      name: currentUser.value?.name || mePegawai.nama || meUser.email || 'User',
-      email: currentUser.value?.email || meUser.email || null,
-      role: meUser.role
-    }
+      currentUser.value = {
+        ...(currentUser.value || {}),
+        id: currentUser.value?.id || meUser.id_user || meUser.id,
+        id_pegawai: currentUser.value?.id_pegawai || mePegawai.id_pegawai || null,
+        name: currentUser.value?.name || mePegawai.nama || meUser.email || 'User',
+        email: currentUser.value?.email || meUser.email || null,
+        role: meUser.role
+      }
 
-    const finalIds = mergeUnitKerjaIds(unit_kerja_id.value, meUnitKerjaIds)
-    const finalUnits = mergeUnitKerjaList(unit_kerja.value, meUnitKerja)
-    applyUnitKerjaData(finalIds, finalUnits)
-    localStorage.setItem('user_data', JSON.stringify(currentUser.value))
-    return data
+      const finalIds = mergeUnitKerjaIds(unit_kerja_id.value, meUnitKerjaIds)
+      const finalUnits = mergeUnitKerjaList(unit_kerja.value, meUnitKerja)
+      applyUnitKerjaData(finalIds, finalUnits)
+      localStorage.setItem('user_data', JSON.stringify(currentUser.value))
+      hasRevalidatedSession.value = true
+      return data
+    })()
+
+    try {
+      return await fetchMePromise
+    } finally {
+      fetchMePromise = null
+    }
   }
 
   const loginAdmin = async (email, password) => {
@@ -209,6 +222,7 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('auth_token', apiToken)
       localStorage.setItem('user_data', JSON.stringify(currentUser.value))
       localStorage.setItem('user_type', 'admin')
+      hasRestoredSession.value = true
       applyUnitKerjaData(resolvedUnitKerjaIds, resolvedUnitKerja)
       await fetchMe().catch(() => {})
 
@@ -265,6 +279,7 @@ export const useAuthStore = defineStore('auth', () => {
       localStorage.setItem('auth_token', payload.token)
       localStorage.setItem('user_data', JSON.stringify(currentUser.value))
       localStorage.setItem('user_type', 'peserta')
+      hasRestoredSession.value = true
       applyUnitKerjaData(resolvedUnitKerjaIds, resolvedUnitKerja)
       await fetchMe().catch(() => {})
 
@@ -297,6 +312,9 @@ export const useAuthStore = defineStore('auth', () => {
       unit_kerja_id.value = []
       unit_kerja.value = []
       userType.value = null
+      hasRestoredSession.value = false
+      hasRevalidatedSession.value = false
+      fetchMePromise = null
 
       localStorage.removeItem('auth_token')
       localStorage.removeItem('user_data')
@@ -309,6 +327,13 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const restoreAuth = () => {
+    if (hasRestoredSession.value) {
+      if (token.value && !hasRevalidatedSession.value) {
+        fetchMe().catch(() => {})
+      }
+      return currentUser.value
+    }
+
     const savedToken = localStorage.getItem('auth_token')
     const savedUser = localStorage.getItem('user_data')
     const savedType = localStorage.getItem('user_type')
@@ -321,13 +346,16 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = savedToken
       currentUser.value = JSON.parse(savedUser)
       userType.value = savedType
+      hasRestoredSession.value = true
       applyUnitKerjaData(
         savedUnitKerjaId?.length ? savedUnitKerjaId : currentUser.value?.unit_kerja_id,
         Array.isArray(savedUnitKerja) && savedUnitKerja.length > 0
           ? savedUnitKerja
           : (Array.isArray(currentUser.value?.unit_kerja) ? currentUser.value.unit_kerja : [])
       )
-      fetchMe().catch(() => {})
+      if (!hasRevalidatedSession.value) {
+        fetchMe().catch(() => {})
+      }
 
       console.log('[Auth] Session restored for:', currentUser.value?.name ?? '(no name)')
     } catch {

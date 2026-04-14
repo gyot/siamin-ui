@@ -1196,6 +1196,7 @@ import { listKegiatan, getKegiatan, getKegiatanTim, createKegiatan, updateKegiat
 import { fetchAPI, postAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Spinner from '@/components/Spinner.vue'
+import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
 
 export default {
   name: 'Kegiatan',
@@ -1216,28 +1217,22 @@ export default {
     }
 
     const buildFormLink = (kode, peran = 'Peserta', judul = '') => {
-      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
       const slug = slugify(judul)
-      return `${base}/formulir/${kode}/${peran}/${slug}`
+      return buildPublicUrl(`formulir/${kode}/${peran}/${slug}`)
     }
 
     const buildAbsoluteUrl = (rawUrl) => {
       if (!rawUrl) return ''
       const value = String(rawUrl).trim()
       if (!value) return ''
-      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
-      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
-      return `${base}/${value.replace(/^\/+/, '')}`
+      return buildPublicUrl(value)
     }
 
     const getStorageFileUrl = (path) => {
       if (!path) return ''
       const value = String(path).trim()
       if (!value) return ''
-      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
-      const apiBase = String(import.meta.env.VITE_API_BASE_URL || '')
-      const hostBase = apiBase.replace(/\/api\/v\d+\/?$/, '').replace(/\/api\/?$/, '').replace(/\/$/, '')
-      return `${hostBase}/storage/${value.replace(/^\/+/, '')}`
+      return buildStorageUrl(value)
     }
 
     const getValueByPath = (obj, path) => {
@@ -1298,23 +1293,19 @@ export default {
     }
 
     const buildPublicPesertaLink = (kode, judul = '') => {
-      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
       const slug = slugify(judul)
-      return `${base}/daftar-peserta/${kode}/${slug}`
+      return buildPublicUrl(`daftar-peserta/${kode}/${slug}`)
     }
 
     const buildPublicEvaluasiLink = (kode, judul = '') => {
 
-      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
       const slug = slugify(judul)
-      return `${base}/evaluasi/${kode}/${slug}`
+      return buildPublicUrl(`evaluasi/${kode}/${slug}`)
     }
 
     const buildPublicLaporanEvaluasiLink = (kode, judul = '') => {
-      const base = (window.location.origin || import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '')
       const slug = slugify(judul)
-      // alert(`Link Laporan Evaluasi untuk kegiatan ${judul}:\n${base}/laporan-evaluasi/${kode}/${slug}`)
-      return `${base}/laporan-evaluasi/${kode}/${slug}`
+      return buildPublicUrl(`laporan-evaluasi/${kode}/${slug}`)
     }
 
     const copyText = async (text) => {
