@@ -386,7 +386,7 @@ export default {
         kegiatanData.value = data
         form.value.id_kegiatan = data.id_kegiatan
 
-        // Load narasumber/fasilitator from peserta data
+        // Load narasumber/fasilitator only for the selected kegiatan.
         await loadNarasumber(data.id_kegiatan)
 
       } catch (err) {
@@ -397,49 +397,81 @@ export default {
       }
     }
 
+    const normalizeArrayResponse = (response, collectionKeys = []) => {
+      if (Array.isArray(response)) return response
+
+      for (const key of collectionKeys) {
+        if (Array.isArray(response?.[key])) return response[key]
+      }
+
+      return []
+    }
+
+    const getPesertaKegiatanId = (peserta) =>
+      peserta?.id_kegiatan ??
+      peserta?.kegiatan_id ??
+      peserta?.kode_kegiatan ??
+      peserta?.kegiatan?.id_kegiatan ??
+      peserta?.kegiatan?.id
+
+    const isSameKegiatan = (peserta, idKegiatan) =>
+      String(getPesertaKegiatanId(peserta) ?? '').trim() === String(idKegiatan ?? '').trim()
+
+    const isNarasumberRole = (peserta) => {
+      const peran = String(peserta?.peran || peserta?.role || '').toLowerCase()
+      return peran.includes('narasumber') ||
+        peran.includes('fasilitator') ||
+        peran.includes('pemateri')
+    }
+
+    const getNamaNarasumber = (peserta) =>
+      peserta?.narasumber ||
+      peserta?.fasilitator ||
+      peserta?.nama_narasumber ||
+      peserta?.nama_fasilitator ||
+      (isNarasumberRole(peserta) ? (peserta?.nama_lengkap || peserta?.nama) : null)
+
+    const initializeFasilitatorForm = () => {
+      form.value.fasilitator = narasumberList.value.map(() => ({
+        penguasaan_materi: null,
+        sistematika: null,
+        sikap: null
+      }))
+    }
+
     const loadNarasumber = async (idKegiatan) => {
       try {
-        // Fetch peserta for this kegiatan
-        const pesertaData = await fetchAPI(`peserta?kegiatan=${idKegiatan}`)
-        
-        if (Array.isArray(pesertaData)) {
-          // Extract unique narasumber/fasilitator
-          const narasumberMap = new Map()
-          
-          pesertaData.forEach(peserta => {
-            // Get peran first
-            const peran = peserta.peran || ''
-            const isNarasumber = peran.toLowerCase().includes('narasumber') || 
-                                peran.toLowerCase().includes('fasilitator') ||
-                                peran.toLowerCase().includes('pemateri')
-            
-            // Check if peserta has narasumber/fasilitator field or role
-            const namaNarasumber = peserta.narasumber || peserta.fasilitator || 
-                                   (isNarasumber ? peserta.nama_lengkap || peserta.nama : null)
-            
-            if (namaNarasumber) {
-              const nama = namaNarasumber
-              if (nama && !narasumberMap.has(nama)) {
-                narasumberMap.set(nama, {
-                  nama: nama,
-                  instansi: peserta.instansi || peserta.nama_instansi || '',
-                  email: peserta.email || ''
-                })
-              }
+        const response = await fetchAPI(`peserta?kegiatan=${idKegiatan}`)
+        const pesertaData = normalizeArrayResponse(response, ['peserta', 'items', 'results'])
+        const hasKegiatanId = pesertaData.some(peserta => getPesertaKegiatanId(peserta) !== undefined && getPesertaKegiatanId(peserta) !== null)
+        const pesertaKegiatan = hasKegiatanId
+          ? pesertaData.filter(peserta => isSameKegiatan(peserta, idKegiatan))
+          : pesertaData
+        const narasumberMap = new Map()
+
+        pesertaKegiatan.forEach(peserta => {
+          const namaNarasumber = getNamaNarasumber(peserta)
+
+          if (namaNarasumber) {
+            const nama = String(namaNarasumber).trim()
+            const key = nama.toLowerCase()
+
+            if (nama && !narasumberMap.has(key)) {
+              narasumberMap.set(key, {
+                nama,
+                instansi: peserta.instansi || peserta.nama_instansi || peserta.asal_instansi || '',
+                email: peserta.email || ''
+              })
             }
-          })
-          
-          narasumberList.value = Array.from(narasumberMap.values())
-          
-          // Initialize form.fasilitator array
-          form.value.fasilitator = narasumberList.value.map(() => ({
-            penguasaan_materi: null,
-            sistematika: null,
-            sikap: null
-          }))
-        }
+          }
+        })
+
+        narasumberList.value = Array.from(narasumberMap.values())
+        initializeFasilitatorForm()
       } catch (err) {
         console.error('Gagal load narasumber:', err)
+        narasumberList.value = []
+        initializeFasilitatorForm()
       }
     }
 
