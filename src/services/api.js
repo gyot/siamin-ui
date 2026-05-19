@@ -7,7 +7,7 @@ import dbJSON from '@/data/database.json'
 const isDev = import.meta.env.DEV
 const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || '')
 const API_BASE_URL = API_HOST.replace(/\/$/, '') + '/api/v1/'
-const API_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT || 15000)
+const API_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT || 600000000)
 let apiReadUnavailable = false
 
 export const apiClient = axios.create({
@@ -110,6 +110,8 @@ const getLocalFallbackData = (endpoint) => {
   }
   if (normalized === 'pegawai') return dbJSON.pegawai || []
   if (normalized === 'users') return dbJSON.users || []
+  if (normalized === 'surat-tugas') return dbJSON.surat_tugas || []
+  if (normalized === 'surat-tugas-pegawai') return dbJSON.surat_tugas_pegawai || []
 
   return null
 }
@@ -179,6 +181,7 @@ apiClient.interceptors.request.use((config) => {
  * Fetch data from API with flexible method support
  * @param {string} endpoint - API endpoint key or full URL
  * @param {object} options - Fetch options (method, body, headers, etc.)
+ * @param {boolean} options.raw - Return original response shape, including pagination metadata
  * @returns {Promise<any>}
  */
 export const fetchAPI = async (endpoint, options = {}) => {
@@ -194,7 +197,7 @@ export const fetchAPI = async (endpoint, options = {}) => {
       params: options.params,
       data: options.body
     })
-    return normalizeResponseData(data)
+    return options.raw ? data : normalizeResponseData(data)
   } catch (error) {
     const method = (options.method || 'GET').toUpperCase()
     if (isDev && method === 'GET') {

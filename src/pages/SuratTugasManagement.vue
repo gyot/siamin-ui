@@ -447,9 +447,19 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import database from '@/data/index.js'
+import { fetchAPI } from '@/services/api'
+import {
+  listSuratTugas,
+  listSuratTugasPegawai,
+  createSuratTugas,
+  editSuratTugas as updateSuratTugas,
+  removeSuratTugas,
+  createSuratTugasPegawai,
+  removeSuratTugasPegawai
+} from '@/services/suratTugas'
 
 export default {
   name: 'SuratTugasManagement',
@@ -469,6 +479,7 @@ export default {
     const editingSuratId = ref(null)
     const detailSuratId = ref(null)
     const formErrors = ref([])
+    const isLoading = ref(false)
 
     const formSurat = ref({
       id_surat_tugas: null,
@@ -488,25 +499,71 @@ export default {
     const detailSurat = ref(null)
     const detailAnggota = ref([])
 
-    // Auto-fill form jika ada query parameter id_kegiatan dari halaman Kegiatan
-    if (route.query.id_kegiatan) {
-      const kegiatanId = route.query.id_kegiatan
-      // Convert ke number jika perlu
-      const kegiatanIdNum = isNaN(kegiatanId) ? kegiatanId : parseInt(kegiatanId)
-      
-      // Cek apakah kegiatan ada di database
-      const kegiatanFound = kegiatan.value.find(k => k.id_kegiatan === kegiatanIdNum)
-      if (kegiatanFound) {
-        formSurat.value.id_kegiatan = kegiatanIdNum
-        showAddSuratModal.value = true
+    const parsePossibleNumber = (value) => {
+      if (value === null || value === undefined || value === '') return value
+      return isNaN(value) ? value : Number(value)
+    }
+
+    const applyRouteIntent = async () => {
+      const kegiatanId = parsePossibleNumber(route.query.id_kegiatan)
+      const suratId = parsePossibleNumber(route.query.id)
+
+      if (route.query.edit === 'true' && suratId) {
+        editSurat(suratId)
+        return
+      }
+
+      if ((route.query.create === 'true' || kegiatanId) && kegiatanId) {
+        const kegiatanFound = kegiatan.value.find(k => String(k.id_kegiatan) === String(kegiatanId))
+        if (kegiatanFound) {
+          resetFormSurat()
+          formSurat.value.id_kegiatan = kegiatanId
+          showAddSuratModal.value = true
+        }
+      }
+    }
+
+    const loadReferenceData = async () => {
+      const [pegawaiData, kegiatanData] = await Promise.all([
+        fetchAPI('pegawai'),
+        fetchAPI('kegiatan')
+      ])
+
+      pegawai.value = Array.isArray(pegawaiData) ? pegawaiData : (database.pegawai || [])
+      kegiatan.value = Array.isArray(kegiatanData) ? kegiatanData : (database.kegiatan || [])
+    }
+
+    const loadSuratTugasData = async () => {
+      const [suratData, anggotaData] = await Promise.all([
+        listSuratTugas(),
+        listSuratTugasPegawai()
+      ])
+
+      suratTugas.value = suratData
+      suratTugasPegawai.value = anggotaData
+    }
+
+    const loadAllData = async () => {
+      isLoading.value = true
+      try {
+        await Promise.all([
+          loadReferenceData(),
+          loadSuratTugasData()
+        ])
+        await applyRouteIntent()
+      } catch (error) {
+        console.error('Gagal memuat data surat tugas:', error)
+        alert(error?.message || 'Gagal memuat data surat tugas')
+      } finally {
+        isLoading.value = false
       }
     }
 
     const filteredSuratTugas = computed(() => {
       return suratTugas.value.filter(s => {
-        const nomorMatch = s.nomor_surat.toLowerCase().includes(searchNomor.value.toLowerCase())
+        const nomorMatch = String(s.nomor_surat || '').toLowerCase().includes(searchNomor.value.toLowerCase())
         const statusMatch = !filterStatus.value || s.status === filterStatus.value
-        const kegiatanMatch = !filterKegiatan.value || s.id_kegiatan === filterKegiatan.value
+        const kegiatanMatch = !filterKegiatan.value || String(s.id_kegiatan) === String(filterKegiatan.value)
         return nomorMatch && statusMatch && kegiatanMatch
       })
     })
@@ -520,17 +577,17 @@ export default {
     })
 
     const getNamaKegiatan = (id) => {
-      const k = kegiatan.value.find(kg => kg.id_kegiatan === id)
+      const k = kegiatan.value.find(kg => String(kg.id_kegiatan) === String(id))
       return k ? k.nama_kegiatan : '-'
     }
 
     const getNamaPegawai = (id) => {
-      const p = pegawai.value.find(pg => pg.id_pegawai === id)
+      const p = pegawai.value.find(pg => String(pg.id_pegawai) === String(id))
       return p ? p.nama : '-'
     }
 
     const getNipPegawai = (id) => {
-      const p = pegawai.value.find(pg => pg.id_pegawai === id)
+      const p = pegawai.value.find(pg => String(pg.id_pegawai) === String(id))
       return p ? p.nip : '-'
     }
 
@@ -541,7 +598,7 @@ export default {
     }
 
     const getCountAnggota = (idSurat) => {
-      return suratTugasPegawai.value.filter(s => s.id_surat_tugas === idSurat).length
+      return suratTugasPegawai.value.filter(s => String(s.id_surat_tugas) === String(idSurat)).length
     }
 
     const resetFormSurat = () => {
@@ -568,7 +625,8 @@ export default {
 
       // Cek nomor surat unik
       const nomorExists = suratTugas.value.some(s =>
-        s.nomor_surat === formSurat.value.nomor_surat && s.id_surat_tugas !== editingSuratId.value
+        String(s.nomor_surat).trim() === String(formSurat.value.nomor_surat).trim() &&
+        String(s.id_surat_tugas) !== String(editingSuratId.value)
       )
       if (nomorExists) formErrors.value.push('Nomor surat sudah digunakan')
 
@@ -576,7 +634,7 @@ export default {
     }
 
     const editSurat = (id) => {
-      const s = suratTugas.value.find(st => st.id_surat_tugas === id)
+      const s = suratTugas.value.find(st => String(st.id_surat_tugas) === String(id))
       if (s) {
         formSurat.value = { ...s }
         editingSuratId.value = id
@@ -584,84 +642,116 @@ export default {
       }
     }
 
-    const saveSurat = () => {
+    const saveSurat = async () => {
       if (!validateFormSurat()) return
 
-      if (editingSuratId.value) {
-        const index = suratTugas.value.findIndex(s => s.id_surat_tugas === editingSuratId.value)
-        if (index !== -1) {
-          suratTugas.value[index] = {
-            ...formSurat.value,
-            updated_at: new Date().toISOString()
-          }
-        }
-      } else {
-        const newId = Math.max(...suratTugas.value.map(s => s.id_surat_tugas), 0) + 1
-        suratTugas.value.push({
+      try {
+        const payload = {
           ...formSurat.value,
-          id_surat_tugas: newId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-      }
+          id_kegiatan: parsePossibleNumber(formSurat.value.id_kegiatan),
+          id_penandatangan: parsePossibleNumber(formSurat.value.id_penandatangan)
+        }
 
-      showAddSuratModal.value = false
-      resetFormSurat()
+        if (editingSuratId.value) {
+          await updateSuratTugas(editingSuratId.value, payload)
+        } else {
+          await createSuratTugas(payload)
+        }
+
+        await loadSuratTugasData()
+        if (detailSuratId.value) {
+          const currentDetail = suratTugas.value.find(st => String(st.id_surat_tugas) === String(detailSuratId.value))
+          if (currentDetail) detailSurat.value = { ...currentDetail }
+        }
+
+        showAddSuratModal.value = false
+        resetFormSurat()
+      } catch (error) {
+        console.error('Gagal menyimpan surat tugas:', error)
+        alert(error?.message || 'Gagal menyimpan surat tugas')
+      }
     }
 
-    const deleteSurat = (id) => {
+    const deleteSurat = async (id) => {
       if (confirm('Apakah Anda yakin ingin menghapus surat tugas ini? Anggota yang terkait juga akan dihapus.')) {
-        suratTugas.value = suratTugas.value.filter(s => s.id_surat_tugas !== id)
-        // Hapus juga anggota yang terkait
-        suratTugasPegawai.value = suratTugasPegawai.value.filter(stp => stp.id_surat_tugas !== id)
+        try {
+          await removeSuratTugas(id)
+          await loadSuratTugasData()
+          if (String(detailSuratId.value) === String(id)) {
+            detailSurat.value = null
+            detailAnggota.value = []
+            detailSuratId.value = null
+            showDetailModal.value = false
+          }
+        } catch (error) {
+          console.error('Gagal menghapus surat tugas:', error)
+          alert(error?.message || 'Gagal menghapus surat tugas')
+        }
       }
     }
 
     const viewDetail = (id) => {
-      const s = suratTugas.value.find(st => st.id_surat_tugas === id)
+      const s = suratTugas.value.find(st => String(st.id_surat_tugas) === String(id))
       if (s) {
         detailSurat.value = { ...s }
         detailSuratId.value = id
-        detailAnggota.value = suratTugasPegawai.value.filter(stp => stp.id_surat_tugas === id)
+        detailAnggota.value = suratTugasPegawai.value.filter(stp => String(stp.id_surat_tugas) === String(id))
         showDetailModal.value = true
       }
     }
 
-    const addAnggotaToSurat = () => {
+    const addAnggotaToSurat = async () => {
       formErrors.value = []
       if (!formAnggota.value.id_pegawai) formErrors.value.push('Pegawai wajib dipilih')
       if (!formAnggota.value.peran) formErrors.value.push('Peran wajib dipilih')
 
       // Cek duplikat
-      const duplicate = detailAnggota.value.some(a => a.id_pegawai === formAnggota.value.id_pegawai)
+      const duplicate = detailAnggota.value.some(a => String(a.id_pegawai) === String(formAnggota.value.id_pegawai))
       if (duplicate) formErrors.value.push('Pegawai ini sudah ditambahkan ke surat tugas ini')
 
       if (formErrors.value.length > 0) return
 
-      const newId = Math.max(...suratTugasPegawai.value.map(s => s.id), 0) + 1
-      const newAnggota = {
-        id: newId,
-        id_surat_tugas: detailSuratId.value,
-        id_pegawai: formAnggota.value.id_pegawai,
-        peran: formAnggota.value.peran
-      }
+      try {
+        await createSuratTugasPegawai({
+          id_surat_tugas: detailSuratId.value,
+          id_pegawai: parsePossibleNumber(formAnggota.value.id_pegawai),
+          peran: formAnggota.value.peran
+        })
 
-      suratTugasPegawai.value.push(newAnggota)
-      detailAnggota.value.push(newAnggota)
+        await loadSuratTugasData()
+        detailAnggota.value = suratTugasPegawai.value.filter(
+          stp => String(stp.id_surat_tugas) === String(detailSuratId.value)
+        )
 
-      formAnggota.value = {
-        id_pegawai: null,
-        peran: ''
+        formAnggota.value = {
+          id_pegawai: null,
+          peran: ''
+        }
+        showAddAnggotaModal.value = false
+      } catch (error) {
+        console.error('Gagal menambah anggota surat tugas:', error)
+        formErrors.value = [error?.message || 'Gagal menambah anggota surat tugas']
       }
-      showAddAnggotaModal.value = false
     }
 
-    const removeAnggota = (id) => {
+    const removeAnggota = async (id) => {
       if (confirm('Apakah Anda yakin ingin menghapus anggota ini?')) {
-        detailAnggota.value = detailAnggota.value.filter(a => a.id !== id)
-        suratTugasPegawai.value = suratTugasPegawai.value.filter(stp => stp.id !== id)
+        try {
+          await removeSuratTugasPegawai(id)
+          await loadSuratTugasData()
+          detailAnggota.value = suratTugasPegawai.value.filter(
+            stp => String(stp.id_surat_tugas) === String(detailSuratId.value)
+          )
+        } catch (error) {
+          console.error('Gagal menghapus anggota surat tugas:', error)
+          alert(error?.message || 'Gagal menghapus anggota surat tugas')
+        }
       }
     }
+
+    onMounted(() => {
+      loadAllData()
+    })
 
     return {
       suratTugas,
@@ -679,6 +769,7 @@ export default {
       formSurat,
       formAnggota,
       formErrors,
+      isLoading,
       detailSurat,
       detailAnggota,
       filteredSuratTugas,

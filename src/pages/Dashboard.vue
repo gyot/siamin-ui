@@ -1095,10 +1095,12 @@ export default {
         // Build query parameters untuk pagination dan filter
         const params = new URLSearchParams({
           page: currentPage.value,
+          per_page: pageSize.value,
           limit: pageSize.value,
           search: searchKegiatan.value,
           tahun: filterTahun.value,
-          status: filterStatus.value
+          status: filterStatus.value,
+          unit_kerja: filterUnitKerja.value
         })
 
         // Filter out empty params
@@ -1109,18 +1111,22 @@ export default {
         const url = `kegiatan/all`
         // console.log(`[Dashboard] API URL: ${url}`)
 
-        const response = await fetchAPI(url)
+        const response = await fetchAPI(url, {
+          params: Object.fromEntries(params.entries()),
+          raw: true
+        })
         // console.log(`[Dashboard] API Response:`, response)
 
         // Backend bisa return format:
-        // { data: [...], total: 100, per_page: 9, current_page: 1 }
+        // Laravel pagination resource: { data: [...], links: {...}, meta: { total, per_page, current_page } }
+        // atau { data: [...], total: 100, per_page: 9, current_page: 1 }
         // atau direct array
         if (Array.isArray(response)) {
           kegiatan.value = response
           totalKegiatanCount.value = response.length
         } else if (response.data) {
           kegiatan.value = response.data
-          totalKegiatanCount.value = response.total || response.data.length
+          totalKegiatanCount.value = response.meta?.total || response.total || response.data.length
         } else {
           kegiatan.value = []
           totalKegiatanCount.value = 0

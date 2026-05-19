@@ -1138,10 +1138,26 @@ export default {
           kegiatan.value = []
           console.warn('[PesertaManagement] Unexpected kegiatan response format:', data)
         }
+
+        if (props.kegiatanId && !getKegiatanById(props.kegiatanId)) {
+          const detail = await getKegiatan(props.kegiatanId)
+          if (detail && !Array.isArray(detail)) {
+            kegiatan.value = [detail, ...kegiatan.value]
+          }
+        }
         
       } catch (error) {
         console.error('[PesertaManagement] Failed to load kegiatan from API:', error.message)
-        kegiatan.value = []
+        if (props.kegiatanId) {
+          try {
+            const detail = await getKegiatan(props.kegiatanId)
+            kegiatan.value = detail && !Array.isArray(detail) ? [detail] : []
+          } catch {
+            kegiatan.value = []
+          }
+        } else {
+          kegiatan.value = []
+        }
       }
     }
 

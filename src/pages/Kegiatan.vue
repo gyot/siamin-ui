@@ -1197,6 +1197,12 @@ import { fetchAPI, postAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Spinner from '@/components/Spinner.vue'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
+import {
+  listSuratTugas,
+  listSuratTugasPegawai,
+  createSuratTugasPegawai,
+  removeSuratTugasPegawai
+} from '@/services/suratTugas'
 
 export default {
   name: 'Kegiatan',
@@ -1655,6 +1661,22 @@ export default {
     const selectedKegiatan = ref(null)
     const showSuratTugasModal = ref(false)
     const selectedSuratTugas = ref(null)
+    const suratTugasItems = ref([])
+    const suratTugasPegawaiItems = ref([])
+    const loadSuratTugasSnapshot = async () => {
+      try {
+        const [suratData, anggotaData] = await Promise.all([
+          listSuratTugas(),
+          listSuratTugasPegawai()
+        ])
+        suratTugasItems.value = suratData
+        suratTugasPegawaiItems.value = anggotaData
+      } catch (error) {
+        console.error('Failed to load surat tugas snapshot', error)
+        suratTugasItems.value = Array.isArray(db.surat_tugas) ? db.surat_tugas : []
+        suratTugasPegawaiItems.value = Array.isArray(db.surat_tugas_pegawai) ? db.surat_tugas_pegawai : []
+      }
+    }
     const showBiodataModal = ref(false)
     const selectedPeserta = ref(null)
     const administrasiDocs = ref([
@@ -1790,7 +1812,9 @@ export default {
 
     const anggotaInSelected = computed(() => {
       if (!selectedSuratTugas.value) return []
-      return db.surat_tugas_pegawai.filter(sp => String(sp.id_surat_tugas) === String(selectedSuratTugas.value.id_surat_tugas))
+      return suratTugasPegawaiItems.value.filter(
+        (sp) => String(sp.id_surat_tugas) === String(selectedSuratTugas.value.id_surat_tugas)
+      )
     })
 
     const pegawaiOptions = computed(() => db.pegawai || [])
@@ -2749,9 +2773,10 @@ export default {
       return format(start) || format(end)
     }
 
-    const handleSuratTugas = (idKegiatan) => {
+    const handleSuratTugas = async (idKegiatan) => {
+      await loadSuratTugasSnapshot()
       // Cari surat tugas untuk kegiatan ini
-      const existingSuratTugas = db.surat_tugas.find(st => String(st.id_kegiatan) === String(idKegiatan))
+      const existingSuratTugas = suratTugasItems.value.find(st => String(st.id_kegiatan) === String(idKegiatan))
 
       if (existingSuratTugas) {
         // Ada surat tugas, tampilkan modal
@@ -2789,7 +2814,7 @@ export default {
       }
     }
 
-    const addAnggota = () => {
+    const addAnggota = async () => {
       formAnggotaErrors.value = []
 
       // Validasi
@@ -2812,26 +2837,29 @@ export default {
       }
 
       if (formAnggotaErrors.value.length > 0) return
-
-      if (!db.surat_tugas_pegawai) db.surat_tugas_pegawai = []
-
-      const newAnggota = {
-        id: Math.max(...(db.surat_tugas_pegawai.map(a => a.id) || [0]), 0) + 1,
-        id_surat_tugas: selectedSuratTugas.value.id_surat_tugas,
-        id_pegawai: formAnggota.value.id_pegawai,
-        peran: formAnggota.value.peran
+      try {
+        await createSuratTugasPegawai({
+          id_surat_tugas: selectedSuratTugas.value.id_surat_tugas,
+          id_pegawai: formAnggota.value.id_pegawai,
+          peran: formAnggota.value.peran
+        })
+        await loadSuratTugasSnapshot()
+        formAnggota.value = { id_pegawai: '', peran: 'anggota_panitia' }
+        formAnggotaErrors.value = []
+      } catch (error) {
+        console.error('Failed to add anggota surat tugas', error)
+        formAnggotaErrors.value = [error?.message || 'Gagal menambah anggota surat tugas']
       }
-
-      db.surat_tugas_pegawai.push(newAnggota)
-      formAnggota.value = { id_pegawai: '', peran: 'anggota_panitia' }
-      formAnggotaErrors.value = []
     }
 
-    const removeAnggota = (id) => {
+    const removeAnggota = async (id) => {
       if (!confirm('Hapus anggota ini?')) return
-      const idx = db.surat_tugas_pegawai.findIndex(a => a.id === id)
-      if (idx !== -1) {
-        db.surat_tugas_pegawai.splice(idx, 1)
+      try {
+        await removeSuratTugasPegawai(id)
+        await loadSuratTugasSnapshot()
+      } catch (error) {
+        console.error('Failed to remove anggota surat tugas', error)
+        alert(error?.message || 'Gagal menghapus anggota surat tugas')
       }
     }
 

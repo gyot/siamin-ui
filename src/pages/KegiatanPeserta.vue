@@ -93,30 +93,23 @@ export default {
     const loadKegiatanFromAPI = async () => {
       isLoadingKegiatan.value = true
       try {
-        console.log('[KegiatanPeserta] Loading kegiatan from API...')
-        let data = await fetchAPI('kegiatan')
-        console.log('[KegiatanPeserta] Kegiatan API Response:', data)
-        if (!Array.isArray(data) || data.length === 0) {
-          // Coba endpoint /kegiatan/all jika /kegiatan kosong
-          try {
-            data = await fetchAPI('kegiatan/all')
-            console.log('[KegiatanPeserta] Kegiatan API Response dari /all:', data)
-          } catch (e) {
-            // Biarkan error jika tetap gagal
-          }
+        const kegiatanId = route.params.id
+        console.log('[KegiatanPeserta] Loading kegiatan detail from API:', kegiatanId)
+        const detail = await fetchAPI(`kegiatan/${kegiatanId}`)
+
+        if (detail && !Array.isArray(detail)) {
+          kegiatan.value = [detail]
+          currentKegiatan.value = detail
+          console.log('[KegiatanPeserta] Found kegiatan from detail API:', detail)
+          return
         }
-        if (Array.isArray(data)) {
-          kegiatan.value = data
-        } else if (data && Array.isArray(data.data)) {
-          kegiatan.value = data.data
-        } else {
-          kegiatan.value = []
-        }
-        console.log(`[KegiatanPeserta] Loaded ${kegiatan.value.length} kegiatan`)
+
+        kegiatan.value = Array.isArray(detail) ? detail : []
         findCurrentKegiatan()
       } catch (error) {
-        console.error('[KegiatanPeserta] Failed to load kegiatan from API:', error)
+        console.error('[KegiatanPeserta] Failed to load kegiatan detail from API:', error)
         kegiatan.value = []
+        findCurrentKegiatan()
       } finally {
         isLoadingKegiatan.value = false
       }
