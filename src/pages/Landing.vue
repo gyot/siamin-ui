@@ -835,7 +835,7 @@ export default {
 
       const idKegiatan = item.id_kegiatan ?? '-'
       const slug = slugify(item.nama_kegiatan)
-      const roles = ['Peserta', 'Panitia', 'Narasumber']
+      const roles = ['Peserta', 'Panitia', 'Narasumber', 'Pendamping']
 
       return roles.map((role) => {
         const dbLinks = getRoleLinksFromKegiatan(item, role)

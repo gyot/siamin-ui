@@ -17,6 +17,7 @@
     <!-- optionally show current user info for debugging -->
     <div v-if="currentUser.id_pegawai" class="mb-2 text-xs text-slate-500">
       Logged in pegawai ID: <strong>{{ currentUser.id_pegawai }}</strong>
+      {{ currentUser}}
     </div>
     <!-- Filters -->
     <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-4 mb-6">
@@ -34,6 +35,7 @@
         <div class="flex gap-2">
           <select v-model="filterTahun"
             class="px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none text-sm bg-white">
+            <option value="">Semua Tahun</option>
             <option v-for="tahun in getAvailableTahun" :key="tahun" :value="tahun">
               {{ tahun }}
             </option>
@@ -1500,11 +1502,11 @@ export default {
       isLoadingKegiatan.value = true
       // console.debug('[Kegiatan] loadKegiatan start, user:', currentUser.value)
       try {
-        console.log('[Kegiatan][Debug] unit_kerja_id user:', currentUser.value?.unit_kerja_id)
-        console.log('[Kegiatan][Debug] unit_kerja user:', auth.unit_kerja)
+        // console.log('[Kegiatan][Debug] unit_kerja_id user:', currentUser.value?.unit_kerja_id)
+        // console.log('[Kegiatan][Debug] unit_kerja user:', auth.unit_kerja)
 
         const rawUnitKerjaIds = currentUser.value?.unit_kerja_id
-        console.log('[Kegiatan][Debug] raw unit_kerja_id:', rawUnitKerjaIds)
+        // console.log('[Kegiatan][Debug] raw unit_kerja_id:', rawUnitKerjaIds)
         const unitKerjaIds = Array.isArray(rawUnitKerjaIds)
           ? rawUnitKerjaIds.filter(v => v !== null && v !== undefined && v !== '')
           : (rawUnitKerjaIds ? [rawUnitKerjaIds] : [])
@@ -1523,7 +1525,7 @@ export default {
             : (Array.isArray(allKegiatan?.data) ? allKegiatan.data : [])
           if (rows.length > 0) {
             merged = rows.map((item) => ({ ...(item || {}) }))
-            console.log('[Kegiatan][Debug] sumber data: listKegiatan()', merged.length)
+            // console.log('[Kegiatan][Debug] sumber data: listKegiatan()', merged.length)
           }
         } catch {
           // fallback ke endpoint per unit kerja jika listKegiatan gagal
@@ -1535,13 +1537,14 @@ export default {
               try {
                 const res = await getKegiatanTim(id)
                 const rows = Array.isArray(res) ? res : []
-                console.log(`[Kegiatan][Debug] getKegiatanTim(${id}) rows:`, rows.length)
-                console.log(`[Kegiatan][Debug] sample getKegiatanTim(${id}):`, rows.slice(0, 3).map((item) => ({
-                  id_kegiatan: item?.id_kegiatan,
-                  unit_kerja_id: item?.unit_kerja_id,
-                  id_tim: item?.id_tim,
-                  unit_kerja: item?.unit_kerja
-                })))
+                // console.log(`[Kegiatan][Debug] getKegiatanTim(${id}) rows:`, rows.length)
+                // console.log(`[Kegiatan][Debug] sample getKegiatanTim(${id}):`, rows.slice(0, 3).map((item) => ({
+                //   id_kegiatan: item?.id_kegiatan,
+                //   unit_kerja_id: item?.unit_kerja_id,
+                //   id_tim: item?.id_tim,
+                //   unit_kerja: item?.unit_kerja
+                // })))
+                console.log('tim', id, res)
                 return rows.map((item) => {
                   const normalized = { ...(item || {}) }
                   normalized.__source_unit_kerja_id = id
@@ -1555,8 +1558,17 @@ export default {
           merged = results.flat()
         }
 
+        // const deduped = Array.from(
+        //   new Map(merged.map(item => [String(item.id_kegiatan), item])).values()
+        // )
+
         const deduped = Array.from(
-          new Map(merged.map(item => [String(item.id_kegiatan), item])).values()
+          new Map(
+            merged.map(item => [
+              `${item.id_kegiatan}_${item.__source_unit_kerja_id || item.unit_kerja_id}`,
+              item
+            ])
+          ).values()
         )
 
         kegiatan.value = deduped.filter((item) => {
@@ -1655,7 +1667,7 @@ export default {
 
     const searchQuery = ref('')
     const activeFilter = ref('all')
-    const filterTahun = ref(new Date().getFullYear().toString())
+    const filterTahun = ref('')
     const showAddModal = ref(false)
     const showDetailModal = ref(false)
     const selectedKegiatan = ref(null)
@@ -1753,9 +1765,10 @@ export default {
       const labels = {
         peserta: 'Formulir Peserta',
         panitia: 'Formulir Panitia',
-        narasumber: 'Formulir Narasumber'
+        narasumber: 'Formulir Narasumber',
+        pendamping: 'Formulir Pendamping'
       }
-      const roles = ['Peserta', 'Panitia', 'Narasumber']
+      const roles = ['Peserta', 'Panitia', 'Narasumber', 'Pendamping']
       const links = roles.map((role) => {
         const roleLinks = getRoleLinksFromKegiatan(selectedKegiatan.value, role)
         return {

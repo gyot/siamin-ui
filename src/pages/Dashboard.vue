@@ -723,13 +723,14 @@ export default {
     const selectedDocumentLinks = computed(() => getDocumentLinks(selectedKegiatan.value))
 
     const activityLinks = computed(() => {
-      if (!selectedKegiatan.value) return { peserta: '', panitia: '', narasumber: '', evaluasi: '', laporanEvaluasi: '' }
+      if (!selectedKegiatan.value) return { peserta: '', panitia: '', narasumber: '', pendamping: '', evaluasi: '', laporanEvaluasi: '' }
       const kode = selectedKegiatan.value.id_kegiatan || ''
       const judul = selectedKegiatan.value.nama_kegiatan || ''
       return {
         peserta: buildFormLink(kode, 'Peserta', judul),
         panitia: buildFormLink(kode, 'Panitia', judul),
         narasumber: buildFormLink(kode, 'Narasumber', judul),
+        pendamping: buildFormLink(kode, 'Pendamping', judul),
         evaluasi: buildPublicEvaluasiLink(kode, judul),
         laporanEvaluasi: buildPublicLaporanEvaluasiLink(kode, judul)
       }
@@ -740,7 +741,8 @@ export default {
       return [
         { key: 'peserta', label: 'Formulir Peserta', url: links.peserta },
         { key: 'panitia', label: 'Formulir Panitia', url: links.panitia },
-        { key: 'narasumber', label: 'Formulir Narasumber', url: links.narasumber }
+        { key: 'narasumber', label: 'Formulir Narasumber', url: links.narasumber },
+        { key: 'pendamping', label: 'Formulir Pendamping', url: links.pendamping }
       ].filter(entry => entry.url)
     })
 

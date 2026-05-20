@@ -10,20 +10,41 @@ import { fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
  * @returns {Promise<Array>} all kegiatan records
  */
 export const listKegiatan = async () => {
-  let data = await fetchAPI('kegiatan')
-  if (!Array.isArray(data) || data.length === 0) {
-    // Coba endpoint /kegiatan/all jika /kegiatan kosong
-    try {
-      data = await fetchAPI('kegiatan/all')
-      // Jika respons API berupa { success: true, data: [...] }, ambil data.data
-      if (data && Array.isArray(data.data)) {
-        data = data.data
-      }
-    } catch (e) {
-      // Biarkan error jika tetap gagal
+  // Request raw response first to detect pagination metadata
+  try {
+    const raw = await fetchAPI('kegiatan', { raw: true })
+
+    // If API returned an array directly, use it
+    if (Array.isArray(raw)) return raw
+
+    // If API returned object with `data` array
+    if (raw && Array.isArray(raw.data)) {
+      // Detect common pagination wrappers (meta, current_page, per_page, total)
+      const hasPagination = raw.meta || raw.current_page || raw.per_page || raw.total
+      // If there is pagination metadata, try the `/kegiatan/all` endpoint to fetch full list
+      if (!hasPagination) return raw.data
     }
+  } catch (e) {
+    // ignore and fallback to non-raw fetch below
   }
-  return data
+
+  // Fallback: try endpoints that return full list
+  try {
+    let data = await fetchAPI('kegiatan')
+    if (!Array.isArray(data) || data.length === 0) {
+      try {
+        data = await fetchAPI('kegiatan/all')
+        if (data && Array.isArray(data.data)) {
+          data = data.data
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    return data
+  } catch (e) {
+    return []
+  }
 }
 
 /**

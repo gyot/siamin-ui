@@ -331,7 +331,7 @@ export default {
       const judul = kegiatan.value?.nama_kegiatan || route.params.slugJudul || ''
       const slug = slugify(judul)
       const item = kegiatan.value || {}
-      const roles = ['Peserta', 'Panitia', 'Narasumber']
+      const roles = ['Peserta', 'Panitia', 'Narasumber', 'Pendamping']
       const roleLinks = roles.map((role) => {
         const dbLinks = getRoleLinksFromKegiatan(item, role)
         return {
