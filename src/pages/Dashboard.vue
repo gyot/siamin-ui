@@ -1150,6 +1150,11 @@ export default {
       return Math.ceil(totalKegiatanCount.value / pageSize.value)
     })
 
+    watch([searchKegiatan, filterTahun, filterStatus, filterUnitKerja], async () => {
+      currentPage.value = 1
+      await fetchKegiatanData()
+    })
+
     // Load kegiatan saat component mount atau saat filter/search berubah
     // onMounted(async () => {
     //   // Load pegawai dan users data dari API terlebih dahulu sebelum rendering greeting

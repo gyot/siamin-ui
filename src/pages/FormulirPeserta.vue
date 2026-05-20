@@ -14,7 +14,7 @@
       <div v-if="kegiatan" class="bg-blue-50 border border-blue-200 rounded-lg  p-4 sm:p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div class="flex-1">
-            <h2 class="text-xl font-semibold text-slate-800">Detail Kegiatan</h2>
+            <h2 class="text-xl font-semibold text-slate-800">Formulir Biodata {{ peran }}</h2>
             <p class="text-sm text-slate-600">{{ kegiatan.nama_kegiatan }}</p>
 
             <div class="mt-3 text-sm text-slate-600">
@@ -283,15 +283,15 @@
             <p class="text-sm text-slate-600 mb-4">Silakan tandatangani di area bawah ini dengan menggunakan mouse atau
               stylus.</p>
 
-            <div class="relative border-2 border-dashed border-slate-300 rounded-lg p-4 mb-4 bg-slate-50">
+            <div class="relative border-2 border-dashed border-slate-300 rounded-lg p-4 mb-4 bg-slate-50" style="aspect-ratio: 1 / 1; width: 100%; max-width: 400px;">
               <button type="button" @click="clearSignature"
                 class="absolute right-3 top-3 px-2 py-1 bg-white border border-slate-300 text-slate-700 rounded-md text-[11px] font-medium shadow-sm hover:bg-slate-100 transition-colors">
                 Hapus Tandatangan
               </button>
               <canvas ref="signatureCanvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
                 @mouseout="stopDrawing" @touchstart="startDrawing" @touchmove="draw" @touchend="stopDrawing"
-                class="w-full border border-slate-300 rounded-lg cursor-crosshair bg-white block"
-                style="height: 200px; display: block; touch-action: none; outline: none;"></canvas>
+                class="w-full h-full border border-slate-300 rounded-lg cursor-crosshair bg-white block"
+                style="touch-action: none; outline: none;"></canvas>
             </div>
 
             <!-- <div v-if="signatureData" class="p-3 bg-green-50 border border-green-200 rounded-lg">
@@ -335,11 +335,11 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watchEffect, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import database from '@/data/index.js'
 import Swal from 'sweetalert2'
-import { listKegiatan } from '@/services/kegiatan'
+import { listKegiatan, getKegiatan } from '@/services/kegiatan'
 import { postAPI } from '@/services/api'
 import Spinner from '@/components/Spinner.vue'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
@@ -362,17 +362,27 @@ export default {
     const signatureData = ref(null)
     let isDrawing = false
 
-    // API-backed kegiatan (fallback to local database)
+    // API-backed kegiatan (fallback ke local database)
     const apiKegiatan = ref([])
+    const fallbackKegiatan = ref(null)
     const isLoadingKegiatan = ref(false)
 
     const loadKegiatan = async () => {
       isLoadingKegiatan.value = true
       try {
         const data = await listKegiatan()
-        apiKegiatan.value = data || []
-        // Debug hasil API
-        // console.log('[FormulirPeserta] hasil listKegiatan:', data)
+        apiKegiatan.value = Array.isArray(data) ? data : [data]
+
+        if (!apiKegiatan.value.find((item) => String(item.id_kegiatan).toLowerCase().trim() === String(kode).toLowerCase().trim())) {
+          try {
+            const singleKegiatan = await getKegiatan(kode)
+            if (singleKegiatan && !Array.isArray(singleKegiatan)) {
+              fallbackKegiatan.value = singleKegiatan
+            }
+          } catch (innerErr) {
+            // ignore fallback failure
+          }
+        }
       } catch (err) {
         console.warn('Gagal mengambil kegiatan dari API, gunakan lokal', err)
       } finally {
@@ -410,16 +420,23 @@ export default {
       // Cari dengan toleransi: id_kegiatan bisa string/number, kode dari route juga
       const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
       const kodeNorm = norm(kode)
-      // Cek di API
+
+      // Cek di API list
       let fromApi = apiKegiatan.value.find(k => norm(k.id_kegiatan) === kodeNorm)
       if (!fromApi) {
-        // Coba juga jika id_kegiatan di API adalah number dan kode bisa dikonversi ke number
         fromApi = apiKegiatan.value.find(k => String(k.id_kegiatan) === String(kode))
       }
       if (fromApi) {
         console.log('[FormulirPeserta] ditemukan kegiatan dari API:', fromApi)
         return fromApi
       }
+
+      // Cek fallback single-item load
+      if (fallbackKegiatan.value && norm(fallbackKegiatan.value.id_kegiatan) === kodeNorm) {
+        console.log('[FormulirPeserta] ditemukan kegiatan dari fallback single getKegiatan:', fallbackKegiatan.value)
+        return fallbackKegiatan.value
+      }
+
       // Cek di database lokal
       let fromDb = database.kegiatan.find(k => norm(k.id_kegiatan) === kodeNorm)
       if (!fromDb) {
@@ -467,6 +484,54 @@ export default {
       const f = kegiatan.value?.flyer || kegiatan.value?.flyer_path || kegiatan.value?.path || null
       if (!f) return null
       return buildStorageUrl(f)
+    })
+
+    const setMetaTag = (attrName, attrValue, isProperty = false) => {
+      if (!attrValue) return
+      const selector = isProperty
+        ? `meta[property="${attrName}"]`
+        : `meta[name="${attrName}"]`
+      let tag = document.querySelector(selector)
+      if (!tag) {
+        tag = document.createElement('meta')
+        if (isProperty) {
+          tag.setAttribute('property', attrName)
+        } else {
+          tag.setAttribute('name', attrName)
+        }
+        document.head.appendChild(tag)
+      }
+      tag.setAttribute('content', attrValue)
+    }
+
+    const updateShareMeta = () => {
+      if (!kegiatan.value) return
+      const kegiatanTitle = kegiatan.value.nama_kegiatan || ''
+      const lokasiText = kegiatan.value.lokasi || '-'
+      const pageTitle = `Formulir Biodata ${peran} ${kegiatanTitle} TPK ${lokasiText}`.trim()
+      const tanggalText = `${formatDate(kegiatan.value.tanggal_mulai)} - ${formatDate(kegiatan.value.tanggal_selesai)}`
+      const description = kegiatan.value.deskripsi
+        ? `Tanggal kegiatan: ${tanggalText}. ${kegiatan.value.deskripsi}`
+        : `Tanggal kegiatan: ${tanggalText}. Lokasi: ${lokasiText}.`
+
+      document.title = pageTitle
+      setMetaTag('description', description)
+      setMetaTag('og:title', pageTitle, true)
+      setMetaTag('og:description', description, true)
+      setMetaTag('og:type', 'article', true)
+      setMetaTag('og:image', flyerUrl.value || '', true)
+      setMetaTag('twitter:card', flyerUrl.value ? 'summary_large_image' : 'summary')
+      setMetaTag('twitter:title', pageTitle)
+      setMetaTag('twitter:description', description)
+      if (flyerUrl.value) {
+        setMetaTag('twitter:image', flyerUrl.value)
+      }
+    }
+
+    watchEffect(() => {
+      if (kegiatan.value) {
+        updateShareMeta()
+      }
     })
 
     const getValueByPath = (obj, path) => {
