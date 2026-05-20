@@ -32,8 +32,10 @@ const ENDPOINTS = {
   akunPeserta: 'akun-peserta',
   keanggotaanTim: 'keanggotaan-tim',
   logAktivitas: 'log-aktivitas',
-  suratTugas: 'surat-tugas',
-  suratTugasPegawai: 'surat-tugas-pegawai',
+  suratTugas: 'penugasan',
+  suratTugasPegawai: 'penugasan-pegawai',
+  penugasan: 'penugasan',
+  penugasanPegawai: 'penugasan-pegawai',
   unitKerja: 'unit-kerja',
   subUnitKerja: 'sub-unit-kerja'
 }
@@ -82,6 +84,83 @@ const normalizeEndpoint = (endpoint = '') =>
     .replace(/^api\/v1\//, '')
     .replace(/^\/+|\/+$/g, '')
 
+const buildFallbackPenugasanList = () => {
+  const kegiatanRows = Array.isArray(dbJSON.kegiatan) ? dbJSON.kegiatan : []
+  const pegawaiRows = Array.isArray(dbJSON.pegawai) ? dbJSON.pegawai : []
+  const penugasanRows = Array.isArray(dbJSON.surat_tugas) ? dbJSON.surat_tugas : []
+  const anggotaRows = Array.isArray(dbJSON.surat_tugas_pegawai) ? dbJSON.surat_tugas_pegawai : []
+
+  const kegiatanById = new Map(
+    kegiatanRows.map((item) => [String(item?.id_kegiatan ?? item?.id ?? ''), item])
+  )
+
+  const pegawaiById = new Map(
+    pegawaiRows.map((item) => [String(item?.id_pegawai ?? item?.id ?? ''), item])
+  )
+
+  return penugasanRows.map((item) => {
+    const idPenugasan = item?.id_penugasan ?? item?.id_surat_tugas ?? item?.id ?? null
+    const idKegiatan = item?.id_kegiatan ?? item?.kegiatan_id ?? item?.kegiatan?.id_kegiatan ?? item?.kegiatan?.id ?? null
+
+    const penugasanPegawais = anggotaRows
+      .filter((anggota) => {
+        const anggotaPenugasanId = anggota?.id_penugasan ?? anggota?.penugasan_id ?? anggota?.id_surat_tugas ?? anggota?.surat_tugas_id ?? null
+        return String(anggotaPenugasanId ?? '') === String(idPenugasan ?? '')
+      })
+      .map((anggota) => {
+        const idPegawai = anggota?.id_pegawai ?? anggota?.pegawai_id ?? anggota?.pegawai?.id_pegawai ?? anggota?.pegawai?.id ?? null
+        const pegawai = pegawaiById.get(String(idPegawai ?? ''))
+
+        return {
+          ...anggota,
+          id: anggota?.id ?? anggota?.id_penugasan_pegawai ?? null,
+          id_penugasan: idPenugasan,
+          id_pegawai: idPegawai,
+          peran: anggota?.peran ?? '',
+          pegawai: pegawai
+            ? {
+                ...pegawai,
+                id_pegawai: pegawai.id_pegawai ?? pegawai.id ?? null,
+                nama: pegawai.nama ?? pegawai.name ?? '',
+                nip: pegawai.nip ?? ''
+              }
+            : null
+        }
+      })
+
+    const kegiatan = kegiatanById.get(String(idKegiatan ?? ''))
+
+    return {
+      ...item,
+      id_penugasan: idPenugasan,
+      id_kegiatan: idKegiatan,
+      kegiatan: kegiatan ? { ...kegiatan } : null,
+      penugasan_pegawais: penugasanPegawais
+    }
+  })
+}
+
+const buildFallbackPenugasanPegawaiList = () => {
+  const penugasanRows = buildFallbackPenugasanList()
+  const penugasanById = new Map(
+    penugasanRows.map((item) => [
+      String(item?.id_penugasan ?? ''),
+      {
+        id_penugasan: item?.id_penugasan ?? null,
+        id_kegiatan: item?.id_kegiatan ?? null,
+        kegiatan: item?.kegiatan ?? null
+      }
+    ])
+  )
+
+  return penugasanRows.flatMap((item) =>
+    (Array.isArray(item?.penugasan_pegawais) ? item.penugasan_pegawais : []).map((anggota) => ({
+      ...anggota,
+      penugasan: penugasanById.get(String(anggota?.id_penugasan ?? '')) ?? null
+    }))
+  )
+}
+
 const getLocalFallbackData = (endpoint) => {
   const normalized = normalizeEndpoint(endpoint)
   if (!normalized) return null
@@ -112,6 +191,17 @@ const getLocalFallbackData = (endpoint) => {
   if (normalized === 'users') return dbJSON.users || []
   if (normalized === 'surat-tugas') return dbJSON.surat_tugas || []
   if (normalized === 'surat-tugas-pegawai') return dbJSON.surat_tugas_pegawai || []
+  // New penugasan endpoints map to existing surat_tugas local data when present
+  if (normalized === 'penugasan') return buildFallbackPenugasanList()
+  if (normalized.startsWith('penugasan/')) {
+    const targetId = normalized.split('/').pop()
+    return buildFallbackPenugasanList().find((item) => String(item?.id_penugasan ?? '') === String(targetId ?? '')) || null
+  }
+  if (normalized === 'penugasan-pegawai') return buildFallbackPenugasanPegawaiList()
+  if (normalized.startsWith('penugasan-pegawai/')) {
+    const targetId = normalized.split('/').pop()
+    return buildFallbackPenugasanPegawaiList().find((item) => String(item?.id ?? '') === String(targetId ?? '')) || null
+  }
 
   return null
 }

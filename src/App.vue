@@ -18,7 +18,7 @@ export default {
       /* =========================
        * RESTORE AUTH (WAJIB)
        * ========================= */
-      auth.restoreAuth()
+      void auth.restoreAuth({ revalidate: false })
 
       /* Previously the app would eagerly load every table when mounted.  
          That's been removed to keep startup fast.  data.ts now exposes

@@ -10,6 +10,13 @@ import { fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
  * @returns {Promise<Array>} all kegiatan records
  */
 export const listKegiatan = async () => {
+  const fetchKegiatanAll = async () => {
+    const rawAll = await fetchAPI('kegiatan/all', { raw: true })
+    if (Array.isArray(rawAll)) return rawAll
+    if (rawAll && Array.isArray(rawAll.data)) return rawAll.data
+    return []
+  }
+
   // Request raw response first to detect pagination metadata
   try {
     const raw = await fetchAPI('kegiatan', { raw: true })
@@ -23,6 +30,8 @@ export const listKegiatan = async () => {
       const hasPagination = raw.meta || raw.current_page || raw.per_page || raw.total
       // If there is pagination metadata, try the `/kegiatan/all` endpoint to fetch full list
       if (!hasPagination) return raw.data
+      const fullList = await fetchKegiatanAll()
+      if (fullList.length > 0) return fullList
     }
   } catch (e) {
     // ignore and fallback to non-raw fetch below
@@ -30,16 +39,9 @@ export const listKegiatan = async () => {
 
   // Fallback: try endpoints that return full list
   try {
-    let data = await fetchAPI('kegiatan')
+    let data = await fetchKegiatanAll()
     if (!Array.isArray(data) || data.length === 0) {
-      try {
-        data = await fetchAPI('kegiatan/all')
-        if (data && Array.isArray(data.data)) {
-          data = data.data
-        }
-      } catch (e) {
-        // ignore
-      }
+      data = await fetchAPI('kegiatan')
     }
     return data
   } catch (e) {

@@ -44,6 +44,29 @@
         </div>
       </div>
 
+      <div v-if="showApiError" class="mb-6 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-yellow-900 shadow-sm">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p class="font-semibold">Peringatan koneksi</p>
+            <p class="text-sm text-yellow-900 mt-1">{{ apiErrorMessage }}</p>
+          </div>
+          <div class="flex gap-2">
+            <button
+              @click="reloadApiData"
+              class="inline-flex items-center justify-center px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm"
+            >
+              Muat ulang data
+            </button>
+            <button
+              @click="showApiError = false"
+              class="inline-flex items-center justify-center px-4 py-2 bg-white border border-yellow-300 text-yellow-900 rounded-lg hover:bg-yellow-100 text-sm"
+            >
+              Tutup
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Loading State -->
       <div v-if="isLoadingPeserta" class="mb-6 p-4 flex items-center justify-center bg-white rounded-lg shadow-md">
         <div class="flex items-center gap-3">
@@ -520,7 +543,7 @@
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500">Data Administrasi</h3>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">No. Surat Tugas</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">No. Penugasan</label>
                 <input
                   v-model="formPeserta.no_surat_tugas"
                   type="text"
@@ -528,7 +551,7 @@
                 />
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Surat Tugas</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Penugasan</label>
                 <input
                   v-model="formPeserta.tanggal_surat_tugas"
                   type="date"
@@ -1019,8 +1042,8 @@
                 <span class="font-semibold">Provider Pulsa</span><span>:</span><span>{{ p.provider_pulsa || '-' }}</span>
                 <span class="font-semibold">Nomor Rekening</span><span>:</span><span>{{ p.nomor_rekening || '-' }}</span>
                 <span class="font-semibold">Nama Bank</span><span>:</span><span>{{ p.nama_bank || '-' }}</span>
-                <span class="font-semibold">No. Surat Tugas</span><span>:</span><span>{{ p.no_surat_tugas || '-' }}</span>
-                <span class="font-semibold">Tanggal Surat Tugas</span><span>:</span><span>{{ p.tanggal_surat_tugas ? formatDate(p.tanggal_surat_tugas) : '-' }}</span>
+                <span class="font-semibold">No. Penugasan</span><span>:</span><span>{{ p.no_surat_tugas || '-' }}</span>
+                <span class="font-semibold">Tanggal Penugasan</span><span>:</span><span>{{ p.tanggal_surat_tugas ? formatDate(p.tanggal_surat_tugas) : '-' }}</span>
               </div>
             </div>
           </div>
@@ -1043,6 +1066,14 @@ import { useAuthStore } from '@/stores/auth'
 import database from '@/data/index.js'
 import { fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
+
+let pesertaCache = null
+let pesertaCacheUpdatedAt = null
+let kegiatanCache = null
+let kegiatanCacheUpdatedAt = null
+let sertifikatCache = null
+let sertifikatCacheUpdatedAt = null
+const CACHE_TTL_MS = 1000 * 60 * 10 // 10 minutes
 
 import * as XLSX from 'xlsx'
 import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXml, processDocxTemplate } from '@/utils/docxUtils.js'
@@ -1075,13 +1106,15 @@ export default {
     const showSertifikatModal = ref(false)
     const showBiodataModal = ref(false)
     const showAllBiodataModal = ref(false)
+    const showApiError = ref(false)
+    const apiErrorMessage = ref('')
     const editingPeserta = ref(false)
     const selectedPeserta = ref(null)
     const selectedPesertaBiodata = ref(null)
     const formErrors = ref([])
     const isDownloadingBatchDocx = ref(false)
     const administrasiDocs = ref([
-      'Surat Tugas',
+      'Penugasan',
       'SPPD',
       'Tiket Pergi (Pulau Sumbawa)',
       'Tiket Pulang (Pulau Sumbawa)',
@@ -1094,7 +1127,16 @@ export default {
     const filterKabKota = ref('')
 
     // Helper function to load peserta from API
-    const loadPesertaFromAPI = async () => {
+    const isCacheValid = (updatedAt) => {
+      return updatedAt && (Date.now() - updatedAt) < CACHE_TTL_MS
+    }
+
+    const loadPesertaFromAPI = async (forceRefresh = false) => {
+      if (!forceRefresh && pesertaCache && isCacheValid(pesertaCacheUpdatedAt)) {
+        peserta.value = pesertaCache
+        return
+      }
+
       isLoadingPeserta.value = true
       try {
         // Always fetch from /peserta endpoint
@@ -1113,18 +1155,27 @@ export default {
           peserta.value = []
           console.warn('[PesertaManagement] Unexpected response format:', data)
         }
+
+        pesertaCache = peserta.value
+        pesertaCacheUpdatedAt = Date.now()
         
       } catch (error) {
         console.error('[PesertaManagement] Failed to load peserta from API:', error.message)
         console.error('[PesertaManagement] Full error:', error)
-        peserta.value = []
+        setApiError(error.message || 'Gagal memuat data peserta. Silakan klik muat ulang.')
+        peserta.value = pesertaCache || []
       } finally {
         isLoadingPeserta.value = false
       }
     }
 
     // Helper function to load kegiatan from API
-    const loadKegiatanFromAPI = async () => {
+    const loadKegiatanFromAPI = async (forceRefresh = false) => {
+      if (!forceRefresh && kegiatanCache && isCacheValid(kegiatanCacheUpdatedAt)) {
+        kegiatan.value = kegiatanCache
+        return
+      }
+
       try {
         const data = await fetchAPI('kegiatan/all')
         
@@ -1145,24 +1196,33 @@ export default {
             kegiatan.value = [detail, ...kegiatan.value]
           }
         }
+
+        kegiatanCache = kegiatan.value
+        kegiatanCacheUpdatedAt = Date.now()
         
       } catch (error) {
         console.error('[PesertaManagement] Failed to load kegiatan from API:', error.message)
+        setApiError(error.message || 'Gagal memuat daftar kegiatan. Silakan klik muat ulang.')
         if (props.kegiatanId) {
           try {
             const detail = await getKegiatan(props.kegiatanId)
             kegiatan.value = detail && !Array.isArray(detail) ? [detail] : []
           } catch {
-            kegiatan.value = []
+            kegiatan.value = kegiatanCache || []
           }
         } else {
-          kegiatan.value = []
+          kegiatan.value = kegiatanCache || []
         }
       }
     }
 
     // Helper function to load sertifikat from API
-    const loadSertifikatFromAPI = async () => {
+    const loadSertifikatFromAPI = async (forceRefresh = false) => {
+      if (!forceRefresh && sertifikatCache && isCacheValid(sertifikatCacheUpdatedAt)) {
+        sertifikat.value = sertifikatCache
+        return
+      }
+
       try {
         const data = await fetchAPI('sertifikat')
         
@@ -1176,10 +1236,38 @@ export default {
           sertifikat.value = []
           console.warn('[PesertaManagement] Unexpected sertifikat response format:', data)
         }
+
+        sertifikatCache = sertifikat.value
+        sertifikatCacheUpdatedAt = Date.now()
         
       } catch (error) {
         console.error('[PesertaManagement] Failed to load sertifikat from API:', error.message)
-        sertifikat.value = []
+        setApiError(error.message || 'Gagal memuat data sertifikat. Silakan klik muat ulang.')
+        sertifikat.value = sertifikatCache || []
+      }
+    }
+
+    const setApiError = (message) => {
+      apiErrorMessage.value = message || 'Terjadi masalah saat memuat data. Silakan coba lagi.'
+      showApiError.value = true
+    }
+
+    const clearApiError = () => {
+      showApiError.value = false
+      apiErrorMessage.value = ''
+    }
+
+    const reloadApiData = async () => {
+      clearApiError()
+      try {
+        await Promise.all([
+          loadKegiatanFromAPI(true),
+          loadPesertaFromAPI(true),
+          loadSertifikatFromAPI(true)
+        ])
+      } catch (error) {
+        console.error('[PesertaManagement] Failed to reload API data:', error)
+        setApiError(error.message || 'Gagal memuat ulang data. Silakan coba lagi.')
       }
     }
 
@@ -2152,7 +2240,7 @@ export default {
           await postAPI('peserta', payload)
           ActivityEvents.CREATE_PESERTA(formPeserta.value.nama_lengkap)
         }
-        await loadPesertaFromAPI()
+        await loadPesertaFromAPI(true)
         closeAddModal()
       } catch (error) {
         console.error('[PesertaManagement] Gagal menyimpan peserta:', error)
@@ -2166,7 +2254,7 @@ export default {
         try {
           await deleteAPI('peserta', id)
           ActivityEvents.DELETE_PESERTA(deletedPeserta?.nama_lengkap || `ID ${id}`)
-          await loadPesertaFromAPI()
+          await loadPesertaFromAPI(true)
         } catch (error) {
           console.error('[PesertaManagement] Gagal menghapus peserta:', error)
           alert(error.message || 'Gagal menghapus data peserta dari API')
@@ -2222,6 +2310,20 @@ export default {
         return buildStorageUrl(sig)
       }
 
+      const sanitizeFileName = (value) => {
+        return String(value || '')
+          .replace(/[^a-zA-Z0-9\-_. ]/g, '')
+          .trim()
+          .replace(/\s+/g, ' ')
+      }
+
+      const exportKegiatanId = filterKegiatan.value || filteredPeserta.value[0]?.id_kegiatan
+      const exportKegiatan = exportKegiatanId ? getKegiatanById(exportKegiatanId) : null
+      const lokasiKegiatan = sanitizeFileName(exportKegiatan?.lokasi || '')
+      const namaKegiatanFile = sanitizeFileName(exportKegiatan?.nama_kegiatan || getNamaKegiatan(exportKegiatanId) || '')
+      const filePrefixParts = [lokasiKegiatan, namaKegiatanFile].filter(Boolean)
+      const filePrefix = filePrefixParts.length > 0 ? filePrefixParts.join(' - ') : 'peserta_export'
+
       // Prepare rows with desired fields including signature URL
       const rows = filteredPeserta.value.map(p => {
         const signature = p.tanda_tangan_url || p.tanda_tangan || p.tandatangan || ''
@@ -2254,7 +2356,8 @@ export default {
       const ws = XLSX.utils.json_to_sheet(rows)
       const wb = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(wb, ws, 'Peserta')
-      const filename = `peserta_export_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.xlsx`
+      const timestamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')
+      const filename = `${filePrefix}_${timestamp}.xlsx`
       XLSX.writeFile(wb, filename)
       
       // Log export activity
@@ -2578,6 +2681,9 @@ export default {
       showSertifikatModal,
       showBiodataModal,
       showAllBiodataModal,
+      showApiError,
+      apiErrorMessage,
+      reloadApiData,
       editingPeserta,
       selectedPeserta,
       selectedPesertaBiodata,

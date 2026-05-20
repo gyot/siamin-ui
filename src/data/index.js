@@ -28,11 +28,43 @@ const tableToEndpoint = {
   peserta: 'peserta',
   sertifikat: 'sertifikat',
   akun_peserta: 'akun-peserta',
-  surat_tugas: 'surat-tugas',
-  surat_tugas_pegawai: 'surat-tugas-pegawai',
+  surat_tugas: 'penugasan-pegawai',
+  surat_tugas_pegawai: 'penugasan-pegawai',
   unit_kerja: 'unit-kerja',
   sub_unit_kerja: 'sub-unit-kerja',
   keanggotaan_tim: 'keanggotaan-tim'
+}
+
+const groupPenugasanByKegiatanRecords = (records = []) => {
+  const grouped = new Map()
+
+  ;(Array.isArray(records) ? records : []).forEach((item) => {
+    const idKegiatan = item?.id_kegiatan ?? item?.kegiatan?.id_kegiatan ?? item?.kegiatan?.id ?? null
+    if (idKegiatan === null || idKegiatan === undefined || idKegiatan === '') return
+
+    const key = String(idKegiatan)
+    const current = grouped.get(key) || {
+      id_penugasan: idKegiatan,
+      id_surat_tugas: idKegiatan,
+      id_kegiatan: idKegiatan,
+      kegiatan: item?.kegiatan || null,
+      penugasan_pegawais: []
+    }
+
+    if (!current.kegiatan && item?.kegiatan) {
+      current.kegiatan = item.kegiatan
+    }
+
+    current.penugasan_pegawais.push({
+      ...item,
+      id_penugasan: idKegiatan,
+      id_surat_tugas: idKegiatan
+    })
+
+    grouped.set(key, current)
+  })
+
+  return Array.from(grouped.values())
 }
 
 /**
@@ -49,9 +81,11 @@ export const loadDataFromAPI = async (tableName) => {
     console.log(`[API] Loading ${tableName} from API...`)
     const data = await fetchAPI(endpoint)
     if (Array.isArray(data)) {
-      db[tableName] = data
+      db[tableName] = tableName === 'surat_tugas'
+        ? groupPenugasanByKegiatanRecords(data)
+        : data
       console.log(`[API] ✅ ${tableName}: ${data.length} records from API`)
-      return data
+      return db[tableName]
     } else {
       throw new Error(`Invalid data format for ${tableName}`)
     }

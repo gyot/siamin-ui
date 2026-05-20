@@ -133,7 +133,7 @@
                   </button>
                   <button @click="handleSuratTugas(k.id_kegiatan)"
                     class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-orange-600"
-                    title="Lihat/Buat Surat Tugas">
+                    title="Lihat/Buat Penugasan">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -567,16 +567,16 @@
           <span class="badge" :class="getStatusBadgeClass(selectedKegiatan.status)">
             {{ getStatusLabel(selectedKegiatan.status) }}
           </span>
-          <span class="text-sm text-slate-500">ID: {{ selectedKegiatan.id_kegiatan }}</span>
+          <!-- <span class="text-sm text-slate-500">ID: {{ selectedKegiatan.id_kegiatan }}</span> -->
 
 
           <button @click="handleSuratTugas(selectedKegiatan.id_kegiatan)"
-            class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-orange-600"
-            title="Lihat/Buat Surat Tugas">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            class="p-2 bg-green-100 hover:bg-slate-100 rounded-lg text-black-500 hover:text-orange-600"
+            title="Lihat/Buat Penugasan"> Penugasan
+            <!-- <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            </svg> -->
           </button>
 
         </div>
@@ -768,12 +768,12 @@
     </div>
   </div>
 
-  <!-- Modal Detail Surat Tugas -->
+  <!-- Modal Detail Penugasan -->
   <div v-if="showSuratTugasModal && selectedSuratTugas"
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between p-6 border-b border-slate-100 sticky top-0 bg-white">
-        <h3 class="text-2xl font-bold text-slate-800">Detail Surat Tugas</h3>
+        <h3 class="text-2xl font-bold text-slate-800">Detail Penugasan</h3>
         <button @click="showSuratTugasModal = false" class="text-slate-400 hover:text-slate-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -781,51 +781,33 @@
         </button>
       </div>
 
-      <div class="p-6 space-y-6">
-        <!-- Informasi Dasar -->
-        <div class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">Informasi Surat Tugas</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Nomor Surat</p>
-              <p class="text-lg font-semibold text-slate-800">{{ selectedSuratTugas.nomor_surat }}</p>
-            </div>
-            <div>
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">ID Surat Tugas</p>
-              <p class="text-lg font-semibold text-slate-800">{{ selectedSuratTugas.id_surat_tugas }}</p>
-            </div>
-            <div>
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Tanggal Surat</p>
-              <p class="text-lg font-semibold text-slate-800">{{ formatDate(selectedSuratTugas.tanggal_surat) }}</p>
-            </div>
-            <div>
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Status</p>
-              <span
-                :class="selectedSuratTugas.status === 'diterbitkan' ? 'badge bg-green-100 text-green-800' : 'badge bg-yellow-100 text-yellow-800'">
-                {{ selectedSuratTugas.status }}
-              </span>
-            </div>
-            <div class="md:col-span-2">
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">ID Kegiatan</p>
-              <p class="text-slate-700">{{ selectedSuratTugas.id_kegiatan }}</p>
+        <div class="p-6 space-y-6">
+          <!-- Informasi Dasar -->
+          <div class="border-b border-slate-100 pb-6">
+            <h4 class="text-lg font-semibold text-slate-800 mb-4">Informasi Penugasan</h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p class="text-xs font-medium text-slate-500 uppercase mb-1">ID Kegiatan</p>
+                <p class="text-lg font-semibold text-slate-800">{{ selectedSuratTugas.id_kegiatan || selectedSuratTugas.id_penugasan || selectedSuratTugas.id_surat_tugas || '-' }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-slate-500 uppercase mb-1">Kegiatan</p>
+                <p class="text-lg font-semibold text-slate-800">{{ selectedSuratTugas.kegiatan?.nama_kegiatan || '-' }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-slate-500 uppercase mb-1">Total Anggota</p>
+                <p class="text-lg font-semibold text-slate-800">{{ anggotaInSelected.length }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-slate-500 uppercase mb-1">Unit Kerja</p>
+                <p class="text-slate-700">{{ getUnitKerjaLabel(selectedSuratTugas.kegiatan || {}) }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-medium text-slate-500 uppercase mb-1">Tanggal Kegiatan</p>
+                <p class="text-slate-700">{{ formatDateRange(selectedSuratTugas.kegiatan?.tanggal_mulai, selectedSuratTugas.kegiatan?.tanggal_selesai) }}</p>
+              </div>
             </div>
           </div>
-        </div>
-
-        <!-- File & Links -->
-        <div v-if="selectedSuratTugas.file_surat" class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">File Surat</h4>
-          <div>
-            <a :href="selectedSuratTugas.file_surat" target="_blank"
-              class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              Unduh File Surat Tugas
-            </a>
-          </div>
-        </div>
 
         <!-- Timestamps -->
         <div class="border-b border-slate-100 pb-6">
@@ -842,15 +824,15 @@
           </div>
         </div>
 
-        <!-- Anggota Surat Tugas -->
+        <!-- Anggota Penugasan -->
         <div class="pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">Anggota Surat Tugas</h4>
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Anggota Penugasan</h4>
 
           <!-- Daftar Anggota Existing -->
           <div class="mb-6">
             <div v-if="anggotaInSelected.length === 0"
               class="p-4 bg-slate-50 border border-slate-200 rounded-lg text-center text-slate-600 text-sm mb-4">
-              Belum ada anggota surat tugas
+              Belum ada pegawai yang ditugaskan pada kegiatan ini
             </div>
             <div v-else class="overflow-x-auto mb-4">
               <table class="w-full text-sm">
@@ -864,7 +846,7 @@
                 <tbody>
                   <tr v-for="a in anggotaInSelected" :key="a.id" class="border-b">
                     <td class="p-2">{{ getNamaPegawai(a.id_pegawai) }}</td>
-                    <td class="p-2">{{ a.peran }}</td>
+                    <td class="p-2">{{ getPeranLabel(a.peran) }}</td>
                     <td class="p-2 text-center">
                       <button @click="removeAnggota(a.id)"
                         class="text-red-600 hover:text-red-800 text-sm font-medium">Hapus</button>
@@ -902,9 +884,9 @@
                   class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
                   <option value="penanggung_jawab">Penanggung Jawab</option>
                   <option value="ketua_panitia">Ketua Panitia</option>
-                  <option value="anggota_panitia">Anggota Panitia</option>
-                  <option value="sekretaris">Sekretaris</option>
-                  <option value="bendahara">Bendahara</option>
+                  <option value="panitia">Panitia</option>
+                  <option value="peserta">Peserta</option>
+                  <option value="narasumber">Narasumber</option>
                 </select>
               </div>
               <div class="flex items-end">
@@ -922,8 +904,8 @@
           <button @click="showSuratTugasModal = false"
             class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Tutup</button>
           <button
-            @click="router.push({ name: 'surat-tugas', query: { edit: 'true', id: selectedSuratTugas.id_surat_tugas } })"
-            class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium">Ubah Surat Tugas</button>
+            @click="router.push({ name: 'penugasan', query: { edit: 'true', id: selectedSuratTugas.id_kegiatan || selectedSuratTugas.id_penugasan || selectedSuratTugas.id_surat_tugas } })"
+            class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium">Buka Halaman Penugasan</button>
         </div>
       </div>
     </div>
@@ -1200,11 +1182,11 @@ import { ActivityEvents } from '@/services/activityLogger'
 import Spinner from '@/components/Spinner.vue'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
 import {
-  listSuratTugas,
-  listSuratTugasPegawai,
-  createSuratTugasPegawai,
-  removeSuratTugasPegawai
-} from '@/services/suratTugas'
+  groupPenugasanByKegiatan,
+  listPenugasanPegawai,
+  createPenugasanPegawai,
+  removePenugasanPegawai
+} from '@/services/penugasan'
 
 export default {
   name: 'Kegiatan',
@@ -1500,23 +1482,17 @@ export default {
 
     const loadKegiatan = async () => {
       isLoadingKegiatan.value = true
-      // console.debug('[Kegiatan] loadKegiatan start, user:', currentUser.value)
       try {
-        // console.log('[Kegiatan][Debug] unit_kerja_id user:', currentUser.value?.unit_kerja_id)
-        // console.log('[Kegiatan][Debug] unit_kerja user:', auth.unit_kerja)
+        auth.restoreAuth()
+        await auth.fetchMe().catch(() => {})
 
         const rawUnitKerjaIds = currentUser.value?.unit_kerja_id
-        // console.log('[Kegiatan][Debug] raw unit_kerja_id:', rawUnitKerjaIds)
         const unitKerjaIds = Array.isArray(rawUnitKerjaIds)
           ? rawUnitKerjaIds.filter(v => v !== null && v !== undefined && v !== '')
           : (rawUnitKerjaIds ? [rawUnitKerjaIds] : [])
 
-        if (unitKerjaIds.length === 0) {
-          kegiatan.value = []
-          return
-        }
-
         let merged = []
+        let source = 'kegiatan'
 
         try {
           const allKegiatan = await listKegiatan()
@@ -1525,26 +1501,18 @@ export default {
             : (Array.isArray(allKegiatan?.data) ? allKegiatan.data : [])
           if (rows.length > 0) {
             merged = rows.map((item) => ({ ...(item || {}) }))
-            // console.log('[Kegiatan][Debug] sumber data: listKegiatan()', merged.length)
           }
         } catch {
           // fallback ke endpoint per unit kerja jika listKegiatan gagal
         }
 
-        if (merged.length === 0) {
+        if (merged.length === 0 && unitKerjaIds.length > 0) {
+          source = 'kegiatan-tim'
           const results = await Promise.all(
             unitKerjaIds.map(async (id) => {
               try {
                 const res = await getKegiatanTim(id)
                 const rows = Array.isArray(res) ? res : []
-                // console.log(`[Kegiatan][Debug] getKegiatanTim(${id}) rows:`, rows.length)
-                // console.log(`[Kegiatan][Debug] sample getKegiatanTim(${id}):`, rows.slice(0, 3).map((item) => ({
-                //   id_kegiatan: item?.id_kegiatan,
-                //   unit_kerja_id: item?.unit_kerja_id,
-                //   id_tim: item?.id_tim,
-                //   unit_kerja: item?.unit_kerja
-                // })))
-                console.log('tim', id, res)
                 return rows.map((item) => {
                   const normalized = { ...(item || {}) }
                   normalized.__source_unit_kerja_id = id
@@ -1565,35 +1533,21 @@ export default {
         const deduped = Array.from(
           new Map(
             merged.map(item => [
-              `${item.id_kegiatan}_${item.__source_unit_kerja_id || item.unit_kerja_id}`,
+              source === 'kegiatan'
+                ? String(item.id_kegiatan)
+                : `${item.id_kegiatan}_${item.__source_unit_kerja_id || item.unit_kerja_id}`,
               item
             ])
           ).values()
         )
 
-        kegiatan.value = deduped.filter((item) => {
-          const unitId = normalizeUnitKerjaId(resolveKegiatanUnitKerjaId(item))
-          return unitId !== '' && userAllowedUnitKerjaSet.value.has(unitId)
-        })
-        const droppedByUnit = deduped.filter((item) => {
-          const unitId = normalizeUnitKerjaId(resolveKegiatanUnitKerjaId(item))
-          return !(unitId !== '' && userAllowedUnitKerjaSet.value.has(unitId))
-        })
-        if (droppedByUnit.length > 0) {
-          console.warn('[Kegiatan][Debug] kegiatan dibuang karena unit kerja tidak cocok/invalid:', droppedByUnit.map((item) => ({
-            id_kegiatan: item?.id_kegiatan,
-            unit_kerja_id: item?.unit_kerja_id,
-            id_tim: item?.id_tim,
-            __source_unit_kerja_id: item?.__source_unit_kerja_id
-          })))
-        }
-        console.log('[Kegiatan][Debug] hasil kegiatan + unit:', kegiatan.value.map(item => ({
-          id_kegiatan: item.id_kegiatan,
-          nama_kegiatan: item.nama_kegiatan,
-          unit_kerja_id: item.unit_kerja_id,
-          id_tim: item.id_tim,
-          __source_unit_kerja_id: item.__source_unit_kerja_id
-        })))
+        kegiatan.value = source === 'kegiatan'
+          ? deduped
+          : deduped.filter((item) => {
+              const unitId = normalizeUnitKerjaId(resolveKegiatanUnitKerjaId(item))
+              return unitId !== '' && userAllowedUnitKerjaSet.value.has(unitId)
+            })
+
         kegiatan.value.forEach(enrichWithLink)
       } catch (err) {
         // console.error('[Kegiatan] Failed to fetch kegiatan from API', err)
@@ -1620,7 +1574,6 @@ export default {
         } else if (Array.isArray(unitKerjaData?.data)) {
           unitKerjaMaster.value = unitKerjaData.data
         }
-        console.log('[Kegiatan][Debug] master unit_kerja:', unitKerjaMaster.value)
 
         await loadKegiatan()
         if (!formData.value.unit_kerja_id) {
@@ -1675,24 +1628,49 @@ export default {
     const selectedSuratTugas = ref(null)
     const suratTugasItems = ref([])
     const suratTugasPegawaiItems = ref([])
+    const syncSelectedSuratTugasSnapshot = () => {
+      if (!selectedSuratTugas.value) return
+
+      const selectedId = selectedSuratTugas.value.id_kegiatan
+        ?? selectedSuratTugas.value.id_penugasan
+        ?? selectedSuratTugas.value.id_surat_tugas
+        ?? null
+
+      const updated = suratTugasItems.value.find(
+        (item) => String(item.id_kegiatan ?? item.id_penugasan ?? item.id_surat_tugas ?? '') === String(selectedId ?? '')
+      )
+
+      if (updated) {
+        selectedSuratTugas.value = updated
+        return
+      }
+
+      selectedSuratTugas.value = {
+        ...selectedSuratTugas.value,
+        id_kegiatan: selectedId,
+        id_penugasan: selectedId,
+        id_surat_tugas: selectedId,
+        penugasan_pegawais: []
+      }
+    }
+
     const loadSuratTugasSnapshot = async () => {
       try {
-        const [suratData, anggotaData] = await Promise.all([
-          listSuratTugas(),
-          listSuratTugasPegawai()
-        ])
-        suratTugasItems.value = suratData
+        const anggotaData = await listPenugasanPegawai()
+        suratTugasItems.value = groupPenugasanByKegiatan(anggotaData)
         suratTugasPegawaiItems.value = anggotaData
       } catch (error) {
-        console.error('Failed to load surat tugas snapshot', error)
+        console.error('Failed to load penugasan snapshot', error)
         suratTugasItems.value = Array.isArray(db.surat_tugas) ? db.surat_tugas : []
         suratTugasPegawaiItems.value = Array.isArray(db.surat_tugas_pegawai) ? db.surat_tugas_pegawai : []
+      } finally {
+        syncSelectedSuratTugasSnapshot()
       }
     }
     const showBiodataModal = ref(false)
     const selectedPeserta = ref(null)
     const administrasiDocs = ref([
-      'Surat Tugas',
+      'Penugasan',
       'SPPD',
       'Tiket Pergi (Pulau Sumbawa)',
       'Tiket Pulang (Pulau Sumbawa)',
@@ -1714,7 +1692,7 @@ export default {
     const templateBiodataInput = ref(null)
     const templateBiodataFile = ref(null)
     const isTemplateBiodataCleared = ref(false)
-    const formAnggota = ref({ id_pegawai: '', peran: 'anggota_panitia' })
+    const formAnggota = ref({ id_pegawai: '', peran: 'panitia' })
     const formAnggotaErrors = ref([])
     const createEmptyAtkForm = () => ({
       nama_barang: '',
@@ -1825,8 +1803,13 @@ export default {
 
     const anggotaInSelected = computed(() => {
       if (!selectedSuratTugas.value) return []
+      const selectedId = selectedSuratTugas.value.id_kegiatan
+        ?? selectedSuratTugas.value.id_penugasan
+        ?? selectedSuratTugas.value.id_surat_tugas
+        ?? null
+
       return suratTugasPegawaiItems.value.filter(
-        (sp) => String(sp.id_surat_tugas) === String(selectedSuratTugas.value.id_surat_tugas)
+        (sp) => String(sp.id_kegiatan ?? sp.id_penugasan ?? sp.id_surat_tugas ?? '') === String(selectedId ?? '')
       )
     })
 
@@ -1881,14 +1864,11 @@ export default {
     }
 
     const filteredKegiatan = computed(() => {
-      let filtered = kegiatan.value.filter((item) => {
-        const unitId = normalizeUnitKerjaId(resolveKegiatanUnitKerjaId(item))
-        return unitId !== '' && userAllowedUnitKerjaSet.value.has(unitId)
-      })
+      let filtered = Array.isArray(kegiatan.value) ? [...kegiatan.value] : []
 
       if (searchQuery.value) {
         filtered = filtered.filter(k =>
-          k.nama_kegiatan.toLowerCase().includes(searchQuery.value.toLowerCase())
+          String(k.nama_kegiatan || '').toLowerCase().includes(searchQuery.value.toLowerCase())
         )
       }
 
@@ -2794,13 +2774,13 @@ export default {
       if (existingSuratTugas) {
         // Ada surat tugas, tampilkan modal
         selectedSuratTugas.value = existingSuratTugas
-        formAnggota.value = { id_pegawai: '', peran: 'anggota_panitia' }
+        formAnggota.value = { id_pegawai: '', peran: 'panitia' }
         showSuratTugasModal.value = true
       } else {
-        // Tidak ada, arahkan ke SuratTugasManagement
-        router.push({ name: 'surat-tugas', query: { create: 'true', id_kegiatan: idKegiatan } })
+          // Tidak ada, arahkan ke SuratTugasManagement
+          router.push({ name: 'penugasan', query: { create: 'true', id_kegiatan: idKegiatan } })
+        }
       }
-    }
 
     const sharePublicPesertaLink = async (kegiatanItem) => {
       const link = buildPublicPesertaLink(kegiatanItem?.id_kegiatan || '', kegiatanItem?.nama_kegiatan || '')
@@ -2846,39 +2826,50 @@ export default {
       // Cek duplikat
       const duplicate = anggotaInSelected.value.some(a => a.id_pegawai === formAnggota.value.id_pegawai)
       if (duplicate) {
-        formAnggotaErrors.value.push('Pegawai ini sudah ditambahkan ke surat tugas ini')
+        formAnggotaErrors.value.push('Pegawai ini sudah ditambahkan ke kegiatan ini')
       }
 
       if (formAnggotaErrors.value.length > 0) return
       try {
-        await createSuratTugasPegawai({
-          id_surat_tugas: selectedSuratTugas.value.id_surat_tugas,
+        await createPenugasanPegawai({
+          id_kegiatan: selectedSuratTugas.value.id_kegiatan ?? selectedSuratTugas.value.id_penugasan ?? selectedSuratTugas.value.id_surat_tugas,
           id_pegawai: formAnggota.value.id_pegawai,
           peran: formAnggota.value.peran
         })
         await loadSuratTugasSnapshot()
-        formAnggota.value = { id_pegawai: '', peran: 'anggota_panitia' }
+        formAnggota.value = { id_pegawai: '', peran: 'panitia' }
         formAnggotaErrors.value = []
       } catch (error) {
-        console.error('Failed to add anggota surat tugas', error)
-        formAnggotaErrors.value = [error?.message || 'Gagal menambah anggota surat tugas']
+        console.error('Failed to add anggota penugasan', error)
+        formAnggotaErrors.value = [error?.message || 'Gagal menambah anggota penugasan']
       }
     }
 
     const removeAnggota = async (id) => {
       if (!confirm('Hapus anggota ini?')) return
       try {
-        await removeSuratTugasPegawai(id)
+        await removePenugasanPegawai(id)
         await loadSuratTugasSnapshot()
       } catch (error) {
-        console.error('Failed to remove anggota surat tugas', error)
-        alert(error?.message || 'Gagal menghapus anggota surat tugas')
+        console.error('Failed to remove anggota penugasan', error)
+        alert(error?.message || 'Gagal menghapus anggota penugasan')
       }
     }
 
     const getNamaPegawai = (idPegawai) => {
       const p = db.pegawai.find(peg => String(peg.id_pegawai) === String(idPegawai))
       return p ? p.nama : '-'
+    }
+
+    const getPeranLabel = (peran) => {
+      const labels = {
+        penanggung_jawab: 'Penanggung Jawab',
+        ketua_panitia: 'Ketua Panitia',
+        panitia: 'Panitia',
+        peserta: 'Peserta',
+        narasumber: 'Narasumber'
+      }
+      return labels[peran] || peran || '-'
     }
 
     return {
@@ -2961,6 +2952,7 @@ export default {
       addAnggota,
       removeAnggota,
       getNamaPegawai,
+      getPeranLabel,
       previewLink,
       activityLinks,
       getActivityQrCodeUrl,

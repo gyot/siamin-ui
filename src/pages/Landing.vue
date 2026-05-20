@@ -41,7 +41,7 @@
                   <b class="text-yellow-400">K</b>egiatan</span>)
               </h2>
               <p class="text-blue-100 text-lg mb-8 leading-relaxed">
-                Platform terintegrasi untuk mengelola kegiatan, peserta, surat tugas, dan sertifikat digital secara
+                Platform terintegrasi untuk mengelola kegiatan, peserta, penugasan, dan sertifikat digital secara
                 efisien dan transparan.
               </p>
               <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
