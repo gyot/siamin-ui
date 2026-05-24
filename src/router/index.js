@@ -11,7 +11,7 @@ import Sertifikat from '../pages/Sertifikat.vue'
 import PegawaiManagement from '../pages/PegawaiManagement.vue'
 import UnitKerjaManagement from '../pages/UnitKerjaManagement.vue'
 import AnggotaManagement from '../pages/AnggotaManagement.vue'
-import PenugasanManagement from '../pages/SuratTugasManagement.vue'
+import Penugasan from '../pages/Penugasan.vue'
 import Profile from '../pages/Profile.vue'
 import Landing from '../pages/Landing.vue'
 import Login from '../pages/Login.vue'
@@ -118,11 +118,11 @@ const router = createRouter({
     {path:'kegiatan',name:'kegiatan',component:Kegiatan,meta:{title:'Manajemen Kegiatan',description:'Kelola seluruh kegiatan.'}},
     {path:'kegiatan/:id/peserta',name:'kegiatan-peserta',component:KegiatanPeserta,meta:{title:'Peserta Kegiatan',description:'Kelola peserta per kegiatan.'}},
     {path:'peserta',name:'peserta',component:PesertaManagement,meta:{title:'Manajemen Peserta',description:'Kelola data peserta kegiatan.'}},
-    {path:'penugasan',name:'penugasan',component:PenugasanManagement,meta:{title:'Penugasan',description:'Kelola penugasan kegiatan dan anggota pegawai.'}},
     {path:'sertifikat',name:'sertifikat',component:Sertifikat,meta:{title:'Sertifikat',description:'Kelola sertifikat peserta.'}},
     {path:'pegawai',name:'pegawai',component:PegawaiManagement,meta:{title:'Pegawai',description:'Kelola data pegawai.'}},
     {path:'unit-kerja',name:'unit-kerja',component:UnitKerjaManagement,meta:{title:'Unit Kerja',description:'Kelola unit kerja.'}},
     {path:'anggota',name:'anggota',component:AnggotaManagement,meta:{title:'Keanggotaan Tim',description:'Kelola anggota tim kerja.'}},
+    {path:'penugasan',name:'penugasan',component:Penugasan,meta:{title:'Penugasan Pegawai',description:'Lihat dan filter penugasan pegawai.'}},
     {path:'profile',name:'profile',component:Profile,meta:{title:'Profil',description:'Kelola profil pengguna.'}}
   ]}
  ]

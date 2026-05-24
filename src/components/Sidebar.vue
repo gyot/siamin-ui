@@ -84,6 +84,16 @@
           </svg>
           <span class="truncate text-sm">Pegawai & User</span>
         </RouterLink>
+        <RouterLink 
+          to="/admin/penugasan" 
+          class="sidebar-item"
+          @click="handleClick"
+        >
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6M7 21h10" />
+          </svg>
+          <span class="truncate text-sm">Penugasan</span>
+        </RouterLink>
         <!-- <RouterLink 
           to="/admin/unit-kerja" 
           class="sidebar-item"

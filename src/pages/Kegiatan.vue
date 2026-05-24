@@ -5,7 +5,7 @@
         <h1 class="text-2xl font-bold text-slate-800">Manajemen Kegiatan</h1>
         <p class="text-slate-500">Kelola semua kegiatan yang ada</p>
       </div>
-      <button @click="showAddModal = true; editingId = null; resetForm()"
+      <button @click="(showAddModal = true, editingId = null, isViewing = false, resetForm())"
         class="btn-primary px-5 py-2.5 text-white rounded-lg font-medium shadow flex items-center gap-2 w-fit">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -157,13 +157,20 @@
                         d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                   </button>
-                  <button @click="editKegiatan(k.id_kegiatan)"
+                  <!-- <button @click="editKegiatan(k.id_kegiatan)"
                     class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-blue-600" title="Edit">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </button>
+                  <button @click="duplicateKegiatan(k)"
+                    class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-indigo-600" title="Duplikat">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V9a2 2 0 012-2z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7V5a2 2 0 012-2h8" />
+                    </svg>
+                  </button> -->
                   <button @click="deleteKegiatan(k.id_kegiatan)"
                     class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-red-600" title="Hapus">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,14 +219,14 @@
   <div v-if="showAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between p-6 border-b border-slate-100 sticky top-0 bg-white">
-        <h3 class="text-xl font-bold text-slate-800">{{ editingId ? 'Edit' : 'Tambah' }} Kegiatan</h3>
+        <h3 class="text-xl font-bold text-slate-800">{{ isViewing ? 'Detail' : editingId ? 'Edit' : 'Tambah' }} Kegiatan</h3>
         <button @click="showAddModal = false" class="text-slate-400 hover:text-slate-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
-      <form @submit.prevent="saveKegiatan" class="p-6 space-y-6">
+      <form v-if="!isViewing" @submit.prevent="saveKegiatan" class="p-6 space-y-6">
 
         <!-- Informasi Dasar -->
         <div class="border-b border-slate-100 pb-6">
@@ -282,6 +289,14 @@
               <input type="text" v-model="formData.lokasi" placeholder="Lokasi kegiatan"
                 class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
                 required />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Kabupaten/Kota</label>
+              <select v-model="formData.kabupaten_kota"
+                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none bg-white">
+                <option value="">Pilih Kabupaten/Kota</option>
+                <option v-for="item in kabupatenKotaOptions" :key="item" :value="item">{{ item }}</option>
+              </select>
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-2">Flyer</label>
@@ -540,229 +555,127 @@
                 'Update' : 'Simpan' }}</button>
         </div>
       </form>
-    </div>
-  </div>
-
-  <!-- Modal Detail Kegiatan -->
-  <div v-if="showDetailModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div v-if="selectedKegiatan" class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between p-6 border-b border-slate-100 sticky top-0 bg-white">
-        <h3 class="text-2xl font-bold text-slate-800">{{ selectedKegiatan.nama_kegiatan }}</h3>
-        <button @click="showDetailModal = false" class="text-slate-400 hover:text-slate-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <div class="p-6 space-y-6">
-
-        <!-- Flyer Preview -->
-        <div v-if="selectedKegiatan.flyer" class="border border-slate-200 rounded-lg overflow-hidden">
-          <img :src="getFlyerUrl(selectedKegiatan.flyer)" alt="Flyer" class="w-full max-h-64 object-cover" />
-        </div>
-
-        <!-- Status Badge -->
-        <div class="flex items-center gap-3">
-          <span class="badge" :class="getStatusBadgeClass(selectedKegiatan.status)">
-            {{ getStatusLabel(selectedKegiatan.status) }}
-          </span>
-          <!-- <span class="text-sm text-slate-500">ID: {{ selectedKegiatan.id_kegiatan }}</span> -->
-
-
-          <button @click="handleSuratTugas(selectedKegiatan.id_kegiatan)"
-            class="p-2 bg-green-100 hover:bg-slate-100 rounded-lg text-black-500 hover:text-orange-600"
-            title="Lihat/Buat Penugasan"> Penugasan
-            <!-- <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg> -->
-          </button>
-
-        </div>
-
-        <!-- Informasi Dasar -->
+      <div v-else class="p-6 space-y-6">
         <div class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">Informasi Dasar</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Informasi Kegiatan</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
             <div>
-              <p class="text-xs font-medium text-slate-500 uppercase">Nama Kegiatan</p>
-              <p class="text-slate-800 font-medium">{{ selectedKegiatan.nama_kegiatan }}</p>
+              <p class="text-xs text-slate-500">Nama Kegiatan</p>
+              <p class="font-medium">{{ formData.nama_kegiatan || '-' }}</p>
             </div>
             <div>
-              <p class="text-xs font-medium text-slate-500 uppercase">Total Peserta</p>
-              <p class="text-slate-800 font-medium">{{ selectedKegiatan.total_peserta }} orang</p>
+              <p class="text-xs text-slate-500">Unit Kerja</p>
+              <p class="font-medium">{{ getUnitKerjaLabel(formData) }}</p>
             </div>
             <div>
-              <p class="text-xs font-medium text-slate-500 uppercase">Unit Kerja</p>
-              <p class="text-slate-800 font-medium">{{ getUnitKerjaLabel(selectedKegiatan) }}</p>
-            </div>
-            <button @click="openPesertaList(selectedKegiatan.id_kegiatan)"
-              class="p-2 bg-green-100 hover:bg-slate-200 rounded-lg text-slate-500 hover:text-green-600"
-              title="Peserta">
-              Daftar Peserta
-            </button>
-            <!-- <div class="md:col-span-2">
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Rincian Kegiatan</p>
-              <p class="text-slate-700">{{ selectedKegiatan.rincian_kegiatan || '-' }}</p>
-            </div> -->
-            <div class="md:col-span-2">
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Deskripsi</p>
-              <p class="text-slate-700">{{ selectedKegiatan.deskripsi || '-' }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Jadwal & Lokasi -->
-        <div class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">Jadwal & Lokasi</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p class="text-xs font-medium text-slate-500 uppercase">Tanggal Mulai</p>
-              <p class="text-slate-800 font-medium">{{ formatDate(selectedKegiatan.tanggal_mulai) }}</p>
+              <p class="text-xs text-slate-500">Tanggal Mulai</p>
+              <p class="font-medium">{{ formatDate(formData.tanggal_mulai) }}</p>
             </div>
             <div>
-              <p class="text-xs font-medium text-slate-500 uppercase">Tanggal Selesai</p>
-              <p class="text-slate-800 font-medium">{{ formatDate(selectedKegiatan.tanggal_selesai) }}</p>
+              <p class="text-xs text-slate-500">Tanggal Selesai</p>
+              <p class="font-medium">{{ formatDate(formData.tanggal_selesai) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500">Lokasi</p>
+              <p class="font-medium">{{ formData.lokasi || '-' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500">Kabupaten/Kota</p>
+              <p class="font-medium">{{ formData.kabupaten_kota || '-' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500">Metode Pelaksanaan</p>
+              <p class="font-medium">{{ getMetodeLabel(formData.metode_pelaksanaan) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500">Metode Pembayaran</p>
+              <p class="font-medium">{{ getPaymentMethodLabel(formData.metode_pembayaran) }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500">Total Peserta</p>
+              <p class="font-medium">{{ formData.total_peserta ?? '-' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500">Ringkasan Peserta</p>
+              <p class="font-medium">{{ formData.peserta_ringkasan || '-' }}</p>
             </div>
             <div class="md:col-span-2">
-              <p class="text-xs font-medium text-slate-500 uppercase">Lokasi</p>
-              <p class="text-slate-800 font-medium">{{ selectedKegiatan.lokasi }}</p>
+              <p class="text-xs text-slate-500">Deskripsi</p>
+              <p class="whitespace-pre-line">{{ formData.deskripsi || '-' }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Metode & Pembayaran -->
         <div class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">Metode & Pembayaran</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Daftar ATK</h4>
+          <div v-if="atkItems.length > 0" class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                  <th class="px-4 py-2 text-left">No</th>
+                  <th class="px-4 py-2 text-left">Nama Barang</th>
+                  <th class="px-4 py-2 text-left">Spesifikasi</th>
+                  <th class="px-4 py-2 text-left">Jumlah</th>
+                  <th class="px-4 py-2 text-left">Satuan</th>
+                  <th class="px-4 py-2 text-left">Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, idx) in atkItems" :key="idx" class="border-t">
+                  <td class="px-4 py-2">{{ idx + 1 }}</td>
+                  <td class="px-4 py-2">{{ item.nama_barang || '-' }}</td>
+                  <td class="px-4 py-2">{{ item.spesifikasi || '-' }}</td>
+                  <td class="px-4 py-2">{{ item.jumlah !== null && item.jumlah !== undefined ? item.jumlah : '-' }}</td>
+                  <td class="px-4 py-2">{{ item.satuan || '-' }}</td>
+                  <td class="px-4 py-2">{{ item.keterangan || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="text-sm text-slate-600">Tidak ada daftar ATK.</div>
+        </div>
+
+        <div class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Resource URL</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
             <div>
-              <p class="text-xs font-medium text-slate-500 uppercase">Metode Pelaksanaan</p>
-              <p class="text-slate-800 font-medium">{{ getMetodeLabel(selectedKegiatan.metode_pelaksanaan) }}</p>
+              <p class="text-xs text-slate-500">URL Dokumentasi</p>
+              <p class="font-medium break-all">{{ formData.dokumentasi_url || '-' }}</p>
             </div>
             <div>
-              <p class="text-xs font-medium text-slate-500 uppercase">Metode Pembayaran</p>
-              <p class="text-slate-800 font-medium">{{ getPaymentMethodLabel(selectedKegiatan.metode_pembayaran) }}</p>
+              <p class="text-xs text-slate-500">URL Materi</p>
+              <p class="font-medium break-all">{{ formData.materi_url || '-' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500">URL Panduan</p>
+              <p class="font-medium break-all">{{ formData.panduan_url || '-' }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500">URL Laporan</p>
+              <p class="font-medium break-all">{{ formData.laporan_url || '-' }}</p>
+            </div>
+            <div class="md:col-span-2">
+              <p class="text-xs text-slate-500">URL Surat Menyurat</p>
+              <p class="font-medium break-all">{{ formData.surat_menyurat_url || '-' }}</p>
             </div>
           </div>
         </div>
 
-        <div>
-          <p class="text-xs font-medium text-slate-500 uppercase">Ringkasan Peserta</p>
-          <p class="text-slate-800">{{ selectedKegiatan.peserta_ringkasan || '-' }}</p>
-        </div>
-
-
-        <!-- <div class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">Laporan dan Evaluasi</h4>
-          <div class="space-y-2">
-            <div class="rounded-lg border border-slate-200 p-3">
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Link Evaluasi</p>
-              <a :href="buildPublicEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan)" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
-                {{ buildPublicEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan) }}
-              </a>
-              <div class="mt-3">
-                <img v-if="getActivityQrCodeUrl(buildPublicEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan))" :src="getActivityQrCodeUrl(buildPublicEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan))"
-                  :alt="`QR Evaluasi`" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
-              </div>
-            </div>
-
-            <div class="rounded-lg border border-slate-200 p-3">
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Laporan Evaluasi</p>
-              <a :href="buildPublicLaporanEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan)" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
-                {{ buildPublicLaporanEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan) }}
-              </a>
-              <div class="mt-3">
-                <img v-if="getActivityQrCodeUrl(buildPublicLaporanEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan))" :src="getActivityQrCodeUrl(buildPublicLaporanEvaluasiLink(selectedKegiatan.id_kegiatan, selectedKegiatan.nama_kegiatan))"
-                  :alt="`QR Laporan Evaluasi`" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
-              </div>
-            </div>
-          </div>
-        </div> -->
-
-        <!-- Formulir Links -->
-        <div class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">Daftar Tautan</h4>
-          <div class="space-y-2">
-
-            <div v-for="item in activityLinks" :key="item.role" class="rounded-lg border border-slate-200 p-3">
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">{{ item.label }}</p>
-              <a :href="item.url" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
-                {{ item.url }}
-              </a>
-              <div class="mt-3">
-                <img v-if="getActivityQrCodeUrl(item.url)" :src="getActivityQrCodeUrl(item.url)"
-                  :alt="`QR ${item.label}`" class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- <div v-if="selectedKegiatan.template_biodata" class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-3">Template Biodata</h4>
-          <a
-            :href="getStorageFileUrl(selectedKegiatan.template_biodata)"
-            target="_blank"
-            download
-            class="text-emerald-700 hover:text-emerald-800 underline text-sm break-all"
-          >
-            Download Contoh Template Biodata
-          </a>
-        </div> -->
-
-        <!-- Peserta Count Section -->
-        <div class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">Data Peserta</h4>
+        <div class="pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Status</h4>
           <div>
-            <p class="text-xs font-medium text-slate-500 uppercase mb-1">Total Peserta</p>
-            <p class="text-lg font-semibold text-slate-800">{{ selectedKegiatan.total_peserta }} orang</p>
+            <p class="text-xs text-slate-500">Status Kegiatan</p>
+            <p class="font-medium">{{ getStatusLabel(formData.status) }}</p>
           </div>
         </div>
 
-        <!-- Resources URL -->
-        <div v-if="hasResourceUrls()" class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">Resource</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div v-if="selectedKegiatan.dokumentasi_url">
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Dokumentasi</p>
-              <a :href="selectedKegiatan.dokumentasi_url" target="_blank"
-                class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
-                {{ selectedKegiatan.dokumentasi_url }}
-              </a>
-            </div>
-            <div v-if="selectedKegiatan.materi_url">
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Materi</p>
-              <a :href="selectedKegiatan.materi_url" target="_blank"
-                class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
-                {{ selectedKegiatan.materi_url }}
-              </a>
-            </div>
-            <div v-if="selectedKegiatan.panduan_url">
-              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Panduan</p>
-              <a :href="selectedKegiatan.panduan_url" target="_blank"
-                class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
-                {{ selectedKegiatan.panduan_url }}
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
         <div class="flex gap-3 pt-4 border-t border-slate-200">
-          <button @click="showDetailModal = false"
-            class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Tutup</button>
-          <!-- <button
-            @click="router.push({ name: 'laporan-evaluasi', params: { kode: selectedKegiatan.id_kegiatan, slugJudul: selectedKegiatan.nama_kegiatan } })"
-            class="flex-1 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-medium hover:shadow-lg transition"
-            title="Lihat Laporan Evaluasi">
-            <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Laporan
-          </button> -->
-          <button @click="openEditFromDetail()"
+          <button type="button" @click="duplicateKegiatan(selectedKegiatan)"
+            class="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">Duplikat</button>
+          <button type="button" @click="openEditFromDetail"
             class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium">Edit</button>
+          <button type="button" @click="showAddModal = false"
+            class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Tutup</button>
         </div>
       </div>
     </div>
@@ -781,7 +694,7 @@
         </button>
       </div>
 
-        <div class="p-6 space-y-6">
+      <div class="p-6 space-y-6">
           <!-- Informasi Dasar -->
           <div class="border-b border-slate-100 pb-6">
             <h4 class="text-lg font-semibold text-slate-800 mb-4">Informasi Penugasan</h4>
@@ -837,21 +750,29 @@
             <div v-else class="overflow-x-auto mb-4">
               <table class="w-full text-sm">
                 <thead>
-                  <tr class="bg-slate-100">
-                    <th class="p-2 text-left">Nama Pegawai</th>
-                    <th class="p-2 text-left">Peran</th>
-                    <th class="p-2 text-center">Aksi</th>
-                  </tr>
+                    <tr class="bg-slate-100">
+                      <th class="p-2 text-left">No</th>
+                      <th class="p-2 text-left">Nama, NIP, Pangkat, dan Gol</th>
+                      <th class="p-2 text-left">Jabatan</th>
+                      <th class="p-2 text-left">Jabatan dalam Kegiatan</th>
+                      <th class="p-2 text-left">Aksi</th>
+                    </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="a in anggotaInSelected" :key="a.id" class="border-b">
-                    <td class="p-2">{{ getNamaPegawai(a.id_pegawai) }}</td>
-                    <td class="p-2">{{ getPeranLabel(a.peran) }}</td>
-                    <td class="p-2 text-center">
-                      <button @click="removeAnggota(a.id)"
-                        class="text-red-600 hover:text-red-800 text-sm font-medium">Hapus</button>
-                    </td>
-                  </tr>
+                    <tr v-for="(a, idx) in anggotaInSelected" :key="a.id || idx" class="border-b">
+                      <td class="p-2 align-top">{{ idx + 1 }}</td>
+                      <td class="p-2">
+                        <div class="font-semibold">{{ (a.pegawai && a.pegawai.nama) || getNamaPegawai(a.id_pegawai) }}</div>
+                        <div class="text-xs text-slate-600 mt-1">NIP. {{ (a.pegawai && (a.pegawai.nip || a.pegawai.nip_pegawai)) || '-' }}</div>
+                        <div class="text-xs text-slate-600">{{ (a.pegawai && (a.pegawai.pangkat || a.pegawai.pangkat_golongan || a.pegawai.pangkat_gol)) ? ((a.pegawai.pangkat || a.pegawai.pangkat_golongan || a.pegawai.pangkat_gol) + ' ' + (a.pegawai.golongan || a.pegawai.gol || '')) : '-' }}</div>
+                      </td>
+                      <td class="p-2">{{ (a.pegawai && (a.pegawai.nama_jabatan || a.pegawai.jabatan || a.pegawai.nama_jabatan)) || '-' }}</td>
+                      <td class="p-2">{{ getPeranLabel(a.peran) }}</td>
+                      <td class="p-2 text-right">
+                        <button @click="editAnggota(a)" type="button" class="mr-2 px-2 py-1 text-sm bg-yellow-100 rounded">Ubah</button>
+                        <button @click="removeAnggota(a.id)" type="button" class="px-2 py-1 text-sm bg-red-100 text-red-700 rounded">Hapus</button>
+                      </td>
+                    </tr>
                 </tbody>
               </table>
             </div>
@@ -889,11 +810,13 @@
                   <option value="narasumber">Narasumber</option>
                 </select>
               </div>
-              <div class="flex items-end">
+              <div class="flex items-end gap-2">
                 <button @click="addAnggota" type="button"
                   class="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
-                  Tambah
+                  {{ editingAnggotaId ? 'Simpan Perubahan' : 'Tambah' }}
                 </button>
+                <button v-if="editingAnggotaId" @click="cancelEditAnggota" type="button"
+                  class="px-3 py-2 border border-slate-300 rounded-lg text-sm">Batal</button>
               </div>
             </div>
           </div>
@@ -901,11 +824,11 @@
 
         <!-- Action Buttons -->
         <div class="flex gap-3 pt-4 border-t border-slate-200">
+          <button @click="copyAnggotaTable"
+            class="px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Salin Tabel</button>
           <button @click="showSuratTugasModal = false"
             class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Tutup</button>
-          <button
-            @click="router.push({ name: 'penugasan', query: { edit: 'true', id: selectedSuratTugas.id_kegiatan || selectedSuratTugas.id_penugasan || selectedSuratTugas.id_surat_tugas } })"
-            class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium">Buka Halaman Penugasan</button>
+          <!-- Penugasan sekarang dikelola via modal; tombol navigasi ke halaman penugasan dihapus -->
         </div>
       </div>
     </div>
@@ -1185,7 +1108,8 @@ import {
   groupPenugasanByKegiatan,
   listPenugasanPegawai,
   createPenugasanPegawai,
-  removePenugasanPegawai
+  removePenugasanPegawai,
+  editPenugasanPegawai
 } from '@/services/penugasan'
 
 export default {
@@ -1622,7 +1546,7 @@ export default {
     const activeFilter = ref('all')
     const filterTahun = ref('')
     const showAddModal = ref(false)
-    const showDetailModal = ref(false)
+    const isViewing = ref(false)
     const selectedKegiatan = ref(null)
     const showSuratTugasModal = ref(false)
     const selectedSuratTugas = ref(null)
@@ -1694,6 +1618,7 @@ export default {
     const isTemplateBiodataCleared = ref(false)
     const formAnggota = ref({ id_pegawai: '', peran: 'panitia' })
     const formAnggotaErrors = ref([])
+    const editingAnggotaId = ref(null)
     const createEmptyAtkForm = () => ({
       nama_barang: '',
       spesifikasi: '',
@@ -1714,6 +1639,7 @@ export default {
       tanggal_mulai: '',
       tanggal_selesai: '',
       lokasi: '',
+      kabupaten_kota: '',
       flyer: '',
       metode_pelaksanaan: 'daring',
       metode_pembayaran: 'tidak_dibayar',
@@ -1728,6 +1654,20 @@ export default {
       status: 'draft',
       id_pegawai: null
     })
+
+    const kabupatenKotaOptions = ref([
+      'Kabupaten Lombok Barat',
+      'Kabupaten Lombok Tengah',
+      'Kabupaten Lombok Timur',
+      'Kabupaten Lombok Utara',
+      'Kabupaten Sumbawa',
+      'Kabupaten Sumbawa Barat',
+      'Kabupaten Dompu',
+      'Kabupaten Bima',
+      'Kota Mataram',
+      'Kota Bima',
+      'Lainnya'
+    ])
 
     const previewLink = computed(() => {
       const kode = formData.value.id_kegiatan || editingId.value || ''
@@ -1813,7 +1753,10 @@ export default {
       )
     })
 
-    const pegawaiOptions = computed(() => db.pegawai || [])
+    const pegawaiOptions = computed(() => {
+      // Prefer runtime-loaded pegawai list, fall back to bundled data
+      return (Array.isArray(pegawai.value) && pegawai.value.length > 0) ? pegawai.value : (db.pegawai || [])
+    })
 
     const resetForm = () => {
       formData.value = {
@@ -1985,31 +1928,26 @@ export default {
     const viewDetail = async (id) => {
       try {
         const item = await getKegiatan(id)
-        if (item) {
-          const listItem = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
-          const unitFallback = listItem?.unit_kerja_id ?? listItem?.id_tim ?? listItem?.__source_unit_kerja_id ?? null
-          selectedKegiatan.value = {
-            ...item,
-            unit_kerja_id: item.unit_kerja_id ?? unitFallback,
-            id_tim: item.id_tim ?? unitFallback,
-            __source_unit_kerja_id: item.__source_unit_kerja_id ?? unitFallback
-          }
-          loadKegiatanAtkItems(item)
-          showDetailModal.value = true
-          // Log viewing detail
-          ActivityEvents.VIEW_KEGIATAN_DETAIL(id, item.nama_kegiatan)
-          return
+        const sourceItem = item || (kegiatan.value.find(k => String(k.id_kegiatan) === String(id)) || null)
+        if (!sourceItem) return
+        const listItem = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
+        const unitFallback = listItem?.unit_kerja_id ?? listItem?.id_tim ?? listItem?.__source_unit_kerja_id ?? null
+        selectedKegiatan.value = {
+          ...sourceItem,
+          unit_kerja_id: sourceItem.unit_kerja_id ?? unitFallback,
+          id_tim: sourceItem.id_tim ?? unitFallback,
+          __source_unit_kerja_id: sourceItem.__source_unit_kerja_id ?? unitFallback
         }
-      } catch (err) {
-        console.warn('Failed to load kegiatan from API', err)
-      }
-      const item = kegiatan.value.find(k => k.id_kegiatan === id)
-      if (item) {
-        selectedKegiatan.value = { ...item }
-        loadKegiatanAtkItems(item)
-        showDetailModal.value = true
+        // Prefill the add-modal form but in read-only mode
+        formData.value = normalizeKegiatanFormData(selectedKegiatan.value)
+        loadKegiatanAtkItems(selectedKegiatan.value)
+        editingId.value = null
+        isViewing.value = true
+        showAddModal.value = true
         // Log viewing detail
-        ActivityEvents.VIEW_KEGIATAN_DETAIL(id, item.nama_kegiatan)
+        ActivityEvents.VIEW_KEGIATAN_DETAIL(id, selectedKegiatan.value?.nama_kegiatan)
+      } catch (err) {
+        console.warn('Failed to load kegiatan for view', err)
       }
     }
 
@@ -2020,7 +1958,7 @@ export default {
         templateBiodataFile.value = null
         isTemplateBiodataCleared.value = false
         editingId.value = selectedKegiatan.value.id_kegiatan
-        showDetailModal.value = false
+        isViewing.value = false
         showAddModal.value = true
         loadKegiatanAtkItems(selectedKegiatan.value)
       }
@@ -2195,6 +2133,15 @@ export default {
       atkItems.value = rows.map(normalizeAtkItem)
     }
 
+    const showAllData = ref(false)
+    const prettySelectedKegiatan = computed(() => {
+      try {
+        return JSON.stringify(selectedKegiatan.value || {}, null, 2)
+      } catch (e) {
+        return String(selectedKegiatan.value || '')
+      }
+    })
+
     const addAtkItem = () => {
       const namaBarang = String(atkForm.value.nama_barang || '').trim()
       const spesifikasi = String(atkForm.value.spesifikasi || '').trim()
@@ -2260,6 +2207,7 @@ export default {
         panduan_url: data.panduan_url,
         laporan_url: data.laporan_url,
         surat_menyurat_url: data.surat_menyurat_url,
+        kabupaten_kota: data.kabupaten_kota,
         status: data.status
       }
 
@@ -2314,6 +2262,45 @@ export default {
           showAddModal.value = true
           loadKegiatanAtkItems(item)
         }
+      }
+    }
+
+    const duplicateKegiatan = async (item) => {
+      try {
+        let source = item || {}
+        const sourceId = source.id_kegiatan || source.id
+
+        if (sourceId) {
+          try {
+            source = {
+              ...source,
+              ...(await getKegiatan(sourceId) || {})
+            }
+          } catch (err) {
+            console.warn('Failed to load full kegiatan before duplicate, using current row data', err)
+          }
+        }
+
+        // Prepare form with normalized values but ensure we are creating a new record
+        formData.value = normalizeKegiatanFormData({ ...source })
+        // Remove any identifying fields
+        delete formData.value.id_kegiatan
+        delete formData.value.id
+        editingId.value = null
+        isViewing.value = false
+        formError.value = ''
+        submitStatus.value.visible = false
+        // Reset file inputs (user can re-upload if desired)
+        flyerFile.value = null
+        templateBiodataFile.value = null
+        isTemplateBiodataCleared.value = false
+        // Load ATK items from source
+        loadKegiatanAtkItems(source)
+        // Open add modal for creating (pre-filled)
+        showAddModal.value = true
+      } catch (err) {
+        console.error('Failed to duplicate kegiatan', err)
+        alert('Gagal menyiapkan duplikat kegiatan')
       }
     }
 
@@ -2774,13 +2761,25 @@ export default {
       if (existingSuratTugas) {
         // Ada surat tugas, tampilkan modal
         selectedSuratTugas.value = existingSuratTugas
+        // Jika data kegiatan belum terisi dari hasil grouping, coba ambil dari daftar kegiatan utama
+        if (!selectedSuratTugas.value.kegiatan) {
+          const kegiatanObj = (Array.isArray(kegiatan.value) ? kegiatan.value : []).find(k => String(k.id_kegiatan ?? k.id) === String(idKegiatan))
+          if (kegiatanObj) selectedSuratTugas.value.kegiatan = kegiatanObj
+        }
+        // Sync snapshot to ensure anggota list is up-to-date
+        syncSelectedSuratTugasSnapshot()
         formAnggota.value = { id_pegawai: '', peran: 'panitia' }
         showSuratTugasModal.value = true
       } else {
-          // Tidak ada, arahkan ke SuratTugasManagement
-          router.push({ name: 'penugasan', query: { create: 'true', id_kegiatan: idKegiatan } })
-        }
+        // Tidak ada, buka modal kosong untuk membuat penugasan baru
+        selectedSuratTugas.value = { id_kegiatan: idKegiatan, kegiatan: null, penugasan_pegawais: [] }
+        const kegiatanObj = (Array.isArray(kegiatan.value) ? kegiatan.value : []).find(k => String(k.id_kegiatan ?? k.id) === String(idKegiatan))
+        if (kegiatanObj) selectedSuratTugas.value.kegiatan = kegiatanObj
+        syncSelectedSuratTugasSnapshot()
+        formAnggota.value = { id_pegawai: '', peran: 'panitia' }
+        showSuratTugasModal.value = true
       }
+    }
 
     const sharePublicPesertaLink = async (kegiatanItem) => {
       const link = buildPublicPesertaLink(kegiatanItem?.id_kegiatan || '', kegiatanItem?.nama_kegiatan || '')
@@ -2807,6 +2806,49 @@ export default {
       }
     }
 
+    const parseDateValue = (value) => {
+      const timestamp = new Date(value).getTime()
+      return Number.isNaN(timestamp) ? null : timestamp
+    }
+
+    const dateRangesOverlap = (startA, endA, startB, endB) => {
+      if (startA === null || endA === null || startB === null || endB === null) return false
+      return startA <= endB && startB <= endA
+    }
+
+    const getKegiatanDateRange = (kegiatanItem = {}) => {
+      return [
+        parseDateValue(kegiatanItem.tanggal_mulai),
+        parseDateValue(kegiatanItem.tanggal_selesai)
+      ]
+    }
+
+    const findOverlappingKegiatanForPegawai = (pegawaiId, kegiatanId, excludeAssignmentId = null) => {
+      const selectedKegiatan = selectedSuratTugas.value?.kegiatan
+        || (Array.isArray(kegiatan.value) ? kegiatan.value.find((item) => String(item.id_kegiatan) === String(kegiatanId)) : null)
+
+      if (!selectedKegiatan) return null
+
+      const [selectedStart, selectedEnd] = getKegiatanDateRange(selectedKegiatan)
+      if (selectedStart === null || selectedEnd === null) return null
+
+      return suratTugasPegawaiItems.value.find((sp) => {
+        if (!sp.id_pegawai || String(sp.id_pegawai) !== String(pegawaiId)) return false
+        if (excludeAssignmentId && String(sp.id) === String(excludeAssignmentId)) return false
+
+        const currentKegiatanId = sp.id_kegiatan ?? sp.id_penugasan ?? sp.id_surat_tugas
+        if (String(currentKegiatanId) === String(kegiatanId)) return false
+
+        const otherKegiatan = sp.kegiatan
+          || (Array.isArray(kegiatan.value) ? kegiatan.value.find((item) => String(item.id_kegiatan) === String(currentKegiatanId)) : null)
+
+        if (!otherKegiatan) return false
+
+        const [otherStart, otherEnd] = getKegiatanDateRange(otherKegiatan)
+        return dateRangesOverlap(selectedStart, selectedEnd, otherStart, otherEnd)
+      })
+    }
+
     const addAnggota = async () => {
       formAnggotaErrors.value = []
 
@@ -2818,30 +2860,56 @@ export default {
         formAnggotaErrors.value.push('Peran wajib dipilih')
       }
 
-      const pegawai = db.pegawai.find(p => p.id_pegawai === formAnggota.value.id_pegawai)
-      if (formAnggota.value.id_pegawai && !pegawai) {
+      const pegawaiItem = (Array.isArray(pegawai.value) ? pegawai.value : []).find(p => p.id_pegawai === formAnggota.value.id_pegawai)
+      if (formAnggota.value.id_pegawai && !pegawaiItem) {
         formAnggotaErrors.value.push('Pegawai tidak ditemukan')
       }
 
       // Cek duplikat
-      const duplicate = anggotaInSelected.value.some(a => a.id_pegawai === formAnggota.value.id_pegawai)
+      const duplicate = anggotaInSelected.value.some((a) => String(a.id_pegawai) === String(formAnggota.value.id_pegawai) && String(a.id) !== String(editingAnggotaId.value))
       if (duplicate) {
         formAnggotaErrors.value.push('Pegawai ini sudah ditambahkan ke kegiatan ini')
       }
 
+      const selectedId = selectedSuratTugas.value?.id_kegiatan
+        ?? selectedSuratTugas.value?.id_penugasan
+        ?? selectedSuratTugas.value?.id_surat_tugas
+
+      const overlappingAssignment = formAnggota.value.id_pegawai && selectedId
+        ? findOverlappingKegiatanForPegawai(formAnggota.value.id_pegawai, selectedId, editingAnggotaId.value)
+        : null
+
+      if (overlappingAssignment) {
+        const otherKegiatan = overlappingAssignment.kegiatan || {}
+        const tanggal = formatDateRange(otherKegiatan.tanggal_mulai, otherKegiatan.tanggal_selesai)
+        formAnggotaErrors.value.push(
+          `Pegawai ini sudah memiliki tugas pada kegiatan ${otherKegiatan.nama_kegiatan || '-'}, ${otherKegiatan.lokasi || '-'}, ${tanggal}`
+        )
+      }
+
       if (formAnggotaErrors.value.length > 0) return
       try {
-        await createPenugasanPegawai({
-          id_kegiatan: selectedSuratTugas.value.id_kegiatan ?? selectedSuratTugas.value.id_penugasan ?? selectedSuratTugas.value.id_surat_tugas,
-          id_pegawai: formAnggota.value.id_pegawai,
-          peran: formAnggota.value.peran
-        })
+        if (editingAnggotaId.value) {
+          // Update anggota
+          await editPenugasanPegawai(editingAnggotaId.value, {
+            id_kegiatan: selectedSuratTugas.value.id_kegiatan ?? selectedSuratTugas.value.id_penugasan ?? selectedSuratTugas.value.id_surat_tugas,
+            id_pegawai: formAnggota.value.id_pegawai,
+            peran: formAnggota.value.peran
+          })
+        } else {
+          await createPenugasanPegawai({
+            id_kegiatan: selectedSuratTugas.value.id_kegiatan ?? selectedSuratTugas.value.id_penugasan ?? selectedSuratTugas.value.id_surat_tugas,
+            id_pegawai: formAnggota.value.id_pegawai,
+            peran: formAnggota.value.peran
+          })
+        }
         await loadSuratTugasSnapshot()
         formAnggota.value = { id_pegawai: '', peran: 'panitia' }
         formAnggotaErrors.value = []
+        editingAnggotaId.value = null
       } catch (error) {
-        console.error('Failed to add anggota penugasan', error)
-        formAnggotaErrors.value = [error?.message || 'Gagal menambah anggota penugasan']
+        console.error('Failed to add/edit anggota penugasan', error)
+        formAnggotaErrors.value = [error?.message || 'Gagal menambah/ubah anggota penugasan']
       }
     }
 
@@ -2856,8 +2924,79 @@ export default {
       }
     }
 
+    const editAnggota = (anggota) => {
+      editingAnggotaId.value = anggota.id
+      formAnggota.value = {
+        id_pegawai: anggota.id_pegawai,
+        peran: anggota.peran || 'panitia'
+      }
+      // ensure selectedSuratTugas is the current group
+      syncSelectedSuratTugasSnapshot()
+    }
+
+    const cancelEditAnggota = () => {
+      editingAnggotaId.value = null
+      formAnggota.value = { id_pegawai: '', peran: 'panitia' }
+      formAnggotaErrors.value = []
+    }
+
+    const escapeHtml = (unsafe) => {
+      if (!unsafe && unsafe !== 0) return ''
+      return String(unsafe)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+    }
+
+    const copyAnggotaTable = async () => {
+      const rows = anggotaInSelected.value || []
+      if (!rows.length) {
+        alert('Tidak ada anggota untuk disalin')
+        return
+      }
+
+      const thead = `<tr><th>No</th><th>Nama, NIP, Pangkat, dan Gol</th><th>Jabatan</th><th>Jabatan dalam Kegiatan</th></tr>`
+      const trs = rows.map((a, idx) => {
+        const name = (a.pegawai && a.pegawai.nama) || escapeHtml(getNamaPegawai(a.id_pegawai))
+        const nip = (a.pegawai && (a.pegawai.nip || a.pegawai.nip_pegawai)) || ''
+        const pangkat = (a.pegawai && (a.pegawai.pangkat || a.pegawai.pangkat_golongan || a.pegawai.pangkat_gol)) || ''
+        const gol = (a.pegawai && (a.pegawai.golongan || a.pegawai.gol)) || ''
+        const jabatan = (a.pegawai && (a.pegawai.nama_jabatan || a.pegawai.jabatan)) || ''
+        const peran = getPeranLabel(a.peran)
+        return `<tr><td>${idx + 1}</td><td>${name}<br/>NIP. ${escapeHtml(nip)}<br/>${escapeHtml(pangkat)} ${escapeHtml(gol)}</td><td>${escapeHtml(jabatan)}</td><td>${escapeHtml(peran)}</td></tr>`
+      }).join('\n')
+
+      const tableHtml = `<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse"> <thead>${thead}</thead><tbody>${trs}</tbody></table>`
+
+      // Copy by inserting temporary element and selecting
+      const container = document.createElement('div')
+      container.style.position = 'fixed'
+      container.style.left = '-9999px'
+      container.innerHTML = tableHtml
+      document.body.appendChild(container)
+
+      const range = document.createRange()
+      range.selectNode(container)
+      const sel = window.getSelection()
+      sel.removeAllRanges()
+      sel.addRange(range)
+
+      try {
+        document.execCommand('copy')
+        alert('Tabel anggota berhasil disalin. Paste ke Word/Excel.')
+      } catch (err) {
+        console.error('Copy failed', err)
+        alert('Gagal menyalin tabel ke clipboard')
+      } finally {
+        sel.removeAllRanges()
+        document.body.removeChild(container)
+      }
+    }
+
     const getNamaPegawai = (idPegawai) => {
-      const p = db.pegawai.find(peg => String(peg.id_pegawai) === String(idPegawai))
+      const p = (Array.isArray(pegawai.value) ? pegawai.value : []).find(peg => String(peg.id_pegawai) === String(idPegawai))
       return p ? p.nama : '-'
     }
 
@@ -2890,12 +3029,12 @@ export default {
         return Array.from(years).sort((a, b) => b - a)
       }),
       showAddModal,
-      showDetailModal,
       selectedKegiatan,
       editingId,
       currentUser,
       profilePegawai,
       formData,
+      isViewing,
       userUnitKerjaOptions,
       formError,
       isSubmitting,
@@ -2951,15 +3090,23 @@ export default {
       formAnggotaErrors,
       addAnggota,
       removeAnggota,
+      editingAnggotaId,
+      editAnggota,
+      cancelEditAnggota,
+      copyAnggotaTable,
       getNamaPegawai,
       getPeranLabel,
       previewLink,
       activityLinks,
       getActivityQrCodeUrl,
       resetForm,
+      duplicateKegiatan,
+      showAllData,
+      prettySelectedKegiatan,
       validateForm,
       closeSubmitStatus,
-      buildPublicPesertaLink
+      buildPublicPesertaLink,
+      kabupatenKotaOptions
     }
   }
 }
@@ -3042,3 +3189,4 @@ export default {
   }
 }
 </style>
+
