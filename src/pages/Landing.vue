@@ -119,6 +119,7 @@
                     <span class="px-2 py-1 rounded-full bg-white/10">{{ formatDate(item.tanggal_mulai) }} - {{
                       formatDate(item.tanggal_selesai) }}</span>
                     <span class="px-2 py-1 rounded-full bg-white/10">{{ item.lokasi || '-' }}</span>
+                    <span class="px-2 py-1 rounded-full bg-white/10">{{ getKabupatenKotaLabel(item) }}</span>
                     <span class="px-2 py-1 rounded-full bg-white/10">{{ getStatusLabel(item.status) }}</span>
 
                   </div>
@@ -224,6 +225,10 @@
             <div class="bg-white/5 rounded-lg p-3 border border-white/10">
               <p class="text-blue-200">Lokasi</p>
               <p class="text-white">{{ selectedKegiatanDetail.lokasi || '-' }}</p>
+            </div>
+            <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+              <p class="text-blue-200">Kabupaten/Kota</p>
+              <p class="text-white">{{ getKabupatenKotaLabel(selectedKegiatanDetail) }}</p>
             </div>
             <div class="bg-white/5 rounded-lg p-3 border border-white/10">
               <p class="text-blue-200">Metode Pelaksanaan</p>
@@ -961,6 +966,17 @@ export default {
       return labels[metode] || metode || '-'
     }
 
+    const getKabupatenKotaLabel = (item) => {
+      return item?.kabupaten_kota
+        || item?.kab_kota
+        || item?.kabupaten
+        || item?.kota
+        || item?.lokasi_kabupaten_kota
+        || item?.kegiatan?.kabupaten_kota
+        || item?.kegiatan?.kab_kota
+        || '-'
+    }
+
     const hasAnyResourceUrl = (item) => Boolean(
       item?.dokumentasi_url ||
       item?.materi_url ||
@@ -1112,6 +1128,7 @@ export default {
       getQrCodeUrl,
       getStatusLabel,
       getMetodeLabel,
+      getKabupatenKotaLabel,
       hasAnyResourceUrl,
       loadKegiatan,
       handleSelectTimker,

@@ -49,6 +49,10 @@
                   <p class="text-white font-medium">{{ kegiatan.lokasi || '-' }}</p>
                 </div>
                 <div class="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p class="text-blue-200">Kabupaten/Kota</p>
+                  <p class="text-white font-medium">{{ getKabupatenKotaLabel(kegiatan) }}</p>
+                </div>
+                <div class="rounded-xl border border-white/10 bg-white/5 p-3">
                   <p class="text-blue-200">Metode</p>
                   <p class="text-white font-medium">{{ getMetodeLabel(kegiatan.metode_pelaksanaan) }}</p>
                 </div>
@@ -224,6 +228,17 @@ export default {
     const getMetodeLabel = (metode) => {
       const labels = { daring: 'Daring', luring: 'Luring', hybrid: 'Hybrid' }
       return labels[metode] || metode || '-'
+    }
+
+    const getKabupatenKotaLabel = (item) => {
+      return item?.kabupaten_kota
+        || item?.kab_kota
+        || item?.kabupaten
+        || item?.kota
+        || item?.lokasi_kabupaten_kota
+        || item?.kegiatan?.kabupaten_kota
+        || item?.kegiatan?.kab_kota
+        || '-'
     }
 
     const flyerUrl = computed(() => {
@@ -507,6 +522,7 @@ export default {
       formatDate,
       getStatusLabel,
       getMetodeLabel,
+      getKabupatenKotaLabel,
       getQrCodeUrl,
       copyLink,
       shareDetailPage
