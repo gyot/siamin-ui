@@ -118,8 +118,8 @@
                 <span class="badge bg-slate-100 text-slate-700">{{ getMetodeLabel(k.metode_pelaksanaan) }}</span>
               </td>
               <td class="px-5 py-4">
-                <span class="badge" :class="getStatusBadgeClass(k.status)">
-                  {{ getStatusLabel(k.status) }}
+                <span class="badge" :class="getStatusBadgeClass(getKegiatanStatus(k))">
+                  {{ getStatusLabel(getKegiatanStatus(k)) }}
                 </span>
               </td>
               <td class="px-5 py-4">
@@ -1819,6 +1819,34 @@ export default {
       submitStatus.value.visible = false
     }
 
+    const parseKegiatanDate = (value, endOfDay = false) => {
+      if (!value) return null
+      const parsed = new Date(value)
+      if (Number.isNaN(parsed.getTime())) return null
+
+      if (endOfDay) {
+        parsed.setHours(23, 59, 59, 999)
+      } else {
+        parsed.setHours(0, 0, 0, 0)
+      }
+
+      return parsed
+    }
+
+    const getKegiatanStatus = (item) => {
+      const startDate = parseKegiatanDate(item?.tanggal_mulai)
+      const endDate = parseKegiatanDate(item?.tanggal_selesai, true)
+
+      if (!startDate || !endDate) return item?.status || ''
+
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      if (today < startDate) return 'akan_datang'
+      if (today > endDate) return 'selesai'
+      return 'berjalan'
+    }
+
     const filteredKegiatan = computed(() => {
       let filtered = Array.isArray(kegiatan.value) ? [...kegiatan.value] : []
 
@@ -1829,7 +1857,7 @@ export default {
       }
 
       if (activeFilter.value !== 'all') {
-        filtered = filtered.filter(k => k.status === activeFilter.value)
+        filtered = filtered.filter(k => getKegiatanStatus(k) === activeFilter.value)
       }
 
       if (filterTahun.value) {
@@ -3082,6 +3110,7 @@ export default {
       isDraggingFlyer,
       flyerInput,
       filteredKegiatan,
+      getKegiatanStatus,
       formatDate,
       getMetodeLabel,
       getUnitKerjaLabel,
