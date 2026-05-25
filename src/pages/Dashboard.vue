@@ -160,12 +160,12 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div v-for="k in filteredKegiatan" :key="k.id_kegiatan"
             class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition overflow-hidden">
-            <div :class="getStatusColor(k.status)" class="h-1"></div>
+            <div :class="getStatusColor(getKegiatanStatus(k))" class="h-1"></div>
             <div class="p-4">
               <div class="flex items-start justify-between mb-2">
                 <h4 class="font-semibold text-slate-800 text-sm flex-1">{{ k.nama_kegiatan }}</h4>
-                <span :class="getStatusBadge(k.status)" class="text-xs whitespace-nowrap ml-2">
-                  {{ formatStatus(k.status) }}
+                <span :class="getStatusBadge(getKegiatanStatus(k))" class="text-xs whitespace-nowrap ml-2">
+                  {{ formatStatus(getKegiatanStatus(k)) }}
                 </span>
               </div>
               <p class="text-xs text-slate-500 mb-3">{{ k.peserta_ringkasan }}</p>
@@ -280,8 +280,8 @@
             </div>
             <div>
               <p class="text-sm text-slate-600">Status</p>
-              <span :class="getStatusBadge(selectedKegiatan.status)">
-                {{ formatStatus(selectedKegiatan.status) }}
+              <span :class="getStatusBadge(getKegiatanStatus(selectedKegiatan))">
+                {{ formatStatus(getKegiatanStatus(selectedKegiatan)) }}
               </span>
             </div>
             <div>
@@ -513,26 +513,41 @@ export default {
     const totalKegiatanCount = ref(0)
     const isLoadingKegiatan = ref(false)
 
-    const totalKegiatan = computed(() => totalKegiatanCount.value)
-    const totalPeserta = ref(peserta.value.length)
-    const totalSertifikat = ref(sertifikat.value.filter(s => s.status === 'terbit').length)
-    const kegiatanBerjalan = computed(() => {
+    const toDashboardNumber = (value) => {
+      const parsed = Number(value)
+      return Number.isFinite(parsed) ? parsed : 0
+    }
+
+    const getLocalKegiatanBerjalanCount = () => {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
-      
+
       return kegiatan.value.filter(k => {
         if (!k.tanggal_mulai || !k.tanggal_selesai) return false
-        
+
         const startDate = new Date(k.tanggal_mulai)
         startDate.setHours(0, 0, 0, 0)
-        
+
         const endDate = new Date(k.tanggal_selesai)
         endDate.setHours(23, 59, 59, 999)
-        
+
         // Kegiatan berjalan jika hari ini berada dalam rentang tanggal mulai dan selesai
         return today >= startDate && today <= endDate
       }).length
+    }
+
+    const getLocalDashboardStats = () => ({
+      total_peserta: peserta.value.length,
+      total_kegiatan: kegiatan.value.length,
+      total_sertifikat: sertifikat.value.filter(s => s.status === 'terbit').length,
+      total_kegiatan_berjalan: getLocalKegiatanBerjalanCount()
     })
+
+    const dashboardStats = ref(getLocalDashboardStats())
+    const totalKegiatan = computed(() => dashboardStats.value.total_kegiatan)
+    const totalPeserta = computed(() => dashboardStats.value.total_peserta)
+    const totalSertifikat = computed(() => dashboardStats.value.total_sertifikat)
+    const kegiatanBerjalan = computed(() => dashboardStats.value.total_kegiatan_berjalan)
 
     const searchKegiatan = ref('')
     const filterTahun = ref(new Date().getFullYear().toString())
@@ -616,7 +631,7 @@ export default {
       return kegiatan.value.filter(k => {
         const searchMatch = k.nama_kegiatan.toLowerCase().includes(searchKegiatan.value.toLowerCase())
         const tahunMatch = !filterTahun.value || (k.tanggal_mulai && new Date(k.tanggal_mulai).getFullYear().toString() === filterTahun.value)
-        const statusMatch = !filterStatus.value || k.status === filterStatus.value
+        const statusMatch = !filterStatus.value || getKegiatanStatus(k) === filterStatus.value
         const unitKerjaValue = resolveUnitKerjaName(k)
         const unitKerjaMatch = !filterUnitKerja.value || unitKerjaValue === filterUnitKerja.value
         return searchMatch && tahunMatch && statusMatch && unitKerjaMatch
@@ -644,6 +659,34 @@ export default {
         day: 'numeric'
       })
       return `${start} - ${end}`
+    }
+
+    const parseKegiatanDate = (value, endOfDay = false) => {
+      if (!value) return null
+      const parsed = new Date(value)
+      if (Number.isNaN(parsed.getTime())) return null
+
+      if (endOfDay) {
+        parsed.setHours(23, 59, 59, 999)
+      } else {
+        parsed.setHours(0, 0, 0, 0)
+      }
+
+      return parsed
+    }
+
+    const getKegiatanStatus = (item) => {
+      const startDate = parseKegiatanDate(item?.tanggal_mulai)
+      const endDate = parseKegiatanDate(item?.tanggal_selesai, true)
+
+      if (!startDate || !endDate) return item?.status || ''
+
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+
+      if (today < startDate) return 'akan_datang'
+      if (today > endDate) return 'selesai'
+      return 'berjalan'
     }
 
     const formatStatus = (status) => {
@@ -776,8 +819,6 @@ export default {
       )
       qrCodes.value = nextQrCodes
     }
-
-    watch(() => selectedKegiatan.value?.id_kegiatan, generateQrCodes, { immediate: true })
 
     const pesertaInSelected = computed(() => {
       if (!selectedKegiatan.value) return []
@@ -1083,9 +1124,31 @@ export default {
 
     const openDetailModal = (k) => {
       selectedKegiatan.value = k
+      qrCodes.value = {}
       showDetailModal.value = true
+      generateQrCodes()
       // Log kegiatan detail view
       ActivityEvents.VIEW_KEGIATAN_DETAIL(k.id_kegiatan, k.nama_kegiatan)
+    }
+
+    const fetchDashboardStats = async () => {
+      try {
+        const response = await fetchAPI('kegiatan/statistik', { raw: true })
+        const rows = Array.isArray(response?.data)
+          ? response.data
+          : (Array.isArray(response) ? response : [])
+        const statistik = rows[0] || {}
+
+        dashboardStats.value = {
+          total_peserta: toDashboardNumber(statistik.total_peserta),
+          total_kegiatan: toDashboardNumber(statistik.total_kegiatan),
+          total_sertifikat: toDashboardNumber(statistik.total_sertifikat),
+          total_kegiatan_berjalan: toDashboardNumber(statistik.total_kegiatan_berjalan)
+        }
+      } catch (error) {
+        console.error('[Dashboard] Error fetching statistik kegiatan:', error)
+        dashboardStats.value = getLocalDashboardStats()
+      }
     }
 
     // Fetch kegiatan dari API server dengan pagination
@@ -1101,7 +1164,6 @@ export default {
           limit: pageSize.value,
           search: searchKegiatan.value,
           tahun: filterTahun.value,
-          status: filterStatus.value,
           unit_kerja: filterUnitKerja.value
         })
 
@@ -1230,6 +1292,7 @@ export default {
     onMounted(async () => {
       try {
         isLoadingKegiatan.value = true
+        await fetchDashboardStats()
 
         const [
           pegawaiData,
@@ -1238,8 +1301,8 @@ export default {
           sertifikatData,
           unitKerjaData
         ] = await Promise.all([
-          fetchAPI('pegawai'),
-          fetchAPI('users'),
+          // fetchAPI('pegawai'),
+          // fetchAPI('users'),
           fetchAPI('peserta'),
           fetchAPI('sertifikat'),
           fetchAPI('unit-kerja')
@@ -1255,12 +1318,10 @@ export default {
 
         if (Array.isArray(pesertaData)) {
           peserta.value = pesertaData
-          totalPeserta.value = pesertaData.length
         }
 
         if (Array.isArray(sertifikatData)) {
           sertifikat.value = sertifikatData
-          totalSertifikat.value = sertifikatData.filter(s => s.status === 'terbit').length
         }
 
         if (Array.isArray(unitKerjaData)) {
@@ -1291,6 +1352,7 @@ export default {
       availableTahun,
       availableUnitKerja,
       filteredKegiatan,
+      getKegiatanStatus,
       formatDate,
       formatDateRange,
       formatStatus,

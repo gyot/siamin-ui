@@ -669,13 +669,26 @@
           </div>
         </div>
 
-        <div class="flex gap-3 pt-4 border-t border-slate-200">
+        <div class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Link Biodata</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <a v-for="link in formLinksByRole" :key="link.role" :href="link.url" target="_blank"
+              class="block p-4 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-slate-50 transition">
+              <div class="text-sm font-semibold text-slate-800">{{ link.label }}</div>
+              <div class="mt-2 text-xs text-slate-500 break-all">{{ link.url }}</div>
+            </a>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-4 border-t border-slate-200 flex-wrap">
+          <button type="button" @click="openPenugasanModal"
+            class="flex-1 min-w-[140px] px-4 py-2.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Penugasan</button>
           <button type="button" @click="duplicateKegiatan(selectedKegiatan)"
-            class="flex-1 px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">Duplikat</button>
+            class="flex-1 min-w-[140px] px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">Duplikat</button>
           <button type="button" @click="openEditFromDetail"
-            class="flex-1 btn-primary px-4 py-2.5 text-white rounded-lg font-medium">Edit</button>
+            class="flex-1 min-w-[140px] btn-primary px-4 py-2.5 text-white rounded-lg font-medium">Edit</button>
           <button type="button" @click="showAddModal = false"
-            class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Tutup</button>
+            class="flex-1 min-w-[140px] px-4 py-2.5 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">Tutup</button>
         </div>
       </div>
     </div>
@@ -1934,6 +1947,7 @@ export default {
         const unitFallback = listItem?.unit_kerja_id ?? listItem?.id_tim ?? listItem?.__source_unit_kerja_id ?? null
         selectedKegiatan.value = {
           ...sourceItem,
+          id_kegiatan: sourceItem.id_kegiatan ?? sourceItem.id ?? id,
           unit_kerja_id: sourceItem.unit_kerja_id ?? unitFallback,
           id_tim: sourceItem.id_tim ?? unitFallback,
           __source_unit_kerja_id: sourceItem.__source_unit_kerja_id ?? unitFallback
@@ -2806,6 +2820,31 @@ export default {
       }
     }
 
+    const formLinksByRole = computed(() => {
+      if (!selectedKegiatan.value) return []
+      const kode = selectedKegiatan.value.id_kegiatan || selectedKegiatan.value.id || ''
+      const judul = selectedKegiatan.value.nama_kegiatan || ''
+      const roles = ['Peserta', 'Narasumber', 'Panitia', 'Pendamping']
+      return roles.map((role) => {
+        const roleLinks = getRoleLinksFromKegiatan(selectedKegiatan.value, role)
+        return {
+          role,
+          label: `Link Biodata ${role}`,
+          url: roleLinks.formUrl || buildFormLink(kode, role, judul),
+          templateUrl: roleLinks.templateUrl
+        }
+      })
+    })
+
+    const openPenugasanModal = async () => {
+      const idKegiatan = selectedKegiatan.value?.id_kegiatan ?? selectedKegiatan.value?.id
+      if (!idKegiatan) {
+        alert('Tidak ada kegiatan yang dipilih untuk penugasan.')
+        return
+      }
+      await handleSuratTugas(idKegiatan)
+    }
+
     const parseDateValue = (value) => {
       const timestamp = new Date(value).getTime()
       return Number.isNaN(timestamp) ? null : timestamp
@@ -3098,6 +3137,8 @@ export default {
       getPeranLabel,
       previewLink,
       activityLinks,
+      formLinksByRole,
+      openPenugasanModal,
       getActivityQrCodeUrl,
       resetForm,
       duplicateKegiatan,
