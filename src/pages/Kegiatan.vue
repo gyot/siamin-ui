@@ -826,11 +826,10 @@
                 <label class="block text-xs font-medium text-slate-700 mb-1">Peran *</label>
                 <select v-model="formAnggota.peran"
                   class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-                  <option value="penanggung_jawab">Penanggung Jawab</option>
-                  <option value="ketua_panitia">Ketua Panitia</option>
-                  <option value="panitia">Panitia</option>
-                  <option value="peserta">Peserta</option>
-                  <option value="narasumber">Narasumber</option>
+                  <option value="">-- Pilih Peran --</option>
+                  <option v-for="role in peranPenugasanOptions" :key="role.value" :value="role.value">
+                    {{ role.label }}
+                  </option>
                 </select>
               </div>
               <div class="flex items-end gap-2">
@@ -1472,6 +1471,13 @@ export default {
           unitKerjaMaster.value = unitKerjaData.data
         }
 
+        // Load peran from API (if available) before loading kegiatan
+        try {
+          await loadPeran()
+        } catch (e) {
+          console.warn('[Kegiatan] Failed to load peran from API', e)
+        }
+
         await loadKegiatan()
         if (!formData.value.unit_kerja_id) {
           formData.value.unit_kerja_id = userUnitKerjaOptions.value[0]?.unit_kerja_id ?? ''
@@ -1587,7 +1593,7 @@ export default {
     const templateBiodataInput = ref(null)
     const templateBiodataFile = ref(null)
     const isTemplateBiodataCleared = ref(false)
-    const formAnggota = ref({ id_pegawai: '', peran: 'panitia' })
+    const formAnggota = ref({ id_pegawai: '', peran: '' })
     const formAnggotaErrors = ref([])
     const editingAnggotaId = ref(null)
     const createEmptyAtkForm = () => ({
@@ -1722,6 +1728,73 @@ export default {
       return suratTugasPegawaiItems.value.filter(
         (sp) => String(sp.id_kegiatan ?? sp.id_penugasan ?? sp.id_surat_tugas ?? '') === String(selectedId ?? '')
       )
+    })
+
+    const humanizePeranPenugasan = (peran) => {
+      if (!peran) return ''
+      return String(peran)
+        .replace(/[_-]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split(' ')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ')
+    }
+
+    const peranApi = ref([])
+
+    const loadPeran = async () => {
+      try {
+        const res = await fetchAPI('peran')
+        const rows = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : [])
+        peranApi.value = rows
+          .map((r) => ({ value: String(r?.value || r?.kode || r?.name || '').trim(), nama: r?.nama || r?.label || r?.name || '' }))
+          .filter((r) => r.value)
+      } catch (err) {
+        peranApi.value = []
+        throw err
+      }
+    }
+
+    const peranPenugasanDefaults = ref([
+      { value: 'penanggung_jawab', label: 'Penanggung Jawab' },
+      { value: 'ketua_panitia', label: 'Ketua Panitia' },
+      { value: 'panitia', label: 'Panitia' },
+      { value: 'peserta', label: 'Peserta' },
+      { value: 'narasumber', label: 'Narasumber' }
+    ])
+
+    const peranPenugasanOptions = computed(() => {
+      const roles = new Map(peranPenugasanDefaults.value.map(role => [role.value, role.label]))
+
+      // Include roles from API (if loaded)
+      peranApi.value.forEach((r) => {
+        const v = String(r.value || '').trim()
+        if (v && !roles.has(v)) {
+          roles.set(v, r.nama || humanizePeranPenugasan(v))
+        }
+      })
+
+      const collect = (rows = []) => {
+        rows.forEach((item) => {
+          const role = String(item?.peran || '').trim()
+          if (role && !roles.has(role)) {
+            roles.set(role, humanizePeranPenugasan(role))
+          }
+        })
+      }
+
+      collect(suratTugasPegawaiItems.value)
+      collect(anggotaInSelected.value)
+      collect(Array.isArray(db.surat_tugas_pegawai) ? db.surat_tugas_pegawai : [])
+      const currentFormRole = String(formAnggota.value.peran || '').trim()
+      if (currentFormRole && !roles.has(currentFormRole)) {
+        roles.set(currentFormRole, humanizePeranPenugasan(currentFormRole))
+      }
+
+      return Array.from(roles.entries())
+        .sort((left, right) => humanizePeranPenugasan(left[0]).localeCompare(humanizePeranPenugasan(right[0]), 'id'))
+        .map(([value, label]) => ({ value, label }))
     })
 
     const pegawaiOptions = computed(() => {
@@ -2810,7 +2883,7 @@ export default {
         }
         // Sync snapshot to ensure anggota list is up-to-date
         syncSelectedSuratTugasSnapshot()
-        formAnggota.value = { id_pegawai: '', peran: 'panitia' }
+        formAnggota.value = { id_pegawai: '', peran: '' }
         showSuratTugasModal.value = true
       } else {
         // Tidak ada, buka modal kosong untuk membuat penugasan baru
@@ -2818,7 +2891,7 @@ export default {
         const kegiatanObj = (Array.isArray(kegiatan.value) ? kegiatan.value : []).find(k => String(k.id_kegiatan ?? k.id) === String(idKegiatan))
         if (kegiatanObj) selectedSuratTugas.value.kegiatan = kegiatanObj
         syncSelectedSuratTugasSnapshot()
-        formAnggota.value = { id_pegawai: '', peran: 'panitia' }
+        formAnggota.value = { id_pegawai: '', peran: '' }
         showSuratTugasModal.value = true
       }
     }
@@ -2971,7 +3044,7 @@ export default {
           })
         }
         await loadSuratTugasSnapshot()
-        formAnggota.value = { id_pegawai: '', peran: 'panitia' }
+        formAnggota.value = { id_pegawai: '', peran: '' }
         formAnggotaErrors.value = []
         editingAnggotaId.value = null
       } catch (error) {
@@ -2995,7 +3068,7 @@ export default {
       editingAnggotaId.value = anggota.id
       formAnggota.value = {
         id_pegawai: anggota.id_pegawai,
-        peran: anggota.peran || 'panitia'
+        peran: anggota.peran || ''
       }
       // ensure selectedSuratTugas is the current group
       syncSelectedSuratTugasSnapshot()
@@ -3003,7 +3076,7 @@ export default {
 
     const cancelEditAnggota = () => {
       editingAnggotaId.value = null
-      formAnggota.value = { id_pegawai: '', peran: 'panitia' }
+      formAnggota.value = { id_pegawai: '', peran: '' }
       formAnggotaErrors.value = []
     }
 
@@ -3068,14 +3141,7 @@ export default {
     }
 
     const getPeranLabel = (peran) => {
-      const labels = {
-        penanggung_jawab: 'Penanggung Jawab',
-        ketua_panitia: 'Ketua Panitia',
-        panitia: 'Panitia',
-        peserta: 'Peserta',
-        narasumber: 'Narasumber'
-      }
-      return labels[peran] || peran || '-'
+      return humanizePeranPenugasan(peran) || '-'
     }
 
     return {
@@ -3165,6 +3231,7 @@ export default {
       pegawaiOptions,
       formAnggota,
       formAnggotaErrors,
+      peranPenugasanOptions,
       addAnggota,
       removeAnggota,
       editingAnggotaId,
