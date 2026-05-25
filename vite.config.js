@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => {
 
   return {
   plugins: [vue()],
+  esbuild: {
+    drop: mode === 'production' ? ['console'] : []
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src')

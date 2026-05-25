@@ -535,10 +535,8 @@ export default {
     const fetchActivityHistory = async () => {
       try {
         isLoadingActivity.value = true
-        console.log('[Profile] Fetching activity history from API...')
         
         const response = await fetchAPI('log-aktivitas')
-        console.log('[Profile] Activity history response:', response)
         
         if (Array.isArray(response)) {
           activityHistory.value = response
@@ -548,7 +546,6 @@ export default {
           activityHistory.value = []
         }
         
-        console.log(`[Profile] Loaded ${activityHistory.value.length} activity records`)
       } catch (error) {
         console.error('[Profile] Error fetching activity history:', error)
         // Gunakan fallback data jika API gagal

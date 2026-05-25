@@ -36,7 +36,6 @@ localStorage.getItem('user_type')
 ```javascript
 // In Console, run:
 const token = localStorage.getItem('auth_token')
-console.log(`Bearer ${token}`)
 // Copy this and check Network tab > Request Headers
 // Should see: Authorization: Bearer 1|abc123token...
 ```
@@ -46,9 +45,6 @@ console.log(`Bearer ${token}`)
 // In Console, run:
 import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
-console.log(auth.currentUser)
-console.log(auth.token)
-console.log(auth.isAuthenticated)
 ```
 
 ## 🚀 Test Scenarios
@@ -144,7 +140,6 @@ console.log(auth.isAuthenticated)
      }
    })
    .then(r => r.json())
-   .then(d => console.log(d))
 
 3. Expected:
    ✅ Returns kegiatan data (no 401 error)
@@ -161,7 +156,6 @@ localStorage.getItem('auth_token') ? '✅ Token found' : '❌ No token'
 ### Check auth store state
 ```javascript
 const auth = useAuthStore()
-console.log({
   token: auth.token,
   currentUser: auth.currentUser,
   userType: auth.userType,
@@ -187,14 +181,12 @@ fetch('http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/lo
   })
 })
 .then(r => r.json())
-.then(d => console.log(d))
 ```
 
 ### Check Bearer token format
 ```javascript
 const token = localStorage.getItem('auth_token')
 const format = `Bearer ${token}`
-console.log(format)
 // Copy this to Network > Request Headers > Authorization
 ```
 

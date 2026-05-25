@@ -352,7 +352,6 @@ export default {
     const router = useRouter()
     const kode = route.params.kode
     // Debug kode route
-    console.log('[FormulirPeserta] kode dari route:', kode)
     const peran = route.params.peran
     const slugJudul = route.params.slugJudul
 
@@ -427,13 +426,11 @@ export default {
         fromApi = apiKegiatan.value.find(k => String(k.id_kegiatan) === String(kode))
       }
       if (fromApi) {
-        console.log('[FormulirPeserta] ditemukan kegiatan dari API:', fromApi)
         return fromApi
       }
 
       // Cek fallback single-item load
       if (fallbackKegiatan.value && norm(fallbackKegiatan.value.id_kegiatan) === kodeNorm) {
-        console.log('[FormulirPeserta] ditemukan kegiatan dari fallback single getKegiatan:', fallbackKegiatan.value)
         return fallbackKegiatan.value
       }
 
@@ -443,7 +440,6 @@ export default {
         fromDb = database.kegiatan.find(k => String(k.id_kegiatan) === String(kode))
       }
       if (fromDb) {
-        console.log('[FormulirPeserta] ditemukan kegiatan dari database:', fromDb)
       }
       return fromDb
     })

@@ -35,10 +35,8 @@ export const logActivity = async (action, description, metadata = {}) => {
       timestamp: new Date().toISOString()
     }
 
-    console.log('[ActivityLogger] Logging activity:', { action, description })
     
     const response = await postAPI('log-aktivitas', payload)
-    console.log('[ActivityLogger] Activity logged successfully:', response)
     
     return response
   } catch (error) {

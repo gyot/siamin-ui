@@ -78,20 +78,17 @@ export const loadDataFromAPI = async (tableName) => {
   }
 
   try {
-    console.log(`[API] Loading ${tableName} from API...`)
     const data = await fetchAPI(endpoint)
     if (Array.isArray(data)) {
       db[tableName] = tableName === 'surat_tugas'
         ? groupPenugasanByKegiatanRecords(data)
         : data
-      console.log(`[API] ✅ ${tableName}: ${data.length} records from API`)
       return db[tableName]
     } else {
       throw new Error(`Invalid data format for ${tableName}`)
     }
   } catch (error) {
     console.warn(`[API] ⚠️  Failed to load ${tableName} from API:`, error.message)
-    console.log(`[API] 📦 Using fallback data for ${tableName} (${db[tableName]?.length || 0} records from JSON)`)
     return db[tableName] || []
   }
 }
@@ -101,7 +98,6 @@ export const loadDataFromAPI = async (tableName) => {
  */
 export const loadAllDataFromAPI = async () => {
   const tables = Object.keys(tableToEndpoint)
-  console.log(`[API] Loading ${tables.length} tables from API with JSON fallback...`)
   
   const results = await Promise.allSettled(
     tables.map(table => loadDataFromAPI(table))
@@ -110,8 +106,6 @@ export const loadAllDataFromAPI = async () => {
   const successes = results.filter(r => r.status === 'fulfilled').length
   const failures = results.filter(r => r.status === 'rejected').length
   
-  console.log(`[API] ✅ Load complete: ${successes} success, ${failures} failed (using JSON fallback for failed)`)
-  console.log('[Data] Database state:', Object.keys(db).map(k => `${k}: ${db[k]?.length || 0}`).join(', '))
   
   return db
 }
@@ -120,7 +114,6 @@ export const loadAllDataFromAPI = async () => {
  */
 export const syncDatabaseWithAPI = async () => {
   try {
-    console.log('Syncing database with API...')
   } catch (error) {
     console.error('Failed to sync database with API:', error)
   }
@@ -142,21 +135,12 @@ let dataLoadPromise = null
  */
 export const ensureDataLoaded = () => {
   if (!dataLoadPromise) {
-    console.log('[Data] 🔄 ensureDataLoaded() initiating loadAllDataFromAPI()')
     dataLoadPromise = loadAllDataFromAPI()
       .then(() => {
-        console.log('[Data] ✅ Data loading complete (API + JSON fallback)')
-        console.log(
-          '[Data] Database state:',
-          Object.keys(db)
-            .map(k => `${k}: ${db[k]?.length || 0}`)
-            .join(', ')
-        )
         return db
       })
       .catch(err => {
         console.error('[Data] ❌ Unexpected error during data loading:', err)
-        console.log('[Data] Using JSON fallback data')
         return db
       })
   }

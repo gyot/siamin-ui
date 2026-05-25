@@ -233,7 +233,6 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
-      console.log('[Auth] Attempting admin login via API...')
 
       const response = await apiClient.post(
         'auth/login-admin',
@@ -293,7 +292,6 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
-      console.log('[Auth] Attempting peserta login via API...')
 
       const response = await apiClient.post(
         'auth/login-peserta',
@@ -338,7 +336,6 @@ export const useAuthStore = defineStore('auth', () => {
         if (!isAuthenticated.value) throw err
       })
 
-      console.log('[Auth] Peserta login successful:', currentUser.value.name)
       return true
     } catch (err) {
       const message = buildErrorMessage(err, 'Username atau password salah')
@@ -365,7 +362,6 @@ export const useAuthStore = defineStore('auth', () => {
       }
     } finally {
       clearLocalSession()
-      console.log('[Auth] User logged out')
     }
   }
 
@@ -412,7 +408,6 @@ export const useAuthStore = defineStore('auth', () => {
         }
       }
 
-      console.log('[Auth] Session restored for:', currentUser.value?.name ?? '(no name)')
       return currentUser.value
     } catch {
       console.warn('[Auth] Failed restoring session, clearing data')

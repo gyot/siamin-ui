@@ -479,7 +479,6 @@ export default {
       
       try {
         const kode = route.params.kode
-        console.log('Loading kegiatan with kode:', kode)
         
         if (!kode) {
           error.value = 'Kode kegiatan tidak valid'
@@ -488,7 +487,6 @@ export default {
         }
         
         const data = await fetchAPI(`kegiatan/${kode}`)
-        console.log('Kegiatan data:', data)
         
         if (!data) {
           error.value = 'Kegiatan tidak ditemukan'
@@ -514,16 +512,13 @@ export default {
 
     const loadStatistik = async (idKegiatan) => {
       try {
-        console.log('Loading statistik for kegiatan:', idKegiatan)
         const response = await fetchAPI(`evaluasi/${idKegiatan}/statistik`)
         
-        console.log('Statistik response:', response)
         
         const statistikData = response?.data || response
         
         if (statistikData && (statistikData.total_evaluasi !== undefined || statistikData.rata_rata_program !== undefined)) {
           statistik.value = statistikData
-          console.log('Statistik loaded:', statistik.value)
         } else {
           throw new Error('Response format tidak sesuai')
         }
@@ -542,16 +537,13 @@ export default {
 
     const loadDetailEvaluasi = async (idKegiatan) => {
       try {
-        console.log('Loading detail evaluasi for kegiatan:', idKegiatan)
         const response = await fetchAPI(`evaluasi/${idKegiatan}`)
         
-        console.log('Detail evaluasi response:', response)
         
         const evaluasiData = response?.data || response
         
         if (evaluasiData && Array.isArray(evaluasiData)) {
           detailEvaluasi.value = evaluasiData
-          console.log('Detail evaluasi loaded:', detailEvaluasi.value.length, 'records')
         } else {
           throw new Error('Response format tidak sesuai')
         }

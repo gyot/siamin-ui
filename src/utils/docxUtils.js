@@ -54,7 +54,6 @@ export const debugXmlStructure = (xmlContent, placeholder) => {
   const index = xmlContent.indexOf(searchPattern)
   
   if (index === -1) {
-    console.log(`DEBUG: Placeholder ${searchPattern} not found`)
     return
   }
   
@@ -63,9 +62,6 @@ export const debugXmlStructure = (xmlContent, placeholder) => {
   const end = Math.min(xmlContent.length, index + 500)
   const context = xmlContent.substring(start, end)
   
-  console.log('=== XML Context Around Placeholder ===')
-  console.log(context)
-  console.log('=== End Context ===')
 }
 
 /**
@@ -88,11 +84,9 @@ const escapeXml = (str) => {
  */
 export const generateTableXml = (rows) => {
   if (!rows || rows.length === 0) {
-    console.log('[generateTableXml] No rows provided, returning empty table')
     return ''
   }
 
-  console.log(`[generateTableXml] Generating table for ${rows.length} rows`)
 
   // Build header row
   const headerRow = `<w:tr><w:trPr><w:trHeight w:val="400" w:type="atLeast"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="1440" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>No</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>Nama</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>Jabatan</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>Peran</w:t></w:r></w:p></w:tc></w:tr>`
@@ -103,7 +97,6 @@ export const generateTableXml = (rows) => {
     const jabatan = escapeXml(row.jabatan || '-')
     const peran = escapeXml(row.peran || '-')
     
-    console.log(`[generateTableXml] Row ${index + 1}: ${nama}, ${jabatan}, ${peran}`)
     
     return `<w:tr><w:trPr><w:trHeight w:val="300" w:type="atLeast"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="1440" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${index + 1}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${nama}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${jabatan}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${peran}</w:t></w:r></w:p></w:tc></w:tr>`
   }).join('')
@@ -111,7 +104,6 @@ export const generateTableXml = (rows) => {
   // Build complete table
   const table = `<w:tbl><w:tblPr><w:tblW w:w="10080" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:left w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:bottom w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:right w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:insideH w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:insideV w:val="single" w:sz="12" w:space="0" w:color="000000"/></w:tblBorders></w:tblPr>${headerRow}${dataRows}</w:tbl>`
 
-  console.log(`[generateTableXml] Table generated, length: ${table.length}`)
   return table
 }
 
@@ -130,14 +122,12 @@ export const replaceTablePlaceholder = (xmlContent, placeholder, rows) => {
   }
 
   const searchPattern = `{${placeholder}}`
-  console.log(`[Table] Searching for placeholder: ${searchPattern}`)
   
   if (!xmlContent.includes(searchPattern)) {
     console.warn(`[Table] Placeholder NOT found`)
     return xmlContent
   }
 
-  console.log(`[Table] Placeholder found!`)
   
   // Strategy: Find paragraph with placeholder, remove placeholder text, then insert table after </w:p>
   // This preserves the paragraph structure above and inserts table right after
@@ -152,16 +142,13 @@ export const replaceTablePlaceholder = (xmlContent, placeholder, rows) => {
   }
   
   const fullParagraph = match[1]
-  console.log(`[Table] Found paragraph, length: ${fullParagraph.length}`)
   
   // Step 2: Remove the placeholder text from paragraph (keep structure, just remove {DAFTAR_TIM})
   const paragraphWithoutPlaceholder = fullParagraph.replace(searchPattern, '')
-  console.log(`[Table] Removed placeholder from paragraph`)
   
   // Step 3: Replace paragraph with (paragraph without placeholder + table after it)
   const result = xmlContent.replace(fullParagraph, paragraphWithoutPlaceholder + tableXml)
   
-  console.log(`[Table] Injection done successfully`)
   return result
 }
 

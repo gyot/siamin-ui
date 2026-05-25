@@ -30,7 +30,6 @@ export const printDataSyncStatus = () => {
   const status = getDataSyncStatus()
 
   console.group('Data Sync Status')
-  console.log(`Last update: ${status.timestamp}`)
   console.table(status.tables)
   console.groupEnd()
 
@@ -41,12 +40,10 @@ export const printDataSyncStatus = () => {
  * Force sync all data from API
  */
 export const forceSyncAllData = async () => {
-  console.log('Starting force sync from API...')
 
   try {
     await loadAllDataFromAPI()
     const status = printDataSyncStatus()
-    console.log('Force sync completed successfully')
     return status
   } catch (error) {
     console.error('Force sync failed:', error)
@@ -58,11 +55,9 @@ export const forceSyncAllData = async () => {
  * Force sync specific table
  */
 export const forceSyncTable = async (tableName) => {
-  console.log(`Syncing table: ${tableName}`)
 
   try {
     const data = await loadDataFromAPI(tableName)
-    console.log(`Table '${tableName}' synced. Count: ${data.length}`)
     return data
   } catch (error) {
     console.error(`Failed to sync table '${tableName}':`, error)
@@ -87,11 +82,9 @@ export const getDataCounts = () => {
  * Verify API connection
  */
 export const verifyAPIConnection = async () => {
-  console.log('Verifying API connection...')
 
   try {
     await apiClient.get('users')
-    console.log('API is connected and responding')
     return true
   } catch (error) {
     const status = error?.response?.status
@@ -110,14 +103,11 @@ export const verifyAPIConnection = async () => {
 export const runDiagnostics = async () => {
   console.group('Running Data Sync Diagnostics')
 
-  console.log('\n1. Checking API Connection...')
   const apiConnected = await verifyAPIConnection()
 
-  console.log('\n2. Current Data Status:')
   const status = printDataSyncStatus()
 
   if (apiConnected) {
-    console.log('\n3. Attempting Force Sync...')
     try {
       await forceSyncAllData()
     } catch (error) {

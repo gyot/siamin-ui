@@ -53,7 +53,11 @@
       </div>
 
       <!-- Embed Halaman Peserta Management -->
-      <PesertaManagement v-if="currentKegiatan" :kegiatan-id="currentKegiatan.id_kegiatan" />
+      <PesertaManagement
+        v-if="currentKegiatan"
+        :kegiatan-id="currentKegiatan.id_kegiatan"
+        :kegiatan-data="currentKegiatan"
+      />
     </div>
   </div>
 </template>
@@ -94,13 +98,11 @@ export default {
       isLoadingKegiatan.value = true
       try {
         const kegiatanId = route.params.id
-        console.log('[KegiatanPeserta] Loading kegiatan detail from API:', kegiatanId)
         const detail = await fetchAPI(`kegiatan/${kegiatanId}`)
 
         if (detail && !Array.isArray(detail)) {
           kegiatan.value = [detail]
           currentKegiatan.value = detail
-          console.log('[KegiatanPeserta] Found kegiatan from detail API:', detail)
           return
         }
 
@@ -117,7 +119,6 @@ export default {
 
     const findCurrentKegiatan = () => {
       const kegiatanId = route.params.id
-      console.log('[KegiatanPeserta] Looking for kegiatan ID:', kegiatanId)
       // Toleransi: id_kegiatan bisa string/number, case-insensitive
       const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
       const idNorm = norm(kegiatanId)
@@ -132,16 +133,13 @@ export default {
           found = database.kegiatan.find(k => String(k.id_kegiatan) === String(kegiatanId))
         }
         if (found) {
-          console.log('[KegiatanPeserta] Found kegiatan from local database:', found)
         }
       } else {
-        console.log('[KegiatanPeserta] Found kegiatan from API:', found)
       }
       currentKegiatan.value = found || null
     }
 
     onMounted(() => {
-      console.log('[KegiatanPeserta] Component mounted, loading kegiatan...')
       loadKegiatanFromAPI()
     })
 

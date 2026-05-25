@@ -75,6 +75,7 @@
         <table class="w-full">
           <thead>
             <tr class="bg-slate-50 border-b border-slate-100">
+              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">No</th>
               <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Kegiatan
               </th>
               <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Tanggal</th>
@@ -88,7 +89,7 @@
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr colspans="7" v-if="isLoadingKegiatan" class="table-row">
-              <td colspan="7" class="px-5 py-4">
+              <td colspan="8" class="px-5 py-4">
                 <div class="flex items-center gap-3 justify-center">
                   <div class="animate-spin">
                     <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,7 +105,10 @@
             <!-- <div v-if="isLoadingKegiatan" class="mb-4 p-4 flex items-center justify-center">
               <Spinner message="Memuat data kegiatan..." />
             </div> -->
-            <tr v-for="k in filteredKegiatan" :key="k.id_kegiatan" class="table-row hover:bg-slate-50">
+            <tr v-for="(k, index) in paginatedKegiatan" :key="k.id_kegiatan" class="table-row hover:bg-slate-50">
+              <td class="px-5 py-4 text-sm text-slate-600">
+                {{ paginationStart + index + 1 }}
+              </td>
               <td class="px-5 py-4">
                 <div class="font-medium text-slate-800">{{ k.nama_kegiatan }}</div>
                 <div class="text-xs text-slate-500">{{ k.id_kegiatan }}</div>
@@ -182,7 +186,7 @@
               </td>
             </tr>
             <tr v-if="filteredKegiatan.length === 0 && kegiatan.length > 0">
-              <td colspan="7" class="px-5 py-8 text-center text-slate-500">
+              <td colspan="8" class="px-5 py-8 text-center text-slate-500">
                 Tidak ada kegiatan yang sesuai dengan filter
               </td>
             </tr>
@@ -193,19 +197,25 @@
       <!-- Pagination -->
       <div v-if="kegiatan.length > 0"
         class="px-5 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p class="text-sm text-slate-500">Menampilkan {{ filteredKegiatan.length }} dari {{ kegiatan.length }} data</p>
+        <p class="text-sm text-slate-500">
+          Menampilkan {{ paginationFrom }}-{{ paginationTo }} dari {{ filteredKegiatan.length }} data
+        </p>
         <div class="flex items-center gap-2">
-          <button
+          <button @click="goToPage(currentPage - 1)" :disabled="currentPage <= 1"
             class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50"
-            disabled>
+            title="Halaman sebelumnya">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <button class="px-4 py-2 rounded-lg bg-blue-600 text-white font-medium">1</button>
-          <button
+          <button v-for="page in paginationPages" :key="page" @click="goToPage(page)"
+            class="px-4 py-2 rounded-lg font-medium"
+            :class="page === currentPage ? 'bg-blue-600 text-white' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'">
+            {{ page }}
+          </button>
+          <button @click="goToPage(currentPage + 1)" :disabled="currentPage >= totalPages"
             class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50"
-            disabled>
+            title="Halaman berikutnya">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
@@ -1112,7 +1122,7 @@ import { useRouter } from 'vue-router'
 import QRCode from 'qrcode'
 import database from '../data/index.js'
 import { useAuthStore } from '@/stores/auth.js'
-import { listKegiatan, getKegiatan, getKegiatanTim, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
+import { listKegiatanTimSaya, getKegiatan, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
 import { fetchAPI, postAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Spinner from '@/components/Spinner.vue'
@@ -1298,7 +1308,6 @@ export default {
         }
 
         if (profile) {
-          // console.log('[Kegiatan] Found pegawai profile:', profile.nama)
           return profile
         } else {
           console.warn('[Kegiatan] No pegawai profile found')
@@ -1423,67 +1432,10 @@ export default {
         auth.restoreAuth()
         await auth.fetchMe().catch(() => {})
 
-        const rawUnitKerjaIds = currentUser.value?.unit_kerja_id
-        const unitKerjaIds = Array.isArray(rawUnitKerjaIds)
-          ? rawUnitKerjaIds.filter(v => v !== null && v !== undefined && v !== '')
-          : (rawUnitKerjaIds ? [rawUnitKerjaIds] : [])
-
-        let merged = []
-        let source = 'kegiatan'
-
-        try {
-          const allKegiatan = await listKegiatan()
-          const rows = Array.isArray(allKegiatan)
-            ? allKegiatan
-            : (Array.isArray(allKegiatan?.data) ? allKegiatan.data : [])
-          if (rows.length > 0) {
-            merged = rows.map((item) => ({ ...(item || {}) }))
-          }
-        } catch {
-          // fallback ke endpoint per unit kerja jika listKegiatan gagal
-        }
-
-        if (merged.length === 0 && unitKerjaIds.length > 0) {
-          source = 'kegiatan-tim'
-          const results = await Promise.all(
-            unitKerjaIds.map(async (id) => {
-              try {
-                const res = await getKegiatanTim(id)
-                const rows = Array.isArray(res) ? res : []
-                return rows.map((item) => {
-                  const normalized = { ...(item || {}) }
-                  normalized.__source_unit_kerja_id = id
-                  return normalized
-                })
-              } catch {
-                return []
-              }
-            })
-          )
-          merged = results.flat()
-        }
-
-        // const deduped = Array.from(
-        //   new Map(merged.map(item => [String(item.id_kegiatan), item])).values()
-        // )
-
-        const deduped = Array.from(
-          new Map(
-            merged.map(item => [
-              source === 'kegiatan'
-                ? String(item.id_kegiatan)
-                : `${item.id_kegiatan}_${item.__source_unit_kerja_id || item.unit_kerja_id}`,
-              item
-            ])
-          ).values()
-        )
-
-        kegiatan.value = source === 'kegiatan'
-          ? deduped
-          : deduped.filter((item) => {
-              const unitId = normalizeUnitKerjaId(resolveKegiatanUnitKerjaId(item))
-              return unitId !== '' && userAllowedUnitKerjaSet.value.has(unitId)
-            })
+        const rows = await listKegiatanTimSaya()
+        kegiatan.value = Array.isArray(rows)
+          ? rows.map((item) => ({ ...(item || {}) }))
+          : []
 
         kegiatan.value.forEach(enrichWithLink)
       } catch (err) {
@@ -1529,22 +1481,18 @@ export default {
     // onMounted(async () => {
     //   // Load pegawai dan users data dari API
     //   try {
-    //     console.log('[Kegiatan] Loading pegawai data from API...')
     //     const pegawaiData = await fetchAPI('pegawai')
     //     if (Array.isArray(pegawaiData)) {
     //       pegawai.value = pegawaiData
-    //       console.log('[Kegiatan] ✅ Pegawai data loaded:', pegawaiData.length, 'records')
     //     }
     //   } catch (error) {
     //     console.warn('[Kegiatan] Failed to load pegawai from API:', error.message)
     //   }
 
     //   try {
-    //     console.log('[Kegiatan] Loading users data from API...')
     //     const usersData = await fetchAPI('users')
     //     if (Array.isArray(usersData)) {
     //       users.value = usersData
-    //       console.log('[Kegiatan] ✅ Users data loaded:', usersData.length, 'records')
     //     }
     //   } catch (error) {
     //     console.warn('[Kegiatan] Failed to load users from API:', error.message)
@@ -1558,6 +1506,8 @@ export default {
     const searchQuery = ref('')
     const activeFilter = ref('all')
     const filterTahun = ref('')
+    const currentPage = ref(1)
+    const pageSize = ref(10)
     const showAddModal = ref(false)
     const isViewing = ref(false)
     const selectedKegiatan = ref(null)
@@ -1867,6 +1817,48 @@ export default {
       }
 
       return filtered
+    })
+
+    const totalPages = computed(() => Math.max(1, Math.ceil(filteredKegiatan.value.length / pageSize.value)))
+
+    const paginationStart = computed(() => (currentPage.value - 1) * pageSize.value)
+
+    const paginatedKegiatan = computed(() => {
+      return filteredKegiatan.value.slice(paginationStart.value, paginationStart.value + pageSize.value)
+    })
+
+    const paginationFrom = computed(() => {
+      if (filteredKegiatan.value.length === 0) return 0
+      return paginationStart.value + 1
+    })
+
+    const paginationTo = computed(() => {
+      return Math.min(paginationStart.value + paginatedKegiatan.value.length, filteredKegiatan.value.length)
+    })
+
+    const paginationPages = computed(() => {
+      const total = totalPages.value
+      const current = currentPage.value
+      const start = Math.max(1, current - 2)
+      const end = Math.min(total, start + 4)
+      const adjustedStart = Math.max(1, end - 4)
+
+      return Array.from({ length: end - adjustedStart + 1 }, (_, index) => adjustedStart + index)
+    })
+
+    const goToPage = (page) => {
+      const nextPage = Math.min(Math.max(Number(page) || 1, 1), totalPages.value)
+      currentPage.value = nextPage
+    }
+
+    watch([searchQuery, activeFilter, filterTahun], () => {
+      currentPage.value = 1
+    })
+
+    watch(totalPages, (nextTotalPages) => {
+      if (currentPage.value > nextTotalPages) {
+        currentPage.value = nextTotalPages
+      }
     })
 
     const formatDate = (dateString) => {
@@ -3110,6 +3102,15 @@ export default {
       isDraggingFlyer,
       flyerInput,
       filteredKegiatan,
+      paginatedKegiatan,
+      currentPage,
+      pageSize,
+      totalPages,
+      paginationStart,
+      paginationFrom,
+      paginationTo,
+      paginationPages,
+      goToPage,
       getKegiatanStatus,
       formatDate,
       getMetodeLabel,

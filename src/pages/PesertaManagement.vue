@@ -137,6 +137,18 @@
               </option>
             </select>
           </div>
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Data per Halaman</label>
+            <select
+              v-model.number="pageSize"
+              class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option :value="10">10</option>
+              <option :value="25">25</option>
+              <option :value="50">50</option>
+              <option :value="100">100</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -162,17 +174,18 @@
 
       <!-- Tabel Peserta - Desktop View -->
       <div class="bg-white rounded-lg shadow-lg overflow-hidden hidden md:block">
+        
         <div class="overflow-x-auto">
-          <table class="w-full text-sm">
+          <table class="min-w-[1080px] w-full text-sm">
             <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white sticky top-0">
               <tr>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">No</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Nama</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">NIP</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm">Email</th>
+                <!-- <th class="px-4 py-3 text-left text-xs sm:text-sm">Email</th> -->
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Instansi</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Kabupaten/Kota</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm">Kegiatan</th>
+                <!-- <th class="px-4 py-3 text-left text-xs sm:text-sm">Kegiatan</th> -->
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Peran</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Sertifikat</th>
                 <th class="px-4 py-3 text-center text-xs sm:text-sm">Aksi</th>
@@ -185,19 +198,19 @@
                 </td>
               </tr>
               <tr
-                v-for="(p, index) in filteredPeserta"
+                v-for="(p, index) in paginatedPeserta"
                 :key="p.id_peserta"
                 class="hover:bg-blue-50 transition-colors"
               >
-                <td class="px-4 py-3 text-xs sm:text-sm text-gray-900">{{ index + 1 }}</td>
+                <td class="px-4 py-3 text-xs sm:text-sm text-gray-900">{{ paginationStart + index }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm font-medium text-gray-900">{{ p.nama_lengkap }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.nip || '-' }}</td>
-                <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 truncate">{{ p.email }}</td>
+                <!-- <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 truncate">{{ p.email }}</td> -->
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 max-w-xs truncate">{{ p.nama_instansi }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.kab_kota || '-' }}</td>
-                <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">
+                <!-- <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">
                   {{ getNamaKegiatan(p.id_kegiatan) }}
-                </td>
+                </td> -->
                 <td class="px-4 py-3 text-xs sm:text-sm">
                   <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
                     {{ p.peran || 'Peserta' }}
@@ -236,7 +249,14 @@
                       DOCX
                     </button>
                     <button
-                      v-if="isKegiatanCreator(p.id_kegiatan)"
+                      v-if="canEditPeserta(p)"
+                      @click="openEditModal(p)"
+                      class="px-2 py-1 bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      v-if="canDeletePeserta(p)"
                       @click="deletePeserta(p.id_peserta)"
                       class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors text-xs font-semibold whitespace-nowrap"
                     >
@@ -249,20 +269,66 @@
           </table>
         </div>
       </div>
+      <div class="border-b border-gray-100 px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p class="text-sm text-gray-600">
+            Menampilkan <span class="font-semibold text-gray-900">{{ paginationStart }}</span>-<span class="font-semibold text-gray-900">{{ paginationEnd }}</span>
+            dari <span class="font-semibold text-gray-900">{{ filteredPeserta.length }}</span> peserta
+          </p>
+          <div class="flex items-center gap-2">
+            <button
+              @click="goToPage(currentPage - 1)"
+              :disabled="currentPage === 1"
+              class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Sebelumnya
+            </button>
+            <span class="text-sm text-gray-600">Halaman {{ currentPage }} / {{ totalPages }}</span>
+            <button
+              @click="goToPage(currentPage + 1)"
+              :disabled="currentPage === totalPages"
+              class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Berikutnya
+            </button>
+          </div>
+        </div>
 
       <!-- Card View - Mobile -->
       <div class="md:hidden space-y-3">
         <div v-if="filteredPeserta.length === 0" class="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
           <p class="text-sm">Tidak ada data peserta</p>
         </div>
+        <div v-else class="bg-white rounded-lg border border-gray-100 p-3 flex flex-col gap-3">
+          <p class="text-xs text-gray-600">
+            Menampilkan <span class="font-semibold text-gray-900">{{ paginationStart }}</span>-<span class="font-semibold text-gray-900">{{ paginationEnd }}</span>
+            dari <span class="font-semibold text-gray-900">{{ filteredPeserta.length }}</span> peserta
+          </p>
+          <div class="flex items-center justify-between gap-2">
+            <button
+              @click="goToPage(currentPage - 1)"
+              :disabled="currentPage === 1"
+              class="px-3 py-2 text-xs border border-gray-200 rounded-lg text-gray-700 disabled:opacity-50"
+            >
+              Sebelumnya
+            </button>
+            <span class="text-xs text-gray-600">Hal. {{ currentPage }} / {{ totalPages }}</span>
+            <button
+              @click="goToPage(currentPage + 1)"
+              :disabled="currentPage === totalPages"
+              class="px-3 py-2 text-xs border border-gray-200 rounded-lg text-gray-700 disabled:opacity-50"
+            >
+              Berikutnya
+            </button>
+          </div>
+        </div>
         <div
-          v-for="(p, index) in filteredPeserta"
+          v-for="(p, index) in paginatedPeserta"
           :key="p.id_peserta"
           class="bg-white rounded-lg shadow-md p-4 space-y-2 border-l-4 border-blue-500"
         >
           <div class="flex justify-between items-start gap-2 mb-3">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-600 mb-1">{{ index + 1 }}. {{ p.nama_lengkap }}</p>
+              <p class="text-sm font-medium text-gray-600 mb-1">{{ paginationStart + index }}. {{ p.nama_lengkap }}</p>
               <p class="text-xs text-gray-500">{{ p.email }}</p>
             </div>
             <span :class="getSertifikatBadgeClass(p.id_peserta)" class="text-xs whitespace-nowrap">
@@ -287,7 +353,7 @@
               <p class="font-semibold text-gray-900">{{ p.peran || 'Peserta' }}</p>
             </div>
           </div>
-          <div class="flex gap-2 justify-between pt-2">
+          <div class="flex flex-wrap gap-2 justify-between pt-2">
             <button
               @click="openBiodataModal(p)"
               class="flex-1 px-3 py-2 bg-purple-500 text-white rounded text-xs font-semibold hover:bg-purple-600 transition-colors"
@@ -307,7 +373,14 @@
               Sertifikat
             </button>
             <button
-              v-if="isKegiatanCreator(p.id_kegiatan)"
+              v-if="canEditPeserta(p)"
+              @click="openEditModal(p)"
+              class="flex-1 px-3 py-2 bg-amber-500 text-white rounded text-xs font-semibold hover:bg-amber-600 transition-colors"
+            >
+              Edit
+            </button>
+            <button
+              v-if="canDeletePeserta(p)"
               @click="deletePeserta(p.id_peserta)"
               class="flex-1 px-3 py-2 bg-red-500 text-white rounded text-xs font-semibold hover:bg-red-600 transition-colors"
             >
@@ -1080,6 +1153,7 @@ import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXm
 import { PDFDocument } from 'pdf-lib'
 import JSZip from 'jszip'
 import { getKegiatan } from '@/services/kegiatan'
+import { listPenugasanPegawai } from '@/services/penugasan'
 import { buildPublicUrl, buildStorageUrl, getApiHostBase } from '@/utils/url'
 
 export default {
@@ -1087,6 +1161,10 @@ export default {
   props: {
     kegiatanId: {
       type: [String, Number],
+      default: null
+    },
+    kegiatanData: {
+      type: Object,
       default: null
     }
   },
@@ -1097,6 +1175,7 @@ export default {
     const peserta = ref([])
     const kegiatan = ref([])
     const kegiatanDetailCache = ref(new Map())
+    const penugasanPegawai = ref([])
     const pegawai = ref(database.pegawai)
     const sertifikat = ref([])
     const isLoadingPeserta = ref(false)
@@ -1125,6 +1204,8 @@ export default {
     const filterKegiatan = ref(props.kegiatanId || '')
     const filterStatus = ref('')
     const filterKabKota = ref('')
+    const currentPage = ref(1)
+    const pageSize = ref(10)
 
     // Helper function to load peserta from API
     const isCacheValid = (updatedAt) => {
@@ -1247,6 +1328,16 @@ export default {
       }
     }
 
+    const loadPenugasanPegawaiFromAPI = async () => {
+      try {
+        const filters = props.kegiatanId ? { id_kegiatan: props.kegiatanId } : {}
+        penugasanPegawai.value = await listPenugasanPegawai(filters)
+      } catch (error) {
+        console.error('[PesertaManagement] Failed to load penugasan pegawai:', error)
+        penugasanPegawai.value = []
+      }
+    }
+
     const setApiError = (message) => {
       apiErrorMessage.value = message || 'Terjadi masalah saat memuat data. Silakan coba lagi.'
       showApiError.value = true
@@ -1263,7 +1354,8 @@ export default {
         await Promise.all([
           loadKegiatanFromAPI(true),
           loadPesertaFromAPI(true),
-          loadSertifikatFromAPI(true)
+          loadSertifikatFromAPI(true),
+          loadPenugasanPegawaiFromAPI()
         ])
       } catch (error) {
         console.error('[PesertaManagement] Failed to reload API data:', error)
@@ -1277,6 +1369,7 @@ export default {
         filterKegiatan.value = newVal
         // Reload peserta when kegiatan changes
         loadPesertaFromAPI()
+        loadPenugasanPegawaiFromAPI()
       }
     }, { immediate: true })
 
@@ -1287,6 +1380,7 @@ export default {
       loadKegiatanFromAPI()
       loadPesertaFromAPI()
       loadSertifikatFromAPI()
+      loadPenugasanPegawaiFromAPI()
     })
 
     const formPeserta = ref({
@@ -1408,6 +1502,39 @@ export default {
       })
     })
 
+    const totalPages = computed(() => {
+      return Math.max(Math.ceil(filteredPeserta.value.length / pageSize.value), 1)
+    })
+
+    const paginationStart = computed(() => {
+      if (filteredPeserta.value.length === 0) return 0
+      return (currentPage.value - 1) * pageSize.value + 1
+    })
+
+    const paginationEnd = computed(() => {
+      return Math.min(currentPage.value * pageSize.value, filteredPeserta.value.length)
+    })
+
+    const paginatedPeserta = computed(() => {
+      const start = (currentPage.value - 1) * pageSize.value
+      return filteredPeserta.value.slice(start, start + pageSize.value)
+    })
+
+    const goToPage = (page) => {
+      const nextPage = Math.min(Math.max(Number(page) || 1, 1), totalPages.value)
+      currentPage.value = nextPage
+    }
+
+    watch([searchNama, filterKegiatan, filterStatus, filterKabKota, pageSize], () => {
+      currentPage.value = 1
+    })
+
+    watch(totalPages, (nextTotalPages) => {
+      if (currentPage.value > nextTotalPages) {
+        currentPage.value = nextTotalPages
+      }
+    })
+
     const uniqueKabKota = computed(() => {
       const kabupatenSet = new Set()
 
@@ -1490,37 +1617,182 @@ export default {
     }
 
     const getKegiatanById = (idKegiatan) => {
-      return kegiatan.value.find(k => String(k.id_kegiatan) === String(idKegiatan))
+      if (props.kegiatanData && String(props.kegiatanData.id_kegiatan ?? props.kegiatanData.id ?? '') === String(idKegiatan ?? '')) {
+        return props.kegiatanData
+      }
+      return kegiatan.value.find(k => String(k.id_kegiatan ?? k.id ?? '') === String(idKegiatan ?? ''))
     }
-
-    const currentUserId = computed(() => {
-      return currentUser.value?.id_pegawai || currentUser.value?.id || currentUser.value?.id_user || null
-    })
 
     const normalizeIdValue = (value) => {
       if (value === undefined || value === null || value === '') return []
       if (Array.isArray(value)) return value.filter(v => v !== undefined && v !== null && v !== '')
       if (typeof value === 'object') {
-        return [value.id, value.id_pegawai, value.id_user, value.user_id].filter(v => v !== undefined && v !== null && v !== '')
+        return [
+          value.id,
+          value.id_user,
+          value.user_id,
+          value.id_pegawai,
+          value.pegawai_id
+        ].filter(v => v !== undefined && v !== null && v !== '')
       }
       return [value]
     }
 
+    const idsMatch = (left, right) => String(left ?? '') === String(right ?? '')
+
+    const currentUserAccountIds = computed(() => {
+      const userRecord = database.users?.find((user) => {
+        return (currentUser.value?.email && String(user.email) === String(currentUser.value.email))
+          || (currentUser.value?.id && String(user.id_user ?? user.id) === String(currentUser.value.id))
+      })
+
+      return [
+        ...normalizeIdValue(currentUser.value?.id),
+        ...normalizeIdValue(currentUser.value?.id_user),
+        ...normalizeIdValue(currentUser.value?.user_id),
+        ...normalizeIdValue(userRecord?.id_user),
+        ...normalizeIdValue(userRecord?.id)
+      ].filter(v => v !== undefined && v !== null && v !== '')
+    })
+
+    const currentUserPegawaiIds = computed(() => {
+      const userRecord = database.users?.find((user) => {
+        return (currentUser.value?.email && String(user.email) === String(currentUser.value.email))
+          || (currentUser.value?.id && String(user.id_user ?? user.id) === String(currentUser.value.id))
+      })
+
+      return [
+        ...normalizeIdValue(currentUser.value?.id_pegawai),
+        ...normalizeIdValue(currentUser.value?.pegawai_id),
+        ...normalizeIdValue(userRecord?.id_pegawai)
+      ].filter(v => v !== undefined && v !== null && v !== '')
+    })
+
+    const currentUserIds = computed(() => {
+      return [
+        ...currentUserAccountIds.value,
+        ...currentUserPegawaiIds.value
+      ].filter(v => v !== undefined && v !== null && v !== '')
+    })
+
+    const isOpenedKegiatan = (kegiatanId) => {
+      return !props.kegiatanId || idsMatch(kegiatanId, props.kegiatanId)
+    }
+
+    const getPesertaKegiatanId = (pesertaData = {}) => {
+      return pesertaData.id_kegiatan
+        ?? pesertaData.kegiatan_id
+        ?? pesertaData.kegiatan?.id_kegiatan
+        ?? pesertaData.kegiatan?.id
+        ?? props.kegiatanId
+        ?? null
+    }
+
+    const getPenugasanKegiatanId = (item = {}) => {
+      return item.id_kegiatan
+        ?? item.kegiatan_id
+        ?? item.kegiatan?.id_kegiatan
+        ?? item.kegiatan?.id
+        ?? item.penugasan?.id_kegiatan
+        ?? item.penugasan?.kegiatan?.id_kegiatan
+        ?? item.penugasan?.kegiatan?.id
+        ?? item.id_penugasan
+        ?? item.penugasan_id
+        ?? item.id_surat_tugas
+        ?? item.surat_tugas_id
+        ?? null
+    }
+
+    const getAssignedAccountIds = (item = {}) => [
+      ...normalizeIdValue(item.id_user),
+      ...normalizeIdValue(item.user_id),
+      ...normalizeIdValue(item.user),
+      ...normalizeIdValue(item.created_by),
+      ...normalizeIdValue(item.created_by_id),
+      ...normalizeIdValue(item.penugasan?.id_user),
+      ...normalizeIdValue(item.penugasan?.user_id),
+      ...normalizeIdValue(item.penugasan?.user),
+      ...normalizeIdValue(item.penugasan?.created_by),
+      ...normalizeIdValue(item.penugasan?.created_by_id),
+      ...normalizeIdValue(item.pegawai?.id_user),
+      ...normalizeIdValue(item.pegawai?.user_id)
+    ]
+
+    const getAssignedPegawaiIds = (item = {}) => [
+      ...normalizeIdValue(item.id_pegawai),
+      ...normalizeIdValue(item.pegawai_id),
+      ...normalizeIdValue(item.pegawai),
+      ...normalizeIdValue(item.penugasan?.id_pegawai),
+      ...normalizeIdValue(item.penugasan?.pegawai_id),
+      ...normalizeIdValue(item.penugasan?.pegawai)
+    ]
+
+    const matchesCurrentUserAssignment = (item = {}) => {
+      const assignedAccountIds = getAssignedAccountIds(item)
+      const assignedPegawaiIds = getAssignedPegawaiIds(item)
+
+      return assignedAccountIds.some(assignedId => currentUserAccountIds.value.some(userId => idsMatch(assignedId, userId)))
+        || assignedPegawaiIds.some(assignedId => currentUserPegawaiIds.value.some(userId => idsMatch(assignedId, userId)))
+    }
+
+    const asList = (value) => {
+      if (Array.isArray(value)) return value
+      return value ? [value] : []
+    }
+
     const isKegiatanCreator = (kegiatanId) => {
       const keg = getKegiatanById(kegiatanId)
-      if (!keg || !currentUserId.value) return false
+      if (!keg || currentUserIds.value.length === 0) return false
       const creatorIds = [
         ...normalizeIdValue(keg.created_by),
         ...normalizeIdValue(keg.created_by_id),
+        ...normalizeIdValue(keg.created_by_user),
+        ...normalizeIdValue(keg.created_by_user_id),
+        ...normalizeIdValue(keg.created_by_pegawai),
+        ...normalizeIdValue(keg.created_by_pegawai_id),
         ...normalizeIdValue(keg.id_user),
         ...normalizeIdValue(keg.user_id),
         ...normalizeIdValue(keg.id_pegawai)
       ]
-      return creatorIds.some(id => String(id) === String(currentUserId.value))
+
+      return creatorIds.some(creatorId => currentUserIds.value.some(userId => idsMatch(creatorId, userId)))
+    }
+
+    const isUserAssignedToKegiatan = (kegiatanId) => {
+      if (!isOpenedKegiatan(kegiatanId) || currentUserIds.value.length === 0) return false
+
+      const keg = getKegiatanById(kegiatanId) || {}
+      const assignedFromKegiatanRelation = [
+        ...asList(keg.penugasan),
+        ...asList(keg.surat_tugas),
+        ...asList(keg.penugasan_pegawai),
+        ...asList(keg.penugasan_pegawais),
+        ...asList(keg.surat_tugas_pegawai)
+      ].some((item) => matchesCurrentUserAssignment(item))
+
+      if (assignedFromKegiatanRelation) return true
+
+      return penugasanPegawai.value.some((item) => (
+        idsMatch(getPenugasanKegiatanId(item), kegiatanId) && matchesCurrentUserAssignment(item)
+      ))
+    }
+
+    const canManagePeserta = (pesertaData) => {
+      const pesertaKegiatanId = getPesertaKegiatanId(pesertaData)
+      if (!pesertaKegiatanId || !isOpenedKegiatan(pesertaKegiatanId)) return false
+      return isKegiatanCreator(pesertaKegiatanId) || isUserAssignedToKegiatan(pesertaKegiatanId)
+    }
+
+    const canDeletePeserta = (pesertaData) => {
+      return canManagePeserta(pesertaData)
+    }
+
+    const canEditPeserta = (pesertaData) => {
+      return canManagePeserta(pesertaData)
     }
 
     const canModifySelectedPeserta = computed(() => {
-      return selectedPeserta.value ? isKegiatanCreator(selectedPeserta.value.id_kegiatan) : false
+      return selectedPeserta.value ? canManagePeserta(selectedPeserta.value) : false
     })
 
     const waitForWindowImages = (win) => {
@@ -2214,9 +2486,29 @@ export default {
       showAllBiodataModal.value = false
     }
 
-    const openEditModal = () => {
-      if (selectedPeserta.value) {
-        formPeserta.value = { ...selectedPeserta.value }
+    const formatDateInputValue = (value) => {
+      if (!value) return ''
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+      const date = new Date(value)
+      if (Number.isNaN(date.getTime())) return ''
+      return date.toISOString().slice(0, 10)
+    }
+
+    const openEditModal = (pesertaData = null) => {
+      const targetPeserta = pesertaData || selectedPeserta.value
+      if (targetPeserta) {
+        if (!canEditPeserta(targetPeserta)) {
+          alert('Anda tidak memiliki akses untuk mengedit peserta pada kegiatan ini.')
+          return
+        }
+
+        selectedPeserta.value = targetPeserta
+        formPeserta.value = {
+          ...targetPeserta,
+          id_kegiatan: getPesertaKegiatanId(targetPeserta),
+          tanggal_lahir: formatDateInputValue(targetPeserta.tanggal_lahir),
+          tanggal_surat_tugas: formatDateInputValue(targetPeserta.tanggal_surat_tugas)
+        }
         editingPeserta.value = true
         showDetailModal.value = false
         showAddModal.value = true
@@ -2234,6 +2526,11 @@ export default {
 
       try {
         if (editingPeserta.value) {
+          if (!canEditPeserta(formPeserta.value)) {
+            alert('Anda tidak memiliki akses untuk mengedit peserta pada kegiatan ini.')
+            return
+          }
+
           await updateAPI('peserta', formPeserta.value.id_peserta, payload)
           ActivityEvents.UPDATE_PESERTA(formPeserta.value.nama_lengkap)
         } else {
@@ -2249,8 +2546,13 @@ export default {
     }
 
     const deletePeserta = async (id) => {
+      const deletedPeserta = peserta.value.find(p => String(p.id_peserta) === String(id))
+      if (!canDeletePeserta(deletedPeserta)) {
+        alert('Anda tidak memiliki akses untuk menghapus peserta pada kegiatan ini.')
+        return
+      }
+
       if (confirm('Apakah Anda yakin ingin menghapus peserta ini?')) {
-        const deletedPeserta = peserta.value.find(p => p.id_peserta === id)
         try {
           await deleteAPI('peserta', id)
           ActivityEvents.DELETE_PESERTA(deletedPeserta?.nama_lengkap || `ID ${id}`)
@@ -2693,9 +2995,16 @@ export default {
       filterKegiatan,
       filterStatus,
       filterKabKota,
+      currentPage,
+      pageSize,
       formPeserta,
       formSertifikat,
       filteredPeserta,
+      paginatedPeserta,
+      totalPages,
+      paginationStart,
+      paginationEnd,
+      goToPage,
       uniqueKabKota,
       pesertaAktif,
       pesertaBersertifikat,
@@ -2733,7 +3042,10 @@ export default {
       closeAllBiodataModal,
       printAllBiodata,
       getPesertaBiodata,
-      isKegiatanCreator
+      isKegiatanCreator,
+      isUserAssignedToKegiatan,
+      canDeletePeserta,
+      canEditPeserta
     }
   }
 }

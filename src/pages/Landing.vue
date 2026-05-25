@@ -615,7 +615,6 @@ export default {
           }
         })
 
-        console.log('Formatted Unit Kerja:', timkerCards.value)
 
       } catch (error) {
         console.error('Gagal memuat data unit kerja:', error)
@@ -744,7 +743,6 @@ export default {
       
       return kegiatan.value.filter((item) => {
         const itemUnitCode = normalizeCode(resolveKegiatanUnitCode(item))
-        console.log(item);
         return selectedUnitCode && itemUnitCode && itemUnitCode === selectedUnitCode
       })
     })
@@ -997,7 +995,6 @@ export default {
     // }
 
     const loadKegiatan = async (selected) => {
-      console.log(selected.id);
       
       isLoadingKegiatan.value = true
       try {

@@ -445,11 +445,9 @@ export default {
     const kegiatanDetailCache = ref(new Map())
     const isDownloadingBatchDocx = ref(false)
 
-    // console.log('[Dashboard] Initial pegawai data on mount:', {
     //   count: pegawai.value.length,
     //   firstNames: pegawai.value.slice(0, 3).map(p => ({ id: p.id_pegawai, nama: p.nama }))
     // })
-    // console.log('[Dashboard] Initial users data on mount:', {
     //   count: users.value.length,
     //   records: users.value.slice(0, 3).map(u => ({ id_user: u.id_user, id_pegawai: u.id_pegawai, email: u.email }))
     // })
@@ -471,8 +469,6 @@ export default {
           return null
         }
 
-        // console.log('[Dashboard] DEBUG - currentUser:', JSON.stringify(currentUser.value))
-        // console.log('[Dashboard] DEBUG - pegawai available:', pegawai.value.length, 'records')
 
         // Try matching dengan id_pegawai dulu
         let profile = pegawai.value.find(p =>
@@ -481,12 +477,10 @@ export default {
 
         // Jika tidak ketemu, coba matching dengan email
         if (!profile && currentUser.value.email) {
-          // console.log('[Dashboard] id_pegawai/id tidak cocok, mencari dari users...')
           const userRecord = users.value.find(u =>
             String(u.email) === String(currentUser.value.email)
           )
           if (userRecord) {
-            // console.log('[Dashboard] Found user record, id_pegawai:', userRecord.id_pegawai)
             profile = pegawai.value.find(p =>
               String(p.id_pegawai) === String(userRecord.id_pegawai)
             )
@@ -494,7 +488,6 @@ export default {
         }
 
         if (profile) {
-          // console.log('[Dashboard] ✅ Found pegawai profile:', profile.nama)
           return profile
         } else {
           // console.warn('[Dashboard] ❌ No pegawai profile found')
@@ -626,6 +619,14 @@ export default {
 
       return Array.from(values).sort()
     })
+
+    const normalizeApiRows = (response) => {
+      if (Array.isArray(response)) return response
+      if (Array.isArray(response?.data)) return response.data
+      if (Array.isArray(response?.unit_kerja)) return response.unit_kerja
+      if (Array.isArray(response?.items)) return response.items
+      return []
+    }
 
     const filteredKegiatan = computed(() => {
       return kegiatan.value.filter(k => {
@@ -1155,7 +1156,6 @@ export default {
     const fetchKegiatanData = async () => {
       try {
         isLoadingKegiatan.value = true
-        console.log(`[Dashboard] Fetching kegiatan page ${currentPage.value} (size: ${pageSize.value})...`)
 
         // Build query parameters untuk pagination dan filter
         const params = new URLSearchParams({
@@ -1173,13 +1173,11 @@ export default {
         })
 
         const url = `kegiatan/all`
-        // console.log(`[Dashboard] API URL: ${url}`)
 
         const response = await fetchAPI(url, {
           params: Object.fromEntries(params.entries()),
           raw: true
         })
-        // console.log(`[Dashboard] API Response:`, response)
 
         // Backend bisa return format:
         // Laravel pagination resource: { data: [...], links: {...}, meta: { total, per_page, current_page } }
@@ -1196,7 +1194,6 @@ export default {
           totalKegiatanCount.value = 0
         }
 
-        // console.log(`[Dashboard] Loaded ${kegiatan.value.length} kegiatan, total: ${totalKegiatanCount.value}`)
       } catch (error) {
         console.error('[Dashboard] Error fetching kegiatan:', error)
         // Fallback ke local data jika API gagal
@@ -1221,54 +1218,44 @@ export default {
     // onMounted(async () => {
     //   // Load pegawai dan users data dari API terlebih dahulu sebelum rendering greeting
     //   try {
-    //     console.log('[Dashboard] 🔄 Loading pegawai data from API...')
     //     const pegawaiData = await fetchAPI('pegawai')
     //     if (Array.isArray(pegawaiData)) {
     //       pegawai.value = pegawaiData
-    //       console.log('[Dashboard] ✅ Pegawai data loaded:', pegawaiData.length, 'records')
     //     }
     //   } catch (error) {
     //     console.warn('[Dashboard] ⚠️ Failed to load pegawai from API:', error.message)
     //   }
 
     //   try {
-    //     console.log('[Dashboard] 🔄 Loading users data from API...')
     //     const usersData = await fetchAPI('users')
     //     if (Array.isArray(usersData)) {
     //       users.value = usersData
-    //       console.log('[Dashboard] ✅ Users data loaded:', usersData.length, 'records')
     //     }
     //   } catch (error) {
     //     console.warn('[Dashboard] ⚠️ Failed to load users from API:', error.message)
     //   }
 
     //   try {
-    //     console.log('[Dashboard] 🔄 Loading peserta data from API...')
     //     const pesertaData = await fetchAPI('peserta')
     //     if (Array.isArray(pesertaData)) {
     //       peserta.value = pesertaData
     //       totalPeserta.value = pesertaData.length
-    //       console.log('[Dashboard] ✅ Peserta data loaded:', pesertaData.length, 'records')
     //     } else if (pesertaData && pesertaData.data && Array.isArray(pesertaData.data)) {
     //       peserta.value = pesertaData.data
     //       totalPeserta.value = pesertaData.data.length
-    //       console.log('[Dashboard] ✅ Peserta data loaded:', pesertaData.data.length, 'records')
     //     }
     //   } catch (error) {
     //     console.warn('[Dashboard] ⚠️ Failed to load peserta from API:', error.message)
     //   }
 
     //   try {
-    //     console.log('[Dashboard] 🔄 Loading sertifikat data from API...')
     //     const sertifikatData = await fetchAPI('sertifikat')
     //     if (Array.isArray(sertifikatData)) {
     //       sertifikat.value = sertifikatData
     //       totalSertifikat.value = sertifikatData.filter(s => s.status === 'terbit').length
-    //       console.log('[Dashboard] ✅ Sertifikat data loaded:', sertifikatData.length, 'records')
     //     } else if (sertifikatData && sertifikatData.data && Array.isArray(sertifikatData.data)) {
     //       sertifikat.value = sertifikatData.data
     //       totalSertifikat.value = sertifikatData.data.filter(s => s.status === 'terbit').length
-    //       console.log('[Dashboard] ✅ Sertifikat data loaded:', sertifikatData.data.length, 'records')
     //     }
     //   } catch (error) {
     //     console.warn('[Dashboard] ⚠️ Failed to load sertifikat from API:', error.message)
@@ -1277,7 +1264,6 @@ export default {
     //   // Trigger profilePegawai computed untuk mendapatkan profile yang tepat
     //   const profile = profilePegawai.value
     //   if (profile) {
-    //     console.log('[Dashboard] ✅ Profile pegawai ditemukan:', profile.nama)
     //   } else {
     //     console.warn('[Dashboard] ⚠️ Profile pegawai tidak ditemukan')
     //   }
@@ -1295,38 +1281,18 @@ export default {
         await fetchDashboardStats()
 
         const [
-          pegawaiData,
-          usersData,
           pesertaData,
           sertifikatData,
           unitKerjaData
         ] = await Promise.all([
-          // fetchAPI('pegawai'),
-          // fetchAPI('users'),
           fetchAPI('peserta'),
           fetchAPI('sertifikat'),
           fetchAPI('unit-kerja')
         ])
 
-        if (Array.isArray(pegawaiData)) {
-          pegawai.value = pegawaiData
-        }
-
-        if (Array.isArray(usersData)) {
-          users.value = usersData
-        }
-
-        if (Array.isArray(pesertaData)) {
-          peserta.value = pesertaData
-        }
-
-        if (Array.isArray(sertifikatData)) {
-          sertifikat.value = sertifikatData
-        }
-
-        if (Array.isArray(unitKerjaData)) {
-          unitKerja.value = unitKerjaData
-        }
+        peserta.value = normalizeApiRows(pesertaData)
+        sertifikat.value = normalizeApiRows(sertifikatData)
+        unitKerja.value = normalizeApiRows(unitKerjaData)
 
         await fetchKegiatanData()
 

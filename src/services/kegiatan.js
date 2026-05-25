@@ -10,43 +10,111 @@ import { fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
  * @returns {Promise<Array>} all kegiatan records
  */
 export const listKegiatan = async () => {
-  const fetchKegiatanAll = async () => {
-    const rawAll = await fetchAPI('kegiatan/all', { raw: true })
-    if (Array.isArray(rawAll)) return rawAll
-    if (rawAll && Array.isArray(rawAll.data)) return rawAll.data
+  const extractRows = (response) => {
+    if (Array.isArray(response)) return response
+    if (Array.isArray(response?.data)) return response.data
     return []
   }
 
-  // Request raw response first to detect pagination metadata
-  try {
-    const raw = await fetchAPI('kegiatan', { raw: true })
+  const extractPagination = (response) => {
+    const meta = response?.meta || response || {}
+    const currentPage = Number(meta.current_page || meta.currentPage || response?.current_page || 1)
+    const lastPage = Number(meta.last_page || meta.lastPage || response?.last_page || 1)
+    const total = Number(meta.total || response?.total || 0)
+    const perPage = Number(meta.per_page || meta.perPage || response?.per_page || 0)
 
-    // If API returned an array directly, use it
-    if (Array.isArray(raw)) return raw
-
-    // If API returned object with `data` array
-    if (raw && Array.isArray(raw.data)) {
-      // Detect common pagination wrappers (meta, current_page, per_page, total)
-      const hasPagination = raw.meta || raw.current_page || raw.per_page || raw.total
-      // If there is pagination metadata, try the `/kegiatan/all` endpoint to fetch full list
-      if (!hasPagination) return raw.data
-      const fullList = await fetchKegiatanAll()
-      if (fullList.length > 0) return fullList
+    return {
+      currentPage: Number.isFinite(currentPage) && currentPage > 0 ? currentPage : 1,
+      lastPage: Number.isFinite(lastPage) && lastPage > 0 ? lastPage : 1,
+      total: Number.isFinite(total) && total > 0 ? total : 0,
+      perPage: Number.isFinite(perPage) && perPage > 0 ? perPage : 0
     }
-  } catch (e) {
-    // ignore and fallback to non-raw fetch below
   }
 
-  // Fallback: try endpoints that return full list
+  const dedupeRows = (rows) => {
+    if (!Array.isArray(rows)) return []
+    return Array.from(
+      new Map(
+        rows.map((item, index) => [
+          String(item?.id_kegiatan ?? item?.id ?? index),
+          item
+        ])
+      ).values()
+    )
+  }
+
+  const fetchAllPages = async (endpoint) => {
+    const firstPage = await fetchAPI(endpoint, {
+      raw: true,
+      params: {
+        page: 1,
+        per_page: 100,
+        limit: 100
+      }
+    })
+
+    const firstRows = extractRows(firstPage)
+    const pagination = extractPagination(firstPage)
+    const hasMoreRows = pagination.lastPage > pagination.currentPage
+      || (pagination.total > firstRows.length && pagination.perPage > 0)
+
+    if (!hasMoreRows) return firstRows
+
+    const lastPage = pagination.lastPage || Math.ceil(pagination.total / pagination.perPage) || 1
+    const remainingPages = Array.from({ length: Math.max(lastPage - 1, 0) }, (_, index) => index + 2)
+    const remainingResponses = await Promise.all(
+      remainingPages.map((page) =>
+        fetchAPI(endpoint, {
+          raw: true,
+          params: {
+            page,
+            per_page: pagination.perPage || 100,
+            limit: pagination.perPage || 100
+          }
+        }).catch(() => null)
+      )
+    )
+
+    return [
+      ...firstRows,
+      ...remainingResponses.flatMap(extractRows)
+    ]
+  }
+
   try {
-    let data = await fetchKegiatanAll()
-    if (!Array.isArray(data) || data.length === 0) {
-      data = await fetchAPI('kegiatan')
-    }
-    return data
+    const rows = await fetchAllPages('kegiatan/all')
+    if (rows.length > 0) return dedupeRows(rows)
+  } catch (e) {
+    // ignore and fallback to authenticated kegiatan endpoint below
+  }
+
+  try {
+    const rows = await fetchAllPages('kegiatan')
+    if (rows.length > 0) return dedupeRows(rows)
+    const data = await fetchAPI('kegiatan')
+    return dedupeRows(Array.isArray(data) ? data : extractRows(data))
   } catch (e) {
     return []
   }
+}
+
+/**
+ * @returns {Promise<Array>} kegiatan yang dapat diakses user login berdasarkan tim dan penugasan
+ */
+export const listKegiatanTimSaya = async () => {
+  const response = await fetchAPI('kegiatan/tim-saya', { raw: true })
+  const rows = Array.isArray(response)
+    ? response
+    : (Array.isArray(response?.data) ? response.data : [])
+
+  return Array.from(
+    new Map(
+      rows.map((item, index) => [
+        String(item?.id_kegiatan ?? item?.id ?? index),
+        item
+      ])
+    ).values()
+  )
 }
 
 /**
@@ -92,6 +160,7 @@ export const removeKegiatan = (id) => {
 
 export default {
   listKegiatan,
+  listKegiatanTimSaya,
   getKegiatan,
   createKegiatan,
   updateKegiatan,

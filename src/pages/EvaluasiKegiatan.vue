@@ -575,7 +575,6 @@ export default {
         // Submit to backend API
         const response = await postAPI('evaluasi', payload)
         
-        console.log('Evaluasi response:', response)
 
         // postAPI returns data?.data || data
         // If backend returns { success: true, data: { id_evaluasi: ... } }
@@ -596,12 +595,6 @@ export default {
         }
       } catch (err) {
         console.error('Gagal mengirim evaluasi:', err)
-        console.log('Error details:', {
-          status: err.status,
-          response: err.response?.data,
-          message: err.message
-        })
-        
         // Handle specific error responses
         if (err.status === 422) {
           // Validation error
