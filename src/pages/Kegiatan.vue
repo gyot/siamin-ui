@@ -1346,11 +1346,19 @@ export default {
       const rows = Array.isArray(unitKerjaMaster.value) ? unitKerjaMaster.value : []
       rows.forEach((item) => {
         const id = item?.unit_kerja_id ?? item?.id
-        if (id === null || id === undefined || id === '') return
-        map.set(String(id), {
+        const kodeUnit = item?.kode_unit || ''
+        const normalized = {
           unit_kerja_id: id,
-          kode_unit: item?.kode_unit || '',
+          kode_unit: kodeUnit,
           nama_unit: item?.nama_unit || item?.nama || ''
+        }
+
+        ;[id, kodeUnit, item?.id].forEach((key) => {
+          if (key === null || key === undefined || key === '') return
+          map.set(String(key), normalized)
+          if (/^\d+$/.test(String(key))) {
+            map.set(String(Number(key)), normalized)
+          }
         })
       })
       return map
@@ -1400,13 +1408,13 @@ export default {
       if (typeof item.unit_kerja === 'string' && item.unit_kerja.trim()) return item.unit_kerja
       if (item.unit_kerja && typeof item.unit_kerja === 'object') {
         const nestedName = item.unit_kerja.nama_unit || item.unit_kerja.nama || ''
-        const nestedCode = item.unit_kerja.kode_unit || ''
+        const nestedCode = item.unit_kerja.kode_unit || item.unit_kerja.nama || ''
         if (nestedName) {
           return nestedCode ? `${nestedCode} - ${nestedName}` : nestedName
         }
       }
 
-      const resolvedUnitId = item.unit_kerja_id ?? item.id_tim ?? item.unit_kerja?.unit_kerja_id ?? item.unit_kerja?.id ?? null
+      const resolvedUnitId = item.unit_kerja_id ?? item.id_tim ?? item.unit_kerja?.nama_unit ?? item.unit_kerja?.nama_unit ?? null
       const key = resolvedUnitId !== undefined && resolvedUnitId !== null
         ? String(resolvedUnitId)
         : ''
@@ -1417,9 +1425,9 @@ export default {
       if (!unitFromMaster && !unit) return `Unit ${key}`
       const resolved = unitFromMaster || unit
       if (!resolved) return `Unit ${key}`
-      return resolved.kode_unit
-        ? `${resolved.kode_unit} - ${resolved.nama_unit || `Unit ${key}`}`
-        : (resolved.nama_unit || `Unit ${key}`)
+      const code = resolved.kode_unit || key
+      const name = resolved.nama_unit || `Unit ${key}`
+      return code ? `${code} - ${name}` : name
     }
 
     // Fetch kegiatan dari API (sudah difilter berdasarkan pegawai yang login)
