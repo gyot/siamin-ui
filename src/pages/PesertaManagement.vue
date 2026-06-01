@@ -9,6 +9,13 @@
         </div>
         <div class="flex gap-2">
           <button
+            @click="handleGenerateMassal"
+            :disabled="selectedCount === 0 || isGeneratingSertifikat"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {{ isGeneratingSertifikat ? 'Memproses...' : `Buat Sertifikat Terpilih (${selectedCount})` }}
+          </button>
+          <button
             @click="exportPeserta"
             class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
           >
@@ -153,22 +160,26 @@
       </div>
 
       <!-- Statistik -->
-      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
         <div class="bg-white rounded-lg shadow-md p-3 sm:p-4">
           <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Total Peserta</p>
-          <p class="text-2xl sm:text-3xl font-bold text-blue-600">{{ filteredPeserta.length }}</p>
+          <p class="text-2xl sm:text-3xl font-bold text-blue-600">{{ sertifikatStats.total }}</p>
         </div>
         <div class="bg-white rounded-lg shadow-md p-3 sm:p-4">
-          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Peserta Aktif</p>
-          <p class="text-2xl sm:text-3xl font-bold text-green-600">{{ filteredPesertaAktif.length }}</p>
+          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Sudah Terbit</p>
+          <p class="text-2xl sm:text-3xl font-bold text-green-600">{{ sertifikatStats.terbit }}</p>
         </div>
         <div class="bg-white rounded-lg shadow-md p-3 sm:p-4">
-          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Sudah Bersertifikat</p>
-          <p class="text-2xl sm:text-3xl font-bold text-indigo-600">{{ filteredPesertaBersertifikat }}</p>
+          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Draft</p>
+          <p class="text-2xl sm:text-3xl font-bold text-yellow-600">{{ sertifikatStats.draft }}</p>
         </div>
         <div class="bg-white rounded-lg shadow-md p-3 sm:p-4">
-          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Belum Bersertifikat</p>
-          <p class="text-2xl sm:text-3xl font-bold text-orange-600">{{ filteredPeserta.length - filteredPesertaBersertifikat }}</p>
+          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Dicabut</p>
+          <p class="text-2xl sm:text-3xl font-bold text-red-600">{{ sertifikatStats.dicabut }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-3 sm:p-4">
+          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Belum Ada</p>
+          <p class="text-2xl sm:text-3xl font-bold text-gray-600">{{ sertifikatStats.belum_ada }}</p>
         </div>
       </div>
 
@@ -179,6 +190,13 @@
           <table class="min-w-[1080px] w-full text-sm">
             <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white sticky top-0">
               <tr>
+                <th class="px-4 py-3 text-left text-xs sm:text-sm">
+                  <input
+                    v-model="allSelected"
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-gray-300"
+                  >
+                </th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">No</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Nama</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">NIP</th>
@@ -193,7 +211,7 @@
             </thead>
             <tbody class="divide-y divide-gray-200">
               <tr v-if="filteredPeserta.length === 0" class="hover:bg-gray-50">
-                <td colspan="10" class="px-4 py-8 text-center text-gray-500">
+                <td colspan="11" class="px-4 py-8 text-center text-gray-500">
                   <p class="text-sm sm:text-base">Tidak ada data peserta</p>
                 </td>
               </tr>
@@ -202,6 +220,14 @@
                 :key="p.id_peserta"
                 class="hover:bg-blue-50 transition-colors"
               >
+                <td class="px-4 py-3 text-xs sm:text-sm text-gray-900">
+                  <input
+                    v-model="checkedPesertaIds"
+                    :value="p.id_peserta"
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-gray-300"
+                  >
+                </td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-900">{{ paginationStart + index }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm font-medium text-gray-900">{{ p.nama_lengkap }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.nip || '-' }}</td>
@@ -240,7 +266,7 @@
                       @click="openSertifikatModal(p)"
                       class="px-2 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors text-xs font-semibold whitespace-nowrap"
                     >
-                      Sert
+                      Sertifikat
                     </button>
                     <button
                       @click="downloadPesertaDocx(p)"
@@ -320,6 +346,13 @@
               Berikutnya
             </button>
           </div>
+          <button
+            @click="handleGenerateMassal"
+            :disabled="selectedCount === 0 || isGeneratingSertifikat"
+            class="w-full px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {{ isGeneratingSertifikat ? 'Memproses...' : `Buat Sertifikat Terpilih (${selectedCount})` }}
+          </button>
         </div>
         <div
           v-for="(p, index) in paginatedPeserta"
@@ -328,7 +361,15 @@
         >
           <div class="flex justify-between items-start gap-2 mb-3">
             <div class="flex-1">
-              <p class="text-sm font-medium text-gray-600 mb-1">{{ paginationStart + index }}. {{ p.nama_lengkap }}</p>
+              <div class="flex items-start gap-2">
+                <input
+                  v-model="checkedPesertaIds"
+                  :value="p.id_peserta"
+                  type="checkbox"
+                  class="mt-0.5 h-4 w-4 rounded border-gray-300"
+                >
+                <p class="text-sm font-medium text-gray-600 mb-1">{{ paginationStart + index }}. {{ p.nama_lengkap }}</p>
+              </div>
               <p class="text-xs text-gray-500">{{ p.email }}</p>
             </div>
             <span :class="getSertifikatBadgeClass(p.id_peserta)" class="text-xs whitespace-nowrap">
@@ -744,41 +785,20 @@
         </div>
       </div>
 
-      <!-- Modal Sertifikat -->
-      <div v-if="showSertifikatModal && selectedPeserta" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <!-- Modal Batch Sertifikat -->
+      <div v-if="showSertifikatModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 flex justify-between items-center sticky top-0">
-            <h2 class="text-xl font-bold">Kelola Sertifikat - {{ selectedPeserta.nama_lengkap }}</h2>
-            <button @click="showSertifikatModal = false" class="text-2xl hover:text-blue-200">&times;</button>
+            <h2 class="text-xl font-bold">ModalBatchSertifikat</h2>
+            <button @click="closeSertifikatModal" class="text-2xl hover:text-blue-200">&times;</button>
           </div>
 
           <div class="p-6">
-            <!-- Tampilkan sertifikat yang sudah ada jika ada -->
-            <div v-if="sertifikatPeserta" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <h3 class="font-semibold text-green-800 mb-3">Sertifikat Sudah Diterbitkan</h3>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p class="text-gray-600">Nomor Sertifikat</p>
-                  <p class="font-semibold text-gray-900">{{ sertifikatPeserta.nomor_sertifikat }}</p>
-                </div>
-                <div>
-                  <p class="text-gray-600">Tanggal Tandatangan</p>
-                  <p class="font-semibold text-gray-900">{{ formatDate(sertifikatPeserta.tanggal_ttd) }}</p>
-                </div>
-                <div>
-                  <p class="text-gray-600">Status</p>
-                  <span :class="getSertifikatBadgeClass(selectedPeserta.id_peserta)">
-                    {{ getSertifikatStatus(selectedPeserta.id_peserta) }}
-                  </span>
-                </div>
-                <div>
-                  <p class="text-gray-600">Template</p>
-                  <p class="font-semibold text-gray-900">{{ sertifikatPeserta.template }}</p>
-                </div>
-              </div>
+            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
+              <p class="font-semibold">Batch sertifikat belum tersedia untuk kegiatan ini.</p>
+              <p class="mt-1">Isi data batch di bawah, lalu sistem akan otomatis generate sertifikat untuk peserta yang dipilih.</p>
             </div>
 
-            <!-- Form Sertifikat -->
             <form @submit.prevent="saveSertifikat" class="space-y-4">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -786,7 +806,7 @@
                   <input
                     v-model="formSertifikat.nomor_sertifikat"
                     type="text"
-                    placeholder="CERT-2025-001"
+                    placeholder="421/BPMP/2026"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -806,41 +826,27 @@
                   >
                     <option value="">Pilih Penandatangan</option>
                     <option v-for="p in pegawai" :key="p.id_pegawai" :value="p.id_pegawai">
-                      {{ p.nama }} ({{ p.pangkat }})
+                      {{ p.nama || p.nama_lengkap || '-' }}{{ p.nip ? ` - ${p.nip}` : '' }}{{ p.pangkat ? ` (${p.pangkat})` : '' }}
                     </option>
                   </select>
                 </div>
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Template *</label>
-                  <select
-                    v-model="formSertifikat.template"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Pilih Template</option>
-                    <option value="template_1">Template Peserta</option>
-                    <option value="template_2">Template Narasumber</option>
-                    <option value="template_3">Template Fasilitator</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Peran</label>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Template File</label>
                   <input
-                    v-model="formSertifikat.peran"
+                    v-model="formSertifikat.template_file"
                     type="text"
+                    placeholder="templates/sertifikat.docx"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    disabled
                   />
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                  <select
+                  <input
                     v-model="formSertifikat.status"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="draft">Draft</option>
-                    <option value="terbit">Diterbitkan</option>
-                    <option value="dicabut">Dicabut</option>
-                  </select>
+                    type="text"
+                    disabled
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
+                  />
                 </div>
               </div>
 
@@ -854,16 +860,17 @@
               <div class="flex gap-3 justify-end pt-4 border-t">
                 <button
                   type="button"
-                  @click="showSertifikatModal = false"
+                  @click="closeSertifikatModal"
                   class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all"
+                  :disabled="isSavingSertifikatBatch"
+                  class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {{ sertifikatPeserta ? 'Ubah Sertifikat' : 'Buat Sertifikat' }}
+                  {{ isSavingSertifikatBatch ? 'Menyimpan...' : 'Simpan & Generate' }}
                 </button>
               </div>
             </form>
@@ -1139,6 +1146,7 @@ import { useAuthStore } from '@/stores/auth'
 import database from '@/data/index.js'
 import { fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
+import Swal from 'sweetalert2'
 
 let pesertaCache = null
 let pesertaCacheUpdatedAt = null
@@ -1192,6 +1200,12 @@ export default {
     const selectedPesertaBiodata = ref(null)
     const formErrors = ref([])
     const isDownloadingBatchDocx = ref(false)
+    const checkedPesertaIds = ref([])
+    const pendingSertifikatMode = ref(null)
+    const pendingSertifikatPeserta = ref(null)
+    const pendingSertifikatPesertaIds = ref([])
+    const isGeneratingSertifikat = ref(false)
+    const isSavingSertifikatBatch = ref(false)
     const administrasiDocs = ref([
       'Penugasan',
       'SPPD',
@@ -1297,7 +1311,23 @@ export default {
       }
     }
 
-    // Helper function to load sertifikat from API
+    const normalizeApiList = (data, key) => {
+      if (Array.isArray(data)) return data
+      if (data && Array.isArray(data.data)) return data.data
+      if (data && key && Array.isArray(data[key])) return data[key]
+      return []
+    }
+
+    const getActiveKegiatanId = (pesertaItem = null) => {
+      return pesertaItem?.id_kegiatan
+        || props.kegiatanId
+        || filterKegiatan.value
+        || selectedPeserta.value?.id_kegiatan
+        || filteredPeserta.value[0]?.id_kegiatan
+        || ''
+    }
+
+    // Helper function to load status sertifikat peserta dari API batch baru
     const loadSertifikatFromAPI = async (forceRefresh = false) => {
       if (!forceRefresh && sertifikatCache && isCacheValid(sertifikatCacheUpdatedAt)) {
         sertifikat.value = sertifikatCache
@@ -1305,18 +1335,15 @@ export default {
       }
 
       try {
-        const data = await fetchAPI('sertifikat')
-        
-        if (Array.isArray(data)) {
-          sertifikat.value = data
-        } else if (data && Array.isArray(data.data)) {
-          sertifikat.value = data.data
-        } else if (data && data.sertifikat && Array.isArray(data.sertifikat)) {
-          sertifikat.value = data.sertifikat
-        } else {
+        const idKegiatan = getActiveKegiatanId()
+
+        if (!idKegiatan) {
           sertifikat.value = []
-          console.warn('[PesertaManagement] Unexpected sertifikat response format:', data)
+          return
         }
+
+        const data = await fetchAPI(`kegiatan/${idKegiatan}/peserta-sertifikat`)
+        sertifikat.value = normalizeApiList(data, 'peserta_sertifikat')
 
         sertifikatCache = sertifikat.value
         sertifikatCacheUpdatedAt = Date.now()
@@ -1338,6 +1365,16 @@ export default {
       }
     }
 
+    const loadPegawaiFromAPI = async () => {
+      try {
+        const data = await fetchAPI('pegawai')
+        pegawai.value = normalizeApiList(data, 'pegawai')
+      } catch (error) {
+        console.error('[PesertaManagement] Failed to load pegawai from API:', error)
+        pegawai.value = database.pegawai || []
+      }
+    }
+
     const setApiError = (message) => {
       apiErrorMessage.value = message || 'Terjadi masalah saat memuat data. Silakan coba lagi.'
       showApiError.value = true
@@ -1355,6 +1392,7 @@ export default {
           loadKegiatanFromAPI(true),
           loadPesertaFromAPI(true),
           loadSertifikatFromAPI(true),
+          loadPegawaiFromAPI(),
           loadPenugasanPegawaiFromAPI()
         ])
       } catch (error) {
@@ -1369,6 +1407,7 @@ export default {
         filterKegiatan.value = newVal
         // Reload peserta when kegiatan changes
         loadPesertaFromAPI()
+        loadSertifikatFromAPI(true)
         loadPenugasanPegawaiFromAPI()
       }
     }, { immediate: true })
@@ -1380,6 +1419,7 @@ export default {
       loadKegiatanFromAPI()
       loadPesertaFromAPI()
       loadSertifikatFromAPI()
+      loadPegawaiFromAPI()
       loadPenugasanPegawaiFromAPI()
     })
 
@@ -1416,8 +1456,7 @@ export default {
       nomor_sertifikat: '',
       tanggal_ttd: '',
       id_penandatangan: '',
-      template: '',
-      peran: '',
+      template_file: '',
       status: 'draft'
     })
 
@@ -1459,8 +1498,7 @@ export default {
         nomor_sertifikat: '',
         tanggal_ttd: '',
         id_penandatangan: '',
-        template: '',
-        peran: '',
+        template_file: '',
         status: 'draft'
       }
       formErrors.value = []
@@ -1487,7 +1525,6 @@ export default {
       if (!formSertifikat.value.nomor_sertifikat) formErrors.value.push('Nomor sertifikat wajib diisi')
       if (!formSertifikat.value.tanggal_ttd) formErrors.value.push('Tanggal tandatangan wajib diisi')
       if (!formSertifikat.value.id_penandatangan) formErrors.value.push('Penandatangan wajib dipilih')
-      if (!formSertifikat.value.template) formErrors.value.push('Template wajib dipilih')
       return formErrors.value.length === 0
     }
 
@@ -1520,6 +1557,24 @@ export default {
       return filteredPeserta.value.slice(start, start + pageSize.value)
     })
 
+    const selectedPesertaIds = computed(() => {
+      const visibleIds = new Set(filteredPeserta.value.map(p => String(p.id_peserta)))
+      return checkedPesertaIds.value.filter(id => visibleIds.has(String(id)))
+    })
+
+    const selectedCount = computed(() => selectedPesertaIds.value.length)
+
+    const allSelected = computed({
+      get() {
+        return filteredPeserta.value.length > 0 && selectedCount.value === filteredPeserta.value.length
+      },
+      set(checked) {
+        checkedPesertaIds.value = checked
+          ? filteredPeserta.value.map(p => p.id_peserta)
+          : []
+      }
+    })
+
     const goToPage = (page) => {
       const nextPage = Math.min(Math.max(Number(page) || 1, 1), totalPages.value)
       currentPage.value = nextPage
@@ -1527,6 +1582,11 @@ export default {
 
     watch([searchNama, filterKegiatan, filterStatus, filterKabKota, pageSize], () => {
       currentPage.value = 1
+    })
+
+    watch(filterKegiatan, () => {
+      checkedPesertaIds.value = []
+      loadSertifikatFromAPI(true)
     })
 
     watch(totalPages, (nextTotalPages) => {
@@ -1568,6 +1628,27 @@ export default {
       }).length
     })
 
+    const sertifikatStats = computed(() => {
+      const stats = {
+        total: filteredPeserta.value.length,
+        terbit: 0,
+        draft: 0,
+        dicabut: 0,
+        belum_ada: 0
+      }
+
+      filteredPeserta.value.forEach((p) => {
+        const status = getRawSertifikatStatus(p.id_peserta)
+        if (stats[status] !== undefined) {
+          stats[status] += 1
+        } else {
+          stats.belum_ada += 1
+        }
+      })
+
+      return stats
+    })
+
     const sertifikatPeserta = computed(() => {
       if (!selectedPeserta.value) return null
       return sertifikat.value.find(s => s.id_peserta === selectedPeserta.value.id_peserta)
@@ -1593,22 +1674,39 @@ export default {
       }
     }
 
+    const getSertifikatRecord = (idPeserta) => {
+      return sertifikat.value.find(s => {
+        return String(s.id_peserta ?? s.peserta?.id_peserta ?? '') === String(idPeserta ?? '')
+      })
+    }
+
+    const getRawSertifikatStatus = (idPeserta) => {
+      const record = getSertifikatRecord(idPeserta)
+      const status = record?.status_sertifikat || record?.status
+      return ['draft', 'terbit', 'dicabut'].includes(status) ? status : 'belum_ada'
+    }
+
     const getSertifikatStatus = (idPeserta) => {
-      const cert = sertifikat.value.find(s => s.id_peserta === idPeserta)
-      if (!cert) return 'Belum Bersertifikat'
-      if (cert.status === 'terbit') return 'Bersertifikat'
-      if (cert.status === 'draft') return 'Draft'
-      if (cert.status === 'dicabut') return 'Dicabut'
-      return 'Belum Bersertifikat'
+      const labels = {
+        belum_ada: 'Belum Ada',
+        draft: 'Draft',
+        terbit: 'Terbit',
+        dicabut: 'Dicabut'
+      }
+
+      return labels[getRawSertifikatStatus(idPeserta)] || labels.belum_ada
     }
 
     const getSertifikatBadgeClass = (idPeserta) => {
-      const cert = sertifikat.value.find(s => s.id_peserta === idPeserta)
-      if (!cert) return 'inline-block px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold'
-      if (cert.status === 'terbit') return 'inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold'
-      if (cert.status === 'draft') return 'inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold'
-      if (cert.status === 'dicabut') return 'inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold'
-      return 'inline-block px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-semibold'
+      const base = 'inline-block px-3 py-1 rounded-full text-xs font-semibold'
+      const classes = {
+        belum_ada: `${base} bg-gray-100 text-gray-700`,
+        draft: `${base} bg-yellow-100 text-yellow-800`,
+        terbit: `${base} bg-green-100 text-green-800`,
+        dicabut: `${base} bg-red-100 text-red-800`
+      }
+
+      return classes[getRawSertifikatStatus(idPeserta)] || classes.belum_ada
     }
 
     const formatDate = (date) => {
@@ -2564,43 +2662,195 @@ export default {
       }
     }
 
-    const openSertifikatModal = (p) => {
-      selectedPeserta.value = p
-      resetFormSertifikat()
-      formSertifikat.value.peran = p.peran || 'Peserta'
+    const showSertifikatError = async (title, error) => {
+      await Swal.fire({
+        title,
+        text: error?.message || 'Terjadi kesalahan. Silakan coba lagi.',
+        icon: 'error'
+      })
+    }
 
-      const cert = sertifikat.value.find(s => s.id_peserta === p.id_peserta)
-      if (cert) {
-        formSertifikat.value = { ...cert }
+    const extractBatch = (response) => {
+      const data = response?.batch || response?.data || response?.sertifikat_batch || response
+      return Array.isArray(data) ? data[0] : data
+    }
+
+    const ensureKegiatanSelected = (pesertaItem = null) => {
+      const idKegiatan = getActiveKegiatanId(pesertaItem)
+      if (!idKegiatan) {
+        throw new Error('Pilih kegiatan terlebih dahulu sebelum membuat sertifikat.')
       }
+      return idKegiatan
+    }
 
+    const checkSertifikatBatch = async (pesertaItem = null) => {
+      const idKegiatan = ensureKegiatanSelected(pesertaItem)
+      return fetchAPI(`kegiatan/${idKegiatan}/sertifikat-batch`)
+    }
+
+    const closeSertifikatModal = () => {
+      showSertifikatModal.value = false
+      resetFormSertifikat()
+      formErrors.value = []
+    }
+
+    const openBatchSertifikatModal = () => {
+      resetFormSertifikat()
       showSertifikatModal.value = true
     }
 
-    const saveSertifikat = () => {
+    const openSertifikatModal = async (p) => {
+      selectedPeserta.value = p
+      pendingSertifikatMode.value = 'single'
+      pendingSertifikatPeserta.value = p
+      pendingSertifikatPesertaIds.value = [p.id_peserta]
+
+      try {
+        const response = await checkSertifikatBatch(p)
+
+        if (!response?.exists) {
+          openBatchSertifikatModal()
+          return
+        }
+
+        const batch = extractBatch(response)
+        if (!batch?.id_batch) {
+          throw new Error('Batch sertifikat tidak ditemukan pada response backend.')
+        }
+
+        const result = await Swal.fire({
+          title: 'Buat sertifikat?',
+          html: `
+            <div style="text-align:left">
+              <p>Buat sertifikat untuk peserta:</p>
+              <p><strong>${p.nama_lengkap || '-'}</strong></p>
+              <br>
+              <p>Nomor Sertifikat:</p>
+              <p><strong>${batch?.nomor_sertifikat || '-'}</strong></p>
+            </div>
+          `,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Ya, Buat Sertifikat',
+          cancelButtonText: 'Batal'
+        })
+
+        if (result.isConfirmed) {
+          await generateSertifikatPeserta(batch.id_batch, p.id_peserta)
+        }
+      } catch (error) {
+        await showSertifikatError('Gagal mengecek batch sertifikat', error)
+      }
+    }
+
+    const generateSertifikatPeserta = async (idBatch, idPeserta) => {
+      isGeneratingSertifikat.value = true
+
+      try {
+        await postAPI('sertifikat/generate', {
+          id_batch: idBatch,
+          id_peserta: idPeserta
+        })
+
+        ActivityEvents.CREATE_SERTIFIKAT(pendingSertifikatPeserta.value?.nama_lengkap || `Peserta ${idPeserta}`)
+        await loadSertifikatFromAPI(true)
+        await Swal.fire('Berhasil', 'Sertifikat peserta berhasil dibuat.', 'success')
+      } catch (error) {
+        await showSertifikatError('Gagal membuat sertifikat', error)
+      } finally {
+        isGeneratingSertifikat.value = false
+      }
+    }
+
+    const handleGenerateMassal = async () => {
+      if (selectedPesertaIds.value.length === 0) return
+
+      pendingSertifikatMode.value = 'massal'
+      pendingSertifikatPeserta.value = null
+      pendingSertifikatPesertaIds.value = [...selectedPesertaIds.value]
+
+      try {
+        const response = await checkSertifikatBatch()
+
+        if (!response?.exists) {
+          openBatchSertifikatModal()
+          return
+        }
+
+        const batch = extractBatch(response)
+        if (!batch?.id_batch) {
+          throw new Error('Batch sertifikat tidak ditemukan pada response backend.')
+        }
+
+        const result = await Swal.fire({
+          title: 'Generate sertifikat?',
+          text: `Generate sertifikat untuk ${pendingSertifikatPesertaIds.value.length} peserta?`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonText: 'Ya, Generate',
+          cancelButtonText: 'Batal'
+        })
+
+        if (result.isConfirmed) {
+          await generateSertifikatMassal(batch.id_batch, pendingSertifikatPesertaIds.value)
+        }
+      } catch (error) {
+        await showSertifikatError('Gagal mengecek batch sertifikat', error)
+      }
+    }
+
+    const generateSertifikatMassal = async (idBatch, pesertaIds) => {
+      isGeneratingSertifikat.value = true
+
+      try {
+        await postAPI('sertifikat/generate-massal', {
+          id_batch: idBatch,
+          peserta_ids: pesertaIds
+        })
+
+        checkedPesertaIds.value = []
+        await loadSertifikatFromAPI(true)
+        await Swal.fire('Berhasil', 'Sertifikat peserta terpilih berhasil dibuat.', 'success')
+      } catch (error) {
+        await showSertifikatError('Gagal generate sertifikat massal', error)
+      } finally {
+        isGeneratingSertifikat.value = false
+      }
+    }
+
+    const saveSertifikat = async () => {
       if (!validateFormSertifikat()) return
 
-      const existingCert = sertifikat.value.find(s => s.id_peserta === selectedPeserta.value.id_peserta)
+      isSavingSertifikatBatch.value = true
 
-      if (existingCert) {
-        Object.assign(existingCert, {
-          ...formSertifikat.value,
-          updated_at: new Date().toISOString()
-        })
-      } else {
-        sertifikat.value.push({
-          id_sertifikat: Math.max(...sertifikat.value.map(s => s.id_sertifikat), 0) + 1,
-          id_kegiatan: selectedPeserta.value.id_kegiatan,
-          id_peserta: selectedPeserta.value.id_peserta,
-          ...formSertifikat.value,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        // Log sertifikat creation
-        ActivityEvents.CREATE_SERTIFIKAT(selectedPeserta.value.nama_lengkap)
+      try {
+        const payload = {
+          id_kegiatan: ensureKegiatanSelected(pendingSertifikatPeserta.value),
+          nomor_sertifikat: formSertifikat.value.nomor_sertifikat,
+          id_penandatangan: formSertifikat.value.id_penandatangan || null,
+          tanggal_ttd: formSertifikat.value.tanggal_ttd || null,
+          template_file: formSertifikat.value.template_file || null,
+          status: formSertifikat.value.status || 'draft'
+        }
+
+        const response = await postAPI('sertifikat-batch', payload)
+        const batch = extractBatch(response)
+        if (!batch?.id_batch) {
+          throw new Error('Batch sertifikat berhasil dibuat, tetapi id_batch tidak ditemukan pada response backend.')
+        }
+
+        closeSertifikatModal()
+
+        if (pendingSertifikatMode.value === 'single') {
+          await generateSertifikatPeserta(batch.id_batch, pendingSertifikatPeserta.value.id_peserta)
+        } else {
+          await generateSertifikatMassal(batch.id_batch, pendingSertifikatPesertaIds.value)
+        }
+      } catch (error) {
+        await showSertifikatError('Gagal menyimpan batch sertifikat', error)
+      } finally {
+        isSavingSertifikatBatch.value = false
       }
-
-      showSertifikatModal.value = false
     }
 
     const exportPeserta = () => {
@@ -2999,6 +3249,10 @@ export default {
       pageSize,
       formPeserta,
       formSertifikat,
+      checkedPesertaIds,
+      selectedPesertaIds,
+      allSelected,
+      selectedCount,
       filteredPeserta,
       paginatedPeserta,
       totalPages,
@@ -3010,6 +3264,7 @@ export default {
       pesertaBersertifikat,
       filteredPesertaAktif,
       filteredPesertaBersertifikat,
+      sertifikatStats,
       sertifikatPeserta,
       getNamaKegiatan,
       getKegiatanById,
@@ -3028,6 +3283,10 @@ export default {
       deletePeserta,
       openSertifikatModal,
       saveSertifikat,
+      closeSertifikatModal,
+      handleGenerateMassal,
+      isGeneratingSertifikat,
+      isSavingSertifikatBatch,
       resetFormPeserta,
       resetFormSertifikat,
       exportPeserta,
