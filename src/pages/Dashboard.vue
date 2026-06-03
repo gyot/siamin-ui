@@ -414,9 +414,6 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import * as XLSX from 'xlsx'
-import JSZip from 'jszip'
-import QRCode from 'qrcode'
 import { useAuthStore } from '@/stores/auth'
 import { fetchAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
@@ -807,6 +804,7 @@ export default {
       }
       const links = activityLinks.value
       const nextQrCodes = {}
+      const QRCode = (await import('qrcode')).default || (await import('qrcode'))
       await Promise.all(
         Object.entries(links).map(async ([key, url]) => {
           try {
@@ -828,7 +826,8 @@ export default {
 
     const viewPesertaList = ref(false)
 
-    const exportPesertaKegiatan = () => {
+    const exportPesertaKegiatan = async () => {
+      const XLSX = (await import('xlsx')).default || await import('xlsx')
       const buildSignatureUrl = (sig) => {
         if (!sig) return ''
         if (typeof sig !== 'string') return ''
@@ -1092,6 +1091,7 @@ export default {
         const kegiatanDetail = await getKegiatanForDocx(selectedKegiatan.value.id_kegiatan)
         const kegiatanData = { ...(selectedKegiatan.value || {}), ...(kegiatanDetail || {}) }
         const daftarAtk = extractKegiatanAtkItems(kegiatanData)
+        const JSZip = (await import('jszip')).default || (await import('jszip'))
         const zip = new JSZip()
 
         for (const p of pesertaInSelected.value) {
@@ -1209,10 +1209,16 @@ export default {
       return Math.ceil(totalKegiatanCount.value / pageSize.value)
     })
 
-    watch([searchKegiatan, filterTahun, filterStatus, filterUnitKerja], async () => {
-      currentPage.value = 1
-      await fetchKegiatanData()
-    })
+    watch([searchKegiatan, filterTahun, filterStatus, filterUnitKerja], (() => {
+      let debounceTimer = null
+      return () => {
+        clearTimeout(debounceTimer)
+        debounceTimer = setTimeout(async () => {
+          currentPage.value = 1
+          await fetchKegiatanData()
+        }, 300)
+      }
+    })())
 
     // Load kegiatan saat component mount atau saat filter/search berubah
     // onMounted(async () => {
@@ -1278,23 +1284,23 @@ export default {
     onMounted(async () => {
       try {
         isLoadingKegiatan.value = true
-        await fetchDashboardStats()
 
         const [
+          ,
           pesertaData,
           sertifikatData,
           unitKerjaData
         ] = await Promise.all([
+          fetchDashboardStats(),
           fetchAPI('peserta'),
           fetchAPI('sertifikat'),
-          fetchAPI('unit-kerja')
+          fetchAPI('unit-kerja'),
+          fetchKegiatanData()
         ])
 
         peserta.value = normalizeApiRows(pesertaData)
         sertifikat.value = normalizeApiRows(sertifikatData)
         unitKerja.value = normalizeApiRows(unitKerjaData)
-
-        await fetchKegiatanData()
 
       } catch (error) {
         console.error(error)

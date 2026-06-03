@@ -272,9 +272,6 @@ export const useAuthStore = defineStore('auth', () => {
       hasRevalidatedSession.value = false
       fetchMePromise = null
       applyUnitKerjaData(resolvedUnitKerjaIds, resolvedUnitKerja)
-      await fetchMe().catch((err) => {
-        if (!isAuthenticated.value) throw err
-      })
 
       return true
     } catch (err) {
@@ -332,9 +329,6 @@ export const useAuthStore = defineStore('auth', () => {
       hasRevalidatedSession.value = false
       fetchMePromise = null
       applyUnitKerjaData(resolvedUnitKerjaIds, resolvedUnitKerja)
-      await fetchMe().catch((err) => {
-        if (!isAuthenticated.value) throw err
-      })
 
       return true
     } catch (err) {
@@ -424,6 +418,8 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     isLoading,
     error,
+    hasRestoredSession,
+    hasRevalidatedSession,
     isAuthenticated,
     isAdmin,
     isPeserta,

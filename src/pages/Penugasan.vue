@@ -88,7 +88,6 @@
 import { ref, onMounted } from 'vue'
 import Spinner from '@/components/Spinner.vue'
 import { fetchAPI } from '@/services/api'
-import * as XLSX from 'xlsx'
 
 function debounce(fn, wait = 300) {
   let timeout
@@ -190,7 +189,8 @@ export default {
       }
     }
 
-    const exportExcel = () => {
+    const exportExcel = async () => {
+      const XLSX = (await import('xlsx')).default || await import('xlsx')
       if (!rows.value || rows.value.length === 0) {
         alert('Tidak ada data untuk diekspor')
         return

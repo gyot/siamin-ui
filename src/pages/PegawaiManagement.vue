@@ -914,7 +914,6 @@
 import { ref, computed, onMounted } from 'vue'
 import database from '@/data/index.js'
 import { ActivityEvents } from '@/services/activityLogger'
-import * as XLSX from 'xlsx'
 import { fetchAPI, postAPI, updateAPI } from '@/services/api'
 
 export default {
@@ -1384,6 +1383,7 @@ export default {
       if (!file) return
 
       try {
+        const XLSX = (await import('xlsx')).default || await import('xlsx')
         const buffer = await file.arrayBuffer()
         const workbook = XLSX.read(buffer, { type: 'array' })
         const sheet = workbook.Sheets[workbook.SheetNames[0]]

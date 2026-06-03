@@ -693,6 +693,8 @@
         <div class="flex gap-3 pt-4 border-t border-slate-200 flex-wrap">
           <button type="button" @click="openPenugasanModal"
             class="flex-1 min-w-[140px] px-4 py-2.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Penugasan</button>
+          <button type="button" @click="openPesertaListFromDetail"
+            class="flex-1 min-w-[140px] px-4 py-2.5 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700">Lihat Peserta</button>
           <button type="button" @click="duplicateKegiatan(selectedKegiatan)"
             class="flex-1 min-w-[140px] px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">Duplikat</button>
           <button type="button" @click="openEditFromDetail"
@@ -1118,7 +1120,6 @@
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import QRCode from 'qrcode'
 import database from '../data/index.js'
 import { useAuthStore } from '@/stores/auth.js'
 import { listKegiatanTimSaya, getKegiatan, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
@@ -1436,9 +1437,6 @@ export default {
     const loadKegiatan = async () => {
       isLoadingKegiatan.value = true
       try {
-        auth.restoreAuth()
-        await auth.fetchMe().catch(() => {})
-
         const rows = await listKegiatanTimSaya()
         kegiatan.value = Array.isArray(rows)
           ? rows.map((item) => ({ ...(item || {}) }))
@@ -1460,7 +1458,8 @@ export default {
         const [pegawaiData, usersData, unitKerjaData] = await Promise.all([
           fetchAPI('pegawai'),
           fetchAPI('users'),
-          fetchAPI('unit-kerja')
+          fetchAPI('unit-kerja'),
+          loadPeran().catch((e) => console.warn('[Kegiatan] Failed to load peran from API', e))
         ])
 
         if (Array.isArray(pegawaiData)) pegawai.value = pegawaiData
@@ -1469,13 +1468,6 @@ export default {
           unitKerjaMaster.value = unitKerjaData
         } else if (Array.isArray(unitKerjaData?.data)) {
           unitKerjaMaster.value = unitKerjaData.data
-        }
-
-        // Load peran from API (if available) before loading kegiatan
-        try {
-          await loadPeran()
-        } catch (e) {
-          console.warn('[Kegiatan] Failed to load peran from API', e)
         }
 
         await loadKegiatan()
@@ -1694,6 +1686,7 @@ export default {
     })
 
     const generateActivityQrCodes = async () => {
+      const QRCode = (await import('qrcode')).default || (await import('qrcode'))
       const urls = activityLinks.value
         .map((item) => item.url)
         .filter(Boolean)
@@ -2577,6 +2570,10 @@ export default {
       router.push({ name: 'kegiatan-peserta', params: { id } })
     }
 
+    const openPesertaListFromDetail = () => {
+      openPesertaList(selectedKegiatan.value?.id_kegiatan)
+    }
+
     const openBiodataModal = (peserta) => {
       selectedPeserta.value = {
         ...peserta,
@@ -3252,6 +3249,7 @@ export default {
       validateForm,
       closeSubmitStatus,
       buildPublicPesertaLink,
+      openPesertaListFromDetail,
       kabupatenKotaOptions
     }
   }

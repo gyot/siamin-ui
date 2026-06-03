@@ -7,7 +7,7 @@ import dbJSON from '@/data/database.json'
 const isDev = import.meta.env.DEV
 const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || '')
 const API_BASE_URL = API_HOST.replace(/\/$/, '') + '/api/v1/'
-const API_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT || 600000000)
+const API_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT || 30000)
 let apiReadUnavailable = false
 
 export const apiClient = axios.create({

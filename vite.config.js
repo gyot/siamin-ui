@@ -16,6 +16,19 @@ export default defineConfig(({ mode }) => {
       '@': path.resolve(__dirname, './src')
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-vue': ['vue', 'vue-router', 'pinia'],
+          'vendor-xlsx': ['xlsx'],
+          'vendor-chart': ['chart.js', 'vue-chartjs'],
+          'vendor-docx': ['docx', 'mammoth'],
+          'vendor-utils': ['qrcode', 'html2canvas', 'sweetalert2', 'axios']
+        }
+      }
+    }
+  },
 
   // development proxy to bypass CORS during local testing
   // any request beginning with `/api` will be forwarded to the real

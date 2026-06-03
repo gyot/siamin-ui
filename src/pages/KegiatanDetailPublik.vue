@@ -182,7 +182,6 @@
 <script>
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import QRCode from 'qrcode'
 import { fetchAPI } from '@/services/api'
 import database from '@/data/index.js'
 import { buildPublicUrl as buildAppUrl, buildStorageUrl } from '@/utils/url'
@@ -443,6 +442,7 @@ export default {
     }
 
     const generateQrCodes = async () => {
+      const QRCode = (await import('qrcode')).default || (await import('qrcode'))
       const biodataTargets = biodataLinks.value.map((item) => item.url)
       const targets = [detailPageUrl.value, ...biodataTargets].filter(Boolean)
       const nextMap = {}

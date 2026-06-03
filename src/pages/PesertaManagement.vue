@@ -16,6 +16,13 @@
             {{ isGeneratingSertifikat ? 'Memproses...' : `Buat Sertifikat Terpilih (${selectedCount})` }}
           </button>
           <button
+            @click="openBatchSertifikatModalForEdit"
+            :disabled="filteredPeserta.length === 0"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            Sertifikat Batch
+          </button>
+          <button
             @click="exportPeserta"
             class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
           >
@@ -789,14 +796,41 @@
       <div v-if="showSertifikatModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 flex justify-between items-center sticky top-0">
-            <h2 class="text-xl font-bold">ModalBatchSertifikat</h2>
+            <div>
+              <h2 class="text-xl font-bold">{{ currentSertifikatBatch ? 'Edit Batch Sertifikat' : 'Batch Sertifikat' }}</h2>
+              <p class="text-sm text-blue-100 mt-1">
+                {{ currentSertifikatBatch ? 'Perbarui detail batch sertifikat dan generate peserta terpilih jika diperlukan.' : 'Buat atau edit sertifikat batch untuk peserta kegiatan.' }}
+              </p>
+            </div>
             <button @click="closeSertifikatModal" class="text-2xl hover:text-blue-200">&times;</button>
           </div>
 
           <div class="p-6">
-            <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
+            <div v-if="!currentSertifikatBatch" class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
               <p class="font-semibold">Batch sertifikat belum tersedia untuk kegiatan ini.</p>
               <p class="mt-1">Isi data batch di bawah, lalu sistem akan otomatis generate sertifikat untuk peserta yang dipilih.</p>
+            </div>
+            <div v-else class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-900">
+              <p class="font-semibold">Batch sertifikat sudah dibuat.</p>
+              <p class="mt-1">Edit data batch di bawah, lalu klik Perbarui Data untuk menyimpan perubahan.</p>
+              <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p class="text-slate-600">Batch ID</p>
+                  <p class="font-medium">{{ currentSertifikatBatch.id_batch || '-' }}</p>
+                </div>
+                <div>
+                  <p class="text-slate-600">Status</p>
+                  <p class="font-medium">{{ currentSertifikatBatch.status || currentSertifikatBatch.status_sertifikat || '-' }}</p>
+                </div>
+                <div>
+                  <p class="text-slate-600">Nomor Sertifikat</p>
+                  <p class="font-medium">{{ currentSertifikatBatch.nomor_sertifikat || '-' }}</p>
+                </div>
+                <div>
+                  <p class="text-slate-600">Tanggal TTD</p>
+                  <p class="font-medium">{{ currentSertifikatBatch.tanggal_ttd || '-' }}</p>
+                </div>
+              </div>
             </div>
 
             <form @submit.prevent="saveSertifikat" class="space-y-4">
@@ -833,11 +867,15 @@
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Template File</label>
                   <input
-                    v-model="formSertifikat.template_file"
-                    type="text"
-                    placeholder="templates/sertifikat.docx"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    type="file"
+                    accept=".docx"
+                    @change="handleTemplateFileSelect"
+                    class="w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
+                  <p v-if="selectedTemplateFile"
+                    class="mt-2 text-sm text-slate-500">File terpilih: {{ selectedTemplateFile.name }}</p>
+                  <p v-else-if="formSertifikat.template_file"
+                    class="mt-2 text-sm text-slate-500">File saat ini: {{ formSertifikat.template_file }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -870,7 +908,7 @@
                   :disabled="isSavingSertifikatBatch"
                   class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {{ isSavingSertifikatBatch ? 'Menyimpan...' : 'Simpan & Generate' }}
+                  {{ isSavingSertifikatBatch ? 'Menyimpan...' : (currentSertifikatBatch ? 'Perbarui Data' : (pendingSertifikatMode ? 'Simpan & Generate' : 'Simpan')) }}
                 </button>
               </div>
             </form>
@@ -1147,7 +1185,6 @@ import database from '@/data/index.js'
 import { fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Swal from 'sweetalert2'
-
 let pesertaCache = null
 let pesertaCacheUpdatedAt = null
 let kegiatanCache = null
@@ -1156,10 +1193,7 @@ let sertifikatCache = null
 let sertifikatCacheUpdatedAt = null
 const CACHE_TTL_MS = 1000 * 60 * 10 // 10 minutes
 
-import * as XLSX from 'xlsx'
 import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXml, processDocxTemplate } from '@/utils/docxUtils.js'
-import { PDFDocument } from 'pdf-lib'
-import JSZip from 'jszip'
 import { getKegiatan } from '@/services/kegiatan'
 import { listPenugasanPegawai } from '@/services/penugasan'
 import { buildPublicUrl, buildStorageUrl, getApiHostBase } from '@/utils/url'
@@ -1410,11 +1444,15 @@ export default {
         loadSertifikatFromAPI(true)
         loadPenugasanPegawaiFromAPI()
       }
-    }, { immediate: true })
+    })
 
     // Log page access
     onMounted(() => {
       ActivityEvents.ACCESS_PAGE('Manajemen Peserta')
+      // Set initial filter from prop
+      if (props.kegiatanId) {
+        filterKegiatan.value = props.kegiatanId
+      }
       // Load data from API
       loadKegiatanFromAPI()
       loadPesertaFromAPI()
@@ -1452,6 +1490,9 @@ export default {
       peran: ''
     })
 
+    const selectedTemplateFile = ref(null)
+    const currentSertifikatBatch = ref(null)
+
     const formSertifikat = ref({
       nomor_sertifikat: '',
       tanggal_ttd: '',
@@ -1459,6 +1500,36 @@ export default {
       template_file: '',
       status: 'draft'
     })
+
+    const handleTemplateFileSelect = (event) => {
+      const file = event.target.files?.[0] || null
+      selectedTemplateFile.value = file
+      if (file) {
+        formSertifikat.value.template_file = file.name
+      } else {
+        formSertifikat.value.template_file = ''
+      }
+    }
+
+    const loadCurrentSertifikatBatch = async (pesertaItem = null) => {
+      currentSertifikatBatch.value = null
+
+      try {
+        const response = await checkSertifikatBatch(pesertaItem)
+        const batch = extractBatch(response)
+        if (batch?.id_batch) {
+          currentSertifikatBatch.value = batch
+          formSertifikat.value.nomor_sertifikat = batch.nomor_sertifikat || ''
+          formSertifikat.value.tanggal_ttd = batch.tanggal_ttd || ''
+          formSertifikat.value.id_penandatangan = batch.id_penandatangan || ''
+          formSertifikat.value.template_file = batch.template_file || ''
+          formSertifikat.value.status = batch.status || batch.status_sertifikat || 'draft'
+          selectedTemplateFile.value = null
+        }
+      } catch (error) {
+        currentSertifikatBatch.value = null
+      }
+    }
 
     const resetFormPeserta = () => {
       formPeserta.value = {
@@ -1501,6 +1572,8 @@ export default {
         template_file: '',
         status: 'draft'
       }
+      selectedTemplateFile.value = null
+      currentSertifikatBatch.value = null
       formErrors.value = []
     }
 
@@ -2685,6 +2758,7 @@ export default {
 
     const checkSertifikatBatch = async (pesertaItem = null) => {
       const idKegiatan = ensureKegiatanSelected(pesertaItem)
+      
       return fetchAPI(`kegiatan/${idKegiatan}/sertifikat-batch`)
     }
 
@@ -2694,8 +2768,18 @@ export default {
       formErrors.value = []
     }
 
-    const openBatchSertifikatModal = () => {
+    const openBatchSertifikatModalForEdit = async () => {
+      pendingSertifikatMode.value = null
+      pendingSertifikatPeserta.value = null
+      pendingSertifikatPesertaIds.value = []
       resetFormSertifikat()
+      await loadCurrentSertifikatBatch()
+      showSertifikatModal.value = true
+    }
+
+    const openBatchSertifikatModal = async () => {
+      resetFormSertifikat()
+      await loadCurrentSertifikatBatch()
       showSertifikatModal.value = true
     }
 
@@ -2704,11 +2788,12 @@ export default {
       pendingSertifikatMode.value = 'single'
       pendingSertifikatPeserta.value = p
       pendingSertifikatPesertaIds.value = [p.id_peserta]
-
+      console.log(p.id_kegiatan);
       try {
-        const response = await checkSertifikatBatch(p)
-
-        if (!response?.exists) {
+        const response = await checkSertifikatBatch(p.id_kegiatan)
+        console.log(response.length);
+        
+        if (response.length != 1) {
           openBatchSertifikatModal()
           return
         }
@@ -2771,8 +2856,9 @@ export default {
 
       try {
         const response = await checkSertifikatBatch()
-
-        if (!response?.exists) {
+        console.log(response.length);
+        
+        if (response.length!=1) {
           openBatchSertifikatModal()
           return
         }
@@ -2824,13 +2910,29 @@ export default {
       isSavingSertifikatBatch.value = true
 
       try {
-        const payload = {
-          id_kegiatan: ensureKegiatanSelected(pendingSertifikatPeserta.value),
-          nomor_sertifikat: formSertifikat.value.nomor_sertifikat,
-          id_penandatangan: formSertifikat.value.id_penandatangan || null,
-          tanggal_ttd: formSertifikat.value.tanggal_ttd || null,
-          template_file: formSertifikat.value.template_file || null,
-          status: formSertifikat.value.status || 'draft'
+        let payload
+        const existingBatchId = currentSertifikatBatch.value?.id_batch || null
+        const batchReference = pendingSertifikatPeserta.value || currentSertifikatBatch.value
+        const idKegiatan = ensureKegiatanSelected(batchReference)
+
+        if (selectedTemplateFile.value) {
+          payload = new FormData()
+          payload.append('id_kegiatan', idKegiatan)
+          if (existingBatchId) payload.append('id_batch', existingBatchId)
+          payload.append('nomor_sertifikat', formSertifikat.value.nomor_sertifikat)
+          payload.append('id_penandatangan', formSertifikat.value.id_penandatangan || '')
+          payload.append('tanggal_ttd', formSertifikat.value.tanggal_ttd || '')
+          payload.append('template_file', selectedTemplateFile.value)
+          payload.append('status', formSertifikat.value.status || 'draft')
+        } else {
+          payload = {
+            id_kegiatan: idKegiatan,
+            ...(existingBatchId ? { id_batch: existingBatchId } : {}),
+            nomor_sertifikat: formSertifikat.value.nomor_sertifikat,
+            id_penandatangan: formSertifikat.value.id_penandatangan || null,
+            tanggal_ttd: formSertifikat.value.tanggal_ttd || null,
+            status: formSertifikat.value.status || 'draft'
+          }
         }
 
         const response = await postAPI('sertifikat-batch', payload)
@@ -2843,7 +2945,7 @@ export default {
 
         if (pendingSertifikatMode.value === 'single') {
           await generateSertifikatPeserta(batch.id_batch, pendingSertifikatPeserta.value.id_peserta)
-        } else {
+        } else if (pendingSertifikatMode.value === 'massal') {
           await generateSertifikatMassal(batch.id_batch, pendingSertifikatPesertaIds.value)
         }
       } catch (error) {
@@ -2853,7 +2955,8 @@ export default {
       }
     }
 
-    const exportPeserta = () => {
+    const exportPeserta = async () => {
+      const XLSX = (await import('xlsx')).default || await import('xlsx')
       const buildSignatureUrl = (sig) => {
         if (!sig) return ''
         if (typeof sig !== 'string') return ''
@@ -3157,6 +3260,7 @@ export default {
 
       isDownloadingBatchDocx.value = true
       try {
+        const JSZip = (await import('jszip')).default || (await import('jszip'))
         const zip = new JSZip()
         const templateResponse = await fetch(buildPublicUrl('template_peserta.docx'))
         if (!templateResponse.ok) {
@@ -3284,6 +3388,9 @@ export default {
       openSertifikatModal,
       saveSertifikat,
       closeSertifikatModal,
+      handleTemplateFileSelect,
+      selectedTemplateFile,
+      pendingSertifikatMode,
       handleGenerateMassal,
       isGeneratingSertifikat,
       isSavingSertifikatBatch,
@@ -3302,6 +3409,9 @@ export default {
       printAllBiodata,
       getPesertaBiodata,
       isKegiatanCreator,
+      openBatchSertifikatModal,
+      openBatchSertifikatModalForEdit,
+      currentSertifikatBatch,
       isUserAssignedToKegiatan,
       canDeletePeserta,
       canEditPeserta

@@ -253,6 +253,16 @@
     </p>
   </div>
 
+  <div class="mb-4">
+    <a
+      :href="buildDaftarPesertaUrl(selectedKegiatanDetail)"
+      target="_blank"
+      class="inline-flex items-center justify-center rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-400"
+    >
+      Lihat Peserta
+    </a>
+  </div>
+
   <!-- Link Halaman -->
   <div class="mb-6">
     <p class="text-blue-200 text-sm mb-1">Link Halaman Detail Kegiatan</p>
@@ -475,7 +485,6 @@
 
 <script>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import QRCode from 'qrcode'
 import { getKegiatanTim, getAllKegiatanTimKegiatan } from '@/services/kegiatan'
 import { getUnitKerja } from '@/services/unit_kerja'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
@@ -760,6 +769,12 @@ export default {
       return buildPublicUrl(`/kegiatan/${idKegiatan}/${slug}`)
     }
 
+    const buildDaftarPesertaUrl = (item) => {
+      const idKegiatan = item?.id_kegiatan ?? '-'
+      const slug = slugify(item?.nama_kegiatan || '')
+      return buildPublicUrl(`/daftar-peserta/${idKegiatan}/${slug}`)
+    }
+
     const getValueByPath = (obj, path) => {
       if (!obj || !path) return ''
       return String(path)
@@ -902,6 +917,7 @@ export default {
     })
 
     const generateQrCodes = async () => {
+      const QRCode = (await import('qrcode')).default || (await import('qrcode'))
       const entries = isWithinSelectedKegiatanDateRange.value ? (biodataLinks.value || []) : []
       const nextMap = {}
 
@@ -1122,6 +1138,7 @@ export default {
       formatDate,
       slugify,
       buildKegiatanDetailUrl,
+      buildDaftarPesertaUrl,
       getQrCodeUrl,
       getStatusLabel,
       getMetodeLabel,

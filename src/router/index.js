@@ -1,30 +1,42 @@
 
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import AdminLayout from '../layouts/AdminLayout.vue'
-import Dashboard from '../pages/Dashboard.vue'
-import Kegiatan from '../pages/Kegiatan.vue'
-import Peserta from '../pages/Peserta.vue'
-import PesertaManagement from '../pages/PesertaManagement.vue'
-import KegiatanPeserta from '../pages/KegiatanPeserta.vue'
-import Sertifikat from '../pages/Sertifikat.vue'
-import PegawaiManagement from '../pages/PegawaiManagement.vue'
-import UnitKerjaManagement from '../pages/UnitKerjaManagement.vue'
-import AnggotaManagement from '../pages/AnggotaManagement.vue'
-import Penugasan from '../pages/Penugasan.vue'
-import Profile from '../pages/Profile.vue'
-import Landing from '../pages/Landing.vue'
-import Login from '../pages/Login.vue'
-import LoginPeserta from '../pages/LoginPeserta.vue'
-import FormulirPeserta from '../pages/FormulirPeserta.vue'
-import DaftarPesertaPublik from '../pages/DaftarPesertaPublik.vue'
-import KegiatanDetailPublik from '../pages/KegiatanDetailPublik.vue'
-import EvaluasiKegiatan from '../pages/EvaluasiKegiatan.vue'
-import LaporanEvaluasi from '../pages/LaporanEvaluasi.vue'
-import LihatTandatangan from '../pages/LihatTandatangan.vue'
-import DataSyncMonitor from '../pages/DataSyncMonitor.vue'
-import { fetchAPI } from '@/services/api'
-import database from '@/data/index.js'
+
+const AdminLayout = () => import('../layouts/AdminLayout.vue')
+const Dashboard = () => import('../pages/Dashboard.vue')
+const Kegiatan = () => import('../pages/Kegiatan.vue')
+const Peserta = () => import('../pages/Peserta.vue')
+const PesertaManagement = () => import('../pages/PesertaManagement.vue')
+const KegiatanPeserta = () => import('../pages/KegiatanPeserta.vue')
+const Sertifikat = () => import('../pages/Sertifikat.vue')
+const PegawaiManagement = () => import('../pages/PegawaiManagement.vue')
+const UnitKerjaManagement = () => import('../pages/UnitKerjaManagement.vue')
+const AnggotaManagement = () => import('../pages/AnggotaManagement.vue')
+const Penugasan = () => import('../pages/Penugasan.vue')
+const Profile = () => import('../pages/Profile.vue')
+const Landing = () => import('../pages/Landing.vue')
+const Login = () => import('../pages/Login.vue')
+const LoginPeserta = () => import('../pages/LoginPeserta.vue')
+const FormulirPeserta = () => import('../pages/FormulirPeserta.vue')
+const DaftarPesertaPublik = () => import('../pages/DaftarPesertaPublik.vue')
+const KegiatanDetailPublik = () => import('../pages/KegiatanDetailPublik.vue')
+const EvaluasiKegiatan = () => import('../pages/EvaluasiKegiatan.vue')
+const LaporanEvaluasi = () => import('../pages/LaporanEvaluasi.vue')
+const LihatTandatangan = () => import('../pages/LihatTandatangan.vue')
+const DataSyncMonitor = () => import('../pages/DataSyncMonitor.vue')
+
+let fetchAPI = null
+let database = null
+const loadRouterDeps = async () => {
+  if (!fetchAPI) {
+    const mod = await import('@/services/api')
+    fetchAPI = mod.fetchAPI
+  }
+  if (!database) {
+    const mod = await import('@/data/index.js')
+    database = mod.default || mod
+  }
+}
 
 const APP_NAME = 'SIMAIK'
 const DEFAULT_TITLE = `${APP_NAME} - Sistem Manajemen Informasi Kegiatan`
@@ -150,24 +162,27 @@ const unslugify = (value) => String(value || '')
   .replace(/-/g, ' ')
   .trim()
 
+let kegiatanListResolved = false
+
 const loadKegiatanList = async () => {
-  if (Array.isArray(kegiatanListCache) && kegiatanListCache.length > 0) {
+  if (kegiatanListResolved && Array.isArray(kegiatanListCache) && kegiatanListCache.length > 0) {
     return kegiatanListCache
   }
 
+  if (!database) await loadRouterDeps()
   kegiatanListCache = database.kegiatan || []
 
   if (!kegiatanListFetchPromise) {
-    kegiatanListFetchPromise = fetchAPI('kegiatan')
-      .then((data) => {
+    kegiatanListFetchPromise = (async () => {
+      try {
+        const data = await fetchAPI('kegiatan')
         const resolved = Array.isArray(data)
           ? data
           : (Array.isArray(data?.data) ? data.data : [])
         if (resolved.length > 0) {
           kegiatanListCache = resolved
         }
-      })
-      .catch(async () => {
+      } catch {
         try {
           const data = await fetchAPI('kegiatan/all')
           const resolved = Array.isArray(data)
@@ -179,12 +194,13 @@ const loadKegiatanList = async () => {
         } catch {
           // keep local fallback cache
         }
-      })
-      .finally(() => {
-        kegiatanListFetchPromise = null
-      })
+      } finally {
+        kegiatanListResolved = true
+      }
+    })()
   }
 
+  await kegiatanListFetchPromise
   return kegiatanListCache
 }
 
@@ -194,16 +210,25 @@ const findKegiatanByKode = async (kode) => {
 }
 
 // Route guards
-router.beforeEach(async (to, from, next) => {
+router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
-  await authStore.restoreAuth({ revalidate: !!to.meta.requiresAuth })
+
+  // Sync restore from localStorage (instant, no network)
+  if (!authStore.hasRestoredSession) {
+    authStore.restoreAuth({ revalidate: false })
+  }
+
+  // Defer revalidation to background (non-blocking)
+  if (to.meta.requiresAuth && authStore.token && !authStore.hasRevalidatedSession) {
+    authStore.fetchMe().catch(() => {})
+  }
 
   let routeTitle = resolveMetaValue(to.meta?.title, to)
   let routeDescription = resolveMetaValue(to.meta?.description, to)
 
   if (to.path.startsWith('/formulir/') || to.path.startsWith('/daftar-peserta/') || to.path.startsWith('/kegiatan/')) {
-    const kegiatan = await findKegiatanByKode(to.params.kode)
-    const namaKegiatan = kegiatan?.nama_kegiatan || unslugify(to.params.slugJudul)
+    // Resolve kegiatan name in background, use slugify fallback immediately
+    const namaKegiatan = unslugify(to.params.slugJudul)
 
     if (to.path.startsWith('/formulir/')) {
       routeTitle = `Formulir ${to.params.peran || 'Peserta'} - ${namaKegiatan || 'Kegiatan'}`
@@ -215,6 +240,20 @@ router.beforeEach(async (to, from, next) => {
       routeTitle = `Detail Kegiatan - ${namaKegiatan || 'Kegiatan'}`
       routeDescription = `Informasi detail kegiatan ${namaKegiatan || ''}.`
     }
+
+    // Refine title from API in background
+    loadRouterDeps().then(() => findKegiatanByKode(to.params.kode)).then((kegiatan) => {
+      if (kegiatan?.nama_kegiatan) {
+        const refined = kegiatan.nama_kegiatan
+        if (to.path.startsWith('/formulir/')) {
+          document.title = `Formulir ${to.params.peran || 'Peserta'} - ${refined} | ${APP_NAME}`
+        } else if (to.path.startsWith('/daftar-peserta/')) {
+          document.title = `Daftar Peserta - ${refined} | ${APP_NAME}`
+        } else if (to.path.startsWith('/kegiatan/')) {
+          document.title = `Detail Kegiatan - ${refined} | ${APP_NAME}`
+        }
+      }
+    }).catch(() => {})
   }
 
   document.title = routeTitle ? `${routeTitle} | ${APP_NAME}` : DEFAULT_TITLE
