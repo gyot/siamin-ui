@@ -394,7 +394,7 @@
             </div>
             <div>
               <p class="text-gray-600">Kegiatan</p>
-              <p class="font-semibold text-gray-900 truncate">{{ getNamaKegiatan(p.id_kegiatan) }}</p>
+              <p class="font-semibold text-gray-900 truncate">{{ getPesertaNamaKegiatan(p) }}</p>
             </div>
             <div>
               <p class="text-gray-600">Peran</p>
@@ -1136,9 +1136,9 @@
 
             <div class="grid gap-3 md:grid-cols-2">
               <div class="grid grid-cols-[140px_1px_auto] gap-2 items-center">
-                <span class="font-semibold">Kegiatan</span><span>:</span><span>{{ getNamaKegiatan(p.id_kegiatan) }}</span>
-                <span class="font-semibold">Waktu</span><span>:</span><span>{{ formatDateRange(getKegiatanById(p.id_kegiatan)?.tanggal_mulai, getKegiatanById(p.id_kegiatan)?.tanggal_selesai) }}</span>
-                <span class="font-semibold">Tempat</span><span>:</span><span>{{ getKegiatanById(p.id_kegiatan)?.lokasi || '-' }}</span>
+                <span class="font-semibold">Kegiatan</span><span>:</span><span>{{ getPesertaNamaKegiatan(p) }}</span>
+                <span class="font-semibold">Waktu</span><span>:</span><span>{{ getPesertaWaktuKegiatan(p) }}</span>
+                <span class="font-semibold">Tempat</span><span>:</span><span>{{ getPesertaLokasiKegiatan(p) }}</span>
                 <span class="font-semibold">Peran</span><span>:</span><span>{{ p.peran || 'Peserta' }}</span>
                 <span class="font-semibold">Jenis Kelamin</span><span>:</span><span>{{ p.jenis_kelamin || '-' }}</span>
                 <span class="font-semibold">Tanggal Lahir</span><span>:</span><span>{{ p.tanggal_lahir ? formatDate(p.tanggal_lahir) : '-' }}</span>
@@ -1604,7 +1604,7 @@ export default {
     const filteredPeserta = computed(() => {
       return peserta.value.filter(p => {
         const namaMatch = (p.nama_lengkap || '').toLowerCase().includes(searchNama.value.toLowerCase())
-        const kegiatanMatch = !filterKegiatan.value || p.id_kegiatan == filterKegiatan.value
+        const kegiatanMatch = !filterKegiatan.value || String(getPesertaKegiatanId(p) ?? '') === String(filterKegiatan.value)
         const statusMatch = !filterStatus.value || (filterStatus.value === 'aktif' && p.id_peserta) || filterStatus.value === 'nonaktif'
         const kabKotaPeserta = String(p.kab_kota || p.kabupaten_kota || '').trim()
         const kabKotaMatch = !filterKabKota.value || kabKotaPeserta === filterKabKota.value
@@ -1728,18 +1728,41 @@ export default {
     })
 
     const getNamaKegiatan = (id) => {
-      const k = kegiatan.value.find(kg => kg.id_kegiatan === id)
+      if (id === undefined || id === null || id === '') return '-'
+      const k = kegiatan.value.find(kg => String(kg.id_kegiatan ?? kg.id ?? '') === String(id))
       return k ? k.nama_kegiatan : '-'
     }
 
+    const resolveKegiatanData = (p) => {
+      const idKegiatan = getPesertaKegiatanId(p)
+      const fromList = getKegiatanById(idKegiatan)
+      const fromPeserta = p.kegiatan || p.data_kegiatan || null
+      return fromList || fromPeserta || {}
+    }
+
+    const getPesertaNamaKegiatan = (p) => {
+      const kegData = resolveKegiatanData(p)
+      return kegData.nama_kegiatan || getNamaKegiatan(getPesertaKegiatanId(p)) || '-'
+    }
+
+    const getPesertaWaktuKegiatan = (p) => {
+      const kegData = resolveKegiatanData(p)
+      return formatDateRange(kegData.tanggal_mulai, kegData.tanggal_selesai)
+    }
+
+    const getPesertaLokasiKegiatan = (p) => {
+      const kegData = resolveKegiatanData(p)
+      return kegData.lokasi || '-'
+    }
+
     const getPesertaBiodata = (p) => {
-      const kegiatanData = getKegiatanById(p.id_kegiatan) || {}
+      const kegData = resolveKegiatanData(p)
       return {
         ...p,
-        nama_kegiatan: getNamaKegiatan(p.id_kegiatan),
-        tanggal_mulai: kegiatanData.tanggal_mulai || '',
-        tanggal_selesai: kegiatanData.tanggal_selesai || '',
-        lokasi: kegiatanData.lokasi || '-',
+        nama_kegiatan: kegData.nama_kegiatan || getNamaKegiatan(getPesertaKegiatanId(p)) || '-',
+        tanggal_mulai: kegData.tanggal_mulai || '',
+        tanggal_selesai: kegData.tanggal_selesai || '',
+        lokasi: kegData.lokasi || '-',
         pangkat_golongan: [p.pangkat, p.gol].filter(Boolean).join(' / ') || '',
         jabatan_kedinasan: p.jabatan || '',
         kabupaten_kota: p.kab_kota || p.kabupaten_kota || '',
@@ -2041,7 +2064,7 @@ export default {
             .text-right { text-align: right; }
             
             h2 {
-              font-size: 18pt;
+              font-size: 25pt;
               font-weight: bold;
               text-align: center;
               margin-bottom: 20px;
@@ -2091,7 +2114,7 @@ export default {
               background-color: #f5f5f5 !important;
               padding: 8px;
               margin-bottom: 0;
-              font-size: 11pt;
+              font-size: 13pt;
             }
             
             table {
@@ -2118,9 +2141,14 @@ export default {
             }
             
             .signature-section {
-              margin-top: 40px;
+              margin-top: 10px;
               text-align: right;
               page-break-inside: avoid;
+            }
+            .signature-image img {
+              max-width: 120px;
+              max-height: auto;
+              object-fit: contain;
             }
             
             @media print {
@@ -2247,8 +2275,8 @@ export default {
     }
 
     const buildBiodataSectionHTML = (p, index) => {
-      const kegiatanData = getKegiatanById(p.id_kegiatan) || {}
-      const namaKegiatan = getNamaKegiatan(p.id_kegiatan)
+      const kegiatanData = resolveKegiatanData(p)
+      const namaKegiatan = kegiatanData.nama_kegiatan || getNamaKegiatan(getPesertaKegiatanId(p)) || '-'
       const pangkatGolongan = [p.pangkat, p.gol].filter(Boolean).join(' / ') || '-'
       const kabupatenKota = p.kab_kota || p.kabupaten_kota || '-'
       const peran = p.peran || 'Peserta'
@@ -2378,17 +2406,17 @@ export default {
             }
             .text-center { text-align: center; }
             h2 {
-              font-size: 18pt;
+              font-size: 25pt;
               font-weight: bold;
-              margin-bottom: 16px;
+              margin-bottom: 12px;
               text-transform: uppercase;
             }
             .info-section {
-              margin-bottom: 18px;
+              margin-bottom: 10px;
             }
             .info-row {
               display: flex;
-              margin-bottom: 6px;
+              margin-bottom: 3px;
             }
             .info-label {
               width: 220px;
@@ -2406,8 +2434,8 @@ export default {
             }
             .tables-row {
               display: flex;
-              gap: 20px;
-              margin-bottom: 24px;
+              gap: 10px;
+              margin-bottom: 10px;
               page-break-inside: avoid;
               flex-wrap: wrap;
             }
@@ -2419,8 +2447,8 @@ export default {
               font-weight: 600;
               border: 1px solid #000;
               background-color: #f5f5f5;
-              padding: 8px;
-              margin-bottom: 8px;
+              padding: 4px;
+              margin-bottom: 4px;
               text-align: center;
               font-size: 14pt;
             }
@@ -2428,14 +2456,14 @@ export default {
               width: 100%;
               border-collapse: collapse;
               margin-bottom: 0;
-              font-size: 12pt;
+              font-size: 11pt;
               page-break-inside: avoid;
             }
             th, td {
               border: 1px solid #000;
-              padding: 6px 8px;
+              padding: 3px 6px;
               text-align: left;
-              font-size: 12pt;
+              font-size: 11pt;
             }
             th {
               background-color: #f0f0f0 !important;
@@ -2443,24 +2471,28 @@ export default {
               text-align: center;
             }
             .signature-section {
-              margin-top: 20px;
+              margin-top: 10px;
               text-align: right;
               page-break-inside: avoid;
             }
             .signature-meta {
-              margin-bottom: 10px;
+              margin-bottom: 4px;
               font-weight: 600;
             }
-            .signature-section {
-              margin-top: 20px;
-              text-align: right;
-              page-break-inside: avoid;
+            .signature-image {
+              display: inline-block;
+            }
+            .signature-image img {
+              max-width: 150px;
+              max-height: auto;
+              object-fit: contain;
             }
             .signature-name {
               font-weight: 600;
+              margin-top: 2px;
             }
             .signature-nip {
-              margin-top: 2px;
+              margin-top: 1px;
             }
             .page-break {
               page-break-after: always;
@@ -2468,7 +2500,7 @@ export default {
             }
             @media print {
             *{
-              font-size: 16pt !important;
+              font-size: 14pt !important;
             }
               @page {
                 margin: 15mm;
@@ -2635,16 +2667,16 @@ export default {
     }
 
     const openBiodataModal = (p) => {
-      const kegiatanData = getKegiatanById(p.id_kegiatan)
+      const kegiatanData = resolveKegiatanData(p)
       selectedPesertaBiodata.value = {
         ...p,
-        nama_kegiatan: getNamaKegiatan(p.id_kegiatan),
-        tanggal_mulai: kegiatanData?.tanggal_mulai || '',
-        tanggal_selesai: kegiatanData?.tanggal_selesai || '',
-        lokasi: kegiatanData?.lokasi || '-',
+        nama_kegiatan: kegiatanData.nama_kegiatan || getNamaKegiatan(getPesertaKegiatanId(p)) || '-',
+        tanggal_mulai: kegiatanData.tanggal_mulai || '',
+        tanggal_selesai: kegiatanData.tanggal_selesai || '',
+        lokasi: kegiatanData.lokasi || '-',
         
         // Get ATK from kegiatan
-        daftar_atk: kegiatanData?.daftar_atk || []
+        daftar_atk: kegiatanData.daftar_atk || []
       }
       showBiodataModal.value = true
     }
@@ -2788,9 +2820,9 @@ export default {
       pendingSertifikatMode.value = 'single'
       pendingSertifikatPeserta.value = p
       pendingSertifikatPesertaIds.value = [p.id_peserta]
-      console.log(p.id_kegiatan);
+      console.log(getPesertaKegiatanId(p));
       try {
-        const response = await checkSertifikatBatch(p.id_kegiatan)
+        const response = await checkSertifikatBatch(getPesertaKegiatanId(p))
         console.log(response.length);
         
         if (response.length != 1) {
@@ -2985,9 +3017,8 @@ export default {
         return {
           // id_peserta: p.id_peserta,
           // id_kegiatan: p.id_kegiatan,
-          nama_kegiatan: getNamaKegiatan(p.id_kegiatan),
+          nama_kegiatan: getPesertaNamaKegiatan(p),
           nama_lengkap: p.nama_lengkap,
-          nip: p.nip || '',
           nik: p.npwp_nik || '',
           'pangkat/golongan': p.pangkat || '',
           jabatan: p.jabatan || '',
@@ -3214,12 +3245,13 @@ export default {
           if (!found) found = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
           return found
         }
-        const kegiatanRingkas = cariKegiatan(pesertaData.id_kegiatan) || {}
-        const kegiatanDetail = await getKegiatanForDocx(pesertaData.id_kegiatan)
+        const pesertaKegiatanId = getPesertaKegiatanId(pesertaData)
+        const kegiatanRingkas = cariKegiatan(pesertaKegiatanId) || pesertaData.kegiatan || pesertaData.data_kegiatan || {}
+        const kegiatanDetail = await getKegiatanForDocx(pesertaKegiatanId)
         const keg = { ...kegiatanRingkas, ...kegiatanDetail }
         const daftarAtk = extractKegiatanAtkItems(keg)
         const data = {
-          judul_kegiatan: keg.nama_kegiatan || getNamaKegiatan(pesertaData.id_kegiatan),
+          judul_kegiatan: keg.nama_kegiatan || getNamaKegiatan(pesertaKegiatanId) || pesertaData.kegiatan?.nama_kegiatan || '-',
           tanggal_mulai: dateFormat(keg.tanggal_mulai),
           tanggal_selesai: dateFormat(keg.tanggal_selesai),
           waktu : dateFormat(keg.tanggal_mulai)+' s.d. '+ dateFormat(keg.tanggal_selesai),
@@ -3234,7 +3266,7 @@ export default {
           no_hp: pesertaData.no_hp,
           email: pesertaData.email,
           nama_instansi: pesertaData.nama_instansi,
-          kegiatan: keg.nama_kegiatan || getNamaKegiatan(pesertaData.id_kegiatan),
+          kegiatan: keg.nama_kegiatan || getNamaKegiatan(pesertaKegiatanId) || pesertaData.kegiatan?.nama_kegiatan || '-',
           peran: pesertaData.peran || 'Peserta',
           tanda_tangan_url: pesertaData.tanda_tangan_url || pesertaData.tanda_tangan || pesertaData.tandatangan || '',
           // Tambahkan field lain sesuai kebutuhan
@@ -3276,12 +3308,13 @@ export default {
             return found
           }
 
-          const kegiatanRingkas = cariKegiatan(p.id_kegiatan) || {}
-          const kegiatanDetail = await getKegiatanForDocx(p.id_kegiatan)
+          const pesertaKegiatanId = getPesertaKegiatanId(p)
+          const kegiatanRingkas = cariKegiatan(pesertaKegiatanId) || p.kegiatan || p.data_kegiatan || {}
+          const kegiatanDetail = await getKegiatanForDocx(pesertaKegiatanId)
           const keg = { ...kegiatanRingkas, ...kegiatanDetail }
           const daftarAtk = extractKegiatanAtkItems(keg)
           const data = {
-            judul_kegiatan: keg.nama_kegiatan || getNamaKegiatan(p.id_kegiatan),
+            judul_kegiatan: keg.nama_kegiatan || getNamaKegiatan(pesertaKegiatanId) || p.kegiatan?.nama_kegiatan || '-',
             tanggal_mulai: dateFormat(keg.tanggal_mulai),
             tanggal_selesai: dateFormat(keg.tanggal_selesai),
             waktu: dateFormat(keg.tanggal_mulai) + ' s.d. ' + dateFormat(keg.tanggal_selesai),
@@ -3296,7 +3329,7 @@ export default {
             no_hp: p.no_hp,
             email: p.email,
             nama_instansi: p.nama_instansi,
-            kegiatan: keg.nama_kegiatan || getNamaKegiatan(p.id_kegiatan),
+            kegiatan: keg.nama_kegiatan || getNamaKegiatan(pesertaKegiatanId) || p.kegiatan?.nama_kegiatan || '-',
             peran: p.peran || 'Peserta',
             tanda_tangan_url: p.tanda_tangan_url || p.tanda_tangan || p.tandatangan || ''
           }
@@ -3414,7 +3447,11 @@ export default {
       currentSertifikatBatch,
       isUserAssignedToKegiatan,
       canDeletePeserta,
-      canEditPeserta
+      canEditPeserta,
+      getPesertaKegiatanId,
+      getPesertaNamaKegiatan,
+      getPesertaWaktuKegiatan,
+      getPesertaLokasiKegiatan
     }
   }
 }
