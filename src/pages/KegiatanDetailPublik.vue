@@ -357,7 +357,8 @@ export default {
 
       return [
         ...roleLinks,
-        { label: 'Daftar Peserta', url: buildPublicUrl(`/daftar-peserta/${kode}/${slug}`), templateUrl: '' }
+        { label: 'Daftar Peserta', url: buildPublicUrl(`/daftar-peserta/${kode}/${slug}`), templateUrl: '' },
+        { label: 'Unduh Sertifikat', url: buildPublicUrl(`/unduh-sertifikat/${kode}/${slug}`), templateUrl: '' }
       ]
     })
 

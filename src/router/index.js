@@ -19,6 +19,7 @@ const Login = () => import('../pages/Login.vue')
 const LoginPeserta = () => import('../pages/LoginPeserta.vue')
 const FormulirPeserta = () => import('../pages/FormulirPeserta.vue')
 const DaftarPesertaPublik = () => import('../pages/DaftarPesertaPublik.vue')
+const UnduhSertifikatPublik = () => import('../pages/UnduhSertifikatPublik.vue')
 const KegiatanDetailPublik = () => import('../pages/KegiatanDetailPublik.vue')
 const EvaluasiKegiatan = () => import('../pages/EvaluasiKegiatan.vue')
 const LaporanEvaluasi = () => import('../pages/LaporanEvaluasi.vue')
@@ -83,6 +84,14 @@ const router = createRouter({
     meta:{
       title: 'Daftar Pengisi Biodata',
       description: 'Daftar pengisi biodata kegiatan yang sudah mengisi formulir.'
+    }
+  },
+  {
+    path:'/unduh-sertifikat/:kode/:slugJudul?',
+    component:UnduhSertifikatPublik,
+    meta:{
+      title: 'Unduh Sertifikat',
+      description: 'Unduh sertifikat peserta kegiatan.'
     }
   },
   {
@@ -226,7 +235,7 @@ router.beforeEach((to, from, next) => {
   let routeTitle = resolveMetaValue(to.meta?.title, to)
   let routeDescription = resolveMetaValue(to.meta?.description, to)
 
-  if (to.path.startsWith('/formulir/') || to.path.startsWith('/daftar-peserta/') || to.path.startsWith('/kegiatan/')) {
+  if (to.path.startsWith('/formulir/') || to.path.startsWith('/daftar-peserta/') || to.path.startsWith('/unduh-sertifikat/') || to.path.startsWith('/kegiatan/')) {
     // Resolve kegiatan name in background, use slugify fallback immediately
     const namaKegiatan = unslugify(to.params.slugJudul)
 
@@ -236,6 +245,9 @@ router.beforeEach((to, from, next) => {
     } else if (to.path.startsWith('/daftar-peserta/')) {
       routeTitle = `Daftar Peserta - ${namaKegiatan || 'Kegiatan'}`
       routeDescription = `Daftar peserta kegiatan ${namaKegiatan || ''}.`
+    } else if (to.path.startsWith('/unduh-sertifikat/')) {
+      routeTitle = `Unduh Sertifikat - ${namaKegiatan || 'Kegiatan'}`
+      routeDescription = `Unduh sertifikat peserta kegiatan ${namaKegiatan || ''}.`
     } else if (to.path.startsWith('/kegiatan/')) {
       routeTitle = `Detail Kegiatan - ${namaKegiatan || 'Kegiatan'}`
       routeDescription = `Informasi detail kegiatan ${namaKegiatan || ''}.`
@@ -249,6 +261,8 @@ router.beforeEach((to, from, next) => {
           document.title = `Formulir ${to.params.peran || 'Peserta'} - ${refined} | ${APP_NAME}`
         } else if (to.path.startsWith('/daftar-peserta/')) {
           document.title = `Daftar Peserta - ${refined} | ${APP_NAME}`
+        } else if (to.path.startsWith('/unduh-sertifikat/')) {
+          document.title = `Unduh Sertifikat - ${refined} | ${APP_NAME}`
         } else if (to.path.startsWith('/kegiatan/')) {
           document.title = `Detail Kegiatan - ${refined} | ${APP_NAME}`
         }
