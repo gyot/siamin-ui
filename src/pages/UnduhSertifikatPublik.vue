@@ -342,14 +342,14 @@ export default {
 
     const downloadSertifikat = async (pesertaItem) => {
       const sertifikat = pesertaItem._sertifikat
-      console.log(sertifikat.id_kegiatan);
+      console.log(sertifikat);
       
       if (!sertifikat) {
         alert('Sertifikat belum tersedia untuk peserta ini.')
         return
       }
 
-      const idSertifikat = sertifikat.id_sertifikat || sertifikat.id || 65
+      const idSertifikat = sertifikat.id_peserta || sertifikat.id || 0
       console.log(idSertifikat);
       
       if (!idSertifikat) {
