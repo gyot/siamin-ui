@@ -348,6 +348,8 @@ export default {
         alert('Sertifikat belum tersedia untuk peserta ini.')
         return
       }
+      console.log(sertifikat);
+      
 
       const idSertifikat = sertifikat.id_peserta || sertifikat.id || 0
       console.log(idSertifikat);
