@@ -118,9 +118,9 @@
                   <div class="flex flex-wrap items-center gap-2 text-xs text-blue-200">
                     <span class="px-2 py-1 rounded-full bg-white/10">{{ formatDate(item.tanggal_mulai) }} - {{
                       formatDate(item.tanggal_selesai) }}</span>
-                    <span class="px-2 py-1 rounded-full bg-white/10">{{ item.lokasi || '-' }}</span>
-                    <span class="px-2 py-1 rounded-full bg-white/10">{{ getKabupatenKotaLabel(item) }}</span>
-                    <span class="px-2 py-1 rounded-full bg-white/10">{{ getStatusLabel(item.status) }}</span>
+                    <!--<span class="px-2 py-1 rounded-full bg-white/10">{{ getKegiatanLocationLabel(item) }}</span>-->
+                    <!--<span class="px-2 py-1 rounded-full bg-white/10">{{ getKabupatenKotaLabel(item) }}</span>-->
+                    <span class="px-2 py-1 rounded-full bg-white/10">{{ formatStatus(getStatusLabel(item)) }}</span>
 
                   </div>
                 </article>
@@ -224,7 +224,7 @@
             </div>
             <div class="bg-white/5 rounded-lg p-3 border border-white/10">
               <p class="text-blue-200">Lokasi</p>
-              <p class="text-white">{{ selectedKegiatanDetail.lokasi || '-' }}</p>
+              <p class="text-white font-medium">{{selectedKegiatanDetail}}</p>
             </div>
             <div class="bg-white/5 rounded-lg p-3 border border-white/10">
               <p class="text-blue-200">Kabupaten/Kota</p>
@@ -487,7 +487,10 @@
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { getKegiatanTim, getAllKegiatanTimKegiatan } from '@/services/kegiatan'
 import { getUnitKerja } from '@/services/unit_kerja'
+import { fetchAPI } from '@/services/api'
+import database from '@/data/index.js'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
+import { getKegiatanKabupatenKotaLabel, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
 
 export default {
   name: 'Landing',
@@ -960,15 +963,56 @@ export default {
       return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })
     }
 
-    const getStatusLabel = (status) => {
-      const labels = {
-        berjalan: 'Berjalan',
-        akan_datang: 'Akan Datang',
-        selesai: 'Selesai',
-        draft: 'Draft',
-        dibatalkan: 'Dibatalkan'
+    const getStatusLabel = (item) => {
+      // console.log(item.tanggal_mulai, item.tanggal_selesai, item.status);
+      
+      // const labels = {
+      //   berjalan: 'Berjalan',
+      //   akan_datang: 'Akan Datang',
+      //   selesai: 'Selesai',
+      //   draft: 'Draft',
+      //   dibatalkan: 'Dibatalkan'
+      // }
+      // return labels[status] || status || '-'
+      const startDate =item.tanggal_mulai
+      const endDate = item.tanggal_selesai
+
+      if (!startDate || !endDate) return item?.status || ''
+
+      const today = new Date().toISOString().split('T')[0];
+
+      // console.log('today:', today, 'startDate:', startDate, 'endDate:', endDate);
+
+      if (today < startDate) return 'akan_datang'
+      if (today > endDate) return 'selesai'
+      return 'berjalan'
+    }
+
+    const formatStatus = (status) => {
+      const statusMap = {
+        'berjalan': 'Berjalan',
+        'akan_datang': 'Akan Datang',
+        'selesai': 'Selesai'
       }
-      return labels[status] || status || '-'
+      return statusMap[status] || status
+    }
+
+    const getStatusColor = (status) => {
+      const colorMap = {
+        'berjalan': 'bg-blue-500',
+        'akan_datang': 'bg-amber-500',
+        'selesai': 'bg-emerald-500'
+      }
+      return colorMap[status] || 'bg-slate-400'
+    }
+
+    const getStatusBadge = (status) => {
+      const badgeMap = {
+        'berjalan': 'inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full font-semibold',
+        'akan_datang': 'inline-block px-3 py-1 bg-amber-100 text-amber-800 rounded-full font-semibold',
+        'selesai': 'inline-block px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full font-semibold'
+      }
+      return badgeMap[status] || 'inline-block px-3 py-1 bg-slate-100 text-slate-800 rounded-full font-semibold'
     }
 
     const getMetodeLabel = (metode) => {
@@ -980,16 +1024,7 @@ export default {
       return labels[metode] || metode || '-'
     }
 
-    const getKabupatenKotaLabel = (item) => {
-      return item?.kabupaten_kota
-        || item?.kab_kota
-        || item?.kabupaten
-        || item?.kota
-        || item?.lokasi_kabupaten_kota
-        || item?.kegiatan?.kabupaten_kota
-        || item?.kegiatan?.kab_kota
-        || '-'
-    }
+    const getKabupatenKotaLabel = (item) => getKegiatanKabupatenKotaLabel(item)
 
     const hasAnyResourceUrl = (item) => Boolean(
       item?.dokumentasi_url ||
@@ -1107,6 +1142,7 @@ export default {
       if (currentPage.value < totalPages.value) currentPage.value += 1
     }
 
+    
     onMounted(() => {
       // loadKegiatan()
       loadUnitKerja()
@@ -1141,8 +1177,11 @@ export default {
       buildDaftarPesertaUrl,
       getQrCodeUrl,
       getStatusLabel,
+      formatStatus,
+      getStatusColor,
       getMetodeLabel,
       getKabupatenKotaLabel,
+      getKegiatanLocationLabel,
       hasAnyResourceUrl,
       loadKegiatan,
       handleSelectTimker,

@@ -116,7 +116,7 @@
               <td class="px-5 py-4 text-sm text-slate-600">
                 {{ formatDate(k.tanggal_mulai) }} s/d {{ formatDate(k.tanggal_selesai) }}
               </td>
-              <td class="px-5 py-4 text-sm text-slate-600">{{ k.lokasi }}</td>
+              <td class="px-5 py-4 text-sm text-slate-600">{{ getKegiatanLocationLabel(k) }}</td>
               <td class="px-5 py-4 text-sm text-slate-600">{{ getUnitKerjaLabel(k) }}</td>
               <td class="px-5 py-4">
                 <span class="badge bg-slate-100 text-slate-700">{{ getMetodeLabel(k.metode_pelaksanaan) }}</span>
@@ -294,21 +294,61 @@
                 class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
                 required />
             </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Lokasi *</label>
-              <input type="text" v-model="formData.lokasi" placeholder="Lokasi kegiatan"
-                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none"
-                required />
+            <div class="md:col-span-2">
+              <div class="flex items-center justify-between mb-4">
+                <h5 class="text-sm font-semibold text-slate-700">Tempat Pelaksanaan Kegiatan (TPK) *</h5>
+              </div>
+
+              <div v-if="tpkItems.length > 0" class="mb-4 border border-slate-200 rounded-lg overflow-x-auto">
+                <table class="w-full min-w-[560px] text-sm">
+                  <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th class="text-left px-4 py-2 w-12">No</th>
+                      <th class="text-left px-4 py-2">Lokasi</th>
+                      <th class="text-left px-4 py-2">Kabupaten/Kota</th>
+                      <th class="text-right px-4 py-2 w-20">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    <tr v-for="(item, index) in tpkItems" :key="`${item.id_tpk || 'new'}-${index}`">
+                      <td class="px-4 py-2">{{ index + 1 }}</td>
+                      <td class="px-4 py-2 text-slate-700">{{ item.lokasi }}</td>
+                      <td class="px-4 py-2 text-slate-700">{{ item.kabupaten_kota || '-' }}</td>
+                      <td class="px-4 py-2 text-right">
+                        <button type="button" @click="removeTpkItem(index)"
+                          class="text-xs text-red-600 hover:text-red-700">
+                          Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">Lokasi *</label>
+                  <input type="text" v-model="tpkForm.lokasi" placeholder="Contoh: Aula Kantor A"
+                    class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-slate-700 mb-2">Kabupaten/Kota</label>
+                  <select v-model="tpkForm.kabupaten_kota"
+                    class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none bg-white">
+                    <option value="">Pilih Kabupaten/Kota</option>
+                    <option v-for="item in kabupatenKotaOptions" :key="item" :value="item">{{ item }}</option>
+                  </select>
+                </div>
+              </div>
+              <div class="mt-3 flex items-center gap-3">
+                <p v-if="tpkError" class="text-xs text-red-600">{{ tpkError }}</p>
+                <button type="button" @click="addTpkItem"
+                  class="ml-auto px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+                  Tambah TPK
+                </button>
+              </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Kabupaten/Kota</label>
-              <select v-model="formData.kabupaten_kota"
-                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none bg-white">
-                <option value="">Pilih Kabupaten/Kota</option>
-                <option v-for="item in kabupatenKotaOptions" :key="item" :value="item">{{ item }}</option>
-              </select>
-            </div>
-            <div>
+            <div class="md:col-span-2">
               <label class="block text-sm font-medium text-slate-700 mb-2">Flyer</label>
               <div @drop.prevent="handleFlyerDrop" @dragover.prevent="isDraggingFlyer = true"
                 @dragleave.prevent="isDraggingFlyer = false" @paste="handleFlyerPaste"
@@ -585,13 +625,27 @@
               <p class="text-xs text-slate-500">Tanggal Selesai</p>
               <p class="font-medium">{{ formatDate(formData.tanggal_selesai) }}</p>
             </div>
-            <div>
-              <p class="text-xs text-slate-500">Lokasi</p>
-              <p class="font-medium">{{ formData.lokasi || '-' }}</p>
-            </div>
-            <div>
-              <p class="text-xs text-slate-500">Kabupaten/Kota</p>
-              <p class="font-medium">{{ formData.kabupaten_kota || '-' }}</p>
+            <div class="md:col-span-2">
+              <p class="text-xs text-slate-500 mb-2">Tempat Pelaksanaan Kegiatan</p>
+              <div v-if="tpkItems.length" class="overflow-x-auto border border-slate-200 rounded-lg">
+                <table class="w-full min-w-[480px] text-sm">
+                  <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th class="px-4 py-2 text-left w-12">No</th>
+                      <th class="px-4 py-2 text-left">Lokasi</th>
+                      <th class="px-4 py-2 text-left">Kabupaten/Kota</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(item, idx) in tpkItems" :key="idx" class="border-t">
+                      <td class="px-4 py-2">{{ idx + 1 }}</td>
+                      <td class="px-4 py-2">{{ item.lokasi }}</td>
+                      <td class="px-4 py-2">{{ item.kabupaten_kota || '-' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p v-else class="font-medium">-</p>
             </div>
             <div>
               <p class="text-xs text-slate-500">Metode Pelaksanaan</p>
@@ -1599,6 +1653,13 @@ export default {
     const atkForm = ref(createEmptyAtkForm())
     const atkItems = ref([])
     const atkError = ref('')
+    const createEmptyTpkForm = () => ({
+      lokasi: '',
+      kabupaten_kota: ''
+    })
+    const tpkForm = ref(createEmptyTpkForm())
+    const tpkItems = ref([])
+    const tpkError = ref('')
 
     const formData = ref({
       nama_kegiatan: '',
@@ -1607,8 +1668,6 @@ export default {
       unit_kerja_id: '',
       tanggal_mulai: '',
       tanggal_selesai: '',
-      lokasi: '',
-      kabupaten_kota: '',
       flyer: '',
       metode_pelaksanaan: 'daring',
       metode_pembayaran: 'tidak_dibayar',
@@ -1803,7 +1862,6 @@ export default {
         unit_kerja_id: userUnitKerjaOptions.value[0]?.unit_kerja_id ?? '',
         tanggal_mulai: '',
         tanggal_selesai: '',
-        lokasi: '',
         flyer: '',
         metode_pelaksanaan: 'daring',
         metode_pembayaran: 'tidak_dibayar',
@@ -1827,6 +1885,9 @@ export default {
       atkForm.value = createEmptyAtkForm()
       atkItems.value = []
       atkError.value = ''
+      tpkForm.value = createEmptyTpkForm()
+      tpkItems.value = []
+      tpkError.value = ''
       formError.value = ''
     }
 
@@ -2008,8 +2069,8 @@ export default {
         formError.value = 'Tanggal mulai tidak boleh lebih besar dari tanggal selesai'
         return false
       }
-      if (!formData.value.lokasi.trim()) {
-        formError.value = 'Lokasi harus diisi'
+      if (tpkItems.value.length === 0) {
+        formError.value = 'Minimal satu tempat pelaksanaan kegiatan harus ditambahkan'
         return false
       }
       if (!formData.value.metode_pelaksanaan) {
@@ -2049,6 +2110,7 @@ export default {
         // Prefill the add-modal form but in read-only mode
         formData.value = normalizeKegiatanFormData(selectedKegiatan.value)
         loadKegiatanAtkItems(selectedKegiatan.value)
+        loadKegiatanTpkItems(selectedKegiatan.value)
         editingId.value = null
         isViewing.value = true
         showAddModal.value = true
@@ -2069,6 +2131,7 @@ export default {
         isViewing.value = false
         showAddModal.value = true
         loadKegiatanAtkItems(selectedKegiatan.value)
+        loadKegiatanTpkItems(selectedKegiatan.value)
       }
     }
 
@@ -2282,6 +2345,85 @@ export default {
       atkItems.value.splice(index, 1)
     }
 
+    const normalizeTpkItem = (item) => ({
+      id_tpk: item?.id_tpk ?? item?.id ?? null,
+      lokasi: String(item?.lokasi ?? '').trim(),
+      kabupaten_kota: String(item?.kabupaten_kota ?? '').trim()
+    })
+
+    const getKegiatanTpkRows = (item) => {
+      const candidates = [
+        item?.daftar_tpk,
+        item?.daftarTpk,
+        item?.data?.daftar_tpk,
+        item?.data?.daftarTpk
+      ]
+
+      for (const candidate of candidates) {
+        if (Array.isArray(candidate)) return candidate
+        if (Array.isArray(candidate?.data)) return candidate.data
+        if (typeof candidate === 'string') {
+          try {
+            const parsed = JSON.parse(candidate)
+            if (Array.isArray(parsed)) return parsed
+          } catch {
+            // Abaikan relasi TPK lama yang bukan JSON valid.
+          }
+        }
+      }
+
+      if (item?.lokasi) {
+        return [{
+          lokasi: item.lokasi,
+          kabupaten_kota: item.kabupaten_kota || ''
+        }]
+      }
+      return []
+    }
+
+    const loadKegiatanTpkItems = (item) => {
+      tpkError.value = ''
+      tpkItems.value = getKegiatanTpkRows(item)
+        .map(normalizeTpkItem)
+        .filter((row) => row.lokasi)
+    }
+
+    const getKegiatanLocationLabel = (item) => {
+      const locations = getKegiatanTpkRows(item)
+        .map(normalizeTpkItem)
+        .filter((row) => row.lokasi)
+        .map((row) => row.kabupaten_kota
+          ? `${row.lokasi} (${row.kabupaten_kota})`
+          : row.lokasi)
+
+      return locations.join(', ') || '-'
+    }
+
+    const addTpkItem = () => {
+      const item = normalizeTpkItem(tpkForm.value)
+      if (!item.lokasi) {
+        tpkError.value = 'Lokasi TPK wajib diisi'
+        return
+      }
+
+      tpkItems.value.push(item)
+      tpkForm.value = createEmptyTpkForm()
+      tpkError.value = ''
+    }
+
+    const removeTpkItem = (index) => {
+      tpkItems.value.splice(index, 1)
+    }
+
+    const buildTpkPayloadItems = () =>
+      tpkItems.value
+        .map(normalizeTpkItem)
+        .filter((item) => item.lokasi)
+        .map((item) => ({
+          lokasi: item.lokasi,
+          kabupaten_kota: item.kabupaten_kota || null
+        }))
+
     const buildAtkPayloadItems = () =>
       atkItems.value
         .map(normalizeAtkItem)
@@ -2305,7 +2447,6 @@ export default {
         id_tim: data.unit_kerja_id,
         tanggal_mulai: data.tanggal_mulai,
         tanggal_selesai: data.tanggal_selesai,
-        lokasi: data.lokasi,
         metode_pelaksanaan: data.metode_pelaksanaan,
         metode_pembayaran: data.metode_pembayaran,
         total_peserta: data.total_peserta,
@@ -2315,7 +2456,6 @@ export default {
         panduan_url: data.panduan_url,
         laporan_url: data.laporan_url,
         surat_menyurat_url: data.surat_menyurat_url,
-        kabupaten_kota: data.kabupaten_kota,
         status: data.status
       }
 
@@ -2359,6 +2499,7 @@ export default {
           editingId.value = id
           showAddModal.value = true
           loadKegiatanAtkItems(item)
+          loadKegiatanTpkItems(item)
         }
       } catch (err) {
         const item = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
@@ -2369,6 +2510,7 @@ export default {
           editingId.value = id
           showAddModal.value = true
           loadKegiatanAtkItems(item)
+          loadKegiatanTpkItems(item)
         }
       }
     }
@@ -2404,6 +2546,7 @@ export default {
         isTemplateBiodataCleared.value = false
         // Load ATK items from source
         loadKegiatanAtkItems(source)
+        loadKegiatanTpkItems(source)
         // Open add modal for creating (pre-filled)
         showAddModal.value = true
       } catch (err) {
@@ -2461,6 +2604,7 @@ export default {
         const normalizedData = normalizeKegiatanFormData(formData.value)
         const payloadObject = buildKegiatanPayloadObject(normalizedData, { isUpdate: Boolean(editingId.value) })
         const daftarAtkPayload = buildAtkPayloadItems()
+        const daftarTpkPayload = buildTpkPayloadItems()
         let payload
         const hasFilePayload = Boolean(flyerFile.value || templateBiodataFile.value || isTemplateBiodataCleared.value)
         const useMultipart = hasFilePayload || daftarAtkPayload.length > 0
@@ -2487,6 +2631,10 @@ export default {
               payload.append(`daftar_atk[${index}][keterangan]`, item.keterangan)
             }
           })
+          daftarTpkPayload.forEach((item, index) => {
+            payload.append(`daftar_tpk[${index}][lokasi]`, item.lokasi)
+            payload.append(`daftar_tpk[${index}][kabupaten_kota]`, item.kabupaten_kota || '')
+          })
           if (flyerFile.value) {
             payload.append('flyer', flyerFile.value)
           }
@@ -2498,6 +2646,7 @@ export default {
         } else {
           payload = { ...payloadObject }
           payload.daftar_atk = daftarAtkPayload
+          payload.daftar_tpk = daftarTpkPayload
         }
 
         if (editingId.value) {
@@ -3210,6 +3359,12 @@ export default {
       atkError,
       addAtkItem,
       removeAtkItem,
+      tpkForm,
+      tpkItems,
+      tpkError,
+      addTpkItem,
+      removeTpkItem,
+      getKegiatanLocationLabel,
       openPesertaList,
       handleSuratTugas,
       openBiodataModal,

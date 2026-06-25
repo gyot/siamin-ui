@@ -193,12 +193,23 @@
                   </svg>
                   <span>{{ formatDateRange(k.tanggal_mulai, k.tanggal_selesai) }}</span>
                 </div>
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   </svg>
-                  <span>{{ k.lokasi }}</span>
+                  <span class="leading-relaxed">
+                    <span class="font-medium text-slate-700">Lokasi:</span> {{ getKegiatanLocationLabel(k) }}
+                  </span>
+                </div>
+                <div class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1m-1 4h1m-1 4h1m5-4h1m-1 4h1" />
+                  </svg>
+                  <span class="leading-relaxed">
+                    <span class="font-medium text-slate-700">Kab/Kota:</span> {{ getKegiatanKabupatenKotaLabel(k) }}
+                  </span>
                 </div>
                 <div class="flex items-center gap-2">
                   <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -286,7 +297,11 @@
             </div>
             <div>
               <p class="text-sm text-slate-600">Lokasi</p>
-              <p class="text-lg font-semibold text-slate-900">{{ selectedKegiatan.lokasi }}</p>
+              <p class="text-lg font-semibold text-slate-900">{{ getKegiatanLocationLabel(selectedKegiatan) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-slate-600">Kabupaten/Kota</p>
+              <p class="text-lg font-semibold text-slate-900">{{ getKegiatanKabupatenKotaLabel(selectedKegiatan) }}</p>
             </div>
             <div>
               <p class="text-sm text-slate-600">Tanggal Mulai</p>
@@ -421,6 +436,7 @@ import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXm
 import { getKegiatan } from '@/services/kegiatan'
 import database from '@/data/index.js'
 import { buildPublicUrl as buildAppUrl, buildStorageUrl } from '@/utils/url'
+import { getKegiatanKabupatenKotaLabel, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
 
 export default {
   name: 'Dashboard',
@@ -1055,7 +1071,7 @@ export default {
       tanggal_mulai: dateFormatDocx(kegiatanData.tanggal_mulai),
       tanggal_selesai: dateFormatDocx(kegiatanData.tanggal_selesai),
       waktu: `${dateFormatDocx(kegiatanData.tanggal_mulai)} s.d. ${dateFormatDocx(kegiatanData.tanggal_selesai)}`,
-      lokasi: kegiatanData.lokasi || '-',
+      lokasi: getKegiatanLocationLabel(kegiatanData),
       nama_lengkap: pesertaData.nama_lengkap || '',
       nip: pesertaData.nip || '',
       pangkat: pesertaData.pangkat || '',
@@ -1332,6 +1348,8 @@ export default {
       getStatusBadge,
       getUnitKerjaFromItem,
       resolveUnitKerjaName,
+      getKegiatanLocationLabel,
+      getKegiatanKabupatenKotaLabel,
       getDocumentLinks,
       selectedDocumentLinks,
       formLinks,

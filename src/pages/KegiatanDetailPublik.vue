@@ -46,7 +46,7 @@
                 </div>
                 <div class="rounded-xl border border-white/10 bg-white/5 p-3">
                   <p class="text-blue-200">Lokasi</p>
-                  <p class="text-white font-medium">{{ kegiatan.lokasi || '-' }}</p>
+                  <p class="text-white font-medium">{{kegiatan}}{{ getKegiatanLocationLabel(kegiatan) }}</p>
                 </div>
                 <div class="rounded-xl border border-white/10 bg-white/5 p-3">
                   <p class="text-blue-200">Kabupaten/Kota</p>
@@ -185,6 +185,7 @@ import { useRoute } from 'vue-router'
 import { fetchAPI } from '@/services/api'
 import database from '@/data/index.js'
 import { buildPublicUrl as buildAppUrl, buildStorageUrl } from '@/utils/url'
+import { getKegiatanKabupatenKotaLabel, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
 
 export default {
   name: 'KegiatanDetailPublik',
@@ -229,16 +230,7 @@ export default {
       return labels[metode] || metode || '-'
     }
 
-    const getKabupatenKotaLabel = (item) => {
-      return item?.kabupaten_kota
-        || item?.kab_kota
-        || item?.kabupaten
-        || item?.kota
-        || item?.lokasi_kabupaten_kota
-        || item?.kegiatan?.kabupaten_kota
-        || item?.kegiatan?.kab_kota
-        || '-'
-    }
+    const getKabupatenKotaLabel = (item) => getKegiatanKabupatenKotaLabel(item)
 
     const flyerUrl = computed(() => {
       const flyer = kegiatan.value?.flyer || kegiatan.value?.flyer_path || kegiatan.value?.path
@@ -411,7 +403,8 @@ export default {
       isLoading.value = true
       errorMessage.value = ''
       kegiatan.value = null
-
+      console.log(kode);
+      
       try {
         try {
           const detail = await fetchAPI(`kegiatan/${kode}`)
@@ -524,6 +517,7 @@ export default {
       getStatusLabel,
       getMetodeLabel,
       getKabupatenKotaLabel,
+      getKegiatanLocationLabel,
       getQrCodeUrl,
       copyLink,
       shareDetailPage

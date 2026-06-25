@@ -3020,6 +3020,7 @@ export default {
           nama_kegiatan: getPesertaNamaKegiatan(p),
           nama_lengkap: p.nama_lengkap,
           nik: p.npwp_nik || '',
+          nip: p.nip || '',
           'pangkat/golongan': p.pangkat || '',
           jabatan: p.jabatan || '',
           email: p.email || '',
