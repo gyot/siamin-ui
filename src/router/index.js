@@ -103,7 +103,7 @@ const router = createRouter({
     }
   },
   {
-    path:'/evaluasi/:kode/:slugJudul?',
+    path:'/evaluasi/:kode/:idTpk?/:slugJudul?',
     component:EvaluasiKegiatan,
     meta:{
       title: 'Evaluasi Kegiatan',
@@ -111,7 +111,7 @@ const router = createRouter({
     }
   },
   {
-    path:'/laporan-evaluasi/:kode/:slugJudul?',
+    path:'/laporan-evaluasi/:kode/:idTpk?/:slugJudul?',
     component:LaporanEvaluasi,
     meta:{
       title: 'Laporan Evaluasi Kegiatan',

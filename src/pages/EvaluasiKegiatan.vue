@@ -48,7 +48,11 @@
                 <p class="text-xs font-medium text-slate-500 uppercase mb-1">Waktu Pelaksanaan</p>
                 <p class="text-sm text-slate-700">{{ formatDate(kegiatanData.tanggal_mulai) }} s/d {{ formatDate(kegiatanData.tanggal_selesai) }}</p>
               </div>
-              <div>
+              <div v-if="currentTpk">
+                <p class="text-xs font-medium text-slate-500 uppercase mb-1">Tempat Pelaksanaan (TPK)</p>
+                <p class="text-sm text-slate-700 font-semibold">{{ currentTpk.lokasi }}{{ currentTpk.kabupaten_kota ? ` (${currentTpk.kabupaten_kota})` : '' }}</p>
+              </div>
+              <div v-else>
                 <p class="text-xs font-medium text-slate-500 uppercase mb-1">Tempat</p>
                 <p class="text-sm text-slate-700">{{ kegiatanData.lokasi }}</p>
               </div>
@@ -327,6 +331,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchAPI, postAPI } from '@/services/api'
+import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
 
 export default {
   name: 'EvaluasiKegiatan',
@@ -340,9 +345,17 @@ export default {
     
     const kegiatanData = ref(null)
     const narasumberList = ref([])
+
+    const currentTpk = computed(() => {
+      const idTpk = route.params.idTpk
+      if (!idTpk || !kegiatanData.value) return null
+      const items = getKegiatanLocationItems(kegiatanData.value)
+      return items.find(t => String(t.id_tpk) === String(idTpk)) || null
+    })
     
     const form = ref({
       id_kegiatan: '',
+      id_tpk: '',
       program_tujuan: null,
       program_bahan_ajar: null,
       program_alokasi_waktu: null,
@@ -385,9 +398,10 @@ export default {
 
         kegiatanData.value = data
         form.value.id_kegiatan = data.id_kegiatan
+        form.value.id_tpk = route.params.idTpk || ''
 
-        // Load narasumber/fasilitator only for the selected kegiatan.
-        await loadNarasumber(data.id_kegiatan)
+        // Load narasumber/fasilitator only for the selected kegiatan and TPK.
+        await loadNarasumber(data.id_kegiatan, form.value.id_tpk)
 
       } catch (err) {
         console.error('Gagal load data kegiatan:', err)
@@ -439,7 +453,7 @@ export default {
       }))
     }
 
-    const loadNarasumber = async (idKegiatan) => {
+    const loadNarasumber = async (idKegiatan, idTpk) => {
       try {
         const response = await fetchAPI(`peserta?kegiatan=${idKegiatan}`)
         const pesertaData = normalizeArrayResponse(response, ['peserta', 'items', 'results'])
@@ -447,9 +461,14 @@ export default {
         const pesertaKegiatan = hasKegiatanId
           ? pesertaData.filter(peserta => isSameKegiatan(peserta, idKegiatan))
           : pesertaData
+
+        const pesertaByTpk = idTpk
+          ? pesertaKegiatan.filter(p => String(p.id_tpk ?? p.tpk?.id_tpk ?? '') === String(idTpk))
+          : pesertaKegiatan
+
         const narasumberMap = new Map()
 
-        pesertaKegiatan.forEach(peserta => {
+        pesertaByTpk.forEach(peserta => {
           const namaNarasumber = getNamaNarasumber(peserta)
 
           if (namaNarasumber) {
@@ -479,8 +498,11 @@ export default {
       try {
         if (!form.value.id_kegiatan) return
         
-        // Backend sekarang hanya butuh id_kegiatan, check berdasarkan IP
-        const response = await fetchAPI(`evaluasi/check/${form.value.id_kegiatan}`)
+        const idTpk = form.value.id_tpk
+        const checkUrl = idTpk
+          ? `evaluasi/check/${form.value.id_kegiatan}/${idTpk}`
+          : `evaluasi/check/${form.value.id_kegiatan}`
+        const response = await fetchAPI(checkUrl)
         
         if (response && response.success && response.data.sudah_evaluasi) {
           // Already submitted based on IP, show message and redirect
@@ -556,7 +578,8 @@ export default {
       try {
         // Prepare payload sesuai format backend (anonim, tanpa identitas peserta)
         const payload = {
-          id_kegiatan: parseInt(kegiatanData.value.id_kegiatan), // Backend butuh numeric
+          id_kegiatan: parseInt(kegiatanData.value.id_kegiatan),
+          id_tpk: form.value.id_tpk ? parseInt(form.value.id_tpk) : null,
           program_tujuan: form.value.program_tujuan,
           program_bahan_ajar: form.value.program_bahan_ajar,
           program_alokasi_waktu: form.value.program_alokasi_waktu,
@@ -645,6 +668,7 @@ export default {
       showSuccessModal,
       error,
       kegiatanData,
+      currentTpk,
       narasumberList,
       form,
       getRatingLabel,

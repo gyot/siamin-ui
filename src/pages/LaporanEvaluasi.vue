@@ -35,6 +35,10 @@
               <p class="text-xs font-medium text-slate-500 uppercase mb-1">Total Evaluasi Masuk</p>
               <p class="text-2xl font-bold text-blue-600">{{ statistik?.total_evaluasi || 0 }}</p>
             </div>
+            <div v-if="currentTpk">
+              <p class="text-xs font-medium text-slate-500 uppercase mb-1">Tempat Pelaksanaan (TPK)</p>
+              <p class="text-sm font-semibold text-slate-800">{{ currentTpk.lokasi }}{{ currentTpk.kabupaten_kota ? ` (${currentTpk.kabupaten_kota})` : '' }}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -246,6 +250,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchAPI } from '@/services/api'
+import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
 import { Bar } from 'vue-chartjs'
 import html2canvas from 'html2canvas'
 import {
@@ -283,6 +288,13 @@ export default {
     const kegiatanData = ref(null)
     const statistik = ref(null)
     const detailEvaluasi = ref(null)
+
+    const currentTpk = computed(() => {
+      const idTpk = route.params.idTpk
+      if (!idTpk || !kegiatanData.value) return null
+      const items = getKegiatanLocationItems(kegiatanData.value)
+      return items.find(t => String(t.id_tpk) === String(idTpk)) || null
+    })
 
     const chartOptions = {
       responsive: true,
@@ -497,10 +509,11 @@ export default {
         kegiatanData.value = data
         
         // Load statistik evaluasi
-        await loadStatistik(data.id_kegiatan)
+        const idTpk = route.params.idTpk || ''
+        await loadStatistik(data.id_kegiatan, idTpk)
         
         // Load detail evaluasi untuk chart
-        await loadDetailEvaluasi(data.id_kegiatan)
+        await loadDetailEvaluasi(data.id_kegiatan, idTpk)
         
       } catch (err) {
         console.error('Gagal load data kegiatan:', err)
@@ -510,9 +523,12 @@ export default {
       }
     }
 
-    const loadStatistik = async (idKegiatan) => {
+    const loadStatistik = async (idKegiatan, idTpk) => {
       try {
-        const response = await fetchAPI(`evaluasi/${idKegiatan}/statistik`)
+        const url = idTpk
+          ? `evaluasi/${idKegiatan}/${idTpk}/statistik`
+          : `evaluasi/${idKegiatan}/statistik`
+        const response = await fetchAPI(url)
         
         
         const statistikData = response?.data || response
@@ -535,9 +551,12 @@ export default {
       }
     }
 
-    const loadDetailEvaluasi = async (idKegiatan) => {
+    const loadDetailEvaluasi = async (idKegiatan, idTpk) => {
       try {
-        const response = await fetchAPI(`evaluasi/${idKegiatan}`)
+        const url = idTpk
+          ? `evaluasi/${idKegiatan}/${idTpk}`
+          : `evaluasi/${idKegiatan}`
+        const response = await fetchAPI(url)
         
         
         const evaluasiData = response?.data || response
@@ -626,6 +645,7 @@ export default {
       loading,
       error,
       kegiatanData,
+      currentTpk,
       statistik,
       detailEvaluasi,
       programChartData,

@@ -185,6 +185,16 @@
                 <input v-model="formData.jabatan" type="text" placeholder="Masukkan jabatan"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
+              <div v-if="tpkItems.length > 0">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Tempat Pelaksanaan (TPK)</label>
+                <select v-model="formData.id_tpk"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  <option value="">Pilih TPK</option>
+                  <option v-for="tpk in tpkItems" :key="tpk.id_tpk" :value="tpk.id_tpk">
+                    {{ tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi }}
+                  </option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -343,6 +353,7 @@ import { listKegiatan, getKegiatan } from '@/services/kegiatan'
 import { postAPI } from '@/services/api'
 import Spinner from '@/components/Spinner.vue'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
+import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
 
 export default {
   name: 'FormulirPeserta',
@@ -450,6 +461,11 @@ export default {
 
     const metode_pembayaran = computed(() => {
       return kegiatan.value?.metode_pembayaran || ''
+    })
+
+    const tpkItems = computed(() => {
+      if (!kegiatan.value) return []
+      return getKegiatanLocationItems(kegiatan.value)
     })
 
     const kabKota = ref([
@@ -586,6 +602,7 @@ export default {
 
     const formData = ref({
       id_kegiatan: kode,
+      id_tpk: '',
       nama_lengkap: '',
       nip: '',
       pangkat: '',
@@ -614,6 +631,7 @@ export default {
     const resetForm = () => {
       formData.value = {
         id_kegiatan: kode,
+        id_tpk: '',
         nama_lengkap: '',
         nip: '',
         pangkat: '',
@@ -863,6 +881,7 @@ export default {
       formErrors,
       showSuccessMessage,
       metode_pembayaran,
+      tpkItems,
       signatureCanvas,
       signatureData,
       isLoadingKegiatan,

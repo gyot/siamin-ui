@@ -88,6 +88,7 @@
                   <th class="px-4 py-3 text-left font-semibold cursor-pointer select-none" @click="setSort('peran')">
                     Peran {{ sortIndicator('peran') }}
                   </th>
+                  <th class="px-4 py-3 text-left font-semibold">TPK</th>
                 </tr>
               </thead>
               <tbody>
@@ -106,6 +107,10 @@
                     <span class="inline-flex w-fit px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                       {{ pesertaItem.peran || 'Peserta' }}
                     </span>
+                  </td>
+                  <td class="px-4 py-3 text-slate-700">
+                    <span v-if="pesertaItem.tpk">{{ pesertaItem.tpk.lokasi }}{{ pesertaItem.tpk.kabupaten_kota ? ` (${pesertaItem.tpk.kabupaten_kota})` : '' }}</span>
+                    <span v-else class="text-slate-400">-</span>
                   </td>
                 </tr>
               </tbody>

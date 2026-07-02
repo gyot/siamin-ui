@@ -744,6 +744,20 @@
           </div>
         </div>
 
+        <div v-if="evaluasiLinks.length > 0" class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Link Evaluasi & Laporan</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div v-for="link in evaluasiLinks" :key="link.role" class="rounded-lg border border-slate-200 p-4 bg-white">
+              <p class="text-xs font-medium text-slate-500 uppercase mb-2">{{ link.label }}</p>
+              <a :href="link.url" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
+                {{ link.url }}
+              </a>
+              <img v-if="getActivityQrCodeUrl(link.url)" :src="getActivityQrCodeUrl(link.url)" :alt="`QR ${link.label}`"
+                class="w-24 h-24 rounded bg-white p-1 border border-slate-200" />
+            </div>
+          </div>
+        </div>
+
         <div class="flex gap-3 pt-4 border-t border-slate-200 flex-wrap">
           <button type="button" @click="openPenugasanModal"
             class="flex-1 min-w-[140px] px-4 py-2.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Penugasan</button>
@@ -1181,6 +1195,7 @@ import { fetchAPI, postAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Spinner from '@/components/Spinner.vue'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
+import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
 import {
   groupPenugasanByKegiatan,
   listPenugasanPegawai,
@@ -1288,15 +1303,19 @@ export default {
       return buildPublicUrl(`daftar-peserta/${kode}/${slug}`)
     }
 
-    const buildPublicEvaluasiLink = (kode, judul = '') => {
+    const buildPublicEvaluasiLink = (kode, judul = '', idTpk = '') => {
 
       const slug = slugify(judul)
-      return buildPublicUrl(`evaluasi/${kode}/${slug}`)
+      return idTpk
+        ? buildPublicUrl(`evaluasi/${kode}/${idTpk}/${slug}`)
+        : buildPublicUrl(`evaluasi/${kode}/${slug}`)
     }
 
-    const buildPublicLaporanEvaluasiLink = (kode, judul = '') => {
+    const buildPublicLaporanEvaluasiLink = (kode, judul = '', idTpk = '') => {
       const slug = slugify(judul)
-      return buildPublicUrl(`laporan-evaluasi/${kode}/${slug}`)
+      return idTpk
+        ? buildPublicUrl(`laporan-evaluasi/${kode}/${idTpk}/${slug}`)
+        : buildPublicUrl(`laporan-evaluasi/${kode}/${slug}`)
     }
 
     const copyText = async (text) => {
@@ -1725,20 +1744,38 @@ export default {
         }
       })
       
-      // Add Evaluasi and Laporan Evaluasi links
-      
-      links.push({
-        role: 'evaluasi',
-        label: 'Link Evaluasi',
-        url: buildPublicEvaluasiLink(kode, judul),
-        templateUrl: null
-      })
-      links.push({
-        role: 'laporan-evaluasi',
-        label: 'Laporan Evaluasi',
-        url: buildPublicLaporanEvaluasiLink(kode, judul),
-        templateUrl: null
-      })
+      // Add Evaluasi and Laporan Evaluasi links per TPK
+      const tpkItems = getKegiatanLocationItems(selectedKegiatan.value)
+      if (tpkItems.length > 0) {
+        for (const tpk of tpkItems) {
+          const namaTpk = tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi
+          links.push({
+            role: `evaluasi-tpk-${tpk.id_tpk}`,
+            label: `Evaluasi - ${namaTpk}`,
+            url: buildPublicEvaluasiLink(kode, judul, tpk.id_tpk),
+            templateUrl: null
+          })
+          links.push({
+            role: `laporan-evaluasi-tpk-${tpk.id_tpk}`,
+            label: `Laporan Evaluasi - ${namaTpk}`,
+            url: buildPublicLaporanEvaluasiLink(kode, judul, tpk.id_tpk),
+            templateUrl: null
+          })
+        }
+      } else {
+        links.push({
+          role: 'evaluasi',
+          label: 'Link Evaluasi',
+          url: buildPublicEvaluasiLink(kode, judul),
+          templateUrl: null
+        })
+        links.push({
+          role: 'laporan-evaluasi',
+          label: 'Laporan Evaluasi',
+          url: buildPublicLaporanEvaluasiLink(kode, judul),
+          templateUrl: null
+        })
+      }
       
       
       return links
@@ -3083,6 +3120,12 @@ export default {
       })
     })
 
+    const evaluasiLinks = computed(() => {
+      return activityLinks.value.filter(link =>
+        link.role.startsWith('evaluasi') || link.role.startsWith('laporan-evaluasi')
+      )
+    })
+
     const openPenugasanModal = async () => {
       const idKegiatan = selectedKegiatan.value?.id_kegiatan ?? selectedKegiatan.value?.id
       if (!idKegiatan) {
@@ -3394,6 +3437,7 @@ export default {
       getPeranLabel,
       previewLink,
       activityLinks,
+      evaluasiLinks,
       formLinksByRole,
       openPenugasanModal,
       getActivityQrCodeUrl,

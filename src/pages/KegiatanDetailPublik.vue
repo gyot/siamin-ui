@@ -44,11 +44,11 @@
                   <p class="text-blue-200">Tanggal</p>
                   <p class="text-white font-medium">{{ formatDate(kegiatan.tanggal_mulai) }} - {{ formatDate(kegiatan.tanggal_selesai) }}</p>
                 </div>
-                <div class="rounded-xl border border-white/10 bg-white/5 p-3">
+                <!-- <div class="rounded-xl border border-white/10 bg-white/5 p-3">
                   <p class="text-blue-200">Lokasi</p>
-                  <p class="text-white font-medium">{{kegiatan}}{{ getKegiatanLocationLabel(kegiatan) }}</p>
-                </div>
-                <div class="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p class="text-white font-medium">{{ getKegiatanLocationLabel(kegiatan) }}</p>
+                </div> -->
+                <div v-if="tpkRows.length <= 1" class="rounded-xl border border-white/10 bg-white/5 p-3">
                   <p class="text-blue-200">Kabupaten/Kota</p>
                   <p class="text-white font-medium">{{ getKabupatenKotaLabel(kegiatan) }}</p>
                 </div>
@@ -56,10 +56,27 @@
                   <p class="text-blue-200">Metode</p>
                   <p class="text-white font-medium">{{ getMetodeLabel(kegiatan.metode_pelaksanaan) }}</p>
                 </div>
-                <div class="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p class="text-blue-200">Status</p>
-                  <p class="text-white font-medium">{{ getStatusLabel(kegiatan.status) }}</p>
-                </div>
+                  <div v-if="tpkRows.length > 0" class="col-span-full rounded-2xl border border-white/10 bg-white/5 p-2 sm:p-2 mt-3">
+                    <h2 class="text-lg font-semibold text-white mb-4">Tempat Pelaksanaan Kegiatan (TPK)</h2>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-sm">
+                        <thead class="text-blue-200">
+                          <tr>
+                            <th class="px-4 py-2 text-left font-medium">No</th>
+                            <th class="px-4 py-2 text-left font-medium">Lokasi</th>
+                            <th class="px-4 py-2 text-left font-medium">Kabupaten/Kota</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(tpk, idx) in tpkRows" :key="idx" class="border-t border-white/10">
+                            <td class="px-4 py-2 text-blue-100">{{ idx + 1 }}</td>
+                            <td class="px-4 py-2 text-white font-medium">{{ tpk.lokasi || '-' }}</td>
+                            <td class="px-4 py-2 text-blue-100">{{ tpk.kabupaten_kota || '-' }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
               </div>
             </div>
 
@@ -134,44 +151,27 @@
         <section v-if="isLastDayOfKegiatan" class="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
           <h2 class="text-lg font-semibold text-white mb-4">Link Evaluasi</h2>
           
+          <div v-if="evaluasiLinks.length === 0" class="text-sm text-slate-400">Tidak ada TPK untuk kegiatan ini.</div>
+
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <article class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
-              <p class="text-xs uppercase tracking-wide text-cyan-200">Link Evaluasi</p>
-              <a :href="evaluasiUrl" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ evaluasiUrl }}</a>
+            <article v-for="item in evaluasiLinks" :key="item.id_tpk" class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
+              <p class="text-xs uppercase tracking-wide text-cyan-200">{{ item.nama_tpk }}</p>
+              <a :href="item.url" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ item.url }}</a>
               <div class="mt-3 flex items-center gap-3">
                 <img
-                  v-if="qrCodeMap.evaluasiUrl"
-                  :src="qrCodeMap.evaluasiUrl"
-                  alt="QR Evaluasi"
+                  v-if="qrCodeMap[item.url]"
+                  :src="qrCodeMap[item.url]"
+                  :alt="`QR ${item.nama_tpk}`"
                   class="w-20 h-20 rounded bg-white p-1"
                 />
                 <button
-                  @click="copyLink(evaluasiUrl)"
+                  @click="copyLink(item.url)"
                   class="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-xs text-blue-100"
                 >
                   Copy Link
                 </button>
               </div>
             </article>
-
-            <!-- <article class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
-              <p class="text-xs uppercase tracking-wide text-cyan-200">Laporan Evaluasi</p>
-              <a :href="laporanEvaluasiUrl" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ laporanEvaluasiUrl }}</a>
-              <div class="mt-3 flex items-center gap-3">
-                <img
-                  v-if="qrCodeMap.laporanEvaluasiUrl"
-                  :src="qrCodeMap.laporanEvaluasiUrl"
-                  alt="QR Laporan Evaluasi"
-                  class="w-20 h-20 rounded bg-white p-1"
-                />
-                <button
-                  @click="copyLink(laporanEvaluasiUrl)"
-                  class="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-xs text-blue-100"
-                >
-                  Copy Link
-                </button>
-              </div>
-            </article> -->
           </div>
         </section>
       </div>
@@ -185,7 +185,7 @@ import { useRoute } from 'vue-router'
 import { fetchAPI } from '@/services/api'
 import database from '@/data/index.js'
 import { buildPublicUrl as buildAppUrl, buildStorageUrl } from '@/utils/url'
-import { getKegiatanKabupatenKotaLabel, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
+import { getKegiatanKabupatenKotaLabel, getKegiatanLocationItems, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
 
 export default {
   name: 'KegiatanDetailPublik',
@@ -372,6 +372,8 @@ export default {
         .filter((entry) => Boolean(entry.url))
     })
 
+    const tpkRows = computed(() => getKegiatanLocationItems(kegiatan.value))
+
     const isWithinKegiatanDateRange = computed(() => {
       const start = toDateOnly(kegiatan.value?.tanggal_mulai)
       const end = toDateOnly(kegiatan.value?.tanggal_selesai)
@@ -387,16 +389,17 @@ export default {
       return today === end
     })
 
-    const evaluasiUrl = computed(() => {
-      if (!kegiatan.value) return ''
-      const slug = slugify(kegiatan.value.nama_kegiatan)
-      return buildPublicUrl(`/evaluasi/${kode}/${slug}`)
-    })
-
-    const laporanEvaluasiUrl = computed(() => {
-      if (!kegiatan.value) return ''
-      const slug = slugify(kegiatan.value.nama_kegiatan)
-      return buildPublicUrl(`/laporan-evaluasi/${kode}/${slug}`)
+    const evaluasiLinks = computed(() => {
+      if (!kegiatan.value) return []
+      const kode = kegiatan.value.id_kegiatan || ''
+      const slug = slugify(kegiatan.value.nama_kegiatan || '')
+      const items = getKegiatanLocationItems(kegiatan.value)
+      if (items.length === 0) return []
+      return items.map(tpk => ({
+        id_tpk: tpk.id_tpk,
+        nama_tpk: tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi,
+        url: buildPublicUrl(`/evaluasi/${kode}/${tpk.id_tpk}/${slug}`)
+      }))
     })
 
     const loadKegiatan = async () => {
@@ -451,11 +454,10 @@ export default {
       // Generate QR codes for evaluation links if it's the last day
       if (isLastDayOfKegiatan.value) {
         try {
-          if (evaluasiUrl.value) {
-            nextMap.evaluasiUrl = await QRCode.toDataURL(evaluasiUrl.value, { width: 220, margin: 1 })
-          }
-          if (laporanEvaluasiUrl.value) {
-            nextMap.laporanEvaluasiUrl = await QRCode.toDataURL(laporanEvaluasiUrl.value, { width: 220, margin: 1 })
+          for (const item of evaluasiLinks.value) {
+            if (item.url) {
+              nextMap[item.url] = await QRCode.toDataURL(item.url, { width: 220, margin: 1 })
+            }
           }
         } catch (error) {
           console.error('[KegiatanDetailPublik] Gagal generate QR Evaluasi:', error)
@@ -508,10 +510,10 @@ export default {
       biodataLinks,
       visibleBiodataLinks,
       resourceLinks,
+      tpkRows,
       isWithinKegiatanDateRange,
       isLastDayOfKegiatan,
-      evaluasiUrl,
-      laporanEvaluasiUrl,
+      evaluasiLinks,
       qrCodeMap,
       formatDate,
       getStatusLabel,

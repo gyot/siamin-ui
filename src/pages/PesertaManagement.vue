@@ -95,7 +95,7 @@
 
       <!-- Filter dan Search -->
       <div class="bg-white rounded-lg p-3 sm:p-4 mb-6">
-        <div :class="kegiatanId ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4'">
+        <div :class="kegiatanId ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4'">
           <div>
             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Cari Nama</label>
             <input
@@ -152,6 +152,18 @@
             </select>
           </div>
           <div>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Filter TPK</label>
+            <select
+              v-model="filterTpk"
+              class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Semua TPK</option>
+              <option v-for="tpk in uniqueTpk" :key="tpk.id_tpk" :value="tpk.id_tpk">
+                {{ tpk.label }}
+              </option>
+            </select>
+          </div>
+          <div>
             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Data per Halaman</label>
             <select
               v-model.number="pageSize"
@@ -194,7 +206,7 @@
       <div class="bg-white rounded-lg shadow-lg overflow-hidden hidden md:block">
         
         <div class="overflow-x-auto">
-          <table class="min-w-[1080px] w-full text-sm">
+          <table class="min-w-[1200px] w-full text-sm">
             <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white sticky top-0">
               <tr>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">
@@ -210,6 +222,7 @@
                 <!-- <th class="px-4 py-3 text-left text-xs sm:text-sm">Email</th> -->
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Instansi</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Kabupaten/Kota</th>
+                <th class="px-4 py-3 text-left text-xs sm:text-sm">TPK</th>
                 <!-- <th class="px-4 py-3 text-left text-xs sm:text-sm">Kegiatan</th> -->
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Peran</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Sertifikat</th>
@@ -218,7 +231,7 @@
             </thead>
             <tbody class="divide-y divide-gray-200">
               <tr v-if="filteredPeserta.length === 0" class="hover:bg-gray-50">
-                <td colspan="11" class="px-4 py-8 text-center text-gray-500">
+                <td colspan="12" class="px-4 py-8 text-center text-gray-500">
                   <p class="text-sm sm:text-base">Tidak ada data peserta</p>
                 </td>
               </tr>
@@ -241,6 +254,10 @@
                 <!-- <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 truncate">{{ p.email }}</td> -->
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 max-w-xs truncate">{{ p.nama_instansi }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.kab_kota || '-' }}</td>
+                <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">
+                  <span v-if="p.tpk">{{ p.tpk.lokasi }}{{ p.tpk.kabupaten_kota ? ` (${p.tpk.kabupaten_kota})` : '' }}</span>
+                  <span v-else class="text-gray-400">-</span>
+                </td>
                 <!-- <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">
                   {{ getNamaKegiatan(p.id_kegiatan) }}
                 </td> -->
@@ -399,6 +416,13 @@
             <div>
               <p class="text-gray-600">Peran</p>
               <p class="font-semibold text-gray-900">{{ p.peran || 'Peserta' }}</p>
+            </div>
+            <div>
+              <p class="text-gray-600">TPK</p>
+              <p class="font-semibold text-gray-900">
+                <span v-if="p.tpk">{{ p.tpk.lokasi }}{{ p.tpk.kabupaten_kota ? ` (${p.tpk.kabupaten_kota})` : '' }}</span>
+                <span v-else class="text-gray-400 font-normal">-</span>
+              </p>
             </div>
           </div>
           <div class="flex flex-wrap gap-2 justify-between pt-2">
@@ -580,6 +604,18 @@
                   <option value="">Pilih Kegiatan</option>
                   <option v-for="k in kegiatan" :key="k.id_kegiatan" :value="k.id_kegiatan">
                     {{ k.nama_kegiatan }}
+                  </option>
+                </select>
+              </div>
+              <div v-if="tpkItemsForForm.length > 0">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tempat Pelaksanaan (TPK)</label>
+                <select
+                  v-model="formPeserta.id_tpk"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Pilih TPK</option>
+                  <option v-for="tpk in tpkItemsForForm" :key="tpk.id_tpk" :value="tpk.id_tpk">
+                    {{ tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi }}
                   </option>
                 </select>
               </div>
@@ -1013,6 +1049,11 @@
                 <div class="text-center">:</div>
                 <div>{{ selectedPesertaBiodata.peran || 'Peserta' }}</div>
               </div>
+              <div v-if="selectedPesertaBiodata.tpk" class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">10. Tempat Pelaksanaan</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.tpk.lokasi }}{{ selectedPesertaBiodata.tpk.kabupaten_kota ? ` (${selectedPesertaBiodata.tpk.kabupaten_kota})` : '' }}</div>
+              </div>
             </div>
 
             <!-- Tables Section -->
@@ -1197,6 +1238,7 @@ import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXm
 import { getKegiatan } from '@/services/kegiatan'
 import { listPenugasanPegawai } from '@/services/penugasan'
 import { buildPublicUrl, buildStorageUrl, getApiHostBase } from '@/utils/url'
+import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
 
 export default {
   name: 'Peserta',
@@ -1252,6 +1294,7 @@ export default {
     const filterKegiatan = ref(props.kegiatanId || '')
     const filterStatus = ref('')
     const filterKabKota = ref('')
+    const filterTpk = ref('')
     const currentPage = ref(1)
     const pageSize = ref(10)
 
@@ -1464,6 +1507,7 @@ export default {
     const formPeserta = ref({
       id_peserta: null,
       id_kegiatan: '',
+      id_tpk: '',
       nama_lengkap: '',
       nip: '',
       pangkat: '',
@@ -1535,6 +1579,7 @@ export default {
       formPeserta.value = {
         id_peserta: null,
         id_kegiatan: '',
+        id_tpk: '',
         nama_lengkap: '',
         nip: '',
         pangkat: '',
@@ -1593,6 +1638,14 @@ export default {
       formPeserta.value.npsn = String(formPeserta.value.npsn || '').replace(/\D/g, '')
     }
 
+    const tpkItemsForForm = computed(() => {
+      const idKegiatan = formPeserta.value.id_kegiatan
+      if (!idKegiatan) return []
+      const kegData = getKegiatanById(idKegiatan)
+      if (!kegData) return []
+      return getKegiatanLocationItems(kegData)
+    })
+
     const validateFormSertifikat = () => {
       formErrors.value = []
       if (!formSertifikat.value.nomor_sertifikat) formErrors.value.push('Nomor sertifikat wajib diisi')
@@ -1608,7 +1661,8 @@ export default {
         const statusMatch = !filterStatus.value || (filterStatus.value === 'aktif' && p.id_peserta) || filterStatus.value === 'nonaktif'
         const kabKotaPeserta = String(p.kab_kota || p.kabupaten_kota || '').trim()
         const kabKotaMatch = !filterKabKota.value || kabKotaPeserta === filterKabKota.value
-        return namaMatch && kegiatanMatch && statusMatch && kabKotaMatch
+        const tpkMatch = !filterTpk.value || String(p.tpk?.id_tpk ?? '') === String(filterTpk.value)
+        return namaMatch && kegiatanMatch && statusMatch && kabKotaMatch && tpkMatch
       })
     })
 
@@ -1653,13 +1707,17 @@ export default {
       currentPage.value = nextPage
     }
 
-    watch([searchNama, filterKegiatan, filterStatus, filterKabKota, pageSize], () => {
+    watch([searchNama, filterKegiatan, filterStatus, filterKabKota, filterTpk, pageSize], () => {
       currentPage.value = 1
     })
 
     watch(filterKegiatan, () => {
       checkedPesertaIds.value = []
       loadSertifikatFromAPI(true)
+    })
+
+    watch(() => formPeserta.value.id_kegiatan, () => {
+      formPeserta.value.id_tpk = ''
     })
 
     watch(totalPages, (nextTotalPages) => {
@@ -1679,6 +1737,24 @@ export default {
       })
 
       return Array.from(kabupatenSet).sort((a, b) => a.localeCompare(b, 'id'))
+    })
+
+    const uniqueTpk = computed(() => {
+      const seen = new Map()
+
+      peserta.value.forEach((p) => {
+        if (p.tpk && p.tpk.id_tpk) {
+          const id = String(p.tpk.id_tpk)
+          if (!seen.has(id)) {
+            const label = p.tpk.kabupaten_kota
+              ? `${p.tpk.lokasi} (${p.tpk.kabupaten_kota})`
+              : p.tpk.lokasi
+            seen.set(id, { id_tpk: p.tpk.id_tpk, label })
+          }
+        }
+      })
+
+      return Array.from(seen.values()).sort((a, b) => a.label.localeCompare(b.label, 'id'))
     })
 
     const pesertaAktif = computed(() => {
@@ -2674,6 +2750,7 @@ export default {
         tanggal_mulai: kegiatanData.tanggal_mulai || '',
         tanggal_selesai: kegiatanData.tanggal_selesai || '',
         lokasi: kegiatanData.lokasi || '-',
+        tpk: p.tpk || null,
         
         // Get ATK from kegiatan
         daftar_atk: kegiatanData.daftar_atk || []
@@ -3383,10 +3460,12 @@ export default {
       filterKegiatan,
       filterStatus,
       filterKabKota,
+      filterTpk,
       currentPage,
       pageSize,
       formPeserta,
       formSertifikat,
+      tpkItemsForForm,
       checkedPesertaIds,
       selectedPesertaIds,
       allSelected,
@@ -3398,6 +3477,7 @@ export default {
       paginationEnd,
       goToPage,
       uniqueKabKota,
+      uniqueTpk,
       pesertaAktif,
       pesertaBersertifikat,
       filteredPesertaAktif,

@@ -175,13 +175,19 @@
                 </span>
               </div>
 
-              <div v-if="getDocumentLinks(k).length" class="mb-3">
+              <div class="mb-3">
                 <p class="text-xs font-medium text-slate-500 uppercase mb-2">Dokumen</p>
                 <div class="space-y-1">
-                  <a v-for="link in getDocumentLinks(k)" :key="link.label" :href="link.url" target="_blank"
-                    class="block text-xs text-blue-600 hover:underline truncate">
-                    {{ link.label }}
-                  </a>
+                  <template v-for="link in getDocumentLinks(k)" :key="link.label">
+                    <a v-if="link.available" :href="link.url" target="_blank"
+                      class="block text-xs text-blue-600 hover:underline truncate">
+                      {{ link.label }}
+                    </a>
+                    <span v-else class="flex items-center gap-1.5 text-xs text-red-500">
+                      {{ link.label }}
+                      <span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Tidak Ada</span>
+                    </span>
+                  </template>
                 </div>
               </div>
 
@@ -352,7 +358,7 @@
           <div class="mt-6">
             <p class="text-sm text-slate-600 font-medium mb-3">Evaluasi</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div v-for="link in evaluationLinks" :key="link.label" class="rounded-lg border border-slate-200 p-4 bg-white">
+              <div v-for="link in evaluationLinks" :key="link.key" class="rounded-lg border border-slate-200 p-4 bg-white">
                 <p class="text-xs font-medium text-slate-500 uppercase mb-2">{{ link.label }}</p>
                 <a :href="link.url" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all block mb-3">
                   {{ link.url }}
@@ -361,13 +367,20 @@
               </div>
             </div>
           </div>
-          <div v-if="selectedDocumentLinks.length" class="mt-6">
+          <div class="mt-6">
             <p class="text-sm text-slate-600 font-medium mb-3">Dokumen Kegiatan</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <a v-for="link in selectedDocumentLinks" :key="link.label" :href="link.url" target="_blank"
-                class="rounded-lg border border-slate-200 p-3 bg-slate-50 text-sm text-blue-600 hover:bg-slate-100 transition break-all">
-                {{ link.label }}
-              </a>
+              <template v-for="link in selectedDocumentLinks" :key="link.label">
+                <a v-if="link.available" :href="link.url" target="_blank"
+                  class="rounded-lg border border-slate-200 p-3 bg-slate-50 text-sm text-blue-600 hover:bg-slate-100 transition break-all">
+                  {{ link.label }}
+                </a>
+                <span v-else
+                  class="rounded-lg border border-red-200 p-3 bg-red-50 text-sm text-red-600 font-medium flex items-center gap-2">
+                  {{ link.label }}
+                  <span class="text-xs bg-red-200 text-red-700 px-2 py-0.5 rounded-full">Tidak Ada</span>
+                </span>
+              </template>
             </div>
           </div>
           <!-- peserta controls -->
@@ -436,7 +449,7 @@ import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXm
 import { getKegiatan } from '@/services/kegiatan'
 import database from '@/data/index.js'
 import { buildPublicUrl as buildAppUrl, buildStorageUrl } from '@/utils/url'
-import { getKegiatanKabupatenKotaLabel, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
+import { getKegiatanKabupatenKotaLabel, getKegiatanLocationItems, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
 
 export default {
   name: 'Dashboard',
@@ -745,14 +758,18 @@ export default {
       return buildAppUrl(`formulir/${kode}/${peran}/${slugify(judul)}`)
     }
 
-    const buildPublicEvaluasiLink = (kode, judul = '') => {
+    const buildPublicEvaluasiLink = (kode, judul = '', idTpk = '') => {
       const slug = slugify(judul)
-      return buildAppUrl(`evaluasi/${kode}/${slug}`)
+      return idTpk
+        ? buildAppUrl(`evaluasi/${kode}/${idTpk}/${slug}`)
+        : buildAppUrl(`evaluasi/${kode}/${slug}`)
     }
 
-    const buildPublicLaporanEvaluasiLink = (kode, judul = '') => {
+    const buildPublicLaporanEvaluasiLink = (kode, judul = '', idTpk = '') => {
       const slug = slugify(judul)
-      return buildAppUrl(`laporan-evaluasi/${kode}/${slug}`)
+      return idTpk
+        ? buildAppUrl(`laporan-evaluasi/${kode}/${idTpk}/${slug}`)
+        : buildAppUrl(`laporan-evaluasi/${kode}/${slug}`)
     }
 
     const buildAbsoluteUrl = (url) => {
@@ -769,12 +786,10 @@ export default {
         { key: 'laporan_url', label: 'Laporan' },
         { key: 'surat_menyurat_url', label: 'Surat Menyurat' }
       ]
-      return candidates
-        .map(({ key, label }) => ({
-          label,
-          url: buildAbsoluteUrl(item[key])
-        }))
-        .filter(entry => entry.url)
+      return candidates.map(({ key, label }) => {
+        const url = buildAbsoluteUrl(item[key])
+        return { label, url, available: !!url }
+      })
     }
 
     const selectedDocumentLinks = computed(() => getDocumentLinks(selectedKegiatan.value))
@@ -804,11 +819,34 @@ export default {
     })
 
     const evaluationLinks = computed(() => {
-      const links = activityLinks.value
-      return [
-        { key: 'evaluasi', label: 'Link Evaluasi', url: links.evaluasi },
-        { key: 'laporanEvaluasi', label: 'Laporan Evaluasi', url: links.laporanEvaluasi }
-      ].filter(entry => entry.url)
+      if (!selectedKegiatan.value) return []
+      const kode = selectedKegiatan.value.id_kegiatan || ''
+      const judul = selectedKegiatan.value.nama_kegiatan || ''
+      const slug = slugify(judul)
+      const tpkItems = getKegiatanLocationItems(selectedKegiatan.value)
+      if (tpkItems.length === 0) {
+        return [
+          { key: 'evaluasi', label: 'Link Evaluasi', url: buildPublicEvaluasiLink(kode, judul) },
+          { key: 'laporanEvaluasi', label: 'Laporan Evaluasi', url: buildPublicLaporanEvaluasiLink(kode, judul) }
+        ].filter(entry => entry.url)
+      }
+      const links = []
+      for (const tpk of tpkItems) {
+        const namaTpk = tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi
+        links.push({
+          key: `evaluasi-tpk-${tpk.id_tpk}`,
+          id_tpk: tpk.id_tpk,
+          label: `Evaluasi - ${namaTpk}`,
+          url: buildPublicEvaluasiLink(kode, judul, tpk.id_tpk)
+        })
+        links.push({
+          key: `laporan-evaluasi-tpk-${tpk.id_tpk}`,
+          id_tpk: tpk.id_tpk,
+          label: `Laporan Evaluasi - ${namaTpk}`,
+          url: buildPublicLaporanEvaluasiLink(kode, judul, tpk.id_tpk)
+        })
+      }
+      return links
     })
 
     const qrCodes = ref({})
@@ -832,6 +870,18 @@ export default {
           }
         })
       )
+
+      // Generate QR for per-TPK evaluasi links
+      for (const link of evaluationLinks.value) {
+        if (link.url && !nextQrCodes[link.key]) {
+          try {
+            nextQrCodes[link.key] = await QRCode.toDataURL(link.url, { width: 180, margin: 1 })
+          } catch (error) {
+            nextQrCodes[link.key] = ''
+          }
+        }
+      }
+
       qrCodes.value = nextQrCodes
     }
 

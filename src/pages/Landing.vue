@@ -222,27 +222,50 @@
               <p class="text-white">{{ formatDate(selectedKegiatanDetail.tanggal_mulai) }} - {{
                 formatDate(selectedKegiatanDetail.tanggal_selesai) }}</p>
             </div>
-            <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+            <!-- <div class="bg-white/5 rounded-lg p-3 border border-white/10">
               <p class="text-blue-200">Lokasi</p>
-              <p class="text-white font-medium">{{selectedKegiatanDetail}}</p>
-            </div>
-            <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+              <p class="text-white font-medium">{{ getKegiatanLocationLabel(selectedKegiatanDetail) }}</p>
+            </div> -->
+            <!-- <div v-if="tpkRows.length <= 1" class="bg-white/5 rounded-lg p-3 border border-white/10">
               <p class="text-blue-200">Kabupaten/Kota</p>
               <p class="text-white">{{ getKabupatenKotaLabel(selectedKegiatanDetail) }}</p>
-            </div>
+            </div> -->
             <div class="bg-white/5 rounded-lg p-3 border border-white/10">
               <p class="text-blue-200">Metode Pelaksanaan</p>
               <p class="text-white">{{ getMetodeLabel(selectedKegiatanDetail.metode_pelaksanaan) }}</p>
             </div>
-            <div class="bg-white/5 rounded-lg p-3 border border-white/10">
+            <!-- <div class="bg-white/5 rounded-lg p-3 border border-white/10">
               <p class="text-blue-200">Status</p>
               <p class="text-white">{{ getStatusLabel(selectedKegiatanDetail.status) }}</p>
-            </div>
+            </div> -->
             <!-- <div class="bg-white/5 rounded-lg p-3 border border-white/10">
               <p class="text-blue-200">Ringkasan Peserta</p>
               <p class="text-white">{{ selectedKegiatanDetail.peserta_ringkasan || '-' }}</p>
             </div> -->
           </div>
+
+          <div v-if="tpkRows.length > 0" class="col-span-full rounded-xl border border-white/10 bg-white/5 p-4">
+            <h4 class="text-white font-semibold mb-3">Tempat Pelaksanaan Kegiatan (TPK)</h4>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="text-blue-200">
+                  <tr>
+                    <th class="px-4 py-2 text-left font-medium">No</th>
+                    <th class="px-4 py-2 text-left font-medium">Lokasi</th>
+                    <th class="px-4 py-2 text-left font-medium">Kabupaten/Kota</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(tpk, idx) in tpkRows" :key="idx" class="border-t border-white/10">
+                    <td class="px-4 py-2 text-blue-100">{{ idx + 1 }}</td>
+                    <td class="px-4 py-2 text-white font-medium">{{ tpk.lokasi || '-' }}</td>
+                    <td class="px-4 py-2 text-blue-100">{{ tpk.kabupaten_kota || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
           <div class="bg-white/5 rounded-lg p-4 border border-white/10">
 
   <!-- Total Peserta -->
@@ -340,9 +363,10 @@
     Link evaluasi hanya tersedia pada hari terakhir kegiatan.
   </p>
   
-  <div v-if="isLastDayOfKegiatan" class="space-y-5">
-    
-    <div
+  <div v-if="isLastDayOfKegiatan" class="space-y-4">
+    <p v-if="evaluasiLinks.length === 0" class="text-slate-400 text-xs">Tidak ada TPK untuk kegiatan ini.</p>
+
+    <div v-for="item in evaluasiLinks" :key="item.id_tpk"
       class="bg-white/5 border border-white/10 rounded-lg p-4
              grid grid-cols-1 sm:grid-cols-[auto_1fr]
              gap-6 text-sm items-center transition hover:bg-white/10"
@@ -351,9 +375,9 @@
       <div class="flex flex-col items-center sm:items-start">
         <div class="bg-white p-2 rounded-lg w-fit shadow">
           <img
-            v-if="qrCodeMap.evaluasiUrl"
-            :src="qrCodeMap.evaluasiUrl"
-            alt="QR Evaluasi"
+            v-if="qrCodeMap[item.url]"
+            :src="qrCodeMap[item.url]"
+            :alt="`QR ${item.nama_tpk}`"
             class="w-28 h-28 sm:w-36 sm:h-36 object-contain"
             loading="lazy"
           />
@@ -370,56 +394,17 @@
 
       <!-- Kolom URL -->
       <div class="flex flex-col h-full">
-        <strong class="text-white mb-3">Link Evaluasi:</strong>
+        <strong class="text-white mb-1">{{ item.nama_tpk }}</strong>
         <a
-          :href="evaluasiUrl"
+          :href="item.url"
           target="_blank"
           class="text-cyan-300 hover:text-cyan-200
                  break-all transition duration-200"
         >
-          {{ evaluasiUrl }}
+          {{ item.url }}
         </a>
       </div>
     </div>
-
-    <!-- <div
-      class="bg-white/5 border border-white/10 rounded-lg p-4
-             grid grid-cols-1 sm:grid-cols-[auto_1fr]
-             gap-6 text-sm items-center transition hover:bg-white/10"
-    >
-      
-      <div class="flex flex-col items-center sm:items-start">
-        <div class="bg-white p-2 rounded-lg w-fit shadow">
-          <img
-            v-if="qrCodeMap.laporanEvaluasiUrl"
-            :src="qrCodeMap.laporanEvaluasiUrl"
-            alt="QR Laporan Evaluasi"
-            class="w-28 h-28 sm:w-36 sm:h-36 object-contain"
-            loading="lazy"
-          />
-          <div
-            v-else
-            class="w-28 h-28 sm:w-36 sm:h-36
-                   flex items-center justify-center
-                   text-xs text-slate-600 text-center"
-          >
-            Membuat QR...
-          </div>
-        </div>
-      </div>
-
-      <div class="flex flex-col h-full">
-        <strong class="text-white mb-3">Laporan Evaluasi:</strong>
-        <a
-          :href="laporanEvaluasiUrl"
-          target="_blank"
-          class="text-cyan-300 hover:text-cyan-200
-                 break-all transition duration-200"
-        >
-          {{ laporanEvaluasiUrl }}
-        </a>
-      </div>
-    </div> -->
 
   </div>
 </div>
@@ -474,6 +459,13 @@
             >
               Verifikasi Sertifikat
             </button>
+            <button
+              type="button"
+              class="text-blue-200 hover:text-white text-sm transition"
+              @click="downloadPOS"
+            >
+              Unduh POS
+            </button>
             <a href="#" class="text-blue-200 hover:text-white text-sm transition">Bantuan</a>
             <a href="#" class="text-blue-200 hover:text-white text-sm transition">Kontak</a>
           </div>
@@ -490,7 +482,8 @@ import { getUnitKerja } from '@/services/unit_kerja'
 import { fetchAPI } from '@/services/api'
 import database from '@/data/index.js'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
-import { getKegiatanKabupatenKotaLabel, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
+import { getKegiatanKabupatenKotaLabel, getKegiatanLocationItems, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
+import { generatePOSDocx } from '@/utils/generatePOS'
 
 export default {
   name: 'Landing',
@@ -901,22 +894,18 @@ export default {
       return today === end
     })
 
-    const evaluasiUrl = computed(() => {
+    const evaluasiLinks = computed(() => {
       const item = selectedKegiatanDetail.value
-      if (!item) return ''
+      if (!item) return []
       const kode = item.id_kegiatan || ''
-      const judul = item.nama_kegiatan || ''
-      const slug = slugify(judul)
-      return buildPublicUrl(`/evaluasi/${kode}/${slug}`)
-    })
-
-    const laporanEvaluasiUrl = computed(() => {
-      const item = selectedKegiatanDetail.value
-      if (!item) return ''
-      const kode = item.id_kegiatan || ''
-      const judul = item.nama_kegiatan || ''
-      const slug = slugify(judul)
-      return buildPublicUrl(`/laporan-evaluasi/${kode}/${slug}`)
+      const slug = slugify(item.nama_kegiatan || '')
+      const tpkItems = getKegiatanLocationItems(item)
+      if (tpkItems.length === 0) return []
+      return tpkItems.map(tpk => ({
+        id_tpk: tpk.id_tpk,
+        nama_tpk: tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi,
+        url: buildPublicUrl(`/evaluasi/${kode}/${tpk.id_tpk}/${slug}`)
+      }))
     })
 
     const generateQrCodes = async () => {
@@ -939,11 +928,10 @@ export default {
       // Generate QR codes for evaluation links if it's the last day
       if (isLastDayOfKegiatan.value) {
         try {
-          if (evaluasiUrl.value) {
-            nextMap.evaluasiUrl = await QRCode.toDataURL(evaluasiUrl.value, { width: 220, margin: 1 })
-          }
-          if (laporanEvaluasiUrl.value) {
-            nextMap.laporanEvaluasiUrl = await QRCode.toDataURL(laporanEvaluasiUrl.value, { width: 220, margin: 1 })
+          for (const item of evaluasiLinks.value) {
+            if (item.url) {
+              nextMap[item.url] = await QRCode.toDataURL(item.url, { width: 220, margin: 1 })
+            }
           }
         } catch (error) {
           console.error('[Landing] Gagal generate QR Evaluasi:', error)
@@ -1026,6 +1014,8 @@ export default {
 
     const getKabupatenKotaLabel = (item) => getKegiatanKabupatenKotaLabel(item)
 
+    const tpkRows = computed(() => getKegiatanLocationItems(selectedKegiatanDetail.value))
+
     const hasAnyResourceUrl = (item) => Boolean(
       item?.dokumentasi_url ||
       item?.materi_url ||
@@ -1095,9 +1085,29 @@ export default {
       })
     }
 
-    const openKegiatanDetail = (item) => {
+    const downloadPOS = async () => {
+      try {
+        await generatePOSDocx()
+      } catch (error) {
+        console.error('Gagal mengunduh POS:', error)
+      }
+    }
+
+    const openKegiatanDetail = async (item) => {
       selectedKegiatanDetail.value = item
       showKegiatanDetailModal.value = true
+
+      try {
+        const id = item?.id_kegiatan ?? item?.id
+        if (id) {
+          const detail = await fetchAPI(`kegiatan/${id}`)
+          if (detail && !Array.isArray(detail)) {
+            selectedKegiatanDetail.value = detail
+          }
+        }
+      } catch {
+        // tetap gunakan data list jika fetch detail gagal
+      }
     }
 
     const shareKegiatanDetailFromModal = async () => {
@@ -1164,8 +1174,7 @@ export default {
       biodataLinks,
       isWithinSelectedKegiatanDateRange,
       isLastDayOfKegiatan,
-      evaluasiUrl,
-      laporanEvaluasiUrl,
+      evaluasiLinks,
       qrCodeMap,
       filteredKegiatan,
       paginatedKegiatan,
@@ -1182,6 +1191,7 @@ export default {
       getMetodeLabel,
       getKabupatenKotaLabel,
       getKegiatanLocationLabel,
+      tpkRows,
       hasAnyResourceUrl,
       loadKegiatan,
       handleSelectTimker,
@@ -1192,7 +1202,8 @@ export default {
       shareKegiatanDetailFromModal,
       closeKegiatanDetail,
       prevPage,
-      nextPage
+      nextPage,
+      downloadPOS
     }
   }
 }
