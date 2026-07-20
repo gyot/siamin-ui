@@ -17,13 +17,14 @@ export default defineConfig(({ mode }) => {
     }
   },
   build: {
+    chunkSizeWarningLimit: 900,
     rollupOptions: {
       output: {
         manualChunks: {
           'vendor-vue': ['vue', 'vue-router', 'pinia'],
           'vendor-xlsx': ['xlsx'],
-          'vendor-chart': ['chart.js', 'vue-chartjs'],
-          'vendor-docx': ['docx', 'mammoth'],
+          'vendor-chart': ['chart.js', 'vue-chartjs', 'chartjs-plugin-datalabels'],
+          'vendor-docx': ['docx', 'mammoth', 'pdf-lib'],
           'vendor-utils': ['qrcode', 'html2canvas', 'sweetalert2', 'axios']
         }
       }

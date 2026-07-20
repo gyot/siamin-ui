@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentasi SIMAIK - Sistem Manajemen Informasi Kegiatan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        * { font-family: 'Inter', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { overflow: hidden; height: 100vh; width: 100vw; }
+        .slide { display: none; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
+        .slide.active { display: flex; }
+        .fade-in { animation: fadeIn 0.6s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-up { animation: slideUp 0.5s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }
+        .scale-in { animation: scaleIn 0.4s ease-out; }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .progress-bar { position: fixed; bottom: 0; left: 0; height: 4px; background: linear-gradient(90deg, #3b82f6, #06b6d4); transition: width 0.4s ease; z-index: 100; }
+        .slide-counter { position: fixed; bottom: 20px; right: 30px; z-index: 100; color: white; font-size: 14px; opacity: 0.7; }
+        .nav-hint { position: fixed; bottom: 20px; left: 30px; z-index: 100; color: white; font-size: 12px; opacity: 0.5; }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .gradient-text { background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .icon-box { width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 28px; }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        .flow-arrow { font-size: 24px; color: #60a5fa; display: flex; align-items: center; }
+        .stat-number { font-size: 3rem; font-weight: 800; line-height: 1; }
+        .dot-pattern {
+            background-image: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900">
+
+    <!-- Progress Bar -->
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="slide-counter" id="slideCounter"></div>
+    <div class="nav-hint">← → atau klik untuk navigasi</div>
+
+    <!-- SLIDE 1: COVER -->
+    <div class="slide active" id="slide-1">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #1e40af 70%, #1e3a8a 100%);">
+            <div class="dot-pattern absolute inset-0 opacity-30"></div>
+            <div class="relative z-10 text-center fade-in px-8">
+                <div class="mb-8">
+                    <div class="inline-flex items-center justify-center w-28 h-28 rounded-3xl bg-blue-600/30 backdrop-blur-sm border border-blue-400/30 mb-6">
+                        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.5">
+                            <path d="M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z"/>
+                            <path d="M4 13a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6z" opacity="0.7"/>
+                            <path d="M16 13a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-6z" opacity="0.5"/>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-7xl font-black text-white mb-3 tracking-tight">
+                    SIM<span class="gradient-text">AIK</span>
+                </h1>
+                <p class="text-xl text-blue-200 font-light mb-2 tracking-wide">Sistem Manajemen Informasi Kegiatan</p>
+                <div class="w-24 h-1 bg-gradient-to-r from-yellow-400 to-amber-500 mx-auto my-8 rounded-full"></div>
+                <p class="text-blue-300/80 text-base max-w-xl mx-auto leading-relaxed">
+                    Kementerian Pendidikan Dasar dan Menengah<br>
+                    <span class="text-blue-200 font-medium">BPMP Nusa Tenggara Barat</span>
+                </p>
+                <div class="mt-10 flex items-center justify-center gap-2 text-blue-400/60 text-sm">
+                    <span class="pulse">●</span>
+                    <span>v1.2.0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 2: LATAR BELAKANG -->
+    <div class="slide" id="slide-2">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="dot-pattern absolute inset-0 opacity-20"></div>
+            <div class="relative z-10 max-w-6xl mx-auto px-12 fade-in">
+                <div class="text-center mb-12">
+                    <span class="inline-block px-4 py-1.5 bg-blue-500/20 text-blue-300 text-sm font-medium rounded-full border border-blue-500/30 mb-4">Latar Belakang</span>
+                    <h2 class="text-5xl font-bold text-white">Mengapa SIMAIK?</h2>
+                </div>
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="bg-red-500/10 border border-red-500/20 rounded-2xl p-8">
+                        <h3 class="text-red-400 font-semibold text-lg mb-5 flex items-center gap-3">
+                            <span class="text-2xl">⚠️</span> Tantangan Sebelumnya
+                        </h3>
+                        <ul class="space-y-4 text-slate-300">
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-400 mt-1">✕</span>
+                                <span>Manajemen kegiatan masih manual & terfragmentasi</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-400 mt-1">✕</span>
+                                <span>Data peserta tersebar di berbagai dokumen</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-400 mt-1">✕</span>
+                                <span>Sertifikat dibuat satu per satu secara manual</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-400 mt-1">✕</span>
+                                <span>Sulit memantau status kegiatan secara real-time</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-red-400 mt-1">✕</span>
+                                <span>Evaluasi kegiatan tidak terstandarisasi</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-8">
+                        <h3 class="text-emerald-400 font-semibold text-lg mb-5 flex items-center gap-3">
+                            <span class="text-2xl">✅</span> Solusi SIMAIK
+                        </h3>
+                        <ul class="space-y-4 text-slate-300">
+                            <li class="flex items-start gap-3">
+                                <span class="text-emerald-400 mt-1">✓</span>
+                                <span>Platform terpadu untuk seluruh siklus kegiatan</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-emerald-400 mt-1">✓</span>
+                                <span>Database peserta terpusat & terintegrasi</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-emerald-400 mt-1">✓</span>
+                                <span>Sertifikat digital otomatis & massal</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-emerald-400 mt-1">✓</span>
+                                <span>Dashboard monitoring real-time</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="text-emerald-400 mt-1">✓</span>
+                                <span>Evaluasi online dengan laporan statistik</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 3: FITUR UTAMA -->
+    <div class="slide" id="slide-3">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="dot-pattern absolute inset-0 opacity-20"></div>
+            <div class="relative z-10 max-w-6xl mx-auto px-12 fade-in">
+                <div class="text-center mb-10">
+                    <span class="inline-block px-4 py-1.5 bg-blue-500/20 text-blue-300 text-sm font-medium rounded-full border border-blue-500/30 mb-4">Fitur Utama</span>
+                    <h2 class="text-5xl font-bold text-white">Modul Aplikasi</h2>
+                </div>
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="card-hover bg-gradient-to-br from-blue-600/20 to-blue-800/20 border border-blue-500/20 rounded-2xl p-7 text-center">
+                        <div class="icon-box bg-blue-500/20 mx-auto mb-4 text-3xl">📅</div>
+                        <h3 class="text-white font-bold text-lg mb-2">Manajemen Kegiatan</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Buat, kelola, dan pantau seluruh kegiatan BPMP NTB dengan CRUD lengkap dan filter per unit kerja</p>
+                    </div>
+                    <div class="card-hover bg-gradient-to-br from-emerald-600/20 to-emerald-800/20 border border-emerald-500/20 rounded-2xl p-7 text-center">
+                        <div class="icon-box bg-emerald-500/20 mx-auto mb-4 text-3xl">👥</div>
+                        <h3 class="text-white font-bold text-lg mb-2">Manajemen Peserta</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Kelola data peserta, panitia, narasumber, dan pendamping dengan formulir online & QR code</p>
+                    </div>
+                    <div class="card-hover bg-gradient-to-br from-purple-600/20 to-purple-800/20 border border-purple-500/20 rounded-2xl p-7 text-center">
+                        <div class="icon-box bg-purple-500/20 mx-auto mb-4 text-3xl">📜</div>
+                        <h3 class="text-white font-bold text-lg mb-2">Sertifikat Digital</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Terbitkan dan distribusikan sertifikat digital secara massal dengan unduh publik</p>
+                    </div>
+                    <div class="card-hover bg-gradient-to-br from-amber-600/20 to-amber-800/20 border border-amber-500/20 rounded-2xl p-7 text-center">
+                        <div class="icon-box bg-amber-500/20 mx-auto mb-4 text-3xl">📊</div>
+                        <h3 class="text-white font-bold text-lg mb-2">Evaluasi & Laporan</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Kumpulkan evaluasi peserta secara online dan analisis dengan laporan statistik visual</p>
+                    </div>
+                    <div class="card-hover bg-gradient-to-br from-rose-600/20 to-rose-800/20 border border-rose-500/20 rounded-2xl p-7 text-center">
+                        <div class="icon-box bg-rose-500/20 mx-auto mb-4 text-3xl">📋</div>
+                        <h3 class="text-white font-bold text-lg mb-2">Penugasan</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Kelola penugasan pegawai, filter berdasarkan unit kerja, dan cetak dokumen penugasan</p>
+                    </div>
+                    <div class="card-hover bg-gradient-to-br from-cyan-600/20 to-cyan-800/20 border border-cyan-500/20 rounded-2xl p-7 text-center">
+                        <div class="icon-box bg-cyan-500/20 mx-auto mb-4 text-3xl">📈</div>
+                        <h3 class="text-white font-bold text-lg mb-2">Dashboard Statistik</h3>
+                        <p class="text-slate-400 text-sm leading-relaxed">Pantau statistik kegiatan, peserta, dan sertifikat dalam satu tampilan dashboard interaktif</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 4: ARSITEKTUR SISTEM -->
+    <div class="slide" id="slide-4">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="dot-pattern absolute inset-0 opacity-20"></div>
+            <div class="relative z-10 max-w-6xl mx-auto px-12 fade-in">
+                <div class="text-center mb-10">
+                    <span class="inline-block px-4 py-1.5 bg-blue-500/20 text-blue-300 text-sm font-medium rounded-full border border-blue-500/30 mb-4">Arsitektur</span>
+                    <h2 class="text-5xl font-bold text-white">Arsitektur Sistem</h2>
+                </div>
+                <div class="flex items-center justify-center gap-6 mb-10">
+                    <div class="bg-blue-600/30 border border-blue-500/30 rounded-2xl p-6 text-center w-52">
+                        <div class="text-4xl mb-3">🖥️</div>
+                        <h3 class="text-white font-bold mb-1">Frontend</h3>
+                        <p class="text-blue-300 text-sm">Vue.js 3 + Vite</p>
+                        <p class="text-slate-400 text-xs mt-2">Tailwind CSS<br>Pinia State Management<br>Vue Router</p>
+                    </div>
+                    <div class="flow-arrow text-3xl">→</div>
+                    <div class="bg-emerald-600/30 border border-emerald-500/30 rounded-2xl p-6 text-center w-52">
+                        <div class="text-4xl mb-3">⚡</div>
+                        <h3 class="text-white font-bold mb-1">API</h3>
+                        <p class="text-emerald-300 text-sm">REST API v1</p>
+                        <p class="text-slate-400 text-xs mt-2">Laravel Sanctum<br>Token Auth<br>JSON Response</p>
+                    </div>
+                    <div class="flow-arrow text-3xl">→</div>
+                    <div class="bg-purple-600/30 border border-purple-500/30 rounded-2xl p-6 text-center w-52">
+                        <div class="text-4xl mb-3">🗄️</div>
+                        <h3 class="text-white font-bold mb-1">Backend</h3>
+                        <p class="text-purple-300 text-sm">Laravel (PHP)</p>
+                        <p class="text-slate-400 text-xs mt-2">MySQL Database<br>RESTful Endpoints<br>File Storage</p>
+                    </div>
+                </div>
+                <div class="flex justify-center">
+                    <div class="bg-amber-600/20 border border-amber-500/20 rounded-2xl p-5 text-center max-w-md">
+                        <div class="text-3xl mb-2">📄</div>
+                        <h3 class="text-white font-bold mb-1">Layanan Sertifikat</h3>
+                        <p class="text-amber-300 text-sm">pdf-docx.gdoank.my.id</p>
+                        <p class="text-slate-400 text-xs mt-2">Microservice untuk generate PDF sertifikat secara terpisah</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 5: TEKNOLOGI -->
+    <div class="slide" id="slide-5">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="dot-pattern absolute inset-0 opacity-20"></div>
+            <div class="relative z-10 max-w-6xl mx-auto px-12 fade-in">
+                <div class="text-center mb-10">
+                    <span class="inline-block px-4 py-1.5 bg-blue-500/20 text-blue-300 text-sm font-medium rounded-full border border-blue-500/30 mb-4">Tech Stack</span>
+                    <h2 class="text-5xl font-bold text-white">Teknologi yang Digunakan</h2>
+                </div>
+                <div class="grid grid-cols-4 gap-5">
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">💚</div>
+                        <h4 class="text-white font-bold text-sm mb-1">Vue.js 3</h4>
+                        <p class="text-slate-400 text-xs">Composition API & Options API</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">⚡</div>
+                        <h4 class="text-white font-bold text-sm mb-1">Vite</h4>
+                        <p class="text-slate-400 text-xs">Fast build & HMR</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">🎨</div>
+                        <h4 class="text-white font-bold text-sm mb-1">Tailwind CSS</h4>
+                        <p class="text-slate-400 text-xs">Utility-first styling</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">🍍</div>
+                        <h4 class="text-white font-bold text-sm mb-1">Pinia</h4>
+                        <p class="text-slate-400 text-xs">State management</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">🔗</div>
+                        <h4 class="text-white font-bold text-sm mb-1">Axios</h4>
+                        <p class="text-slate-400 text-xs">HTTP client</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">📊</div>
+                        <h4 class="text-white font-bold text-sm mb-1">Chart.js</h4>
+                        <p class="text-slate-400 text-xs">Data visualization</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">📑</div>
+                        <h4 class="text-white font-bold text-sm mb-1">xlsx / docx</h4>
+                        <p class="text-slate-400 text-xs">Export Excel & Word</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">📱</div>
+                        <h4 class="text-white font-bold text-sm mb-1">QR Code</h4>
+                        <p class="text-slate-400 text-xs">Auto generate QR</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">🐘</div>
+                        <h4 class="text-white font-bold text-sm mb-1">Laravel</h4>
+                        <p class="text-slate-400 text-xs">PHP backend framework</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">🔒</div>
+                        <h4 class="text-white font-bold text-sm mb-1">Sanctum</h4>
+                        <p class="text-slate-400 text-xs">API authentication</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">🐬</div>
+                        <h4 class="text-white font-bold text-sm mb-1">MySQL</h4>
+                        <p class="text-slate-400 text-xs">Relational database</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-xl p-5 text-center">
+                        <div class="text-3xl mb-3">📄</div>
+                        <h4 class="text-white font-bold text-sm mb-1">PDF-lib</h4>
+                        <p class="text-slate-400 text-xs">PDF manipulation</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 6: ALUR KERJA -->
+    <div class="slide" id="slide-6">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="dot-pattern absolute inset-0 opacity-20"></div>
+            <div class="relative z-10 max-w-6xl mx-auto px-12 fade-in">
+                <div class="text-center mb-10">
+                    <span class="inline-block px-4 py-1.5 bg-blue-500/20 text-blue-300 text-sm font-medium rounded-full border border-blue-500/30 mb-4">Alur Kerja</span>
+                    <h2 class="text-5xl font-bold text-white">Siklus Kegiatan</h2>
+                </div>
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex-1 text-center">
+                        <div class="w-20 h-20 rounded-2xl bg-blue-500/20 border-2 border-blue-500/40 flex items-center justify-center mx-auto mb-4 text-3xl">1</div>
+                        <h4 class="text-white font-bold mb-2">Buat Kegiatan</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed">Admin membuat kegiatan baru dengan detail tanggal, lokasi, dan deskripsi</p>
+                    </div>
+                    <div class="flow-arrow mt-10">→</div>
+                    <div class="flex-1 text-center">
+                        <div class="w-20 h-20 rounded-2xl bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center mx-auto mb-4 text-3xl">2</div>
+                        <h4 class="text-white font-bold mb-2">Daftarkan Peserta</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed">Peserta mengisi biodata melalui formulir online dengan QR code</p>
+                    </div>
+                    <div class="flow-arrow mt-10">→</div>
+                    <div class="flex-1 text-center">
+                        <div class="w-20 h-20 rounded-2xl bg-purple-500/20 border-2 border-purple-500/40 flex items-center justify-center mx-auto mb-4 text-3xl">3</div>
+                        <h4 class="text-white font-bold mb-2">Laksanakan</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed">Kegiatan berjalan, pantau peserta dan kehadiran secara real-time</p>
+                    </div>
+                    <div class="flow-arrow mt-10">→</div>
+                    <div class="flex-1 text-center">
+                        <div class="w-20 h-20 rounded-2xl bg-amber-500/20 border-2 border-amber-500/40 flex items-center justify-center mx-auto mb-4 text-3xl">4</div>
+                        <h4 class="text-white font-bold mb-2">Evaluasi</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed">Peserta mengisi evaluasi online, sistem generate laporan statistik</p>
+                    </div>
+                    <div class="flow-arrow mt-10">→</div>
+                    <div class="flex-1 text-center">
+                        <div class="w-20 h-20 rounded-2xl bg-rose-500/20 border-2 border-rose-500/40 flex items-center justify-center mx-auto mb-4 text-3xl">5</div>
+                        <h4 class="text-white font-bold mb-2">Sertifikat</h4>
+                        <p class="text-slate-400 text-xs leading-relaxed">Terbitkan sertifikat digital massal, peserta unduh secara mandiri</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 7: UNIT KERJA -->
+    <div class="slide" id="slide-7">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="dot-pattern absolute inset-0 opacity-20"></div>
+            <div class="relative z-10 max-w-5xl mx-auto px-12 fade-in">
+                <div class="text-center mb-10">
+                    <span class="inline-block px-4 py-1.5 bg-blue-500/20 text-blue-300 text-sm font-medium rounded-full border border-blue-500/30 mb-4">Tim Kerja</span>
+                    <h2 class="text-5xl font-bold text-white">Unit Kerja BPMP NTB</h2>
+                    <p class="text-slate-400 mt-3">SIMAIK mendukung pengelolaan kegiatan per tim kerja</p>
+                </div>
+                <div class="grid grid-cols-5 gap-5">
+                    <div class="card-hover bg-gradient-to-br from-pink-500/20 to-rose-600/20 border border-pink-500/20 rounded-2xl p-6 text-center">
+                        <div class="w-16 h-16 rounded-full bg-pink-500/20 flex items-center justify-center mx-auto mb-4 text-3xl">🧒</div>
+                        <h4 class="text-white font-bold text-lg mb-1">PAUD</h4>
+                        <p class="text-pink-300 text-xs">Pendidikan Anak Usia Dini</p>
+                    </div>
+                    <div class="card-hover bg-gradient-to-br from-emerald-500/20 to-green-600/20 border border-emerald-500/20 rounded-2xl p-6 text-center">
+                        <div class="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4 text-3xl">📚</div>
+                        <h4 class="text-white font-bold text-lg mb-1">SD</h4>
+                        <p class="text-emerald-300 text-xs">Sekolah Dasar</p>
+                    </div>
+                    <div class="card-hover bg-gradient-to-br from-sky-500/20 to-blue-600/20 border border-sky-500/20 rounded-2xl p-6 text-center">
+                        <div class="w-16 h-16 rounded-full bg-sky-500/20 flex items-center justify-center mx-auto mb-4 text-3xl">🏫</div>
+                        <h4 class="text-white font-bold text-lg mb-1">SMP</h4>
+                        <p class="text-sky-300 text-xs">Sekolah Menengah Pertama</p>
+                    </div>
+                    <div class="card-hover bg-gradient-to-br from-amber-500/20 to-orange-600/20 border border-amber-500/20 rounded-2xl p-6 text-center">
+                        <div class="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-4 text-3xl">🎓</div>
+                        <h4 class="text-white font-bold text-lg mb-1">SMA/SMK</h4>
+                        <p class="text-amber-300 text-xs">Sekolah Menengah Atas</p>
+                    </div>
+                    <div class="card-hover bg-gradient-to-br from-violet-500/20 to-fuchsia-600/20 border border-violet-500/20 rounded-2xl p-6 text-center">
+                        <div class="w-16 h-16 rounded-full bg-violet-500/20 flex items-center justify-center mx-auto mb-4 text-3xl">🏢</div>
+                        <h4 class="text-white font-bold text-lg mb-1">Subbag Umum</h4>
+                        <p class="text-violet-300 text-xs">Administrasi Umum</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 8: AKSES PENGGUNA -->
+    <div class="slide" id="slide-8">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="dot-pattern absolute inset-0 opacity-20"></div>
+            <div class="relative z-10 max-w-6xl mx-auto px-12 fade-in">
+                <div class="text-center mb-10">
+                    <span class="inline-block px-4 py-1.5 bg-blue-500/20 text-blue-300 text-sm font-medium rounded-full border border-blue-500/30 mb-4">Akses Pengguna</span>
+                    <h2 class="text-5xl font-bold text-white">Dua Portal Akses</h2>
+                </div>
+                <div class="grid grid-cols-2 gap-10">
+                    <div class="bg-gradient-to-br from-blue-600/20 to-indigo-800/20 border border-blue-500/20 rounded-3xl p-10">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-14 h-14 rounded-2xl bg-blue-500/30 flex items-center justify-center text-3xl">🔐</div>
+                            <div>
+                                <h3 class="text-white font-bold text-2xl">Portal Admin</h3>
+                                <p class="text-blue-300 text-sm">/laman-masuk</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-3 text-slate-300">
+                            <li class="flex items-center gap-3"><span class="text-blue-400">▸</span> Dashboard statistik lengkap</li>
+                            <li class="flex items-center gap-3"><span class="text-blue-400">▸</span> CRUD kegiatan & peserta</li>
+                            <li class="flex items-center gap-3"><span class="text-blue-400">▸</span> Kelola sertifikat & penugasan</li>
+                            <li class="flex items-center gap-3"><span class="text-blue-400">▸</span> Manajemen pegawai & user</li>
+                            <li class="flex items-center gap-3"><span class="text-blue-400">▸</span> Export data (Excel, Word, PDF)</li>
+                        </ul>
+                        <div class="mt-6 flex gap-2">
+                            <span class="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full">Admin</span>
+                            <span class="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full">Operator</span>
+                            <span class="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full">Verifikator</span>
+                            <span class="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full">Kepala</span>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-emerald-600/20 to-teal-800/20 border border-emerald-500/20 rounded-3xl p-10">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-14 h-14 rounded-2xl bg-emerald-500/30 flex items-center justify-center text-3xl">👤</div>
+                            <div>
+                                <h3 class="text-white font-bold text-2xl">Portal Peserta</h3>
+                                <p class="text-emerald-300 text-sm">/login-peserta</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-3 text-slate-300">
+                            <li class="flex items-center gap-3"><span class="text-emerald-400">▸</span> Isi biodata via formulir online</li>
+                            <li class="flex items-center gap-3"><span class="text-emerald-400">▸</span> Akses dengan QR code</li>
+                            <li class="flex items-center gap-3"><span class="text-emerald-400">▸</span> Unduh sertifikat digital</li>
+                            <li class="flex items-center gap-3"><span class="text-emerald-400">▸</span> Isi evaluasi kegiatan</li>
+                            <li class="flex items-center gap-3"><span class="text-emerald-400">▸</span> Lihat daftar peserta publik</li>
+                        </ul>
+                        <div class="mt-6 flex gap-2">
+                            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs rounded-full">Peserta</span>
+                            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs rounded-full">Panitia</span>
+                            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs rounded-full">Narasumber</span>
+                            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs rounded-full">Pendamping</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 9: HALAMAN PUBLIK -->
+    <div class="slide" id="slide-9">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="dot-pattern absolute inset-0 opacity-20"></div>
+            <div class="relative z-10 max-w-6xl mx-auto px-12 fade-in">
+                <div class="text-center mb-10">
+                    <span class="inline-block px-4 py-1.5 bg-blue-500/20 text-blue-300 text-sm font-medium rounded-full border border-blue-500/30 mb-4">Halaman Publik</span>
+                    <h2 class="text-5xl font-bold text-white">Akses Tanpa Login</h2>
+                    <p class="text-slate-400 mt-3">Fitur publik yang dapat diakses peserta tanpa autentikasi</p>
+                </div>
+                <div class="grid grid-cols-3 gap-6">
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-2xl p-7">
+                        <div class="text-3xl mb-4">📝</div>
+                        <h4 class="text-white font-bold text-lg mb-2">Formulir Biodata</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">Peserta mengisi data diri melalui link/QR code yang dibagikan. Tersedia hanya selama periode kegiatan berlangsung.</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-2xl p-7">
+                        <div class="text-3xl mb-4">📋</div>
+                        <h4 class="text-white font-bold text-lg mb-2">Daftar Peserta</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">Lihat daftar peserta yang sudah terdaftar dalam suatu kegiatan secara publik dan transparan.</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-2xl p-7">
+                        <div class="text-3xl mb-4">🏅</div>
+                        <h4 class="text-white font-bold text-lg mb-2">Unduh Sertifikat</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">Peserta dapat mengunduh sertifikat digital mereka secara mandiri melalui halaman publik.</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-2xl p-7">
+                        <div class="text-3xl mb-4">📊</div>
+                        <h4 class="text-white font-bold text-lg mb-2">Evaluasi Online</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">Formulir evaluasi yang dapat diakses peserta pada hari terakhir kegiatan untuk umpan balik.</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-2xl p-7">
+                        <div class="text-3xl mb-4">📈</div>
+                        <h4 class="text-white font-bold text-lg mb-2">Laporan Evaluasi</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">Statistik dan laporan evaluasi kegiatan yang dapat dilihat secara publik dengan grafik visual.</p>
+                    </div>
+                    <div class="card-hover bg-slate-800/60 border border-slate-700/50 rounded-2xl p-7">
+                        <div class="text-3xl mb-4">🔍</div>
+                        <h4 class="text-white font-bold text-lg mb-2">Detail Kegiatan</h4>
+                        <p class="text-slate-400 text-sm leading-relaxed">Informasi lengkap kegiatan termasuk jadwal, lokasi, deskripsi, dan tautan terkait.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 10: PENUTUP -->
+    <div class="slide" id="slide-10">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #1e40af 70%, #1e3a8a 100%);">
+            <div class="dot-pattern absolute inset-0 opacity-30"></div>
+            <div class="relative z-10 text-center fade-in px-8">
+                <div class="mb-8">
+                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-blue-600/30 backdrop-blur-sm border border-blue-400/30 mb-6">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.5">
+                            <path d="M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z"/>
+                            <path d="M4 13a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6z" opacity="0.7"/>
+                            <path d="M16 13a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-6z" opacity="0.5"/>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-6xl font-black text-white mb-4">
+                    Terima <span class="gradient-text">Kasih</span>
+                </h1>
+                <div class="w-24 h-1 bg-gradient-to-r from-yellow-400 to-amber-500 mx-auto my-8 rounded-full"></div>
+                <p class="text-blue-200 text-xl mb-3 font-light">SIMAIK v1.2.0</p>
+                <p class="text-blue-300/70 text-base max-w-lg mx-auto leading-relaxed mb-8">
+                    Sistem Manajemen Informasi Kegiatan<br>
+                    Platform terintegrasi untuk mengelola kegiatan, peserta,<br>penugasan, dan sertifikat digital secara efisien dan transparan.
+                </p>
+                <div class="flex items-center justify-center gap-8 text-sm text-blue-300/60">
+                    <div class="flex items-center gap-2">
+                        <span>🌐</span>
+                        <span>api-siamin.bpmpntb.id</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span>📧</span>
+                        <span>BPMP Nusa Tenggara Barat</span>
+                    </div>
+                </div>
+                <p class="text-blue-400/40 text-xs mt-10">© 2025 SIMAIK - Kementerian Pendidikan Dasar dan Menengah</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 10;
+
+        function showSlide(n) {
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            const slide = document.getElementById('slide-' + n);
+            if (slide) {
+                slide.classList.add('active');
+                slide.querySelectorAll('.fade-in, .slide-up, .scale-in').forEach(el => {
+                    el.style.animation = 'none';
+                    el.offsetHeight;
+                    el.style.animation = '';
+                });
+            }
+            document.getElementById('progressBar').style.width = ((n / totalSlides) * 100) + '%';
+            document.getElementById('slideCounter').textContent = n + ' / ' + totalSlides;
+            currentSlide = n;
+        }
+
+        function nextSlide() { if (currentSlide < totalSlides) showSlide(currentSlide + 1); }
+        function prevSlide() { if (currentSlide > 1) showSlide(currentSlide - 1); }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); nextSlide(); }
+            if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); prevSlide(); }
+            if (e.key === 'Home') { e.preventDefault(); showSlide(1); }
+            if (e.key === 'End') { e.preventDefault(); showSlide(totalSlides); }
+        });
+
+        document.addEventListener('click', (e) => {
+            const x = e.clientX / window.innerWidth;
+            if (x > 0.5) nextSlide(); else prevSlide();
+        });
+
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+        document.addEventListener('touchend', (e) => {
+            const diff = touchStartX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 50) { if (diff > 0) nextSlide(); else prevSlide(); }
+        });
+
+        showSlide(1);
+    </script>
+</body>
+</html>

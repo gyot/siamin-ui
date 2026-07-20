@@ -255,13 +255,13 @@ export const useAuthStore = defineStore('auth', () => {
 
       token.value = apiToken
       currentUser.value = {
-        id: user.id,
-        id_pegawai: user.id_pegawai || user.id,
+        id: user.id ?? user.id_user ?? user.id_pegawai,
+        id_pegawai: user.id_pegawai || user.id_user || user.id,
         unit_kerja_id: resolvedUnitKerjaIds,
         unit_kerja: resolvedUnitKerja,
         name: user.name ?? user.email ?? 'Admin',
         email: user.email,
-        role: 'admin'
+        role: user.role || 'admin'
       }
       userType.value = 'admin'
 
