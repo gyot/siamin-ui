@@ -754,8 +754,11 @@ export default {
         .replace(/\-\-+/g, '-')
     }
 
-    const buildFormLink = (kode, peran, judul) => {
-      return buildAppUrl(`formulir/${kode}/${peran}/${slugify(judul)}`)
+    const buildFormLink = (kode, peran, judul, idTpk = '') => {
+      const slug = slugify(judul)
+      return idTpk
+        ? buildAppUrl(`formulir/${kode}/${peran}/${idTpk}/${slug}`)
+        : buildAppUrl(`formulir/${kode}/${peran}/${slug}`)
     }
 
     const buildPublicEvaluasiLink = (kode, judul = '', idTpk = '') => {
@@ -809,13 +812,31 @@ export default {
     })
 
     const formLinks = computed(() => {
-      const links = activityLinks.value
-      return [
-        { key: 'peserta', label: 'Formulir Peserta', url: links.peserta },
-        { key: 'panitia', label: 'Formulir Panitia', url: links.panitia },
-        { key: 'narasumber', label: 'Formulir Narasumber', url: links.narasumber },
-        { key: 'pendamping', label: 'Formulir Pendamping', url: links.pendamping }
-      ].filter(entry => entry.url)
+      if (!selectedKegiatan.value) return []
+      const kode = selectedKegiatan.value.id_kegiatan || ''
+      const judul = selectedKegiatan.value.nama_kegiatan || ''
+      const peranList = ['Peserta', 'Panitia', 'Narasumber', 'Pendamping']
+      const tpkItems = getKegiatanLocationItems(selectedKegiatan.value)
+      if (tpkItems.length === 0) {
+        return peranList.map(peran => ({
+          key: peran.toLowerCase(),
+          label: `Formulir ${peran}`,
+          url: buildFormLink(kode, peran, judul)
+        })).filter(entry => entry.url)
+      }
+      const links = []
+      for (const tpk of tpkItems) {
+        const namaTpk = tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi
+        for (const peran of peranList) {
+          links.push({
+            key: `form-${peran.toLowerCase()}-tpk-${tpk.id_tpk}`,
+            id_tpk: tpk.id_tpk,
+            label: `${peran} - ${namaTpk}`,
+            url: buildFormLink(kode, peran, judul, tpk.id_tpk)
+          })
+        }
+      }
+      return links.filter(entry => entry.url)
     })
 
     const evaluationLinks = computed(() => {
@@ -873,6 +894,17 @@ export default {
 
       // Generate QR for per-TPK evaluasi links
       for (const link of evaluationLinks.value) {
+        if (link.url && !nextQrCodes[link.key]) {
+          try {
+            nextQrCodes[link.key] = await QRCode.toDataURL(link.url, { width: 180, margin: 1 })
+          } catch (error) {
+            nextQrCodes[link.key] = ''
+          }
+        }
+      }
+
+      // Generate QR for per-TPK formulir links
+      for (const link of formLinks.value) {
         if (link.url && !nextQrCodes[link.key]) {
           try {
             nextQrCodes[link.key] = await QRCode.toDataURL(link.url, { width: 180, margin: 1 })

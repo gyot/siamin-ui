@@ -71,6 +71,14 @@ const router = createRouter({
     }
   },
   {
+    path:'/formulir/:kode/:peran/:idTpk/:slugJudul',
+    component:FormulirPeserta,
+    meta:{
+      title: (to) => `Formulir ${to.params.peran || 'Peserta'} - ${to.params.slugJudul || ''}`,
+      description: (to) => `Formulir pendaftaran kegiatan ${to.params.slugJudul || ''}.`
+    }
+  },
+  {
     path:'/formulir/:kode/:peran/:slugJudul',
     component:FormulirPeserta,
     meta:{

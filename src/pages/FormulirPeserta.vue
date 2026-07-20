@@ -20,7 +20,8 @@
             <div class="mt-3 text-sm text-slate-600">
               <p><strong>Tanggal:</strong> {{ formatDate(kegiatan.tanggal_mulai) }} - {{
                 formatDate(kegiatan.tanggal_selesai) }}</p>
-              <p><strong>Lokasi:</strong> {{ kegiatan.lokasi || '-' }}</p>
+              <p><strong>Lokasi:</strong> {{ displayLokasi }}</p>
+              <p v-if="currentTpk && currentTpk.kabupaten_kota"><strong>Kab/Kota:</strong> {{ currentTpk.kabupaten_kota }}</p>
             </div>
           </div>
 
@@ -188,12 +189,15 @@
               <div v-if="tpkItems.length > 0">
                 <label class="block text-sm font-medium text-slate-700 mb-2">Tempat Pelaksanaan (TPK)</label>
                 <select v-model="formData.id_tpk"
-                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                  :disabled="!!idTpkFromRoute"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  :class="idTpkFromRoute ? 'bg-slate-100 text-slate-600' : ''">
                   <option value="">Pilih TPK</option>
                   <option v-for="tpk in tpkItems" :key="tpk.id_tpk" :value="tpk.id_tpk">
                     {{ tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi }}
                   </option>
                 </select>
+                <p v-if="idTpkFromRoute" class="text-xs text-slate-500 mt-1">TPK ditentukan dari link yang Anda akses.</p>
               </div>
             </div>
           </div>
@@ -365,6 +369,7 @@ export default {
     // Debug kode route
     const peran = route.params.peran
     const slugJudul = route.params.slugJudul
+    const idTpkFromRoute = route.params.idTpk || ''
 
     const formErrors = ref([])
     const showSuccessMessage = ref(false)
@@ -466,6 +471,25 @@ export default {
     const tpkItems = computed(() => {
       if (!kegiatan.value) return []
       return getKegiatanLocationItems(kegiatan.value)
+    })
+
+    const currentTpk = computed(() => {
+      if (!idTpkFromRoute || tpkItems.value.length === 0) return null
+      return tpkItems.value.find(tpk => String(tpk.id_tpk) === String(idTpkFromRoute)) || null
+    })
+
+    const displayLokasi = computed(() => {
+      if (currentTpk.value) {
+        return currentTpk.value.kabupaten_kota
+          ? `${currentTpk.value.lokasi} (${currentTpk.value.kabupaten_kota})`
+          : currentTpk.value.lokasi
+      }
+      if (tpkItems.value.length > 0) {
+        return tpkItems.value.map(tpk =>
+          tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi
+        ).join(', ')
+      }
+      return kegiatan.value?.lokasi || '-'
     })
 
     const kabKota = ref([
@@ -602,7 +626,7 @@ export default {
 
     const formData = ref({
       id_kegiatan: kode,
-      id_tpk: '',
+      id_tpk: idTpkFromRoute,
       nama_lengkap: '',
       nip: '',
       pangkat: '',
@@ -871,6 +895,7 @@ export default {
       kode,
       peran,
       slugJudul,
+      idTpkFromRoute,
       namaKegiatan,
       kegiatan,
       flyerUrl,
@@ -882,6 +907,8 @@ export default {
       showSuccessMessage,
       metode_pembayaran,
       tpkItems,
+      currentTpk,
+      displayLokasi,
       signatureCanvas,
       signatureData,
       isLoadingKegiatan,

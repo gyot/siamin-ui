@@ -736,11 +736,14 @@
         <div class="border-b border-slate-100 pb-6">
           <h4 class="text-lg font-semibold text-slate-800 mb-4">Link Biodata</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <a v-for="link in formLinksByRole" :key="link.role" :href="link.url" target="_blank"
-              class="block p-4 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-slate-50 transition">
-              <div class="text-sm font-semibold text-slate-800">{{ link.label }}</div>
-              <div class="mt-2 text-xs text-slate-500 break-all">{{ link.url }}</div>
-            </a>
+            <div v-for="link in formLinksByRole" :key="link.role" class="p-4 border border-slate-200 rounded-xl hover:border-blue-500 hover:bg-slate-50 transition">
+              <a :href="link.url" target="_blank" class="block">
+                <div class="text-sm font-semibold text-slate-800">{{ link.label }}</div>
+                <div class="mt-2 text-xs text-slate-500 break-all">{{ link.url }}</div>
+              </a>
+              <img v-if="getActivityQrCodeUrl(link.url)" :src="getActivityQrCodeUrl(link.url)" :alt="`QR ${link.label}`"
+                class="w-24 h-24 rounded bg-white p-1 border border-slate-200 mt-3" />
+            </div>
           </div>
         </div>
 
@@ -1222,9 +1225,11 @@ export default {
         .replace(/\-\-+/g, '-')
     }
 
-    const buildFormLink = (kode, peran = 'Peserta', judul = '') => {
+    const buildFormLink = (kode, peran = 'Peserta', judul = '', idTpk = '') => {
       const slug = slugify(judul)
-      return buildPublicUrl(`formulir/${kode}/${peran}/${slug}`)
+      return idTpk
+        ? buildPublicUrl(`formulir/${kode}/${peran}/${idTpk}/${slug}`)
+        : buildPublicUrl(`formulir/${kode}/${peran}/${slug}`)
     }
 
     const buildAbsoluteUrl = (rawUrl) => {
@@ -1734,21 +1739,21 @@ export default {
         pendamping: 'Formulir Pendamping'
       }
       const roles = ['Peserta', 'Panitia', 'Narasumber', 'Pendamping']
-      const links = roles.map((role) => {
-        const roleLinks = getRoleLinksFromKegiatan(selectedKegiatan.value, role)
-        return {
-          role,
-          label: labels[role.toLowerCase()] || `Formulir ${role}`,
-          url: roleLinks.formUrl || buildFormLink(kode, role, judul),
-          templateUrl: roleLinks.templateUrl
-        }
-      })
-      
-      // Add Evaluasi and Laporan Evaluasi links per TPK
       const tpkItems = getKegiatanLocationItems(selectedKegiatan.value)
+      const links = []
+
       if (tpkItems.length > 0) {
         for (const tpk of tpkItems) {
           const namaTpk = tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi
+          for (const role of roles) {
+            const roleLinks = getRoleLinksFromKegiatan(selectedKegiatan.value, role)
+            links.push({
+              role: `${role.toLowerCase()}-tpk-${tpk.id_tpk}`,
+              label: `${labels[role.toLowerCase()]} - ${namaTpk}`,
+              url: roleLinks.formUrl || buildFormLink(kode, role, judul, tpk.id_tpk),
+              templateUrl: roleLinks.templateUrl
+            })
+          }
           links.push({
             role: `evaluasi-tpk-${tpk.id_tpk}`,
             label: `Evaluasi - ${namaTpk}`,
@@ -1763,6 +1768,15 @@ export default {
           })
         }
       } else {
+        for (const role of roles) {
+          const roleLinks = getRoleLinksFromKegiatan(selectedKegiatan.value, role)
+          links.push({
+            role,
+            label: labels[role.toLowerCase()] || `Formulir ${role}`,
+            url: roleLinks.formUrl || buildFormLink(kode, role, judul),
+            templateUrl: roleLinks.templateUrl
+          })
+        }
         links.push({
           role: 'evaluasi',
           label: 'Link Evaluasi',
@@ -1776,7 +1790,6 @@ export default {
           templateUrl: null
         })
       }
-      
       
       return links
     })
@@ -3109,15 +3122,35 @@ export default {
       const kode = selectedKegiatan.value.id_kegiatan || selectedKegiatan.value.id || ''
       const judul = selectedKegiatan.value.nama_kegiatan || ''
       const roles = ['Peserta', 'Narasumber', 'Panitia', 'Pendamping']
-      return roles.map((role) => {
-        const roleLinks = getRoleLinksFromKegiatan(selectedKegiatan.value, role)
-        return {
-          role,
-          label: `Link Biodata ${role}`,
-          url: roleLinks.formUrl || buildFormLink(kode, role, judul),
-          templateUrl: roleLinks.templateUrl
+      const tpkItems = getKegiatanLocationItems(selectedKegiatan.value)
+      const links = []
+
+      if (tpkItems.length > 0) {
+        for (const tpk of tpkItems) {
+          const namaTpk = tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi
+          for (const role of roles) {
+            const roleLinks = getRoleLinksFromKegiatan(selectedKegiatan.value, role)
+            links.push({
+              role: `${role.toLowerCase()}-tpk-${tpk.id_tpk}`,
+              label: `${role} - ${namaTpk}`,
+              url: roleLinks.formUrl || buildFormLink(kode, role, judul, tpk.id_tpk),
+              templateUrl: roleLinks.templateUrl
+            })
+          }
         }
-      })
+      } else {
+        for (const role of roles) {
+          const roleLinks = getRoleLinksFromKegiatan(selectedKegiatan.value, role)
+          links.push({
+            role,
+            label: `Link Biodata ${role}`,
+            url: roleLinks.formUrl || buildFormLink(kode, role, judul),
+            templateUrl: roleLinks.templateUrl
+          })
+        }
+      }
+
+      return links
     })
 
     const evaluasiLinks = computed(() => {
