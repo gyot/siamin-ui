@@ -293,7 +293,7 @@
               Kembali
             </button>
             <button type="submit"
-              :disabled="isSubmitting || narasumberList.length === 0"
+              
               class="flex-1 btn-primary px-6 py-3.5 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               <svg v-if="isSubmitting" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -583,16 +583,19 @@ export default {
           program_tujuan: form.value.program_tujuan,
           program_bahan_ajar: form.value.program_bahan_ajar,
           program_alokasi_waktu: form.value.program_alokasi_waktu,
-          fasilitator: form.value.fasilitator.map((fas, index) => ({
-            nama: narasumberList.value[index]?.nama || fas.nama,
-            penguasaan_materi: fas.penguasaan_materi,
-            sistematika: fas.sistematika,
-            sikap: fas.sikap
-          })),
           layanan_panitia: form.value.layanan_panitia,
           layanan_fasilitas: form.value.layanan_fasilitas,
           layanan_konsumsi: form.value.layanan_konsumsi,
           saran: form.value.saran ? form.value.saran.trim() : null
+        }
+
+        if (form.value.fasilitator.length > 0) {
+          payload.fasilitator = form.value.fasilitator.map((fas, index) => ({
+            nama: narasumberList.value[index]?.nama || fas.nama,
+            penguasaan_materi: fas.penguasaan_materi,
+            sistematika: fas.sistematika,
+            sikap: fas.sikap
+          }))
         }
 
         // Submit to backend API

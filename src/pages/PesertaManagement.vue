@@ -473,284 +473,276 @@
             <button @click="closeAddModal" class="text-2xl hover:text-blue-200">&times;</button>
           </div>
 
-          <div class="p-4 sm:p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-6">
+          <div class="p-6 sm:p-8">
+            <form @submit.prevent="savePeserta" class="space-y-6">
               <!-- Data Pribadi -->
-              <div class="md:col-span-2">
-                <h3 class="text-base sm:text-lg font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500">Data Pribadi</h3>
-              </div>
               <div>
-                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Nama Lengkap *</label>
-                <input
-                  v-model="formPeserta.nama_lengkap"
-                  type="text"
-                  class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">NIP</label>
-                <input
-                  v-model="formPeserta.nip"
-                  type="text"
-                  class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Email *</label>
-                <input
-                  v-model="formPeserta.email"
-                  type="email"
-                  class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">No. HP</label>
-                <input
-                  v-model="formPeserta.no_hp"
-                  type="tel"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Jenis Kelamin</label>
-                <select
-                  v-model="formPeserta.jenis_kelamin"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Pilih Jenis Kelamin</option>
-                  <option value="Laki-laki">Laki-laki</option>
-                  <option value="Perempuan">Perempuan</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tempat Lahir</label>
-                <input
-                  v-model="formPeserta.tempat_lahir"
-                  type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Lahir</label>
-                <input
-                  v-model="formPeserta.tanggal_lahir"
-                  type="date"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">NPWP/NIK</label>
-                <input
-                  v-model="formPeserta.npwp_nik"
-                  type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Pangkat</label>
-                <input
-                  v-model="formPeserta.pangkat"
-                  type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Golongan</label>
-                <input
-                  v-model="formPeserta.gol"
-                  type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Jabatan</label>
-                <input
-                  v-model="formPeserta.jabatan"
-                  type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b-2 border-blue-500">Data Pribadi</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Nama Lengkap *</label>
+                    <input v-model="formPeserta.nama_lengkap" type="text" placeholder="Masukkan nama lengkap"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">NIP</label>
+                    <input v-model="formPeserta.nip" type="text" placeholder="Masukkan NIP"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Email *</label>
+                    <input v-model="formPeserta.email" type="email" placeholder="Masukkan email"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">No. HP</label>
+                    <input v-model="formPeserta.no_hp" type="tel" placeholder="Masukkan nomor HP"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Jenis Kelamin</label>
+                    <select v-model="formPeserta.jenis_kelamin"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                      <option value="">Pilih Jenis Kelamin</option>
+                      <option value="laki-laki">Laki-laki</option>
+                      <option value="perempuan">Perempuan</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Tempat Lahir</label>
+                    <input v-model="formPeserta.tempat_lahir" type="text" placeholder="Masukkan tempat lahir"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Tanggal Lahir</label>
+                    <input v-model="formPeserta.tanggal_lahir" type="date"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">NPWP/NIK</label>
+                    <input v-model="formPeserta.npwp_nik" type="text" placeholder="Masukkan NPWP atau NIK"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Pangkat / Golongan</label>
+                    <select v-model="formPeserta.pangkat"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                      <option value="">Pilih Pangkat</option>
+                      <optgroup label="Non-ASN">
+                        <option value="Non ASN">Non ASN</option>
+                        <option value="Honorer">Honorer</option>
+                        <option value="Swasta">Swasta</option>
+                        <option value="Lainnya">Lainnya</option>
+                      </optgroup>
+                      <optgroup label="Golongan I">
+                        <option value="Juru Muda / Ia">Juru Muda / Ia</option>
+                        <option value="Juru Muda Tingkat I / Ib">Juru Muda Tingkat I / Ib</option>
+                        <option value="Juru / Ic">Juru / Ic</option>
+                        <option value="Juru Tingkat I / Id">Juru Tingkat I / Id</option>
+                      </optgroup>
+                      <optgroup label="Golongan II">
+                        <option value="Pengatur Muda / IIa">Pengatur Muda / IIa</option>
+                        <option value="Pengatur Muda Tingkat I / IIb">Pengatur Muda Tingkat I / IIb</option>
+                        <option value="Pengatur / IIc">Pengatur / IIc</option>
+                        <option value="Pengatur Tingkat I / IId">Pengatur Tingkat I / IId</option>
+                      </optgroup>
+                      <optgroup label="Golongan III">
+                        <option value="Penata Muda / IIIa">Penata Muda / IIIa</option>
+                        <option value="Penata Muda Tingkat I / IIIb">Penata Muda Tingkat I / IIIb</option>
+                        <option value="Penata / IIIc">Penata / IIIc</option>
+                        <option value="Penata Tingkat I / IIId">Penata Tingkat I / IIId</option>
+                      </optgroup>
+                      <optgroup label="Golongan IV">
+                        <option value="Pembina / IVa">Pembina / IVa</option>
+                        <option value="Pembina Tingkat I / IVb">Pembina Tingkat I / IVb</option>
+                        <option value="Pembina Utama Muda / IVc">Pembina Utama Muda / IVc</option>
+                        <option value="Pembina Utama Madya / IVd">Pembina Utama Madya / IVd</option>
+                        <option value="Pembina Utama / IVe">Pembina Utama / IVe</option>
+                      </optgroup>
+                      <optgroup label="Golongan PPPK">
+                        <option value="PPPK / I">PPPK / I</option>
+                        <option value="PPPK / II">PPPK / II</option>
+                        <option value="PPPK / III">PPPK / III</option>
+                        <option value="PPPK / IV">PPPK / IV</option>
+                        <option value="PPPK / V">PPPK / V</option>
+                        <option value="PPPK / VI">PPPK / VI</option>
+                        <option value="PPPK / VII">PPPK / VII</option>
+                        <option value="PPPK / VIII">PPPK / VIII</option>
+                        <option value="PPPK / IX">PPPK / IX</option>
+                        <option value="PPPK / X">PPPK / X</option>
+                        <option value="PPPK / XI">PPPK / XI</option>
+                        <option value="PPPK / XII">PPPK / XII</option>
+                        <option value="PPPK / XIII">PPPK / XIII</option>
+                        <option value="PPPK / XIV">PPPK / XIV</option>
+                        <option value="PPPK / XV">PPPK / XV</option>
+                        <option value="PPPK / XVI">PPPK / XVI</option>
+                        <option value="PPPK / XVII">PPPK / XVII</option>
+                      </optgroup>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Jabatan</label>
+                    <input v-model="formPeserta.jabatan" type="text" placeholder="Masukkan jabatan"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div v-if="tpkItemsForForm.length > 0">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Tempat Pelaksanaan (TPK)</label>
+                    <select v-model="formPeserta.id_tpk"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                      <option value="">Pilih TPK</option>
+                      <option v-for="tpk in tpkItemsForForm" :key="tpk.id_tpk" :value="tpk.id_tpk">
+                        {{ tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
               <!-- Data Instansi -->
-              <div class="md:col-span-2">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500">Data Instansi</h3>
-              </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Instansi *</label>
-                <input
-                  v-model="formPeserta.nama_instansi"
-                  type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">NPSN (jika instansi pendidikan)</label>
-                <input
-                  v-model="formPeserta.npsn"
-                  type="text"
-                  inputmode="numeric"
-                  pattern="[0-9]*"
-                  maxlength="8"
-                  @input="onNpsnInput"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Kegiatan *</label>
-                <select
-                  v-model="formPeserta.id_kegiatan"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Pilih Kegiatan</option>
-                  <option v-for="k in kegiatan" :key="k.id_kegiatan" :value="k.id_kegiatan">
-                    {{ k.nama_kegiatan }}
-                  </option>
-                </select>
-              </div>
-              <div v-if="tpkItemsForForm.length > 0">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tempat Pelaksanaan (TPK)</label>
-                <select
-                  v-model="formPeserta.id_tpk"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Pilih TPK</option>
-                  <option v-for="tpk in tpkItemsForForm" :key="tpk.id_tpk" :value="tpk.id_tpk">
-                    {{ tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi }}
-                  </option>
-                </select>
-              </div>
-              <div class="md:col-span-2">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Alamat Instansi</label>
-                <textarea
-                  v-model="formPeserta.alamat_instansi"
-                  rows="3"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                ></textarea>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Kabupaten/Kota</label>
-                <input
-                  v-model="formPeserta.kab_kota"
-                  type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Provinsi</label>
-                <input
-                  v-model="formPeserta.provinsi"
-                  type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Telepon Instansi</label>
-                <input
-                  v-model="formPeserta.telp_instansi"
-                  type="tel"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Email Instansi</label>
-                <input
-                  v-model="formPeserta.email_instansi"
-                  type="email"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b-2 border-blue-500">Data Instansi</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Nama Instansi *</label>
+                    <input v-model="formPeserta.nama_instansi" type="text" placeholder="Masukkan nama instansi"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">NPSN (jika instansi pendidikan)</label>
+                    <input v-model="formPeserta.npsn" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="8"
+                      placeholder="Masukkan NPSN (angka saja)" @input="onNpsnInput"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Kegiatan *</label>
+                    <select v-model="formPeserta.id_kegiatan" :disabled="editingPeserta"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      :class="editingPeserta ? 'bg-slate-100 text-slate-600' : ''">
+                      <option value="">Pilih Kegiatan</option>
+                      <option v-for="k in kegiatan" :key="k.id_kegiatan" :value="k.id_kegiatan">
+                        {{ k.nama_kegiatan }}
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Kabupaten / Kota</label>
+                    <select v-model="formPeserta.kab_kota"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                      <option value="">Pilih Kabupaten/Kota</option>
+                      <option v-for="k in kabKota" :key="k" :value="k">{{ k }}</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              <!-- Data Pembayaran -->
-              <div class="md:col-span-2">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500">Data Pembayaran</h3>
+              <!-- Data Pembayaran (conditional) -->
+              <div v-if="metodePembayaran && ['transfer', 'pulsa', 'transfer_dan_pulsa'].includes(metodePembayaran)">
+                <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b-2 border-blue-500">Data Pembayaran</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div v-if="['transfer_dan_pulsa', 'transfer'].includes(metodePembayaran)">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Nomor Rekening</label>
+                    <input v-model="formPeserta.nomor_rekening" type="text" placeholder="Masukkan nomor rekening"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div v-if="['transfer_dan_pulsa', 'transfer'].includes(metodePembayaran)">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Nama Bank</label>
+                    <input v-model="formPeserta.nama_bank" type="text" placeholder="Masukkan nama bank"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div v-if="['transfer_dan_pulsa', 'pulsa'].includes(metodePembayaran)">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Provider Seluler</label>
+                    <select v-model="formPeserta.provider_pulsa"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                      <option value="">Pilih Provider</option>
+                      <option value="Telkomsel">Telkomsel</option>
+                      <option value="Indosat">Indosat</option>
+                      <option value="XL">XL Axiata</option>
+                      <option value="Tri">Tri</option>
+                      <option value="Smartfren">Smartfren</option>
+                      <option value="Axis">Axis</option>
+                      <option value="By.U">By.U</option>
+                    </select>
+                  </div>
+                </div>
               </div>
+
+              <!-- Tandatangan Digital -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Provider Pulsa</label>
-                <select
-                  v-model="formPeserta.provider_pulsa"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Pilih Provider</option>
-                  <option value="Telkomsel">Telkomsel</option>
-                  <option value="Indosat">Indosat</option>
-                  <option value="XL">XL Axiata</option>
-                  <option value="Tri">Tri</option>
-                  <option value="Smartfren">Smartfren</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Rekening</label>
-                <input
-                  v-model="formPeserta.nomor_rekening"
-                  type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Nama Bank</label>
-                <input
-                  v-model="formPeserta.nama_bank"
-                  type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b-2 border-blue-500">Tandatangan Digital</h3>
+
+                <div v-if="signaturePreviewUrl && !signatureData" class="mb-4">
+                  <p class="text-sm text-slate-600 mb-2">Tandatangan saat ini:</p>
+                  <div class="relative inline-block border border-slate-300 rounded-lg p-2 bg-white">
+                    <img :src="signaturePreviewUrl" alt="Tandatangan" class="max-w-[300px] max-h-[200px] object-contain" />
+                    <button type="button" @click="signaturePreviewUrl = null"
+                      class="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs font-bold hover:bg-red-600 flex items-center justify-center">
+                      &times;
+                    </button>
+                  </div>
+                  <p class="text-xs text-slate-500 mt-1">Gambar di atas adalah tandatangan yang sudah tersimpan. Gambar baru di bawah akan menggantikannya.</p>
+                </div>
+
+                <p class="text-sm text-slate-600 mb-4">{{ signaturePreviewUrl && !signatureData ? 'Gambar baru tandatangan:' : 'Silakan tandatangani di area bawah ini dengan menggunakan mouse atau stylus.' }}</p>
+                <div class="relative border-2 border-dashed border-slate-300 rounded-lg p-4 mb-4 bg-slate-50" style="aspect-ratio: 1 / 1; width: 100%; max-width: 400px;">
+                  <button type="button" @click="clearSignature"
+                    class="absolute right-3 top-3 px-2 py-1 bg-white border border-slate-300 text-slate-700 rounded-md text-[11px] font-medium shadow-sm hover:bg-slate-100 transition-colors">
+                    Hapus Tandatangan
+                  </button>
+                  <canvas ref="signatureCanvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
+                    @mouseout="stopDrawing" @touchstart="startDrawing" @touchmove="draw" @touchend="stopDrawing"
+                    class="w-full h-full border border-slate-300 rounded-lg cursor-crosshair bg-white block"
+                    style="touch-action: none; outline: none;"></canvas>
+                </div>
               </div>
 
               <!-- Data Administrasi -->
-              <div class="md:col-span-2">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b-2 border-blue-500">Data Administrasi</h3>
-              </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">No. Penugasan</label>
-                <input
-                  v-model="formPeserta.no_surat_tugas"
-                  type="text"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <h3 class="text-lg font-semibold text-slate-800 mb-4 pb-2 border-b-2 border-blue-500">Data Administrasi</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">No. Penugasan</label>
+                    <input v-model="formPeserta.no_surat_tugas" type="text" placeholder="Masukkan nomor penugasan"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Tanggal Penugasan</label>
+                    <input v-model="formPeserta.tanggal_surat_tugas" type="date"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Peran</label>
+                    <select v-model="formPeserta.peran"
+                      class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                      <option value="">Pilih Peran</option>
+                      <option value="Peserta">Peserta</option>
+                      <option value="Narasumber">Narasumber</option>
+                      <option value="Fasilitator">Fasilitator</option>
+                      <option value="Panitia">Panitia</option>
+                    </select>
+                  </div>
+                </div>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Penugasan</label>
-                <input
-                  v-model="formPeserta.tanggal_surat_tugas"
-                  type="date"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Peran</label>
-                <select
-                  v-model="formPeserta.peran"
-                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">Pilih Peran</option>
-                  <option value="Peserta">Peserta</option>
-                  <option value="Narasumber">Narasumber</option>
-                  <option value="Fasilitator">Fasilitator</option>
-                  <option value="Panitia">Panitia</option>
-                </select>
-              </div>
-            </div>
 
-            <div v-if="formErrors.length > 0" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p class="text-red-800 font-semibold mb-2">Terdapat kesalahan:</p>
-              <ul class="list-disc list-inside text-red-700">
-                <li v-for="error in formErrors" :key="error">{{ error }}</li>
-              </ul>
-            </div>
+              <!-- Form Errors -->
+              <div v-if="formErrors.length > 0" class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p class="text-red-800 font-semibold mb-2">Terdapat kesalahan:</p>
+                <ul class="list-disc list-inside text-red-700">
+                  <li v-for="error in formErrors" :key="error">{{ error }}</li>
+                </ul>
+              </div>
 
-            <div class="flex gap-3 justify-end">
-              <button
-                @click="closeAddModal"
-                class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Batal
-              </button>
-              <button
-                @click="savePeserta"
-                class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all"
-              >
-                {{ editingPeserta ? 'Simpan Perubahan' : 'Tambah Peserta' }}
-              </button>
-            </div>
+              <!-- Buttons -->
+              <div class="flex gap-3 justify-end pt-4 border-t">
+                <button type="button" @click="closeAddModal"
+                  class="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium">
+                  Batal
+                </button>
+                <button type="submit"
+                  class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all font-medium">
+                  {{ editingPeserta ? 'Simpan Perubahan' : 'Tambah Peserta' }}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -1290,6 +1282,25 @@ export default {
       'Nota Bensin (Pulau Lombok)'
     ])
 
+    const kabKota = ref([
+      'Kabupaten Lombok Barat',
+      'Kabupaten Lombok Tengah',
+      'Kabupaten Lombok Timur',
+      'Kabupaten Lombok Utara',
+      'Kabupaten Sumbawa',
+      'Kabupaten Sumbawa Barat',
+      'Kabupaten Dompu',
+      'Kabupaten Bima',
+      'Kota Mataram',
+      'Kota Bima',
+      'Lainnya'
+    ])
+
+    const signatureCanvas = ref(null)
+    const signatureData = ref(null)
+    const signaturePreviewUrl = ref(null)
+    let isDrawing = false
+
     const searchNama = ref('')
     const filterKegiatan = ref(props.kegiatanId || '')
     const filterStatus = ref('')
@@ -1531,7 +1542,8 @@ export default {
       nama_bank: '',
       no_surat_tugas: '',
       tanggal_surat_tugas: '',
-      peran: ''
+      peran: '',
+      tandatangan: null
     })
 
     const selectedTemplateFile = ref(null)
@@ -1603,10 +1615,13 @@ export default {
         nama_bank: '',
         no_surat_tugas: '',
         tanggal_surat_tugas: '',
-        peran: ''
+        peran: '',
+        tandatangan: null
       }
       editingPeserta.value = false
       formErrors.value = []
+      signatureData.value = null
+      signaturePreviewUrl.value = null
     }
 
     const resetFormSertifikat = () => {
@@ -1628,8 +1643,15 @@ export default {
       if (!formPeserta.value.email) formErrors.value.push('Email wajib diisi')
       if (!formPeserta.value.nama_instansi) formErrors.value.push('Nama instansi wajib diisi')
       if (!formPeserta.value.id_kegiatan) formErrors.value.push('Kegiatan wajib dipilih')
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (formPeserta.value.email && !emailRegex.test(formPeserta.value.email)) {
+        formErrors.value.push('Format email tidak valid')
+      }
       if (formPeserta.value.npsn && !/^\d+$/.test(formPeserta.value.npsn)) {
         formErrors.value.push('NPSN hanya boleh berisi angka')
+      }
+      if (formPeserta.value.email_instansi && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formPeserta.value.email_instansi)) {
+        formErrors.value.push('Format email instansi tidak valid')
       }
       return formErrors.value.length === 0
     }
@@ -1645,6 +1667,95 @@ export default {
       if (!kegData) return []
       return getKegiatanLocationItems(kegData)
     })
+
+    const metodePembayaran = computed(() => {
+      const idKegiatan = formPeserta.value.id_kegiatan
+      if (!idKegiatan) return ''
+      const keg = getKegiatanById(idKegiatan)
+      return keg?.metode_pembayaran || ''
+    })
+
+    const initializeSignatureCanvas = () => {
+      setTimeout(() => {
+        const canvas = signatureCanvas.value
+        if (!canvas) return
+        const rect = canvas.getBoundingClientRect()
+        canvas.width = rect.width
+        canvas.height = rect.height
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#ffffff'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.strokeStyle = '#1e293b'
+        ctx.lineWidth = 2
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+      }, 100)
+    }
+
+    const startDrawing = (e) => {
+      e.preventDefault()
+      isDrawing = true
+      const canvas = signatureCanvas.value
+      if (!canvas) return
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width / rect.width
+      const scaleY = canvas.height / rect.height
+      const clientX = e.clientX !== undefined ? e.clientX : e.touches[0]?.clientX
+      const clientY = e.clientY !== undefined ? e.clientY : e.touches[0]?.clientY
+      if (clientX === undefined || clientY === undefined) return
+      const x = (clientX - rect.left) * scaleX
+      const y = (clientY - rect.top) * scaleY
+      const ctx = canvas.getContext('2d')
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+    }
+
+    const draw = (e) => {
+      if (!isDrawing) return
+      e.preventDefault()
+      const canvas = signatureCanvas.value
+      if (!canvas) return
+      signaturePreviewUrl.value = null
+      const rect = canvas.getBoundingClientRect()
+      const scaleX = canvas.width / rect.width
+      const scaleY = canvas.height / rect.height
+      const clientX = e.clientX !== undefined ? e.clientX : e.touches[0]?.clientX
+      const clientY = e.clientY !== undefined ? e.clientY : e.touches[0]?.clientY
+      if (clientX === undefined || clientY === undefined) return
+      const x = (clientX - rect.left) * scaleX
+      const y = (clientY - rect.top) * scaleY
+      const ctx = canvas.getContext('2d')
+      ctx.lineTo(x, y)
+      ctx.stroke()
+      signatureData.value = canvas.toDataURL('image/png')
+    }
+
+    const stopDrawing = () => {
+      isDrawing = false
+    }
+
+    const clearSignature = () => {
+      const canvas = signatureCanvas.value
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      signatureData.value = null
+      signaturePreviewUrl.value = null
+    }
+
+    const base64ToFile = (dataUrl, filename = 'tanda_tangan.png') => {
+      const arr = dataUrl.split(',')
+      const mime = arr[0].match(/:(.*?);/)[1]
+      const bstr = atob(arr[1])
+      let n = bstr.length
+      const u8arr = new Uint8Array(n)
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n)
+      }
+      return new File([u8arr], filename, { type: mime })
+    }
 
     const validateFormSertifikat = () => {
       formErrors.value = []
@@ -2792,6 +2903,16 @@ export default {
         editingPeserta.value = true
         showDetailModal.value = false
         showAddModal.value = true
+        signatureData.value = null
+        signaturePreviewUrl.value = null
+
+        const rawSignature = targetPeserta.tanda_tangan || targetPeserta.tanda_tangan_url || targetPeserta.tandatangan
+        if (rawSignature) {
+          signaturePreviewUrl.value = /^(https?:)?\/\//.test(rawSignature) || rawSignature.startsWith('data:')
+            ? rawSignature
+            : buildStorageUrl(rawSignature.replace(/^storage\//, ''))
+        }
+        initializeSignatureCanvas()
       }
     }
 
@@ -2802,7 +2923,24 @@ export default {
 
     const savePeserta = async () => {
       if (!validateFormPeserta()) return
-      const payload = { ...formPeserta.value }
+
+      if (formPeserta.value.pangkat && formPeserta.value.pangkat.includes(' / ')) {
+        const parts = formPeserta.value.pangkat.split(' / ')
+        if (!formPeserta.value.gol && parts.length > 1) {
+          formPeserta.value.gol = parts[1].trim()
+        }
+      }
+
+      const cleanPayload = (obj) => {
+        const cleaned = {}
+        Object.entries(obj).forEach(([key, val]) => {
+          if (key === 'tandatangan' || key === 'tanda_tangan') return
+          if (val === undefined || val === null) return
+          if (typeof val === 'string' && val.trim() === '') return
+          cleaned[key] = val
+        })
+        return cleaned
+      }
 
       try {
         if (editingPeserta.value) {
@@ -2811,10 +2949,43 @@ export default {
             return
           }
 
-          await updateAPI('peserta', formPeserta.value.id_peserta, payload)
+          if (signatureData.value) {
+            const fd = new FormData()
+            const cleaned = cleanPayload(formPeserta.value)
+            Object.entries(cleaned).forEach(([key, val]) => {
+              fd.append(key, val)
+            })
+            try {
+              const file = base64ToFile(signatureData.value, `tanda_tangan_${Date.now()}.png`)
+              fd.append('tanda_tangan', file)
+            } catch (e) {
+              console.warn('Gagal konversi tanda_tangan ke file', e)
+            }
+            fd.append('_method', 'PUT')
+            await postAPI(`peserta/${formPeserta.value.id_peserta}`, fd)
+          } else {
+            const payload = cleanPayload(formPeserta.value)
+            await updateAPI('peserta', formPeserta.value.id_peserta, payload)
+          }
           ActivityEvents.UPDATE_PESERTA(formPeserta.value.nama_lengkap)
         } else {
-          await postAPI('peserta', payload)
+          if (signatureData.value) {
+            const fd = new FormData()
+            const cleaned = cleanPayload(formPeserta.value)
+            Object.entries(cleaned).forEach(([key, val]) => {
+              fd.append(key, val)
+            })
+            try {
+              const file = base64ToFile(signatureData.value, `tanda_tangan_${Date.now()}.png`)
+              fd.append('tanda_tangan', file)
+            } catch (e) {
+              console.warn('Gagal konversi tanda_tangan ke file', e)
+            }
+            await postAPI('peserta', fd)
+          } else {
+            const payload = cleanPayload(formPeserta.value)
+            await postAPI('peserta', payload)
+          }
           ActivityEvents.CREATE_PESERTA(formPeserta.value.nama_lengkap)
         }
         await loadPesertaFromAPI(true)
@@ -3532,7 +3703,16 @@ export default {
       getPesertaKegiatanId,
       getPesertaNamaKegiatan,
       getPesertaWaktuKegiatan,
-      getPesertaLokasiKegiatan
+      getPesertaLokasiKegiatan,
+      kabKota,
+      metodePembayaran,
+      signatureCanvas,
+      signatureData,
+      signaturePreviewUrl,
+      startDrawing,
+      draw,
+      stopDrawing,
+      clearSignature
     }
   }
 }
