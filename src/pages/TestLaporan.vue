@@ -13,6 +13,11 @@
         </div>
         <p class="text-slate-500 text-sm">{{ kegiatanData?.nama_kegiatan || 'Memuat...' }}</p>
       </div>
+      <button @click="exportExcel" :disabled="filteredData.length === 0"
+        :class="['px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2', filteredData.length === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-emerald-600 text-white hover:bg-emerald-700']">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        Export Excel
+      </button>
     </div>
 
     <!-- Ringkasan -->
@@ -73,8 +78,14 @@
     </div>
 
     <!-- Detail Peserta -->
-    <div v-if="detailData" class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 mb-6">
-      <h2 class="text-lg font-semibold text-slate-700 mb-4">Detail Peserta</h2>
+    <div v-if="detailData" ref="detailSection" class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-slate-700">Detail Peserta</h2>
+        <button @click="cetakPDF" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          Cetak PDF
+        </button>
+      </div>
 
       <!-- Data Diri -->
       <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 mb-4">
@@ -141,6 +152,7 @@
 <script>
 import { getKegiatan } from '@/services/kegiatan'
 import { getLaporanByKegiatan, getLaporanDetail } from '@/services/test'
+import * as XLSX from 'xlsx'
 
 export default {
   name: 'TestLaporan',
@@ -201,11 +213,89 @@ export default {
       try {
         this.detailData = await getLaporanDetail(this.idKegiatan, idPeserta, idPaketSoal)
         this.$nextTick(() => {
-          this.$el.querySelector('.bg-white.rounded-xl.border:nth-child(3)')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          this.$refs.detailSection?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         })
       } catch {
         this.detailData = null
       }
+    },
+    cetakPDF() {
+      if (!this.detailData) return
+      const d = this.detailData
+      const p = d.peserta
+      const r = d.ringkasan
+
+      const rows = d.detail.map((item, i) => {
+        const pilihan = ['a', 'b', 'c', 'd'].map(h => {
+          let cls = ''
+          if (h === item.jawaban_benar) cls = 'color:#15803d;font-weight:700'
+          if (h === item.jawaban_peserta && h !== item.jawaban_benar) cls = 'color:#dc2626;text-decoration:line-through'
+          let label = ''
+          if (h === item.jawaban_benar) label = ' <span style="background:#bbf7d0;color:#15803d;padding:1px 6px;border-radius:4px;font-size:11px">Kunci</span>'
+          if (h === item.jawaban_peserta && h !== item.jawaban_benar) label += ' <span style="background:#fecaca;color:#dc2626;padding:1px 6px;border-radius:4px;font-size:11px">Jawaban</span>'
+          return `<p style="${cls};margin:2px 0 2px 16px;font-size:13px">${h.toUpperCase()}. ${item['pilihan_' + h]}${label}</p>`
+        }).join('')
+
+        return '<div style="margin-bottom:12px;padding:10px;border-radius:8px;border:1px solid ' + (item.is_correct ? '#bbf7d0' : '#fecaca') + ';background:' + (item.is_correct ? '#f0fdf4' : '#fef2f2') + '">' +
+          '<div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:4px">' +
+          '<strong style="font-size:13px">' + (i + 1) + '. ' + item.pertanyaan + '</strong>' +
+          '<span style="font-size:11px;padding:2px 8px;border-radius:12px;font-weight:600;background:' + (item.is_correct ? '#bbf7d0' : '#fecaca') + ';color:' + (item.is_correct ? '#15803d' : '#dc2626') + '">' + (item.is_correct ? 'Benar' : 'Salah') + '</span>' +
+          '</div>' + pilihan + '</div>'
+      }).join('')
+
+      const html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Hasil Ujian - ' + p.nama_lengkap + '</title>' +
+        '<style>@media print { @page { margin: 15mm; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style>' +
+        '</head><body style="font-family:Arial,sans-serif;color:#1e293b;max-width:800px;margin:0 auto">' +
+        '<h2 style="margin:0 0 4px">Hasil Ujian</h2>' +
+        '<p style="color:#64748b;margin:0 0 16px;font-size:14px">' + (this.kegiatanData?.nama_kegiatan || '') + '</p>' +
+        '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:16px">' +
+        '<tr><td style="padding:4px 0;color:#64748b;width:120px">Nama</td><td style="font-weight:600">' + p.nama_lengkap + '</td></tr>' +
+        '<tr><td style="padding:4px 0;color:#64748b">NIP</td><td>' + (p.nip || '-') + '</td></tr>' +
+        '<tr><td style="padding:4px 0;color:#64748b">Jabatan</td><td>' + (p.jabatan || '-') + '</td></tr>' +
+        '<tr><td style="padding:4px 0;color:#64748b">Instansi</td><td>' + (p.nama_instansi || '-') + '</td></tr>' +
+        '</table>' +
+        '<div style="display:flex;gap:12px;margin-bottom:20px">' +
+        '<div style="flex:1;text-align:center;padding:12px;border-radius:8px;background:#eff6ff;border:1px solid #bfdbfe"><div style="font-size:24px;font-weight:700;color:#1d4ed8">' + r.total_soal + '</div><div style="font-size:11px;color:#3b82f6">Total</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0"><div style="font-size:24px;font-weight:700;color:#15803d">' + r.jawaban_benar + '</div><div style="font-size:11px;color:#22c55e">Benar</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;border-radius:8px;background:#fef2f2;border:1px solid #fecaca"><div style="font-size:24px;font-weight:700;color:#dc2626">' + r.jawaban_salah + '</div><div style="font-size:11px;color:#ef4444">Salah</div></div>' +
+        '<div style="flex:1;text-align:center;padding:12px;border-radius:8px;background:#fffbeb;border:1px solid #fde68a"><div style="font-size:24px;font-weight:700;color:#d97706">' + r.skor + '</div><div style="font-size:11px;color:#f59e0b">Skor</div></div>' +
+        '</div>' +
+        '<h3 style="font-size:15px;margin:0 0 10px">Detail Jawaban</h3>' +
+        rows +
+        '<' + 'script>window.onload=function(){window.print()}<' + '/script>' +
+        '</body></html>'
+
+      const win = window.open('', '_blank')
+      win.document.write(html)
+      win.document.close()
+    },
+    exportExcel() {
+      if (this.filteredData.length === 0) return
+
+      const rows = this.filteredData.map((d, i) => ({
+        'No': i + 1,
+        'Nama Peserta': d.nama_peserta,
+        'NIP': d.nip || '',
+        'Jabatan': d.jabatan || '',
+        'Instansi': d.nama_instansi || '',
+        'Paket Soal': d.nama_paket,
+        'Total Soal': d.total_soal,
+        'Jawaban Benar': d.jawaban_benar,
+        'Jawaban Salah': d.jawaban_salah,
+        'Skor': d.skor,
+      }))
+
+      const ws = XLSX.utils.json_to_sheet(rows)
+      ws['!cols'] = [
+        { wch: 5 }, { wch: 25 }, { wch: 20 }, { wch: 20 }, { wch: 25 },
+        { wch: 20 }, { wch: 10 }, { wch: 12 }, { wch: 12 }, { wch: 8 },
+      ]
+
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Hasil Test')
+
+      const nama = (this.kegiatanData?.nama_kegiatan || 'kegiatan').replace(/[^a-zA-Z0-9]/g, '_').substring(0, 50)
+      XLSX.writeFile(wb, `hasil_test_${nama}.xlsx`)
     },
     formatPangkat(p) {
       if (p?.pangkat && p?.gol) return `${p.pangkat} / ${p.gol}`

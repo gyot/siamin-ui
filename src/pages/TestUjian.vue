@@ -117,7 +117,7 @@
             <p class="font-semibold text-slate-800 mb-3">{{ index + 1 }}. {{ soal.pertanyaan }}</p>
             <div class="space-y-2">
               <label
-                v-for="huruf in ['a', 'b', 'c', 'd']"
+                v-for="huruf in (pilihanOrder[soal.id_soal] || ['a', 'b', 'c', 'd'])"
                 :key="huruf"
                 :class="[
                   'flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition',
@@ -234,6 +234,7 @@ export default {
       selectedPeserta: null,
       selectedPaketId: '',
       jawaban: {},
+      pilihanOrder: {},
       submitting: false,
       hasilData: null,
       alert: { show: false, type: 'error', message: '' },
@@ -299,16 +300,29 @@ export default {
       this.soalList = []
       this.hasilData = null
       this.jawaban = {}
+      this.pilihanOrder = {}
 
       if (!this.selectedPaketId) return
 
       try {
         const data = await getSoalByPaket(this.selectedPaketId)
-        this.soalList = data?.soals || []
-        this.soalList.forEach(s => { this.jawaban[s.id_soal] = null })
+        const soals = data?.soals || []
+        this.soalList = this.shuffleArray(soals)
+        this.soalList.forEach(s => {
+          this.jawaban[s.id_soal] = null
+          this.pilihanOrder[s.id_soal] = this.shuffleArray(['a', 'b', 'c', 'd'])
+        })
       } catch {
         this.showAlert('Gagal memuat soal', 'error')
       }
+    },
+    shuffleArray(arr) {
+      const shuffled = [...arr]
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      }
+      return shuffled
     },
     async submitAnswers() {
       const unanswered = this.soalList.find(s => !this.jawaban[s.id_soal])
