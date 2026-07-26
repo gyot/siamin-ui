@@ -338,14 +338,31 @@ export default {
       const slug = slugify(judul)
       const item = kegiatan.value || {}
       const roles = ['Peserta', 'Panitia', 'Narasumber', 'Pendamping']
-      const roleLinks = roles.map((role) => {
-        const dbLinks = getRoleLinksFromKegiatan(item, role)
-        return {
-          label: `Form ${role}`,
-          url: dbLinks.formUrl || buildPublicUrl(`/formulir/${kode}/${role}/${slug}`),
-          templateUrl: dbLinks.templateUrl
+      const tpkItems = getKegiatanLocationItems(kegiatan.value)
+      const roleLinks = []
+
+      if (tpkItems.length > 0) {
+        for (const tpk of tpkItems) {
+          const namaTpk = tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi
+          for (const role of roles) {
+            const dbLinks = getRoleLinksFromKegiatan(item, role)
+            roleLinks.push({
+              label: `${role} - ${namaTpk}`,
+              url: dbLinks.formUrl || buildPublicUrl(`/formulir/${kode}/${role}/${tpk.id_tpk}/${slug}`),
+              templateUrl: dbLinks.templateUrl
+            })
+          }
         }
-      })
+      } else {
+        for (const role of roles) {
+          const dbLinks = getRoleLinksFromKegiatan(item, role)
+          roleLinks.push({
+            label: `Form ${role}`,
+            url: dbLinks.formUrl || buildPublicUrl(`/formulir/${kode}/${role}/${slug}`),
+            templateUrl: dbLinks.templateUrl
+          })
+        }
+      }
 
       return [
         ...roleLinks,
@@ -355,9 +372,12 @@ export default {
     })
 
     const visibleBiodataLinks = computed(() => {
-      return isWithinKegiatanDateRange.value
-        ? biodataLinks.value
-        : biodataLinks.value.filter(item => !item.label.toLowerCase().startsWith('form'))
+      if (isWithinKegiatanDateRange.value) return biodataLinks.value
+      const roles = ['peserta', 'panitia', 'narasumber', 'pendamping']
+      return biodataLinks.value.filter(item => {
+        const lower = item.label.toLowerCase()
+        return !roles.some(r => lower.startsWith(`form ${r}`) || lower.startsWith(`${r} -`))
+      })
     })
 
     const resourceLinks = computed(() => {
