@@ -2739,6 +2739,8 @@ export default {
         const waktu = formatDateRange(kegiatanData.tanggal_mulai, kegiatanData.tanggal_selesai)
         const lokasi = kegiatanData.lokasi || '-'
         const daftarAtk = kegiatanData.daftar_atk || []
+        const sigLokasi = p.kab_kota || p.kabupaten_kota || kegiatanData.lokasi || '-'
+        const sigTanggal = formatDate(kegiatanData.tanggal_mulai)
 
         return `
           <div class="biodata-card">
@@ -2764,6 +2766,12 @@ export default {
             <div class="tables-row">
               ${buildAdministrasiTableHTML()}
               ${buildKelengkapanTableHTML(daftarAtk)}
+            </div>
+            <div class="signature-section">
+              <div class="signature-meta">${sigLokasi}, ${sigTanggal}</div>
+              <div style="height: 80px;"></div>
+              <div class="signature-name">${p.nama_lengkap || '-'}</div>
+              <div class="signature-nip">NIP ${p.nip || '-'}</div>
             </div>
           </div>
         `
@@ -2791,6 +2799,10 @@ export default {
             table { width: 100%; border-collapse: collapse; font-size: 11pt; page-break-inside: avoid; }
             th, td { border: 1px solid #000; padding: 3px 6px; text-align: left; font-size: 11pt; }
             th { background-color: #f0f0f0 !important; font-weight: bold; text-align: center; }
+            .signature-section { margin-top: 10px; text-align: right; page-break-inside: avoid; }
+            .signature-meta { margin-bottom: 4px; font-weight: 600; }
+            .signature-name { font-weight: 600; margin-top: 2px; }
+            .signature-nip { margin-top: 1px; }
             .page-break { page-break-after: always; margin: 30px 0; }
             @media print {
               * { font-size: 14pt !important; }
