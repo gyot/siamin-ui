@@ -49,6 +49,13 @@
           >
             Cetak Semua Biodata
           </button>
+          <button
+            @click="printAllBiodataNoSignature"
+            :disabled="filteredPeserta.length === 0"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-slate-500 text-white rounded-lg hover:bg-slate-600 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            Cetak Semua Biodata (Tanpa TTD)
+          </button>
           <!-- <button
             @click="showAddModal = true"
             class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base"
@@ -2717,6 +2724,90 @@ export default {
       })
     }
 
+    const printAllBiodataNoSignature = async () => {
+      if (!filteredPeserta.value || filteredPeserta.value.length === 0) return
+
+      const printWindow = window.open('', '', 'width=1200,height=800')
+      if (!printWindow) return
+
+      const sections = filteredPeserta.value.map((p, index) => {
+        const kegiatanData = resolveKegiatanData(p)
+        const namaKegiatan = kegiatanData.nama_kegiatan || getNamaKegiatan(getPesertaKegiatanId(p)) || '-'
+        const pangkatGolongan = [p.pangkat, p.gol].filter(Boolean).join(' / ') || '-'
+        const kabupatenKota = p.kab_kota || p.kabupaten_kota || '-'
+        const peran = p.peran || 'Peserta'
+        const waktu = formatDateRange(kegiatanData.tanggal_mulai, kegiatanData.tanggal_selesai)
+        const lokasi = kegiatanData.lokasi || '-'
+        const daftarAtk = kegiatanData.daftar_atk || []
+
+        return `
+          <div class="biodata-card">
+            <div class="text-center mb-4">
+              <h2>Biodata</h2>
+            </div>
+            <div class="info-section mb-4">
+              <div class="info-row"><div class="info-label">Kegiatan</div><div class="info-separator">:</div><div class="info-value">${namaKegiatan}</div></div>
+              <div class="info-row"><div class="info-label">Waktu</div><div class="info-separator">:</div><div class="info-value">${waktu}</div></div>
+              <div class="info-row"><div class="info-label">Tempat</div><div class="info-separator">:</div><div class="info-value">${lokasi}</div></div>
+            </div>
+            <div class="info-section">
+              <div class="info-row"><div class="info-label">1. Nama</div><div class="info-separator">:</div><div class="info-value">${p.nama_lengkap || '-'}</div></div>
+              <div class="info-row"><div class="info-label">2. NIP</div><div class="info-separator">:</div><div class="info-value">${p.nip || '-'}</div></div>
+              <div class="info-row"><div class="info-label">3. Pangkat/Golongan</div><div class="info-separator">:</div><div class="info-value">${pangkatGolongan}</div></div>
+              <div class="info-row"><div class="info-label">4. Nama Instansi</div><div class="info-separator">:</div><div class="info-value">${p.nama_instansi || '-'}</div></div>
+              <div class="info-row"><div class="info-label">5. Jabatan Kedinasan</div><div class="info-separator">:</div><div class="info-value">${p.jabatan_kedinasan || p.jabatan || '-'}</div></div>
+              <div class="info-row"><div class="info-label">6. Kabupaten/Kota</div><div class="info-separator">:</div><div class="info-value">${kabupatenKota}</div></div>
+              <div class="info-row"><div class="info-label">7. No. HP/WhatsApp</div><div class="info-separator">:</div><div class="info-value">${p.no_hp || '-'}</div></div>
+              <div class="info-row"><div class="info-label">8. E-Mail</div><div class="info-separator">:</div><div class="info-value">${p.email || '-'}</div></div>
+              <div class="info-row"><div class="info-label">9. Peran Dalam Kegiatan</div><div class="info-separator">:</div><div class="info-value">${peran}</div></div>
+            </div>
+            <div class="tables-row">
+              ${buildAdministrasiTableHTML()}
+              ${buildKelengkapanTableHTML(daftarAtk)}
+            </div>
+          </div>
+        `
+      }).join('<div class="page-break"></div>')
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Biodata</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { font-family: 'Times New Roman', Times, serif; font-size: 14pt; line-height: 1; padding: 15mm; color: #000; }
+            .text-center { text-align: center; }
+            h2 { font-size: 25pt; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
+            .info-section { margin-bottom: 10px; }
+            .info-row { display: flex; margin-bottom: 3px; }
+            .info-label { width: 220px; font-weight: 600; }
+            .info-separator { width: 20px; text-align: center; }
+            .info-value { flex: 1; }
+            .biodata-card { page-break-inside: avoid; }
+            .tables-row { display: flex; gap: 10px; margin-bottom: 10px; page-break-inside: avoid; flex-wrap: wrap; }
+            .table-box { flex: 1; min-width: 0; }
+            .table-title { font-weight: 600; border: 1px solid #000; background-color: #f5f5f5; padding: 4px; margin-bottom: 4px; text-align: center; font-size: 14pt; }
+            table { width: 100%; border-collapse: collapse; font-size: 11pt; page-break-inside: avoid; }
+            th, td { border: 1px solid #000; padding: 3px 6px; text-align: left; font-size: 11pt; }
+            th { background-color: #f0f0f0 !important; font-weight: bold; text-align: center; }
+            .page-break { page-break-after: always; margin: 30px 0; }
+            @media print {
+              * { font-size: 14pt !important; }
+              @page { margin: 15mm; size: A4; }
+              body { padding: 15mm; }
+              .page-break { display: block; }
+            }
+          </style>
+        </head>
+        <body>${sections}</body>
+        </html>
+      `)
+      printWindow.document.close()
+      printWindow.focus()
+      printWindow.print()
+    }
+
     const generateBiodataHTML = (content) => {
       // Extract data from the cloned content
       const h2 = content.querySelector('h2')?.textContent || 'BIODATA'
@@ -3692,6 +3783,7 @@ export default {
       openAllBiodataModal,
       closeAllBiodataModal,
       printAllBiodata,
+      printAllBiodataNoSignature,
       getPesertaBiodata,
       isKegiatanCreator,
       openBatchSertifikatModal,
