@@ -761,6 +761,37 @@
         </div>
 
         <div class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Paket Soal Ujian</h4>
+          <div v-if="paketSoalItems.length > 0" class="overflow-x-auto border border-slate-200 rounded-lg">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                  <th class="px-4 py-2 text-left w-12">No</th>
+                  <th class="px-4 py-2 text-left">Nama Paket</th>
+                  <th class="px-4 py-2 text-left">Deskripsi</th>
+                  <th class="px-4 py-2 text-center">Jumlah Soal</th>
+                  <th class="px-4 py-2 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, idx) in paketSoalItems" :key="idx" class="border-t">
+                  <td class="px-4 py-2">{{ idx + 1 }}</td>
+                  <td class="px-4 py-2 font-medium text-slate-800">{{ item.nama_paket }}</td>
+                  <td class="px-4 py-2 text-slate-600">{{ item.deskripsi || '-' }}</td>
+                  <td class="px-4 py-2 text-center">{{ item.soals_count ?? item.soal_count ?? '-' }}</td>
+                  <td class="px-4 py-2 text-center">
+                    <span :class="['text-xs px-2 py-1 rounded-full font-medium', item.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500']">
+                      {{ item.is_active ? 'Aktif' : 'Nonaktif' }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="text-sm text-slate-600">Tidak ada paket soal.</div>
+        </div>
+
+        <div class="border-b border-slate-100 pb-6">
           <h4 class="text-lg font-semibold text-slate-800 mb-4">Resource URL</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
             <div>
@@ -2233,6 +2264,7 @@ export default {
         formData.value = normalizeKegiatanFormData(selectedKegiatan.value)
         loadKegiatanAtkItems(selectedKegiatan.value)
         loadKegiatanTpkItems(selectedKegiatan.value)
+        loadKegiatanPaketSoal(selectedKegiatan.value)
         editingId.value = null
         isViewing.value = true
         showAddModal.value = true
@@ -2254,6 +2286,8 @@ export default {
         showAddModal.value = true
         loadKegiatanAtkItems(selectedKegiatan.value)
         loadKegiatanTpkItems(selectedKegiatan.value)
+        loadKegiatanPaketSoal(selectedKegiatan.value)
+        loadAllPaketSoal()
       }
     }
 
