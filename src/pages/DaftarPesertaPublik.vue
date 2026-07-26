@@ -36,7 +36,7 @@
               class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
-          <div>
+          <div class="flex flex-col gap-2">
             <label class="block text-sm font-medium text-slate-700 mb-2">Baris per halaman</label>
             <select
               v-model.number="rowsPerPage"
@@ -47,6 +47,13 @@
               <option :value="50">50</option>
               <option :value="100">100</option>
             </select>
+            <button
+              @click="printAllBiodataNoSignature"
+              :disabled="filteredPeserta.length === 0"
+              class="w-full px-4 py-2.5 bg-slate-700 text-white rounded-lg hover:bg-slate-800 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Cetak Semua Biodata (Tanpa TTD)
+            </button>
           </div>
         </div>
       </div>
@@ -284,6 +291,132 @@ export default {
       if (currentPage.value > newTotal) currentPage.value = newTotal
     })
 
+    const formatDate = (dateString) => {
+      if (!dateString) return '-'
+      try {
+        return new Date(dateString).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
+      } catch {
+        return dateString
+      }
+    }
+
+    const printAllBiodataNoSignature = () => {
+      if (!filteredPeserta.value || filteredPeserta.value.length === 0) return
+
+      const namaKegiatan = kegiatan.value?.nama_kegiatan || '-'
+      const tanggalMulai = kegiatan.value?.tanggal_mulai || ''
+      const tanggalSelesai = kegiatan.value?.tanggal_selesai || ''
+      const waktu = tanggalMulai && tanggalSelesai
+        ? `${formatDate(tanggalMulai)} - ${formatDate(tanggalSelesai)}`
+        : '-'
+      const lokasi = kegiatan.value?.lokasi || '-'
+      const daftarAtk = kegiatan.value?.daftar_atk || []
+
+      const buildAtkRows = () => {
+        const items = daftarAtk.length > 0 ? daftarAtk : Array.from({ length: 5 }, () => ({}))
+        return items.map((atk, i) => `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${atk.nama_barang || '-'}</td>
+            <td>${atk.jumlah !== undefined && atk.jumlah !== null ? atk.jumlah : '-'}</td>
+          </tr>
+        `).join('')
+      }
+
+      const sections = filteredPeserta.value.map((p, idx) => {
+        const pangkatGol = [p.pangkat, p.gol].filter(Boolean).join(' / ') || '-'
+        const kabKota = p.kab_kota || p.kabupaten_kota || '-'
+        const peran = p.peran || 'Peserta'
+
+        return `
+          <div class="biodata-card">
+            <div class="text-center mb-4">
+              <h2>Biodata</h2>
+            </div>
+            <div class="info-section mb-4">
+              <div class="info-row"><div class="info-label">Kegiatan</div><div class="info-separator">:</div><div class="info-value">${namaKegiatan}</div></div>
+              <div class="info-row"><div class="info-label">Waktu</div><div class="info-separator">:</div><div class="info-value">${waktu}</div></div>
+              <div class="info-row"><div class="info-label">Tempat</div><div class="info-separator">:</div><div class="info-value">${lokasi}</div></div>
+            </div>
+            <div class="info-section">
+              <div class="info-row"><div class="info-label">1. Nama</div><div class="info-separator">:</div><div class="info-value">${p.nama_lengkap || '-'}</div></div>
+              <div class="info-row"><div class="info-label">2. NIP</div><div class="info-separator">:</div><div class="info-value">${p.nip || '-'}</div></div>
+              <div class="info-row"><div class="info-label">3. Pangkat/Golongan</div><div class="info-separator">:</div><div class="info-value">${pangkatGol}</div></div>
+              <div class="info-row"><div class="info-label">4. Nama Instansi</div><div class="info-separator">:</div><div class="info-value">${p.nama_instansi || '-'}</div></div>
+              <div class="info-row"><div class="info-label">5. Jabatan Kedinasan</div><div class="info-separator">:</div><div class="info-value">${p.jabatan || '-'}</div></div>
+              <div class="info-row"><div class="info-label">6. Kabupaten/Kota</div><div class="info-separator">:</div><div class="info-value">${kabKota}</div></div>
+              <div class="info-row"><div class="info-label">7. No. HP/WhatsApp</div><div class="info-separator">:</div><div class="info-value">${p.no_hp || '-'}</div></div>
+              <div class="info-row"><div class="info-label">8. E-Mail</div><div class="info-separator">:</div><div class="info-value">${p.email || '-'}</div></div>
+              <div class="info-row"><div class="info-label">9. Peran Dalam Kegiatan</div><div class="info-separator">:</div><div class="info-value">${peran}</div></div>
+            </div>
+            <div class="tables-row">
+              <div class="table-box">
+                <div class="table-title">Ceklist Kelengkapan Administrasi</div>
+                <table>
+                  <thead><tr><th>No</th><th>Dokumen</th><th>&#10003;</th></tr></thead>
+                  <tbody>
+                    <tr><td>1</td><td>Penugasan</td><td></td></tr>
+                    <tr><td>2</td><td>SPPD</td><td></td></tr>
+                    <tr><td>3</td><td>Tiket Pergi</td><td></td></tr>
+                    <tr><td>4</td><td>Tiket Pulang</td><td></td></tr>
+                    <tr><td>5</td><td>Nota Bensin</td><td></td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="table-box">
+                <div class="table-title">Kelengkapan Kegiatan</div>
+                <table>
+                  <thead><tr><th>No</th><th>Nama Barang</th><th>Jumlah</th></tr></thead>
+                  <tbody>${buildAtkRows()}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        `
+      }).join('<div class="page-break"></div>')
+
+      const printWindow = window.open('', '', 'width=1200,height=800')
+      if (!printWindow) return
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Biodata</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { font-family: 'Times New Roman', Times, serif; font-size: 14pt; line-height: 1; padding: 15mm; color: #000; }
+            .text-center { text-align: center; }
+            h2 { font-size: 25pt; font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
+            .info-section { margin-bottom: 10px; }
+            .info-row { display: flex; margin-bottom: 3px; }
+            .info-label { width: 220px; font-weight: 600; }
+            .info-separator { width: 20px; text-align: center; }
+            .info-value { flex: 1; }
+            .biodata-card { page-break-inside: avoid; }
+            .tables-row { display: flex; gap: 10px; margin-bottom: 10px; page-break-inside: avoid; flex-wrap: wrap; }
+            .table-box { flex: 1; min-width: 0; }
+            .table-title { font-weight: 600; border: 1px solid #000; background-color: #f5f5f5; padding: 4px; margin-bottom: 4px; text-align: center; font-size: 14pt; }
+            table { width: 100%; border-collapse: collapse; font-size: 11pt; page-break-inside: avoid; }
+            th, td { border: 1px solid #000; padding: 3px 6px; text-align: left; font-size: 11pt; }
+            th { background-color: #f0f0f0 !important; font-weight: bold; text-align: center; }
+            .page-break { page-break-after: always; margin: 30px 0; }
+            @media print {
+              * { font-size: 14pt !important; }
+              @page { margin: 15mm; size: A4; }
+              body { padding: 15mm; }
+              .page-break { display: block; }
+            }
+          </style>
+        </head>
+        <body>${sections}</body>
+        </html>
+      `)
+      printWindow.document.close()
+      printWindow.focus()
+      printWindow.print()
+    }
+
     onMounted(loadData)
 
     return {
@@ -302,7 +435,8 @@ export default {
       setSort,
       sortIndicator,
       prevPage,
-      nextPage
+      nextPage,
+      printAllBiodataNoSignature
     }
   }
 }
