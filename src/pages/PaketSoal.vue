@@ -26,8 +26,8 @@
           <thead>
             <tr class="border-b border-slate-200">
               <th class="text-left py-3 px-4 font-semibold text-slate-600">Nama Paket</th>
-              <th class="text-left py-3 px-4 font-semibold text-slate-600">Kegiatan</th>
               <th class="text-center py-3 px-4 font-semibold text-slate-600">Jumlah Soal</th>
+              <th class="text-center py-3 px-4 font-semibold text-slate-600">Digunakan</th>
               <th class="text-center py-3 px-4 font-semibold text-slate-600">Status</th>
               <th class="text-center py-3 px-4 font-semibold text-slate-600">Aksi</th>
             </tr>
@@ -43,8 +43,8 @@
               <td class="py-3 px-4">
                 <button @click="openSoalEditor(p)" class="font-medium text-blue-600 hover:text-blue-800 hover:underline">{{ p.nama_paket }}</button>
               </td>
-              <td class="py-3 px-4 text-slate-600">{{ p.kegiatan?.nama_kegiatan || '-' }}</td>
               <td class="py-3 px-4 text-center">{{ p.soals_count }}</td>
+              <td class="py-3 px-4 text-center text-xs text-slate-500">{{ (p.kegiatans?.length ?? 0) }} kegiatan</td>
               <td class="py-3 px-4 text-center">
                 <span :class="['text-xs px-2 py-1 rounded-full font-medium', p.is_active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500']">
                   {{ p.is_active ? 'Aktif' : 'Nonaktif' }}
