@@ -349,6 +349,67 @@
               </div>
             </div>
             <div class="md:col-span-2">
+              <div class="flex items-center justify-between mb-4">
+                <h5 class="text-sm font-semibold text-slate-700">Paket Soal Ujian</h5>
+              </div>
+
+              <div v-if="paketSoalItems.length > 0" class="mb-4 border border-slate-200 rounded-lg overflow-x-auto">
+                <table class="w-full min-w-[400px] text-sm">
+                  <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th class="text-left px-4 py-2 w-12">No</th>
+                      <th class="text-left px-4 py-2">Nama Paket</th>
+                      <th class="text-center px-4 py-2">Jumlah Soal</th>
+                      <th class="text-right px-4 py-2 w-20">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    <tr v-for="(item, index) in paketSoalItems" :key="item.id_paket_soal">
+                      <td class="px-4 py-2">{{ index + 1 }}</td>
+                      <td class="px-4 py-2 text-slate-700">{{ item.nama_paket }}</td>
+                      <td class="px-4 py-2 text-center text-slate-600">{{ item.soals_count ?? item.soal_count ?? '-' }}</td>
+                      <td class="px-4 py-2 text-right">
+                        <button type="button" @click="removePaketSoalItem(index)" class="text-xs text-red-600 hover:text-red-700">Hapus</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="flex gap-3 items-end">
+                <div class="flex-1 relative">
+                  <label class="block text-sm font-medium text-slate-700 mb-2">Tambah Paket Soal</label>
+                  <input
+                    v-model="paketSoalSearch"
+                    @input="searchPaketSoal"
+                    @focus="onPaketSoalFocus"
+                    @blur="setTimeout(() => showPaketSoalDropdown = false, 200)"
+                    type="text"
+                    placeholder="Klik atau ketik untuk mencari paket soal..."
+                    class="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none text-sm"
+                  />
+                  <div v-if="showPaketSoalDropdown"
+                    class="absolute z-10 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    <div v-if="paketSoalLoading" class="px-4 py-3 text-sm text-slate-400 text-center">Memuat paket soal...</div>
+                    <template v-else-if="filteredPaketSoal.length > 0">
+                      <button
+                        v-for="p in filteredPaketSoal" :key="p.id_paket_soal"
+                        @mousedown.prevent="addPaketSoalItem(p)"
+                        type="button"
+                        class="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 transition flex items-center justify-between"
+                      >
+                        <span class="text-slate-800">{{ p.nama_paket }}</span>
+                        <span class="text-xs text-slate-400">{{ p.soals_count ?? 0 }} soal</span>
+                      </button>
+                    </template>
+                    <div v-else class="px-4 py-3 text-sm text-slate-400 text-center">
+                      {{ paketSoalSearch ? 'Paket soal tidak ditemukan' : 'Semua paket soal sudah ditambahkan atau belum ada data' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="md:col-span-2">
               <label class="block text-sm font-medium text-slate-700 mb-2">Flyer</label>
               <div @drop.prevent="handleFlyerDrop" @dragover.prevent="isDraggingFlyer = true"
                 @dragleave.prevent="isDraggingFlyer = false" @paste="handleFlyerPaste"
@@ -766,6 +827,8 @@
             class="flex-1 min-w-[140px] px-4 py-2.5 bg-amber-600 text-white rounded-lg font-medium hover:bg-amber-700">Penugasan</button>
           <button type="button" @click="openPesertaListFromDetail"
             class="flex-1 min-w-[140px] px-4 py-2.5 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700">Lihat Peserta</button>
+          <button type="button" @click="openTestLaporan"
+            class="flex-1 min-w-[140px] px-4 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700">Laporan Test</button>
           <button type="button" @click="duplicateKegiatan(selectedKegiatan)"
             class="flex-1 min-w-[140px] px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">Duplikat</button>
           <button type="button" @click="openEditFromDetail"
@@ -1684,6 +1747,11 @@ export default {
     const tpkForm = ref(createEmptyTpkForm())
     const tpkItems = ref([])
     const tpkError = ref('')
+    const paketSoalItems = ref([])
+    const allPaketSoal = ref([])
+    const paketSoalSearch = ref('')
+    const showPaketSoalDropdown = ref(false)
+    const paketSoalLoading = ref(false)
 
     const formData = ref({
       nama_kegiatan: '',
@@ -1938,7 +2006,11 @@ export default {
       tpkForm.value = createEmptyTpkForm()
       tpkItems.value = []
       tpkError.value = ''
+      paketSoalItems.value = []
+      paketSoalSearch.value = ''
+      showPaketSoalDropdown.value = false
       formError.value = ''
+      loadAllPaketSoal()
     }
 
     const showSubmitStatus = ({ type = 'success', title = '', message = '' }) => {
@@ -2438,6 +2510,11 @@ export default {
         .filter((row) => row.lokasi)
     }
 
+    const loadKegiatanPaketSoal = (item) => {
+      const paket = item?.paket_soal || item?.paketSoals || item?.data?.paket_soal || item?.data?.paketSoals
+      paketSoalItems.value = Array.isArray(paket) ? paket.map(p => ({ ...p })) : []
+    }
+
     const getKegiatanLocationLabel = (item) => {
       const locations = getKegiatanTpkRows(item)
         .map(normalizeTpkItem)
@@ -2463,6 +2540,49 @@ export default {
 
     const removeTpkItem = (index) => {
       tpkItems.value.splice(index, 1)
+    }
+
+    const filteredPaketSoal = computed(() => {
+      const existingIds = paketSoalItems.value.map(p => p.id_paket_soal)
+      const q = paketSoalSearch.value.toLowerCase().trim()
+      return allPaketSoal.value
+        .filter(p => !existingIds.includes(p.id_paket_soal))
+        .filter(p => !q || p.nama_paket.toLowerCase().includes(q))
+    })
+
+    const loadAllPaketSoal = async () => {
+      if (allPaketSoal.value.length > 0) return
+      paketSoalLoading.value = true
+      try {
+        const { getAllPaket } = await import('@/services/test')
+        const data = await getAllPaket()
+        allPaketSoal.value = Array.isArray(data) ? data : (data?.data || [])
+      } catch {
+        allPaketSoal.value = []
+      } finally {
+        paketSoalLoading.value = false
+      }
+    }
+
+    const onPaketSoalFocus = async () => {
+      showPaketSoalDropdown.value = true
+      await loadAllPaketSoal()
+    }
+
+    const addPaketSoalItem = (paket) => {
+      if (!paketSoalItems.value.find(p => p.id_paket_soal === paket.id_paket_soal)) {
+        paketSoalItems.value.push({ ...paket })
+      }
+      paketSoalSearch.value = ''
+      showPaketSoalDropdown.value = false
+    }
+
+    const removePaketSoalItem = (index) => {
+      paketSoalItems.value.splice(index, 1)
+    }
+
+    const searchPaketSoal = () => {
+      showPaketSoalDropdown.value = true
     }
 
     const buildTpkPayloadItems = () =>
@@ -2550,6 +2670,8 @@ export default {
           showAddModal.value = true
           loadKegiatanAtkItems(item)
           loadKegiatanTpkItems(item)
+          loadKegiatanPaketSoal(item)
+          loadAllPaketSoal()
         }
       } catch (err) {
         const item = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
@@ -2561,6 +2683,8 @@ export default {
           showAddModal.value = true
           loadKegiatanAtkItems(item)
           loadKegiatanTpkItems(item)
+          loadKegiatanPaketSoal(item)
+          loadAllPaketSoal()
         }
       }
     }
@@ -2685,6 +2809,9 @@ export default {
             payload.append(`daftar_tpk[${index}][lokasi]`, item.lokasi)
             payload.append(`daftar_tpk[${index}][kabupaten_kota]`, item.kabupaten_kota || '')
           })
+          paketSoalItems.value.forEach((paket, index) => {
+            payload.append(`daftar_paket_soal[${index}]`, paket.id_paket_soal)
+          })
           if (flyerFile.value) {
             payload.append('flyer', flyerFile.value)
           }
@@ -2697,6 +2824,7 @@ export default {
           payload = { ...payloadObject }
           payload.daftar_atk = daftarAtkPayload
           payload.daftar_tpk = daftarTpkPayload
+          payload.daftar_paket_soal = paketSoalItems.value.map(p => p.id_paket_soal)
         }
 
         if (editingId.value) {
@@ -2767,6 +2895,10 @@ export default {
 
     const openPesertaList = (id) => {
       router.push({ name: 'kegiatan-peserta', params: { id } })
+    }
+
+    const openTestLaporan = () => {
+      router.push({ name: 'test-laporan', params: { id: selectedKegiatan.value?.id_kegiatan } })
     }
 
     const openPesertaListFromDetail = () => {
@@ -3440,8 +3572,19 @@ export default {
       tpkError,
       addTpkItem,
       removeTpkItem,
+      paketSoalItems,
+      allPaketSoal,
+      paketSoalSearch,
+      showPaketSoalDropdown,
+      paketSoalLoading,
+      filteredPaketSoal,
+      addPaketSoalItem,
+      removePaketSoalItem,
+      searchPaketSoal,
+      onPaketSoalFocus,
       getKegiatanLocationLabel,
       openPesertaList,
+      openTestLaporan,
       handleSuratTugas,
       openBiodataModal,
       printBiodata,

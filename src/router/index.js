@@ -25,6 +25,9 @@ const EvaluasiKegiatan = () => import('../pages/EvaluasiKegiatan.vue')
 const LaporanEvaluasi = () => import('../pages/LaporanEvaluasi.vue')
 const LihatTandatangan = () => import('../pages/LihatTandatangan.vue')
 const DataSyncMonitor = () => import('../pages/DataSyncMonitor.vue')
+const TestUjian = () => import('../pages/TestUjian.vue')
+const TestLaporan = () => import('../pages/TestLaporan.vue')
+const PaketSoal = () => import('../pages/PaketSoal.vue')
 
 let fetchAPI = null
 let database = null
@@ -127,6 +130,14 @@ const router = createRouter({
     }
   },
   {
+    path:'/test/:kode/:idTpk?/:slugJudul?',
+    component:TestUjian,
+    meta:{
+      title: 'Ujian Online',
+      description: 'Kerjakan soal ujian kegiatan.'
+    }
+  },
+  {
     path:'/lihat-tandatangan/:id',
     component:LihatTandatangan,
     meta:{
@@ -146,6 +157,8 @@ const router = createRouter({
     {path:'dashboard',name:'dashboard',component:Dashboard,meta:{title:'Dashboard',description:'Ringkasan data utama SIMAIK.'}},
     {path:'kegiatan',name:'kegiatan',component:Kegiatan,meta:{title:'Manajemen Kegiatan',description:'Kelola seluruh kegiatan.'}},
     {path:'kegiatan/:id/peserta',name:'kegiatan-peserta',component:KegiatanPeserta,meta:{title:'Peserta Kegiatan',description:'Kelola peserta per kegiatan.'}},
+    {path:'kegiatan/:id/test-laporan',name:'test-laporan',component:TestLaporan,meta:{title:'Laporan Test',description:'Laporan hasil test kegiatan.'}},
+    {path:'paket-soal',name:'paket-soal',component:PaketSoal,meta:{title:'Paket Soal',description:'Kelola paket soal dan soal ujian.'}},
     {path:'peserta',name:'peserta',component:PesertaManagement,meta:{title:'Manajemen Peserta',description:'Kelola data peserta kegiatan.'}},
     {path:'sertifikat',name:'sertifikat',component:Sertifikat,meta:{title:'Sertifikat',description:'Kelola sertifikat peserta.'}},
     {path:'pegawai',name:'pegawai',component:PegawaiManagement,meta:{title:'Pegawai',description:'Kelola data pegawai.'}},
@@ -243,7 +256,7 @@ router.beforeEach((to, from, next) => {
   let routeTitle = resolveMetaValue(to.meta?.title, to)
   let routeDescription = resolveMetaValue(to.meta?.description, to)
 
-  if (to.path.startsWith('/formulir/') || to.path.startsWith('/daftar-peserta/') || to.path.startsWith('/unduh-sertifikat/') || to.path.startsWith('/kegiatan/')) {
+  if (to.path.startsWith('/formulir/') || to.path.startsWith('/daftar-peserta/') || to.path.startsWith('/unduh-sertifikat/') || to.path.startsWith('/kegiatan/') || to.path.startsWith('/test/')) {
     // Resolve kegiatan name in background, use slugify fallback immediately
     const namaKegiatan = unslugify(to.params.slugJudul)
 
@@ -259,6 +272,9 @@ router.beforeEach((to, from, next) => {
     } else if (to.path.startsWith('/kegiatan/')) {
       routeTitle = `Detail Kegiatan - ${namaKegiatan || 'Kegiatan'}`
       routeDescription = `Informasi detail kegiatan ${namaKegiatan || ''}.`
+    } else if (to.path.startsWith('/test/')) {
+      routeTitle = `Ujian Online - ${namaKegiatan || 'Kegiatan'}`
+      routeDescription = `Ujian online kegiatan ${namaKegiatan || ''}.`
     }
 
     // Refine title from API in background
@@ -273,6 +289,8 @@ router.beforeEach((to, from, next) => {
           document.title = `Unduh Sertifikat - ${refined} | ${APP_NAME}`
         } else if (to.path.startsWith('/kegiatan/')) {
           document.title = `Detail Kegiatan - ${refined} | ${APP_NAME}`
+        } else if (to.path.startsWith('/test/')) {
+          document.title = `Ujian Online - ${refined} | ${APP_NAME}`
         }
       }
     }).catch(() => {})
