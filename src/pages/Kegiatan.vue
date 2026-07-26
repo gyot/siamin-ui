@@ -847,7 +847,7 @@
         </div>
 
         <div v-if="evaluasiLinks.length > 0" class="border-b border-slate-100 pb-6">
-          <h4 class="text-lg font-semibold text-slate-800 mb-4">Link Evaluasi & Laporan</h4>
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Link Evaluasi, Laporan & Test</h4>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div v-for="link in evaluasiLinks" :key="link.role" class="rounded-lg border border-slate-200 p-4 bg-white">
               <p class="text-xs font-medium text-slate-500 uppercase mb-2">{{ link.label }}</p>
@@ -1417,6 +1417,13 @@ export default {
         : buildPublicUrl(`evaluasi/${kode}/${slug}`)
     }
 
+    const buildPublicTestLink = (kode, judul = '', idTpk = '') => {
+      const slug = slugify(judul)
+      return idTpk
+        ? buildPublicUrl(`test/${kode}/${idTpk}/${slug}`)
+        : buildPublicUrl(`test/${kode}/${slug}`)
+    }
+
     const buildPublicLaporanEvaluasiLink = (kode, judul = '', idTpk = '') => {
       const slug = slugify(judul)
       return idTpk
@@ -1872,6 +1879,12 @@ export default {
             url: buildPublicLaporanEvaluasiLink(kode, judul, tpk.id_tpk),
             templateUrl: null
           })
+          links.push({
+            role: `test-tpk-${tpk.id_tpk}`,
+            label: `Ujian/Test - ${namaTpk}`,
+            url: buildPublicTestLink(kode, judul, tpk.id_tpk),
+            templateUrl: null
+          })
         }
       } else {
         for (const role of roles) {
@@ -1893,6 +1906,12 @@ export default {
           role: 'laporan-evaluasi',
           label: 'Laporan Evaluasi',
           url: buildPublicLaporanEvaluasiLink(kode, judul),
+          templateUrl: null
+        })
+        links.push({
+          role: 'test',
+          label: 'Ujian/Test',
+          url: buildPublicTestLink(kode, judul),
           templateUrl: null
         })
       }
@@ -3354,7 +3373,7 @@ export default {
 
     const evaluasiLinks = computed(() => {
       return activityLinks.value.filter(link =>
-        link.role.startsWith('evaluasi') || link.role.startsWith('laporan-evaluasi')
+        link.role.startsWith('evaluasi') || link.role.startsWith('laporan-evaluasi') || link.role.startsWith('test')
       )
     })
 
@@ -3659,6 +3678,7 @@ export default {
       sharePublicPesertaLink,
       shareKegiatanPublikLink,
       buildPublicEvaluasiLink,
+      buildPublicTestLink,
       buildPublicLaporanEvaluasiLink,
 
       showSuratTugasModal,
