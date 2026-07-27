@@ -224,15 +224,13 @@
                   >
                 </th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">No</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm">Nama</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm">NIP</th>
-                <!-- <th class="px-4 py-3 text-left text-xs sm:text-sm">Email</th> -->
-                <th class="px-4 py-3 text-left text-xs sm:text-sm">Instansi</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm">Kabupaten/Kota</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm">TPK</th>
-                <!-- <th class="px-4 py-3 text-left text-xs sm:text-sm">Kegiatan</th> -->
-                <th class="px-4 py-3 text-left text-xs sm:text-sm">Peran</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm">Sertifikat</th>
+                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nama_lengkap')">Nama{{ sortIndicator('nama_lengkap') }}</th>
+                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nip')">NIP{{ sortIndicator('nip') }}</th>
+                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nama_instansi')">Instansi{{ sortIndicator('nama_instansi') }}</th>
+                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('kab_kota')">Kabupaten/Kota{{ sortIndicator('kab_kota') }}</th>
+                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('tpk')">TPK{{ sortIndicator('tpk') }}</th>
+                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('peran')">Peran{{ sortIndicator('peran') }}</th>
+                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('sertifikat')">Sertifikat{{ sortIndicator('sertifikat') }}</th>
                 <th class="px-4 py-3 text-center text-xs sm:text-sm">Aksi</th>
               </tr>
             </thead>
@@ -1315,6 +1313,8 @@ export default {
     const filterTpk = ref('')
     const currentPage = ref(1)
     const pageSize = ref(10)
+    const sortBy = ref('nama_lengkap')
+    const sortOrder = ref('asc')
 
     // Helper function to load peserta from API
     const isCacheValid = (updatedAt) => {
@@ -1784,22 +1784,60 @@ export default {
       })
     })
 
+    const sortedPeserta = computed(() => {
+      const data = [...filteredPeserta.value]
+      const col = sortBy.value
+      const order = sortOrder.value === 'asc' ? 1 : -1
+      return data.sort((a, b) => {
+        let valA, valB
+        if (col === 'sertifikat') {
+          valA = getRawSertifikatStatus(a.id_peserta)
+          valB = getRawSertifikatStatus(b.id_peserta)
+        } else if (col === 'tpk') {
+          valA = a.tpk?.lokasi || ''
+          valB = b.tpk?.lokasi || ''
+        } else {
+          valA = a[col] || ''
+          valB = b[col] || ''
+        }
+        const strA = String(valA).toLowerCase()
+        const strB = String(valB).toLowerCase()
+        if (strA < strB) return -1 * order
+        if (strA > strB) return 1 * order
+        return 0
+      })
+    })
+
+    const setSort = (column) => {
+      if (sortBy.value === column) {
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+      } else {
+        sortBy.value = column
+        sortOrder.value = 'asc'
+      }
+    }
+
+    const sortIndicator = (column) => {
+      if (sortBy.value !== column) return ''
+      return sortOrder.value === 'asc' ? ' ▲' : ' ▼'
+    }
+
     const totalPages = computed(() => {
-      return Math.max(Math.ceil(filteredPeserta.value.length / pageSize.value), 1)
+      return Math.max(Math.ceil(sortedPeserta.value.length / pageSize.value), 1)
     })
 
     const paginationStart = computed(() => {
-      if (filteredPeserta.value.length === 0) return 0
+      if (sortedPeserta.value.length === 0) return 0
       return (currentPage.value - 1) * pageSize.value + 1
     })
 
     const paginationEnd = computed(() => {
-      return Math.min(currentPage.value * pageSize.value, filteredPeserta.value.length)
+      return Math.min(currentPage.value * pageSize.value, sortedPeserta.value.length)
     })
 
     const paginatedPeserta = computed(() => {
       const start = (currentPage.value - 1) * pageSize.value
-      return filteredPeserta.value.slice(start, start + pageSize.value)
+      return sortedPeserta.value.slice(start, start + pageSize.value)
     })
 
     const selectedPesertaIds = computed(() => {
@@ -3745,11 +3783,16 @@ export default {
       allSelected,
       selectedCount,
       filteredPeserta,
+      sortedPeserta,
       paginatedPeserta,
       totalPages,
       paginationStart,
       paginationEnd,
       goToPage,
+      sortBy,
+      sortOrder,
+      setSort,
+      sortIndicator,
       uniqueKabKota,
       uniqueTpk,
       pesertaAktif,
