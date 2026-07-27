@@ -153,6 +153,26 @@ export const replaceTablePlaceholder = (xmlContent, placeholder, rows) => {
 }
 
 /**
+ * Generate table XML untuk Daftar Hadir (No, Nama, NIP, Instansi, Tanda Tangan)
+ * @param {Array<Object>} rows - Array of row objects: { nama_lengkap, nip, nama_instansi }
+ * @returns {string} Table XML
+ */
+export const generateDaftarHadirTableXml = (rows) => {
+  if (!rows || rows.length === 0) return ''
+
+  const headerRow = `<w:tr><w:trPr><w:trHeight w:val="400" w:type="atLeast"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="720" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>No</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2500" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>Nama</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="1800" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>NIP</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2500" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>Instansi</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2000" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>Tanda Tangan</w:t></w:r></w:p></w:tc></w:tr>`
+
+  const dataRows = rows.map((row, i) => {
+    const nama = escapeXml(row.nama_lengkap || '-')
+    const nip = escapeXml(row.nip || '-')
+    const instansi = escapeXml(row.nama_instansi || '-')
+    return `<w:tr><w:trPr><w:trHeight w:val="300" w:type="atLeast"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="720" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${i + 1}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2500" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${nama}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="1800" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${nip}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2500" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${instansi}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2000" w:type="dxa"/></w:tcPr><w:p><w:r><w:t xml:space="preserve"> </w:t></w:r></w:p></w:tc></w:tr>`
+  }).join('')
+
+  return `<w:tbl><w:tblPr><w:tblW w:w="9520" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:left w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:bottom w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:right w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:insideH w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:insideV w:val="single" w:sz="12" w:space="0" w:color="000000"/></w:tblBorders></w:tblPr>${headerRow}${dataRows}</w:tbl>`
+}
+
+/**
  * Generate DOCX dari XML structure
  * @param {string} xmlContent - Modified XML content
  * @param {Blob} originalDocx - Original DOCX for resources

@@ -36,6 +36,13 @@
             {{ isDownloadingBatchDocx ? 'Menyiapkan Batch DOCX...' : 'Download Batch DOCX' }}
           </button>
           <button
+            @click="downloadDaftarHadir"
+            :disabled="filteredPeserta.length === 0"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            Unduh Daftar Hadir
+          </button>
+          <button
             @click="openAllBiodataModal"
             :disabled="filteredPeserta.length === 0"
             class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
@@ -1243,7 +1250,7 @@ let sertifikatCache = null
 let sertifikatCacheUpdatedAt = null
 const CACHE_TTL_MS = 1000 * 60 * 10 // 10 minutes
 
-import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXml, processDocxTemplate } from '@/utils/docxUtils.js'
+import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXml, processDocxTemplate, generateDaftarHadirTableXml } from '@/utils/docxUtils.js'
 import { getKegiatan } from '@/services/kegiatan'
 import { listPenugasanPegawai } from '@/services/penugasan'
 import { buildPublicUrl, buildStorageUrl, getApiHostBase } from '@/utils/url'
@@ -3771,6 +3778,55 @@ export default {
       }
     }
 
+    const downloadDaftarHadir = async () => {
+      if (filteredPeserta.value.length === 0) {
+        alert('Tidak ada peserta sesuai filter untuk diunduh.')
+        return
+      }
+
+      try {
+        const response = await fetch(buildPublicUrl('template_daftar_hadir.docx'))
+        if (!response.ok) throw new Error(`Template tidak ditemukan (${response.status})`)
+        const templateDocx = await response.blob()
+
+        const namaKegiatan = filteredPeserta.value[0]
+          ? (getKegiatanById(getPesertaKegiatanId(filteredPeserta.value[0]))?.nama_kegiatan || '-')
+          : '-'
+
+        const peranLabel = filterPeran.value || 'Semua Peran'
+        const tpkLabel = filterTpk.value
+          ? (uniqueTpk.value.find(t => String(t.id_tpk) === String(filterTpk.value))?.label || '-')
+          : 'Semua TPK'
+        const kabKotaLabel = filterKabKota.value || 'Semua Kabupaten/Kota'
+
+        const data = {
+          kegiatan: namaKegiatan,
+          peran: peranLabel,
+          tpk: tpkLabel,
+          kab_kota: kabKotaLabel
+        }
+
+        const xmlContent = await parseDocxPreservingFormat(templateDocx)
+        let xml = replacePlaceholdersInXml(xmlContent, data)
+
+        const tableXml = generateDaftarHadirTableXml(filteredPeserta.value)
+        if (tableXml) {
+          const placeholder = '{DAFTAR_HADIR}'
+          const paragraphRegex = new RegExp(`(<w:p[^>]*>[\\s\\S]*?\\{DAFTAR_HADIR\\}[\\s\\S]*?</w:p>)`, 'g')
+          const match = paragraphRegex.exec(xml)
+          if (match) {
+            const paragraphWithoutPlaceholder = match[1].replace(placeholder, '')
+            xml = xml.replace(match[1], paragraphWithoutPlaceholder + tableXml)
+          }
+        }
+
+        await generateDocxFromXml(xml, templateDocx, `Daftar Hadir - ${namaKegiatan}.docx`)
+      } catch (error) {
+        console.error('Gagal download daftar hadir:', error)
+        alert(error.message || 'Gagal download daftar hadir.')
+      }
+    }
+
     return {
       base,
       peserta,
@@ -3859,6 +3915,7 @@ export default {
       // downloadPesertaPdf,
       downloadPesertaDocx,
       downloadBatchDocxZip,
+      downloadDaftarHadir,
       isDownloadingBatchDocx,
       openAllBiodataModal,
       closeAllBiodataModal,
