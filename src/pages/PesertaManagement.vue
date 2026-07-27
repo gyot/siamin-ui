@@ -1918,8 +1918,11 @@ export default {
 
     const uniqueTpk = computed(() => {
       const seen = new Map()
+      const source = props.kegiatanId
+        ? peserta.value.filter(p => String(getPesertaKegiatanId(p) ?? '') === String(props.kegiatanId))
+        : peserta.value
 
-      peserta.value.forEach((p) => {
+      source.forEach((p) => {
         if (p.tpk && p.tpk.id_tpk) {
           const id = String(p.tpk.id_tpk)
           if (!seen.has(id)) {
@@ -3779,7 +3782,7 @@ export default {
     }
 
     const downloadDaftarHadir = async () => {
-      if (filteredPeserta.value.length === 0) {
+      if (sortedPeserta.value.length === 0) {
         alert('Tidak ada peserta sesuai filter untuk diunduh.')
         return
       }
@@ -3789,8 +3792,8 @@ export default {
         if (!response.ok) throw new Error(`Template tidak ditemukan (${response.status})`)
         const templateDocx = await response.blob()
 
-        const namaKegiatan = filteredPeserta.value[0]
-          ? (getKegiatanById(getPesertaKegiatanId(filteredPeserta.value[0]))?.nama_kegiatan || '-')
+        const namaKegiatan = sortedPeserta.value[0]
+          ? (getKegiatanById(getPesertaKegiatanId(sortedPeserta.value[0]))?.nama_kegiatan || '-')
           : '-'
 
         const peranLabel = filterPeran.value || 'Semua Peran'
@@ -3801,11 +3804,8 @@ export default {
 
         let kabKotaLabel = 'Semua Kabupaten/Kota'
         if (filterTpk.value) {
-          const selectedTpk = uniqueTpk.value.find(t => String(t.id_tpk) === String(filterTpk.value))
-          if (selectedTpk) {
-            const tpkData = peserta.value.find(p => String(p.tpk?.id_tpk ?? '') === String(filterTpk.value))
-            kabKotaLabel = tpkData?.tpk?.kabupaten_kota || selectedTpk.label || '-'
-          }
+          const tpkData = sortedPeserta.value.find(p => String(p.tpk?.id_tpk ?? '') === String(filterTpk.value))
+          kabKotaLabel = tpkData?.tpk?.kabupaten_kota || '-'
         } else if (filterKabKota.value) {
           kabKotaLabel = filterKabKota.value
         }
@@ -3820,7 +3820,7 @@ export default {
         const xmlContent = await parseDocxPreservingFormat(templateDocx)
         let xml = replacePlaceholdersInXml(xmlContent, data)
 
-        const tableXml = generateDaftarHadirTableXml(filteredPeserta.value)
+        const tableXml = generateDaftarHadirTableXml(sortedPeserta.value)
         if (tableXml) {
           const tableRegex = /<w:tbl>[\s\S]*?<\/w:tbl>/
           xml = xml.replace(tableRegex, tableXml)
