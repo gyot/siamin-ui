@@ -50,6 +50,13 @@
             Tampilkan Semua Biodata
           </button>
           <button
+            @click="openKelasModal"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            Buat Kelas
+          </button>
+          <button
             @click="printAllBiodata"
             :disabled="filteredPeserta.length === 0"
             class="inline-flex items-center gap-2 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
@@ -228,6 +235,22 @@
         </div>
       </div>
 
+      <!-- Daftar Kelas -->
+      <div v-if="kelasList.length > 0" class="mb-4 sm:mb-6">
+        <p class="text-sm font-semibold text-slate-700 mb-2">Kelas:</p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="k in kelasList" :key="k.id_kelas"
+            @click="openKelasDetail(k)"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-violet-200 text-violet-700 rounded-lg hover:bg-violet-50 text-sm transition"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            {{ k.nama_kelas }}
+            <span class="text-xs bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded-full">{{ k.anggotas_count ?? 0 }}</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Tabel Peserta - Desktop View -->
       <div class="bg-white rounded-lg shadow-lg overflow-hidden hidden md:block">
         
@@ -315,6 +338,12 @@
                       class="px-2 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors text-xs font-semibold whitespace-nowrap"
                     >
                       Sertifikat
+                    </button>
+                    <button
+                      @click="openMasukKelasModal(p)"
+                      class="px-2 py-1 bg-violet-500 text-white rounded hover:bg-violet-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                    >
+                      Kelas
                     </button>
                     <button
                       @click="downloadPesertaDocx(p)"
@@ -1232,6 +1261,113 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal Buat Kelas -->
+    <div v-if="showKelasModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+        <div class="flex items-center justify-between p-6 border-b border-slate-100">
+          <h3 class="text-xl font-bold text-slate-800">Buat Kelas</h3>
+          <button @click="showKelasModal = false" class="text-slate-400 hover:text-slate-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div>
+            <label class="text-sm font-medium text-slate-700 mb-1 block">Nama Kelas *</label>
+            <input v-model="kelasForm.nama_kelas" type="text" placeholder="Contoh: Kelas A" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none text-sm" />
+          </div>
+          <div>
+            <label class="text-sm font-medium text-slate-700 mb-1 block">Deskripsi</label>
+            <textarea v-model="kelasForm.deskripsi" rows="2" placeholder="Deskripsi kelas (opsional)" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:border-blue-500 focus:outline-none text-sm"></textarea>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 p-6 border-t border-slate-100">
+          <button @click="showKelasModal = false" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50">Batal</button>
+          <button @click="saveKelas" :disabled="!kelasForm.nama_kelas" :class="['px-6 py-2 rounded-lg text-sm font-medium text-white', kelasForm.nama_kelas ? 'bg-violet-600 hover:bg-violet-700' : 'bg-violet-300 cursor-not-allowed']">Simpan</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Masukkan Kelas -->
+    <div v-if="showMasukKelasModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+        <div class="flex items-center justify-between p-6 border-b border-slate-100">
+          <h3 class="text-xl font-bold text-slate-800">Masukkan ke Kelas</h3>
+          <button @click="showMasukKelasModal = false" class="text-slate-400 hover:text-slate-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="p-6">
+          <p class="text-sm text-slate-600 mb-4">Pilih kelas untuk <strong>{{ masukKelasPeserta?.nama_lengkap }}</strong>:</p>
+          <div v-if="kelasList.length === 0" class="text-sm text-slate-400 text-center py-4">Belum ada kelas. Buat kelas terlebih dahulu.</div>
+          <div v-else class="space-y-2">
+            <button
+              v-for="k in kelasList" :key="k.id_kelas"
+              @click="masukKelas(k.id_kelas)"
+              class="w-full text-left px-4 py-3 rounded-lg border border-slate-200 hover:border-violet-400 hover:bg-violet-50 transition flex items-center justify-between"
+            >
+              <span class="text-sm font-medium text-slate-800">{{ k.nama_kelas }}</span>
+              <span class="text-xs text-slate-400">{{ k.anggotas_count ?? 0 }} anggota</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Detail Kelas -->
+    <div v-if="showKelasDetailModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-6 border-b border-slate-100 sticky top-0 bg-white">
+          <div>
+            <h3 class="text-xl font-bold text-slate-800">{{ selectedKelas?.nama_kelas }}</h3>
+            <p class="text-sm text-slate-500">{{ selectedKelas?.deskripsi || '' }} · {{ kelasAnggota.length }} anggota</p>
+          </div>
+          <button @click="showKelasDetailModal = false" class="text-slate-400 hover:text-slate-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="p-6">
+          <div v-if="kelasAnggota.length === 0" class="text-sm text-slate-400 text-center py-8">Belum ada anggota di kelas ini.</div>
+          <div v-else class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b border-slate-200">
+                  <th class="text-left py-3 px-2 font-semibold text-slate-600">No</th>
+                  <th class="text-left py-3 px-2 font-semibold text-slate-600">Nama</th>
+                  <th class="text-left py-3 px-2 font-semibold text-slate-600">NIP</th>
+                  <th class="text-left py-3 px-2 font-semibold text-slate-600">Instansi</th>
+                  <th class="text-center py-3 px-2 font-semibold text-slate-600">Tanda Tangan</th>
+                  <th class="text-center py-3 px-2 font-semibold text-slate-600">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(p, i) in kelasAnggota" :key="p.id_peserta" class="border-b border-slate-100 hover:bg-slate-50">
+                  <td class="py-3 px-2 text-slate-500">{{ i + 1 }}</td>
+                  <td class="py-3 px-2 font-medium text-slate-800">{{ p.nama_lengkap }}</td>
+                  <td class="py-3 px-2 text-slate-600">{{ p.nip || '-' }}</td>
+                  <td class="py-3 px-2 text-slate-600">{{ p.nama_instansi || '-' }}</td>
+                  <td class="py-3 px-2 text-center">
+                    <img v-if="p.tanda_tangan" :src="buildStorageUrl(p.tanda_tangan)" alt="TTD" class="h-8 mx-auto" />
+                    <span v-else class="text-slate-400 text-xs">-</span>
+                  </td>
+                  <td class="py-3 px-2 text-center">
+                    <button @click="hapusAnggotaKelas(selectedKelas.id_kelas, p.id_peserta)" class="text-xs text-red-600 hover:text-red-800 font-medium">Hapus</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="flex justify-between gap-3 p-6 border-t border-slate-100 sticky bottom-0 bg-white">
+          <button @click="downloadDaftarHadirKelas" :disabled="kelasAnggota.length === 0"
+            :class="['px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2', kelasAnggota.length === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-teal-600 text-white hover:bg-teal-700']">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Unduh Daftar Hadir
+          </button>
+          <button @click="showKelasDetailModal = false" class="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50">Tutup</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1255,6 +1391,7 @@ import { getKegiatan } from '@/services/kegiatan'
 import { listPenugasanPegawai } from '@/services/penugasan'
 import { buildPublicUrl, buildStorageUrl, getApiHostBase } from '@/utils/url'
 import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
+import { getKelasByKegiatan, createKelas, showKelas, addAnggotaKelas, removeAnggotaKelas } from '@/services/kelas'
 
 export default {
   name: 'Peserta',
@@ -1293,6 +1430,16 @@ export default {
     const formErrors = ref([])
     const isDownloadingBatchDocx = ref(false)
     const checkedPesertaIds = ref([])
+
+    // Kelas state
+    const kelasList = ref([])
+    const showKelasModal = ref(false)
+    const kelasForm = ref({ nama_kelas: '', deskripsi: '' })
+    const showKelasDetailModal = ref(false)
+    const selectedKelas = ref(null)
+    const kelasAnggota = ref([])
+    const showMasukKelasModal = ref(false)
+    const masukKelasPeserta = ref(null)
     const pendingSertifikatMode = ref(null)
     const pendingSertifikatPeserta = ref(null)
     const pendingSertifikatPesertaIds = ref([])
@@ -3833,6 +3980,126 @@ export default {
       }
     }
 
+    // ===== KELAS METHODS =====
+    const loadKelas = async () => {
+      if (!props.kegiatanId) return
+      try {
+        const data = await getKelasByKegiatan(props.kegiatanId)
+        kelasList.value = Array.isArray(data) ? data : (data?.data || [])
+      } catch {
+        kelasList.value = []
+      }
+    }
+
+    const openKelasModal = () => {
+      kelasForm.value = { nama_kelas: '', deskripsi: '' }
+      showKelasModal.value = true
+    }
+
+    const saveKelas = async () => {
+      if (!kelasForm.value.nama_kelas) return
+      try {
+        await createKelas({ ...kelasForm.value, id_kegiatan: props.kegiatanId })
+        showKelasModal.value = false
+        await loadKelas()
+      } catch (e) {
+        alert(e?.response?.data?.message || e?.message || 'Gagal membuat kelas')
+      }
+    }
+
+    const openKelasDetail = async (kelas) => {
+      try {
+        const data = await showKelas(kelas.id_kelas)
+        selectedKelas.value = data
+        kelasAnggota.value = data?.pesertas || []
+        showKelasDetailModal.value = true
+      } catch {
+        alert('Gagal memuat detail kelas')
+      }
+    }
+
+    const openMasukKelasModal = (p) => {
+      masukKelasPeserta.value = p
+      showMasukKelasModal.value = true
+    }
+
+    const masukKelas = async (idKelas) => {
+      if (!masukKelasPeserta.value) return
+      try {
+        await addAnggotaKelas(idKelas, masukKelasPeserta.value.id_peserta)
+        showMasukKelasModal.value = false
+        masukKelasPeserta.value = null
+        await loadKelas()
+      } catch (e) {
+        alert(e?.response?.data?.message || e?.message || 'Gagal menambahkan anggota')
+      }
+    }
+
+    const hapusAnggotaKelas = async (idKelas, idPeserta) => {
+      try {
+        await removeAnggotaKelas(idKelas, idPeserta)
+        const data = await showKelas(idKelas)
+        selectedKelas.value = data
+        kelasAnggota.value = data?.pesertas || []
+        await loadKelas()
+      } catch (e) {
+        alert(e?.response?.data?.message || e?.message || 'Gagal menghapus anggota')
+      }
+    }
+
+    const downloadDaftarHadirKelas = async () => {
+      if (!selectedKelas.value || kelasAnggota.value.length === 0) {
+        alert('Tidak ada peserta di kelas ini.')
+        return
+      }
+
+      try {
+        const response = await fetch(buildPublicUrl('template_daftar_hadir.docx'))
+        if (!response.ok) throw new Error(`Template tidak ditemukan (${response.status})`)
+        const templateDocx = await response.blob()
+
+        const namaKegiatan = props.kegiatanData?.nama_kegiatan || '-'
+        const namaKelas = selectedKelas.value.nama_kelas || '-'
+        const tpkItems = getKegiatanLocationItems(props.kegiatanData)
+        const tpkLabel = tpkItems.length > 0
+          ? tpkItems.map(t => t.kabupaten_kota ? `${t.lokasi} (${t.kabupaten_kota})` : t.lokasi).join(', ')
+          : '-'
+
+        const data = {
+          kegiatan: namaKegiatan,
+          peran: namaKelas,
+          tpk: tpkLabel,
+          kab_kota: '-'
+        }
+
+        const pesertaList = kelasAnggota.value.map(p => ({
+          ...p,
+          nama_lengkap: p.nama_lengkap || '-',
+          nip: p.nip || '-',
+          nama_instansi: p.nama_instansi || '-',
+        }))
+
+        const xmlContent = await parseDocxPreservingFormat(templateDocx)
+        let xml = replacePlaceholdersInXml(xmlContent, data)
+
+        const tableXml = generateDaftarHadirTableXml(pesertaList)
+        if (tableXml) {
+          const tableRegex = /<w:tbl>[\s\S]*?<\/w:tbl>/
+          xml = xml.replace(tableRegex, tableXml)
+        }
+
+        await generateDocxFromXml(xml, templateDocx, `Daftar Hadir - ${namaKelas} - ${namaKegiatan}.docx`)
+      } catch (error) {
+        console.error('Gagal download daftar hadir kelas:', error)
+        alert(error.message || 'Gagal download daftar hadir.')
+      }
+    }
+
+    // Load kelas on mount
+    onMounted(() => {
+      loadKelas()
+    })
+
     return {
       base,
       peserta,
@@ -3947,7 +4214,24 @@ export default {
       startDrawing,
       draw,
       stopDrawing,
-      clearSignature
+      clearSignature,
+      // Kelas
+      kelasList,
+      showKelasModal,
+      kelasForm,
+      showKelasDetailModal,
+      selectedKelas,
+      kelasAnggota,
+      showMasukKelasModal,
+      masukKelasPeserta,
+      loadKelas,
+      openKelasModal,
+      saveKelas,
+      openKelasDetail,
+      openMasukKelasModal,
+      masukKelas,
+      hapusAnggotaKelas,
+      downloadDaftarHadirKelas,
     }
   }
 }
