@@ -110,7 +110,7 @@
                 <!-- View Mode -->
                 <div v-if="editingSoal?.id_soal !== soal.id_soal" class="ml-6 space-y-1">
                   <p v-for="huruf in ['a', 'b', 'c', 'd']" :key="huruf" :class="['text-sm', soal.jawaban_benar === huruf ? 'text-green-700 font-semibold' : 'text-slate-500']">
-                    {{ huruf.toUpperCase() }}. {{ soal[`pilihan_${huruf}`] }}
+                    {{ soal[`pilihan_${huruf}`] }}
                     <span v-if="soal.jawaban_benar === huruf" class="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded ml-1">✓ Benar</span>
                   </p>
                 </div>

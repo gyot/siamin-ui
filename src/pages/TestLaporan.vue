@@ -140,7 +140,7 @@
           huruf === d.jawaban_peserta && huruf !== d.jawaban_benar ? 'text-red-700 font-semibold line-through' : '',
           huruf !== d.jawaban_benar && huruf !== d.jawaban_peserta ? 'text-slate-500' : ''
         ]">
-          {{ huruf.toUpperCase() }}. {{ d[`pilihan_${huruf}`] }}
+          {{ d[`pilihan_${huruf}`] }}
           <span v-if="huruf === d.jawaban_benar" class="text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded ml-1">Kunci</span>
           <span v-if="huruf === d.jawaban_peserta && huruf !== d.jawaban_benar" class="text-xs bg-red-200 text-red-800 px-1.5 py-0.5 rounded ml-1">Jawaban</span>
         </div>
@@ -233,7 +233,7 @@ export default {
           let label = ''
           if (h === item.jawaban_benar) label = ' <span style="background:#bbf7d0;color:#15803d;padding:1px 6px;border-radius:4px;font-size:11px">Kunci</span>'
           if (h === item.jawaban_peserta && h !== item.jawaban_benar) label += ' <span style="background:#fecaca;color:#dc2626;padding:1px 6px;border-radius:4px;font-size:11px">Jawaban</span>'
-          return `<p style="${cls};margin:2px 0 2px 16px;font-size:13px">${h.toUpperCase()}. ${item['pilihan_' + h]}${label}</p>`
+          return `<p style="${cls};margin:2px 0 2px 16px;font-size:13px">${item['pilihan_' + h]}${label}</p>`
         }).join('')
 
         return '<div style="margin-bottom:12px;padding:10px;border-radius:8px;border:1px solid ' + (item.is_correct ? '#bbf7d0' : '#fecaca') + ';background:' + (item.is_correct ? '#f0fdf4' : '#fef2f2') + '">' +

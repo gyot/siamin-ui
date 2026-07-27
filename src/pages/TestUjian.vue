@@ -107,7 +107,8 @@
         </div>
 
         <!-- STEP 3: Kerjakan Soal -->
-        <div v-if="selectedPaketId && soalList.length > 0 && !hasilData" class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100">
+        <div v-if="selectedPaketId && soalList.length > 0 && !hasilData" class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100 soal-area"
+          @copy.prevent @cut.prevent @paste.prevent @contextmenu.prevent>
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">3</div>
             <h2 class="text-lg font-bold text-slate-800">Kerjakan Soal</h2>
@@ -133,10 +134,7 @@
                   v-model="jawaban[soal.id_soal]"
                   class="mt-0.5 accent-blue-600"
                 />
-                <span class="text-sm text-slate-700">
-                  <strong class="text-slate-500">{{ huruf.toUpperCase() }}.</strong>
-                  {{ soal[`pilihan_${huruf}`] }}
-                </span>
+                <span class="text-sm text-slate-700">{{ soal[`pilihan_${huruf}`] }}</span>
               </label>
             </div>
           </div>
@@ -204,7 +202,7 @@
               huruf === d.jawaban_peserta && huruf !== d.jawaban_benar ? 'text-red-700 font-semibold line-through' : '',
               huruf !== d.jawaban_benar && huruf !== d.jawaban_peserta ? 'text-slate-500' : ''
             ]">
-              {{ huruf.toUpperCase() }}. {{ d[`pilihan_${huruf}`] }}
+              {{ d[`pilihan_${huruf}`] }}
               <span v-if="huruf === d.jawaban_benar" class="text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded ml-1">Kunci</span>
               <span v-if="huruf === d.jawaban_peserta && huruf !== d.jawaban_benar" class="text-xs bg-red-200 text-red-800 px-1.5 py-0.5 rounded ml-1">Jawaban Anda</span>
             </div>
@@ -373,3 +371,13 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.soal-area {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+</style>
