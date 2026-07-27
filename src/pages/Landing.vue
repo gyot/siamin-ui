@@ -70,7 +70,7 @@
               <div class="flex items-center justify-between gap-3 mb-6">
                 <div
                   class="inline-flex items-center gap-2 px-3 py-1.5 bg-cyan-500/20 rounded-full text-cyan-200 text-sm">
-                  Daftar Kegiatan
+                  {{ selectedTimker.isSemua ? 'Semua Kegiatan' : 'Daftar Kegiatan' }}
                 </div>
                 <button
                   class="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm border border-white/20 transition"
@@ -81,9 +81,24 @@
               <h2 class="text-2xl lg:text-3xl font-bold text-white leading-tight mb-2">
                 {{ selectedTimker.name }}
               </h2>
-              <p class="text-blue-100 text-sm mb-6">
+              <p class="text-blue-100 text-sm mb-4">
                 Menampilkan {{ filteredKegiatan.length }} kegiatan
               </p>
+
+              <div v-if="selectedTimker.isSemua" class="mb-4">
+                <div class="relative">
+                  <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <input
+                    v-model="searchQuery"
+                    type="text"
+                    placeholder="Cari kegiatan..."
+                    class="w-full pl-9 pr-4 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 backdrop-blur transition"
+                    @input="currentPage = 1"
+                  />
+                </div>
+              </div>
 
               <div v-if="isLoadingKegiatan" class="text-blue-100 text-sm py-10 text-center lg:text-left">
                 Memuat daftar kegiatan...
@@ -91,7 +106,7 @@
 
               <div v-else-if="paginatedKegiatan.length === 0"
                 class="text-blue-100 text-sm py-10 text-center lg:text-left">
-                Belum ada kegiatan untuk timker ini.
+                {{ searchQuery && selectedTimker.isSemua ? 'Tidak ada kegiatan yang cocok dengan pencarian.' : 'Belum ada kegiatan.' }}
               </div>
 
               <div v-else class="space-y-4">
@@ -105,13 +120,13 @@
                         target="_blank"
                         class="px-3 py-1 rounded-lg text-xs border border-cyan-300/40 text-cyan-100 hover:bg-cyan-400/15 transition"
                       >
-                        Halaman
+                        Detail
                       </a>
-                      <button
+                      <!-- <button
                         class="px-3 py-1 rounded-lg text-xs border border-white/20 text-blue-100 hover:bg-white/10 transition"
                         @click="openKegiatanDetail(item)">
                         Detail
-                      </button>
+                      </button> -->
                     </div>
                   </div>
                   <!-- <p class="text-blue-100 text-sm mb-2">{{ item.rincian_kegiatan || item.deskripsi || '-' }}</p> -->
@@ -477,7 +492,7 @@
 
 <script>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { getKegiatanTim, getAllKegiatanTimKegiatan } from '@/services/kegiatan'
+import { getKegiatanTim, getAllKegiatanTimKegiatan, listKegiatan } from '@/services/kegiatan'
 import { getUnitKerja } from '@/services/unit_kerja'
 import { fetchAPI } from '@/services/api'
 import database from '@/data/index.js'
@@ -499,6 +514,8 @@ export default {
     const qrCodeMap = ref({})
     const currentPage = ref(1)
     const itemsPerPage = 4
+
+    const searchQuery = ref('')
     function slugify(text) {
       if (!text) return ''
       return String(text)
@@ -572,12 +589,29 @@ export default {
       return { iconCircles: [], iconPaths: defaultIcon(), iconRects: [] }
     }
 
+    const SEMUA_CARD = {
+      id: 'semua',
+      name: 'Semua',
+      description: 'Menampilkan seluruh kegiatan dari semua tim kerja.',
+      iconBg: 'bg-gradient-to-br from-cyan-400 to-teal-500',
+      iconColor: 'text-white',
+      fullWidth: true,
+      keywords: ['semua', 'all'],
+      isSemua: true,
+      iconCircles: [],
+      iconRects: [],
+      iconPaths: [
+        { 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', d: 'M4 6h16M4 12h16M4 18h16' }
+      ]
+    }
+
     const buildDefaultTimkerCards = () => ([
       { id: 'paud', name: 'Timker Pendidikan Anak Usia Dini', description: 'Fokus pada pengembangan dan pengelolaan program pendidikan anak usia dini secara holistik dan inklusif.', iconBg: 'bg-gradient-to-br from-pink-400 to-rose-500', iconColor: 'text-yellow-100', fullWidth: false, keywords: ['anak usia dini', 'paud'], ...getIconConfig('paud', '001') },
       { id: 'sd', name: 'Timker Sekolah Dasar', description: 'Bertanggung jawab atas pelaksanaan dan inovasi pendidikan tingkat sekolah dasar.', iconBg: 'bg-gradient-to-br from-emerald-400 to-green-600', iconColor: 'text-lime-100', fullWidth: false, keywords: ['sekolah dasar', 'sd'], ...getIconConfig('sd', '002') },
       { id: 'smp', name: 'Timker Sekolah Menengah Pertama', description: 'Mengelola program dan kegiatan pendidikan untuk jenjang sekolah menengah pertama.', iconBg: 'bg-gradient-to-br from-sky-400 to-blue-600', iconColor: 'text-cyan-100', fullWidth: false, keywords: ['sekolah menengah pertama', 'smp'], ...getIconConfig('smp', '003') },
       { id: 'sma', name: 'Timker Sekolah Menengah', description: 'Bertugas dalam pengembangan dan pengawasan pendidikan tingkat menengah atas.', iconBg: 'bg-gradient-to-br from-amber-400 to-orange-500', iconColor: 'text-yellow-50', fullWidth: false, keywords: ['sekolah menengah', 'sma', 'smk'], ...getIconConfig('sma', '004') },
-      { id: 'subbag', name: 'Timker Subbag Umum', description: 'Mendukung operasional, administrasi, dan layanan umum untuk kelancaran seluruh program kerja.', iconBg: 'bg-gradient-to-br from-violet-500 to-fuchsia-600', iconColor: 'text-pink-100', fullWidth: true, keywords: ['subbag umum', 'umum', 'administrasi'], ...getIconConfig('subbag umum', '005') }
+      { id: 'subbag', name: 'Timker Subbag Umum', description: 'Mendukung operasional, administrasi, dan layanan umum untuk kelancaran seluruh program kerja.', iconBg: 'bg-gradient-to-br from-violet-500 to-fuchsia-600', iconColor: 'text-pink-100', fullWidth: true, keywords: ['subbag umum', 'umum', 'administrasi'], ...getIconConfig('subbag umum', '005') },
+      SEMUA_CARD,
     ])
     const timkerCards = ref(buildDefaultTimkerCards())
     const normalizeUnitCode = (value) => {
@@ -597,28 +631,32 @@ export default {
           return
         }
 
-        timkerCards.value = rows.map((item) => {
-          const name = item.nama_unit || item.nama || 'Timker'
-          const lowerName = String(name).toLowerCase()
-          const kodeUnit = normalizeUnitCode(item.kode_unit || item.unit_kerja_id || item.id || '')
-          const cardId = kodeUnit || item.id || item.id_unit || ''
-          const iconConfig = getIconConfig(name, kodeUnit)
-          return {
-            id: cardId,
-            name,
-            description: item.keterangan !== '-'
-              ? item.keterangan
-              : `Unit kerja ${name}${item.tahun ? ` tahun ${item.tahun}` : ''}`,
-            kode_unit: kodeUnit,
-            iconBg: getIconBg(name, kodeUnit),
-            iconColor: getIconColor(name, kodeUnit),
-            fullWidth: lowerName.includes('subbag') || lowerName.includes('umum'),
-            keywords: generateKeywords(name),
-            iconPaths: iconConfig.iconPaths,
-            iconCircles: iconConfig.iconCircles,
-            iconRects: iconConfig.iconRects
-          }
-        })
+        timkerCards.value = [
+          
+          ...rows.map((item) => {
+            const name = item.nama_unit || item.nama || 'Timker'
+            const lowerName = String(name).toLowerCase()
+            const kodeUnit = normalizeUnitCode(item.kode_unit || item.unit_kerja_id || item.id || '')
+            const cardId = kodeUnit || item.id || item.id_unit || ''
+            const iconConfig = getIconConfig(name, kodeUnit)
+            return {
+              id: cardId,
+              name,
+              description: item.keterangan !== '-'
+                ? item.keterangan
+                : `Unit kerja ${name}${item.tahun ? ` tahun ${item.tahun}` : ''}`,
+              kode_unit: kodeUnit,
+              iconBg: getIconBg(name, kodeUnit),
+              iconColor: getIconColor(name, kodeUnit),
+              fullWidth: lowerName.includes('subbag') || lowerName.includes('umum'),
+              keywords: generateKeywords(name),
+              iconPaths: iconConfig.iconPaths,
+              iconCircles: iconConfig.iconCircles,
+              iconRects: iconConfig.iconRects
+            }
+          }),
+          SEMUA_CARD,
+        ]
 
 
       } catch (error) {
@@ -744,6 +782,16 @@ export default {
     const filteredKegiatan = computed(() => {
       if (!selectedTimker.value) return []
       
+      if (activeUnitCode.value === 'semua') {
+        const q = searchQuery.value.toLowerCase().trim()
+        if (!q) return kegiatan.value
+        return kegiatan.value.filter((item) => {
+          const nama = String(item.nama_kegiatan || '').toLowerCase()
+          const deskripsi = String(item.deskripsi || '').toLowerCase()
+          return nama.includes(q) || deskripsi.includes(q)
+        })
+      }
+
       const selectedUnitCode = normalizeCode(activeUnitCode.value)
       
       return kegiatan.value.filter((item) => {
@@ -1038,17 +1086,24 @@ export default {
     const loadKegiatan = async (selected) => {
       
       isLoadingKegiatan.value = true
+      searchQuery.value = ''
       try {
-        const selectedUnitCode = normalizeCode(selected.id)
-        activeUnitCode.value = selectedUnitCode
-        const queryId = selectedUnitCode
-        const data = await getAllKegiatanTimKegiatan(queryId)
-        const rows = Array.isArray(data) ? data : []
+        if (selected.id === 'semua') {
+          activeUnitCode.value = 'semua'
+          const data = await listKegiatan()
+          kegiatan.value = Array.isArray(data) ? data : []
+        } else {
+          const selectedUnitCode = normalizeCode(selected.id)
+          activeUnitCode.value = selectedUnitCode
+          const queryId = selectedUnitCode
+          const data = await getAllKegiatanTimKegiatan(queryId)
+          const rows = Array.isArray(data) ? data : []
 
-        kegiatan.value = rows.filter((item) => {
-          const itemUnitCode = normalizeCode(resolveKegiatanUnitCode(item))
-          return selectedUnitCode && itemUnitCode && itemUnitCode === selectedUnitCode
-        })
+          kegiatan.value = rows.filter((item) => {
+            const itemUnitCode = normalizeCode(resolveKegiatanUnitCode(item))
+            return selectedUnitCode && itemUnitCode && itemUnitCode === selectedUnitCode
+          })
+        }
       } catch (error) {
         console.error('Gagal memuat data kegiatan di landing page:', error)
         kegiatan.value = []
@@ -1153,8 +1208,9 @@ export default {
     }
 
     
+
+    
     onMounted(() => {
-      // loadKegiatan()
       loadUnitKerja()
     })
 
@@ -1180,6 +1236,7 @@ export default {
       paginatedKegiatan,
       currentPage,
       totalPages,
+      searchQuery,
       formatDate,
       slugify,
       buildKegiatanDetailUrl,
