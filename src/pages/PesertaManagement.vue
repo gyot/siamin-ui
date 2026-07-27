@@ -28,13 +28,13 @@
           >
             Export Excel
           </button>
-          <button
+          <!-- <button
             @click="downloadBatchDocxZip"
             :disabled="isDownloadingBatchDocx || filteredPeserta.length === 0"
             class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {{ isDownloadingBatchDocx ? 'Menyiapkan Batch DOCX...' : 'Download Batch DOCX' }}
-          </button>
+          </button> -->
           <button
             @click="downloadDaftarHadir"
             :disabled="filteredPeserta.length === 0"
@@ -42,13 +42,13 @@
           >
             Unduh Daftar Hadir
           </button>
-          <button
+          <!-- <button
             @click="openAllBiodataModal"
             :disabled="filteredPeserta.length === 0"
             class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Tampilkan Semua Biodata
-          </button>
+          </button> -->
           <button
             @click="openKelasModal"
             class="inline-flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm"
@@ -300,10 +300,13 @@
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.nip || '-' }}</td>
                 <!-- <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 truncate">{{ p.email }}</td> -->
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 max-w-xs truncate">{{ p.nama_instansi }}</td>
-                <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.kab_kota || '-' }}</td>
+                <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.kab_kota || p.tpk?.kabupaten_kota || '-' }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">
-                  <span v-if="p.tpk">{{ p.tpk.lokasi }}{{ p.tpk.kabupaten_kota ? ` (${p.tpk.kabupaten_kota})` : '' }}</span>
+                  <span v-if="p.tpk">{{ p.tpk.lokasi }}{{ (p.tpk.kabupaten_kota || p.kab_kota) ? ` (${p.tpk.kabupaten_kota || p.kab_kota})` : '' }}</span>
                   <span v-else class="text-gray-400">-</span>
+                  <div v-if="getPesertaKelasNames(p).length" class="text-xs text-indigo-600 mt-0.5">
+                    {{ getPesertaKelasNames(p).join(', ') }}
+                  </div>
                 </td>
                 <!-- <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">
                   {{ getNamaKegiatan(p.id_kegiatan) }}
@@ -473,8 +476,11 @@
             <div>
               <p class="text-gray-600">TPK</p>
               <p class="font-semibold text-gray-900">
-                <span v-if="p.tpk">{{ p.tpk.lokasi }}{{ p.tpk.kabupaten_kota ? ` (${p.tpk.kabupaten_kota})` : '' }}</span>
+                <span v-if="p.tpk">{{ p.tpk.lokasi }}{{ (p.tpk.kabupaten_kota || p.kab_kota) ? ` (${p.tpk.kabupaten_kota || p.kab_kota})` : '' }}</span>
                 <span v-else class="text-gray-400 font-normal">-</span>
+              </p>
+              <p v-if="getPesertaKelasNames(p).length" class="text-xs text-indigo-600 font-medium mt-0.5">
+                Kelas: {{ getPesertaKelasNames(p).join(', ') }}
               </p>
             </div>
           </div>
@@ -1433,6 +1439,7 @@ export default {
 
     // Kelas state
     const kelasList = ref([])
+    const pesertaKelasMap = ref({})
     const showKelasModal = ref(false)
     const kelasForm = ref({ nama_kelas: '', deskripsi: '' })
     const showKelasDetailModal = ref(false)
@@ -2165,6 +2172,10 @@ export default {
     const getPesertaLokasiKegiatan = (p) => {
       const kegData = resolveKegiatanData(p)
       return kegData.lokasi || '-'
+    }
+
+    const getPesertaKelasNames = (p) => {
+      return pesertaKelasMap.value[p.id_peserta] || []
     }
 
     const getPesertaBiodata = (p) => {
@@ -3986,8 +3997,24 @@ export default {
       try {
         const data = await getKelasByKegiatan(props.kegiatanId)
         kelasList.value = Array.isArray(data) ? data : (data?.data || [])
+
+        const map = {}
+        await Promise.all(kelasList.value.map(async (k) => {
+          try {
+            const detail = await showKelas(k.id_kelas)
+            const members = detail?.pesertas || []
+            members.forEach((m) => {
+              const pid = m.id_peserta
+              if (!pid) return
+              if (!map[pid]) map[pid] = []
+              map[pid].push(k.nama_kelas)
+            })
+          } catch { /* skip */ }
+        }))
+        pesertaKelasMap.value = map
       } catch {
         kelasList.value = []
+        pesertaKelasMap.value = {}
       }
     }
 
@@ -4065,11 +4092,16 @@ export default {
           ? tpkItems.map(t => t.kabupaten_kota ? `${t.lokasi} (${t.kabupaten_kota})` : t.lokasi).join(', ')
           : '-'
 
+        const kabKotaLabel = tpkItems.length > 0
+          ? [...new Set(tpkItems.map(t => t.kabupaten_kota).filter(Boolean))].join(', ') || '-'
+          : '-'
+
         const data = {
           kegiatan: namaKegiatan,
           peran: namaKelas,
           tpk: tpkLabel,
-          kab_kota: '-'
+          kab_kota: kabKotaLabel,
+          kelas: namaKelas,
         }
 
         const pesertaList = kelasAnggota.value.map(p => ({
@@ -4077,6 +4109,7 @@ export default {
           nama_lengkap: p.nama_lengkap || '-',
           nip: p.nip || '-',
           nama_instansi: p.nama_instansi || '-',
+          kab_kota: p.kab_kota || p.kabupaten_kota || '-',
         }))
 
         const xmlContent = await parseDocxPreservingFormat(templateDocx)
@@ -4232,6 +4265,9 @@ export default {
       masukKelas,
       hapusAnggotaKelas,
       downloadDaftarHadirKelas,
+      buildStorageUrl,
+      pesertaKelasMap,
+      getPesertaKelasNames,
     }
   }
 }

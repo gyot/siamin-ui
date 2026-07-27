@@ -158,19 +158,28 @@ export const replaceTablePlaceholder = (xmlContent, placeholder, rows) => {
  * @param {Array<Object>} rows - Array of row objects: { nama_lengkap, nip, nama_instansi }
  * @returns {string} Table XML
  */
-export const generateDaftarHadirTableXml = (rows) => {
+export const generateDaftarHadirTableXml = (rows, options = {}) => {
   if (!rows || rows.length === 0) return ''
 
-  const headerRow = `<w:tr w14:paraId="H001"><w:tblPrEx><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:left w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:bottom w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:right w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideH w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideV w:val="single" w:color="auto" w:sz="4" w:space="0"/></w:tblBorders><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPrEx><w:trPr><w:trHeight w:val="485" w:hRule="atLeast"/></w:trPr>${makeHeaderCell('619', 'No.')}${makeHeaderCell('3207', 'Nama')}${makeHeaderCell('1914', 'NIP')}${makeHeaderCell('1914', 'Instansi')}${makeHeaderCell('1914', 'Tanda Tangan')}</w:tr>`
+  const showKabKota = options.showKabKota !== false
+
+  const headerCells = `${makeHeaderCell('500', 'No.')}${makeHeaderCell('2800', 'Nama')}${makeHeaderCell('1600', 'NIP')}${makeHeaderCell('1600', 'Instansi')}${showKabKota ? makeHeaderCell('1400', 'Kab/Kota') : ''}${makeHeaderCell('1600', 'Tanda Tangan')}`
+  const headerRow = `<w:tr w14:paraId="H001"><w:tblPrEx><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:left w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:bottom w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:right w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideH w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideV w:val="single" w:color="auto" w:sz="4" w:space="0"/></w:tblBorders><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPrEx><w:trPr><w:trHeight w:val="485" w:hRule="atLeast"/></w:trPr>${headerCells}</w:tr>`
 
   const dataRows = rows.map((row, i) => {
     const nama = escapeXml(row.nama_lengkap || '-')
     const nip = escapeXml(row.nip || '-')
     const instansi = escapeXml(row.nama_instansi || '-')
-    return `<w:tr w14:paraId="D${String(i).padStart(3,'0')}"><w:tblPrEx><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:left w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:bottom w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:right w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideH w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideV w:val="single" w:color="auto" w:sz="4" w:space="0"/></w:tblBorders><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPrEx><w:trPr><w:trHeight w:val="529" w:hRule="atLeast"/></w:trPr>${makeDataCell('619', String(i + 1))}${makeDataCell('3207', nama)}${makeDataCell('1914', nip)}${makeDataCell('1914', instansi)}${makeDataCell('1914', '')}</w:tr>`
+    const kabKota = escapeXml(row.kab_kota || row.kabupaten_kota || '-')
+    const dataCells = `${makeDataCell('500', String(i + 1))}${makeDataCell('2800', nama)}${makeDataCell('1600', nip)}${makeDataCell('1600', instansi)}${showKabKota ? makeDataCell('1400', kabKota) : ''}${makeDataCell('1600', '')}`
+    return `<w:tr w14:paraId="D${String(i).padStart(3,'0')}"><w:tblPrEx><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:left w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:bottom w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:right w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideH w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideV w:val="single" w:color="auto" w:sz="4" w:space="0"/></w:tblBorders><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPrEx><w:trPr><w:trHeight w:val="529" w:hRule="atLeast"/></w:trPr>${dataCells}</w:tr>`
   }).join('')
 
-  return `<w:tbl><w:tblPr><w:tblStyle w:val="5"/><w:tblW w:w="0" w:type="auto"/><w:tblInd w:w="0" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:left w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:bottom w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:right w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideH w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideV w:val="single" w:color="auto" w:sz="4" w:space="0"/></w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid><w:gridCol w:w="619"/><w:gridCol w:w="3207"/><w:gridCol w:w="1914"/><w:gridCol w:w="1914"/><w:gridCol w:w="1914"/></w:tblGrid>${headerRow}${dataRows}</w:tbl>`
+  const gridCols = showKabKota
+    ? '<w:gridCol w:w="500"/><w:gridCol w:w="2800"/><w:gridCol w:w="1600"/><w:gridCol w:w="1600"/><w:gridCol w:w="1400"/><w:gridCol w:w="1600"/>'
+    : '<w:gridCol w:w="500"/><w:gridCol w:w="2800"/><w:gridCol w:w="1600"/><w:gridCol w:w="1600"/><w:gridCol w:w="1600"/>'
+
+  return `<w:tbl><w:tblPr><w:tblStyle w:val="5"/><w:tblW w:w="0" w:type="auto"/><w:tblInd w:w="0" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:left w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:bottom w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:right w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideH w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideV w:val="single" w:color="auto" w:sz="4" w:space="0"/></w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${gridCols}</w:tblGrid>${headerRow}${dataRows}</w:tbl>`
 }
 
 const makeHeaderCell = (width, text) => {
