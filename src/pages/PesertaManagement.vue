@@ -3794,10 +3794,21 @@ export default {
           : '-'
 
         const peranLabel = filterPeran.value || 'Semua Peran'
+
         const tpkLabel = filterTpk.value
           ? (uniqueTpk.value.find(t => String(t.id_tpk) === String(filterTpk.value))?.label || '-')
           : 'Semua TPK'
-        const kabKotaLabel = filterKabKota.value || 'Semua Kabupaten/Kota'
+
+        let kabKotaLabel = 'Semua Kabupaten/Kota'
+        if (filterTpk.value) {
+          const selectedTpk = uniqueTpk.value.find(t => String(t.id_tpk) === String(filterTpk.value))
+          if (selectedTpk) {
+            const tpkData = peserta.value.find(p => String(p.tpk?.id_tpk ?? '') === String(filterTpk.value))
+            kabKotaLabel = tpkData?.tpk?.kabupaten_kota || selectedTpk.label || '-'
+          }
+        } else if (filterKabKota.value) {
+          kabKotaLabel = filterKabKota.value
+        }
 
         const data = {
           kegiatan: namaKegiatan,
@@ -3811,13 +3822,8 @@ export default {
 
         const tableXml = generateDaftarHadirTableXml(filteredPeserta.value)
         if (tableXml) {
-          const placeholder = '{DAFTAR_HADIR}'
-          const paragraphRegex = new RegExp(`(<w:p[^>]*>[\\s\\S]*?\\{DAFTAR_HADIR\\}[\\s\\S]*?</w:p>)`, 'g')
-          const match = paragraphRegex.exec(xml)
-          if (match) {
-            const paragraphWithoutPlaceholder = match[1].replace(placeholder, '')
-            xml = xml.replace(match[1], paragraphWithoutPlaceholder + tableXml)
-          }
+          const tableRegex = /<w:tbl>[\s\S]*?<\/w:tbl>/
+          xml = xml.replace(tableRegex, tableXml)
         }
 
         await generateDocxFromXml(xml, templateDocx, `Daftar Hadir - ${namaKegiatan}.docx`)
