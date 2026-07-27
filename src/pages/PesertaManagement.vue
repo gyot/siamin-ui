@@ -171,6 +171,18 @@
             </select>
           </div>
           <div>
+            <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Filter Peran</label>
+            <select
+              v-model="filterPeran"
+              class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">Semua Peran</option>
+              <option v-for="peran in uniquePeran" :key="peran" :value="peran">
+                {{ peran }}
+              </option>
+            </select>
+          </div>
+          <div>
             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Data per Halaman</label>
             <select
               v-model.number="pageSize"
@@ -1311,6 +1323,7 @@ export default {
     const filterStatus = ref('')
     const filterKabKota = ref('')
     const filterTpk = ref('')
+    const filterPeran = ref('')
     const currentPage = ref(1)
     const pageSize = ref(10)
     const sortBy = ref('nama_lengkap')
@@ -1780,7 +1793,8 @@ export default {
         const kabKotaPeserta = String(p.kab_kota || p.kabupaten_kota || '').trim()
         const kabKotaMatch = !filterKabKota.value || kabKotaPeserta === filterKabKota.value
         const tpkMatch = !filterTpk.value || String(p.tpk?.id_tpk ?? '') === String(filterTpk.value)
-        return namaMatch && kegiatanMatch && statusMatch && kabKotaMatch && tpkMatch
+        const peranMatch = !filterPeran.value || String(p.peran || '').trim() === filterPeran.value
+        return namaMatch && kegiatanMatch && statusMatch && kabKotaMatch && tpkMatch && peranMatch
       })
     })
 
@@ -1863,7 +1877,7 @@ export default {
       currentPage.value = nextPage
     }
 
-    watch([searchNama, filterKegiatan, filterStatus, filterKabKota, filterTpk, pageSize], () => {
+    watch([searchNama, filterKegiatan, filterStatus, filterKabKota, filterTpk, filterPeran, pageSize], () => {
       currentPage.value = 1
     })
 
@@ -1911,6 +1925,15 @@ export default {
       })
 
       return Array.from(seen.values()).sort((a, b) => a.label.localeCompare(b.label, 'id'))
+    })
+
+    const uniquePeran = computed(() => {
+      const peranSet = new Set()
+      peserta.value.forEach((p) => {
+        const peran = String(p.peran || '').trim()
+        if (peran) peranSet.add(peran)
+      })
+      return Array.from(peranSet).sort((a, b) => a.localeCompare(b, 'id'))
     })
 
     const pesertaAktif = computed(() => {
@@ -3773,6 +3796,7 @@ export default {
       filterStatus,
       filterKabKota,
       filterTpk,
+      filterPeran,
       currentPage,
       pageSize,
       formPeserta,
@@ -3795,6 +3819,7 @@ export default {
       sortIndicator,
       uniqueKabKota,
       uniqueTpk,
+      uniquePeran,
       pesertaAktif,
       pesertaBersertifikat,
       filteredPesertaAktif,
