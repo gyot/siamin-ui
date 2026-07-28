@@ -3975,8 +3975,13 @@ export default {
           kab_kota: kabKotaLabel
         }
 
-        const ketuaPanitia = sortedPeserta.value.find(p =>
-          (p.peran || '').toLowerCase().includes('ketua panitia') || (p.peran || '').toLowerCase() === 'ketua_panitia'
+        const namaKegiatanId = sortedPeserta.value[0]
+          ? getPesertaKegiatanId(sortedPeserta.value[0])
+          : props.kegiatanId
+
+        const ketuaPanitia = peserta.value.find(p =>
+          String(getPesertaKegiatanId(p)) === String(namaKegiatanId) &&
+          ((p.peran || '').toLowerCase().includes('ketua panitia') || (p.peran || '').toLowerCase() === 'ketua_panitia')
         )
         data.ketua_panitia = ketuaPanitia?.nama_lengkap || '-'
         data.nip_ketua_panitia = ketuaPanitia?.nip || '-'
