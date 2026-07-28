@@ -153,17 +153,17 @@
 
         <!-- STEP 4: Hasil -->
          
-        <!-- <div v-if="hasilData" class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100">
+        <div v-if="hasilData" class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 class="text-lg font-bold text-slate-800">Hasil Ujian</h2>
+            <h2 class="text-lg font-bold text-slate-800">Selesai! Terimakasih telah menjawab.</h2>
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+          <!-- <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <div class="bg-blue-50 rounded-xl p-4 text-center border border-blue-100">
               <div class="text-2xl font-bold text-blue-700">{{ hasilData.ringkasan.total_soal }}</div>
               <div class="text-xs text-blue-600">Total Soal</div>
@@ -206,8 +206,8 @@
               <span v-if="huruf === d.jawaban_benar" class="text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded ml-1">Kunci</span>
               <span v-if="huruf === d.jawaban_peserta && huruf !== d.jawaban_benar" class="text-xs bg-red-200 text-red-800 px-1.5 py-0.5 rounded ml-1">Jawaban Anda</span>
             </div>
-          </div>
-        </div> -->
+          </div> -->
+        </div> 
       </template>
     </div>
   </div>
