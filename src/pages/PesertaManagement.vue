@@ -3975,6 +3975,12 @@ export default {
           kab_kota: kabKotaLabel
         }
 
+        const ketuaPanitia = sortedPeserta.value.find(p =>
+          (p.peran || '').toLowerCase().includes('ketua panitia') || (p.peran || '').toLowerCase() === 'ketua_panitia'
+        )
+        data.ketua_panitia = ketuaPanitia?.nama_lengkap || '-'
+        data.nip_ketua_panitia = ketuaPanitia?.nip || '-'
+
         const xmlContent = await parseDocxPreservingFormat(templateDocx)
         let xml = replacePlaceholdersInXml(xmlContent, data)
 
@@ -4103,6 +4109,13 @@ export default {
           kab_kota: kabKotaLabel,
           kelas: namaKelas,
         }
+
+        const ketuaPanitia = peserta.value.find(p =>
+          String(p.id_kegiatan) === String(props.kegiatanId) &&
+          ((p.peran || '').toLowerCase().includes('ketua panitia') || (p.peran || '').toLowerCase() === 'ketua_panitia')
+        )
+        data.ketua_panitia = ketuaPanitia?.nama_lengkap || '-'
+        data.nip_ketua_panitia = ketuaPanitia?.nip || '-'
 
         const pesertaList = kelasAnggota.value.map(p => ({
           ...p,
