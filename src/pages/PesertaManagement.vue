@@ -4098,7 +4098,7 @@ export default {
 
         const data = {
           kegiatan: namaKegiatan,
-          peran: namaKelas,
+          peran: filterPeran.value || 'Peserta',
           tpk: tpkLabel,
           kab_kota: kabKotaLabel,
           kelas: namaKelas,
