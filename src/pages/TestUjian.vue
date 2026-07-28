@@ -152,7 +152,8 @@
         </div>
 
         <!-- STEP 4: Hasil -->
-        <div v-if="hasilData" class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100">
+         
+        <!-- <div v-if="hasilData" class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100">
           <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,7 +182,6 @@
             </div>
           </div>
 
-          <!-- Detail Jawaban -->
           <h3 class="font-semibold text-slate-700 mb-3">Detail Jawaban</h3>
           <div v-for="(d, index) in hasilData.detail" :key="d.id_soal" :class="[
             'mb-4 p-4 rounded-xl border',
@@ -207,7 +207,7 @@
               <span v-if="huruf === d.jawaban_peserta && huruf !== d.jawaban_benar" class="text-xs bg-red-200 text-red-800 px-1.5 py-0.5 rounded ml-1">Jawaban Anda</span>
             </div>
           </div>
-        </div>
+        </div> -->
       </template>
     </div>
   </div>
