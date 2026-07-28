@@ -1395,6 +1395,7 @@ const CACHE_TTL_MS = 1000 * 60 * 10 // 10 minutes
 import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXml, processDocxTemplate, generateDaftarHadirTableXml } from '@/utils/docxUtils.js'
 import { getKegiatan } from '@/services/kegiatan'
 import { listPenugasanPegawai } from '@/services/penugasan'
+import { getKetuaPanitia } from '@/services/penugasan'
 import { buildPublicUrl, buildStorageUrl, getApiHostBase } from '@/utils/url'
 import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
 import { getKelasByKegiatan, createKelas, showKelas, addAnggotaKelas, removeAnggotaKelas } from '@/services/kelas'
@@ -3979,11 +3980,8 @@ export default {
           ? getPesertaKegiatanId(sortedPeserta.value[0])
           : props.kegiatanId
 
-        const ketuaPanitia = peserta.value.find(p =>
-          String(getPesertaKegiatanId(p)) === String(namaKegiatanId) &&
-          ((p.peran || '').toLowerCase().includes('ketua panitia') || (p.peran || '').toLowerCase() === 'ketua_panitia')
-        )
-        data.ketua_panitia = ketuaPanitia?.nama_lengkap || '-'
+        const ketuaPanitia = await getKetuaPanitia(namaKegiatanId)
+        data.ketua_panitia = ketuaPanitia?.nama || '-'
         data.nip_ketua_panitia = ketuaPanitia?.nip || '-'
 
         const xmlContent = await parseDocxPreservingFormat(templateDocx)
@@ -4115,11 +4113,8 @@ export default {
           kelas: namaKelas,
         }
 
-        const ketuaPanitia = peserta.value.find(p =>
-          String(p.id_kegiatan) === String(props.kegiatanId) &&
-          ((p.peran || '').toLowerCase().includes('ketua panitia') || (p.peran || '').toLowerCase() === 'ketua_panitia')
-        )
-        data.ketua_panitia = ketuaPanitia?.nama_lengkap || '-'
+        const ketuaPanitia = await getKetuaPanitia(props.kegiatanId)
+        data.ketua_panitia = ketuaPanitia?.nama || '-'
         data.nip_ketua_panitia = ketuaPanitia?.nip || '-'
 
         const pesertaList = kelasAnggota.value.map(p => ({

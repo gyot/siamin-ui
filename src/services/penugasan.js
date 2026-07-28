@@ -249,3 +249,12 @@ export default {
   editPenugasanPegawai,
   removePenugasanPegawai
 }
+
+export const getKetuaPanitia = async (idKegiatan) => {
+  try {
+    const data = await fetchAPI(`penugasan/ketua-panitia/${idKegiatan}`)
+    return data || null
+  } catch {
+    return null
+  }
+}
