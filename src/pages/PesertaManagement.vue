@@ -3983,6 +3983,7 @@ export default {
         const ketuaPanitia = await getKetuaPanitia(namaKegiatanId)
         data.ketua_panitia = ketuaPanitia?.nama || '-'
         data.nip_ketua_panitia = ketuaPanitia?.nip || '-'
+        data.nip = ketuaPanitia?.nip || '-'
 
         const xmlContent = await parseDocxPreservingFormat(templateDocx)
         let xml = replacePlaceholdersInXml(xmlContent, data)
@@ -4116,6 +4117,7 @@ export default {
         const ketuaPanitia = await getKetuaPanitia(props.kegiatanId)
         data.ketua_panitia = ketuaPanitia?.nama || '-'
         data.nip_ketua_panitia = ketuaPanitia?.nip || '-'
+        data.nip = ketuaPanitia?.nip || '-'
 
         const pesertaList = kelasAnggota.value.map(p => ({
           ...p,
