@@ -453,33 +453,38 @@ export default {
 
     const getFasilitatorChartData = (fasilitator, aspect) => {
       const total = fasilitator.jumlah_penilaian || 0
-      const distribution = {
-        '1_bintang': 0,
-        '2_bintang': 0,
-        '3_bintang': 0,
-        '4_bintang': 0,
-        '5_bintang': 0
-      }
 
-      // Calculate approximate distribution from average
-      const avg = fasilitator[`rata_rata_${aspect}`] || 0
-      
-      // Distribute based on average (approximation)
-      if (avg >= 4.5) {
-        distribution['5_bintang'] = Math.round(total * 0.8)
-        distribution['4_bintang'] = Math.round(total * 0.2)
-      } else if (avg >= 4.0) {
-        distribution['5_bintang'] = Math.round(total * 0.5)
-        distribution['4_bintang'] = Math.round(total * 0.4)
-        distribution['3_bintang'] = Math.round(total * 0.1)
-      } else if (avg >= 3.0) {
-        distribution['4_bintang'] = Math.round(total * 0.4)
-        distribution['3_bintang'] = Math.round(total * 0.4)
-        distribution['2_bintang'] = Math.round(total * 0.2)
+      const distKey = `distribusi_${aspect}`
+      const rawDist = fasilitator[distKey]
+
+      let distribution
+      if (rawDist && typeof rawDist === 'object') {
+        distribution = {
+          '1_bintang': rawDist['1'] || rawDist['1_bintang'] || 0,
+          '2_bintang': rawDist['2'] || rawDist['2_bintang'] || 0,
+          '3_bintang': rawDist['3'] || rawDist['3_bintang'] || 0,
+          '4_bintang': rawDist['4'] || rawDist['4_bintang'] || 0,
+          '5_bintang': rawDist['5'] || rawDist['5_bintang'] || 0,
+        }
       } else {
-        distribution['3_bintang'] = Math.round(total * 0.3)
-        distribution['2_bintang'] = Math.round(total * 0.4)
-        distribution['1_bintang'] = Math.round(total * 0.3)
+        distribution = { '1_bintang': 0, '2_bintang': 0, '3_bintang': 0, '4_bintang': 0, '5_bintang': 0 }
+        const avg = fasilitator[`rata_rata_${aspect}`] || 0
+        if (avg >= 4.5) {
+          distribution['5_bintang'] = Math.round(total * 0.8)
+          distribution['4_bintang'] = Math.round(total * 0.2)
+        } else if (avg >= 4.0) {
+          distribution['5_bintang'] = Math.round(total * 0.5)
+          distribution['4_bintang'] = Math.round(total * 0.4)
+          distribution['3_bintang'] = Math.round(total * 0.1)
+        } else if (avg >= 3.0) {
+          distribution['4_bintang'] = Math.round(total * 0.4)
+          distribution['3_bintang'] = Math.round(total * 0.4)
+          distribution['2_bintang'] = Math.round(total * 0.2)
+        } else {
+          distribution['3_bintang'] = Math.round(total * 0.3)
+          distribution['2_bintang'] = Math.round(total * 0.4)
+          distribution['1_bintang'] = Math.round(total * 0.3)
+        }
       }
 
       return getBarChartData(distribution, total, `${fasilitator.nama} - ${aspect}`)
