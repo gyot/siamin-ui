@@ -226,6 +226,32 @@
           </div>
         </div>
 
+        <!-- Section IV: Saran dan Masukan -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-slate-100">
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold">
+              IV
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-slate-800">Saran dan Masukan</h2>
+              <p class="text-xs text-slate-500">Masukan peserta untuk perbaikan kegiatan</p>
+            </div>
+          </div>
+
+          <div v-if="saranList.length === 0" class="rounded-xl border border-slate-200 bg-slate-50 p-5 text-center text-sm text-slate-500">
+            Belum ada saran dan masukan.
+          </div>
+          <ol v-else class="space-y-3">
+            <li v-for="(saran, index) in saranList" :key="index"
+              class="flex gap-3 rounded-xl border border-purple-100 bg-purple-50/50 p-4 text-sm text-slate-700">
+              <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-purple-600 text-xs font-bold text-white">
+                {{ index + 1 }}
+              </span>
+              <p class="whitespace-pre-line leading-relaxed">{{ saran }}</p>
+            </li>
+          </ol>
+        </div>
+
         <!-- Export Buttons -->
         <div class="flex gap-4">
           <button @click="printLaporan" class="flex-1 px-6 py-3 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition font-semibold">
@@ -233,6 +259,12 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2z" />
             </svg>
             Cetak Laporan
+          </button>
+          <button @click="exportDocx" class="flex-1 px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-semibold shadow-lg hover:shadow-xl">
+            <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export DOCX
           </button>
           <button @click="exportPDF" class="flex-1 btn-primary px-6 py-3 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition">
             <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,6 +285,7 @@ import { fetchAPI } from '@/services/api'
 import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
 import { Bar } from 'vue-chartjs'
 import html2canvas from 'html2canvas'
+import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, ImageRun } from 'docx'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -451,6 +484,13 @@ export default {
       ]
     })
 
+    const saranList = computed(() => {
+      if (!Array.isArray(detailEvaluasi.value)) return []
+      return detailEvaluasi.value
+        .map(item => String(item?.saran || '').trim())
+        .filter(Boolean)
+    })
+
     const getFasilitatorChartData = (fasilitator, aspect) => {
       const total = fasilitator.jumlah_penilaian || 0
 
@@ -628,6 +668,251 @@ export default {
       alert('Fitur export PDF akan segera tersedia!')
     }
 
+    const ratingLabels = { 1: 'Sangat Kurang', 2: 'Kurang', 3: 'Cukup', 4: 'Baik', 5: 'Sangat Baik' }
+
+    const buildDistributionRows = (label, distribution, total) => {
+      const rows = []
+      for (let s = 1; s <= 5; s++) {
+        const count = distribution?.[`${s}_bintang`] || 0
+        const pct = total > 0 ? ((count / total) * 100).toFixed(1) : '0.0'
+        rows.push([ratingLabels[s], String(count), `${pct}%`])
+      }
+      return rows
+    }
+
+    const cell = (text, opts = {}) => new TableCell({
+      children: [new Paragraph({ children: [new TextRun({ text: String(text), bold: opts.bold, size: opts.size || 20, font: 'Calibri' })], alignment: opts.align })],
+      width: opts.width ? { size: opts.width, type: WidthType.DXA } : undefined,
+      shading: opts.fill ? { fill: opts.fill } : undefined,
+    })
+
+    const headerCell = (text, width) => cell(text, { bold: true, fill: '2563EB', width, align: AlignmentType.CENTER, size: 20 })
+    const headerCellWhite = (text, width) => new TableCell({
+      children: [new Paragraph({ children: [new TextRun({ text, bold: true, color: 'FFFFFF', size: 20, font: 'Calibri' })], alignment: AlignmentType.CENTER })],
+      width: width ? { size: width, type: WidthType.DXA } : undefined,
+      shading: { fill: '2563EB' },
+    })
+
+    const makeTable = (headerTexts, dataRows, colWidths) => {
+      const totalWidth = colWidths.reduce((a, b) => a + b, 0)
+      const headerRow = new TableRow({
+        children: headerTexts.map((t, i) => headerCellWhite(t, colWidths[i])),
+        tableHeader: true,
+      })
+      const rows = dataRow => new TableRow({
+        children: dataRow.map((t, i) => cell(t, { width: colWidths[i], align: i > 0 ? AlignmentType.CENTER : undefined })),
+      })
+      return new Table({
+        width: { size: totalWidth, type: WidthType.DXA },
+        rows: [headerRow, ...dataRows.map(r => rows(r))],
+      })
+    }
+
+    const captureChartForDocx = async (elementId) => {
+      const element = document.getElementById(elementId)
+      if (!element) return null
+
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#ffffff',
+        scale: 1.5,
+        useCORS: true,
+        width: element.offsetWidth,
+        height: element.offsetHeight,
+      })
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.95))
+      return blob ? new Uint8Array(await blob.arrayBuffer()) : null
+    }
+
+    const addChartToDocument = async (children, elementId, title) => {
+      const image = await captureChartForDocx(elementId)
+      if (!image) return
+
+      children.push(new Paragraph({
+        children: [new TextRun({ text: title, bold: true, size: 20, font: 'Calibri' })],
+        spacing: { before: 120, after: 80 },
+      }))
+      children.push(new Paragraph({
+        children: [new ImageRun({ data: image, transformation: { width: 560, height: 373 }, type: 'png' })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 160 },
+      }))
+    }
+
+    const exportDocx = async () => {
+      if (!statistik.value || !kegiatanData.value) return
+
+      const st = statistik.value
+      const kd = kegiatanData.value
+      const children = []
+
+      children.push(new Paragraph({
+        children: [new TextRun({ text: 'LAPORAN EVALUASI KEGIATAN', bold: true, size: 28, font: 'Calibri' })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200 },
+      }))
+
+      children.push(new Paragraph({
+        children: [new TextRun({ text: kd.nama_kegiatan || '-', bold: true, size: 24, font: 'Calibri' })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 300 },
+      }))
+
+      const infoRows = [
+        ['Nama Kegiatan', kd.nama_kegiatan || '-'],
+        ['Waktu', `${formatDate(kd.tanggal_mulai)} s/d ${formatDate(kd.tanggal_selesai)}`],
+        ['Total Evaluasi', String(st.total_evaluasi || 0)],
+      ]
+      if (currentTpk.value) {
+        infoRows.push(['TPK', `${currentTpk.value.lokasi}${currentTpk.value.kabupaten_kota ? ` (${currentTpk.value.kabupaten_kota})` : ''}`])
+      }
+      children.push(makeTable(['Keterangan', 'Detail'], infoRows, [3000, 6600]))
+      children.push(new Paragraph({ text: '', spacing: { after: 200 } }))
+
+      children.push(new Paragraph({
+        children: [new TextRun({ text: 'I. Evaluasi Terhadap Program', bold: true, size: 24, font: 'Calibri' })],
+        spacing: { before: 200, after: 150 },
+      }))
+
+      const programAspects = [
+        { key: 'program_tujuan', label: 'Kesesuaian Program dengan Tujuan' },
+        { key: 'program_bahan_ajar', label: 'Kesesuaian Bahan Ajar dengan Struktur Program' },
+        { key: 'program_alokasi_waktu', label: 'Kesesuaian Alokasi Waktu dengan Bobot Materi' },
+      ]
+      const evaluasiArr = detailEvaluasi.value || []
+      const progSummaryRows = programAspects.map(a => {
+        const scores = evaluasiArr.map(ev => ev[a.key]).filter(Boolean)
+        const avg = scores.length > 0 ? (scores.reduce((s, v) => s + v, 0) / scores.length).toFixed(2) : '-'
+        return [a.label, String(scores.length), avg]
+      })
+      children.push(makeTable(['Aspek', 'Jumlah Respons', 'Rata-rata'], progSummaryRows, [5000, 2300, 2300]))
+      children.push(new Paragraph({ text: '', spacing: { after: 100 } }))
+
+      const progDistRows = []
+      programAspects.forEach(a => {
+        const dist = { '1_bintang': 0, '2_bintang': 0, '3_bintang': 0, '4_bintang': 0, '5_bintang': 0 }
+        evaluasiArr.forEach(ev => { const s = ev[a.key]; if (s) dist[`${s}_bintang`]++ })
+        buildDistributionRows(a.label, dist, evaluasiArr.length).forEach((r, i) => {
+          progDistRows.push(i === 0 ? [a.label, ...r] : ['', ...r])
+        })
+      })
+      children.push(makeTable(['Aspek', 'Skor', 'Jumlah', 'Persen'], progDistRows, [3500, 2000, 2000, 2100]))
+      children.push(new Paragraph({ text: '', spacing: { after: 200 } }))
+
+      for (let i = 0; i < programAspects.length; i++) {
+        await addChartToDocument(children, `program-chart-${i}`, `${i + 1}. ${programAspects[i].label}`)
+      }
+
+      children.push(new Paragraph({
+        children: [new TextRun({ text: 'II. Evaluasi Terhadap Fasilitator/Narasumber', bold: true, size: 24, font: 'Calibri' })],
+        spacing: { before: 200, after: 150 },
+      }))
+
+      const fasList = st.detail_fasilitator || []
+      if (fasList.length === 0) {
+        children.push(new Paragraph({ children: [new TextRun({ text: 'Tidak ada data fasilitator.', italics: true, size: 20, font: 'Calibri' })] }))
+      } else {
+        for (let fi = 0; fi < fasList.length; fi++) {
+          const fas = fasList[fi]
+          children.push(new Paragraph({
+            children: [new TextRun({ text: `${fi + 1}. ${fas.nama} (${fas.jumlah_penilaian} penilaian)`, bold: true, size: 22, font: 'Calibri' })],
+            spacing: { before: 150, after: 100 },
+          }))
+
+          const aspects = [
+            { key: 'penguasaan', label: 'Penguasaan Materi' },
+            { key: 'sistematika', label: 'Sistematika Penyajian' },
+            { key: 'sikap', label: 'Sikap dan Kehadiran' },
+          ]
+
+          const summaryRows = aspects.map(a => {
+            const avg = fas[`rata_rata_${a.key}`]
+            return [a.label, avg !== undefined && avg !== null ? String(Number(avg).toFixed(2)) : '-']
+          })
+          children.push(makeTable(['Aspek', 'Rata-rata'], summaryRows, [5500, 4100]))
+          children.push(new Paragraph({ text: '', spacing: { after: 100 } }))
+
+          const distRows = []
+          aspects.forEach(a => {
+            const distKey = `distribusi_${a.key}`
+            const raw = fas[distKey] || {}
+            const dist = {}
+            for (let s = 1; s <= 5; s++) dist[`${s}_bintang`] = raw[String(s)] || raw[`${s}_bintang`] || 0
+            buildDistributionRows(a.label, dist, fas.jumlah_penilaian || 0).forEach((r, i) => {
+              distRows.push(i === 0 ? [a.label, ...r] : ['', ...r])
+            })
+          })
+          children.push(makeTable(['Aspek', 'Skor', 'Jumlah', 'Persen'], distRows, [3500, 2000, 2000, 2100]))
+          children.push(new Paragraph({ text: '', spacing: { after: 100 } }))
+
+          for (const aspect of aspects) {
+            await addChartToDocument(children, `fas-${fi}-${aspect.key}`, `${fas.nama} - ${aspect.label}`)
+          }
+        }
+      }
+
+      children.push(new Paragraph({
+        children: [new TextRun({ text: 'III. Evaluasi Terhadap Layanan', bold: true, size: 24, font: 'Calibri' })],
+        spacing: { before: 200, after: 150 },
+      }))
+
+      const layananAspects = [
+        { key: 'layanan_panitia', label: 'Sikap dan Pelayanan Panitia' },
+        { key: 'layanan_fasilitas', label: 'Fasilitas dan Kebersihan Tempat' },
+        { key: 'layanan_konsumsi', label: 'Kualitas Konsumsi' },
+      ]
+      const laySummaryRows = layananAspects.map(a => {
+        const scores = evaluasiArr.map(ev => ev[a.key]).filter(Boolean)
+        const avg = scores.length > 0 ? (scores.reduce((s, v) => s + v, 0) / scores.length).toFixed(2) : '-'
+        return [a.label, String(scores.length), avg]
+      })
+      children.push(makeTable(['Aspek', 'Jumlah Respons', 'Rata-rata'], laySummaryRows, [5000, 2300, 2300]))
+      children.push(new Paragraph({ text: '', spacing: { after: 100 } }))
+
+      const layDistRows = []
+      layananAspects.forEach(a => {
+        const dist = { '1_bintang': 0, '2_bintang': 0, '3_bintang': 0, '4_bintang': 0, '5_bintang': 0 }
+        evaluasiArr.forEach(ev => { const s = ev[a.key]; if (s) dist[`${s}_bintang`]++ })
+        buildDistributionRows(a.label, dist, evaluasiArr.length).forEach((r, i) => {
+          layDistRows.push(i === 0 ? [a.label, ...r] : ['', ...r])
+        })
+      })
+      children.push(makeTable(['Aspek', 'Skor', 'Jumlah', 'Persen'], layDistRows, [3500, 2000, 2000, 2100]))
+      children.push(new Paragraph({ text: '', spacing: { after: 200 } }))
+
+      for (let i = 0; i < layananAspects.length; i++) {
+        await addChartToDocument(children, `layanan-chart-${i}`, `${i + 1}. ${layananAspects[i].label}`)
+      }
+
+      const saranList = evaluasiArr.map(ev => ev.saran).filter(Boolean)
+      if (saranList.length > 0) {
+        children.push(new Paragraph({
+          children: [new TextRun({ text: 'IV. Saran dan Masukan', bold: true, size: 24, font: 'Calibri' })],
+          spacing: { before: 200, after: 150 },
+        }))
+        saranList.forEach((s, i) => {
+          children.push(new Paragraph({
+            children: [new TextRun({ text: `${i + 1}. ${s}`, size: 20, font: 'Calibri' })],
+            spacing: { after: 80 },
+          }))
+        })
+      }
+
+      const doc = new Document({
+        sections: [{ children }],
+      })
+
+      const blob = await Packer.toBlob(doc)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Laporan Evaluasi - ${kd.nama_kegiatan || 'Kegiatan'}.docx`
+      document.body.appendChild(a)
+      a.click()
+      URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    }
+
     const goBack = () => {
       router.back()
     }
@@ -655,12 +940,14 @@ export default {
       detailEvaluasi,
       programChartData,
       layananChartData,
+      saranList,
       chartOptions,
       getFasilitatorChartData,
       downloadChart,
       downloadFasilitatorCharts,
       printLaporan,
       exportPDF,
+      exportDocx,
       goBack,
       formatDate
     }
