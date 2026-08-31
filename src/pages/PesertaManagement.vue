@@ -15,6 +15,20 @@
           >
             {{ isGeneratingSertifikat ? 'Memproses...' : `Buat Sertifikat Terpilih (${selectedCount})` }}
           </button>
+          <div v-if="selectedCount > 0" class="relative" ref="bulkStatusRef">
+            <button
+              @click="showBulkStatusMenu = !showBulkStatusMenu"
+              class="inline-flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 text-sm"
+            >
+              Ubah Status Terpilih ({{ selectedCount }})
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div v-if="showBulkStatusMenu" class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+              <button @click="bulkChangeStatus('terbit'); showBulkStatusMenu = false" class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 text-green-700 font-medium rounded-t-lg">Terbitkan</button>
+              <button @click="bulkChangeStatus('draft'); showBulkStatusMenu = false" class="w-full text-left px-4 py-2.5 text-sm hover:bg-yellow-50 text-yellow-700 font-medium">Set Draft</button>
+              <button @click="bulkChangeStatus('dicabut'); showBulkStatusMenu = false" class="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 text-red-700 font-medium rounded-b-lg">Cabut</button>
+            </div>
+          </div>
           <button
             @click="openBatchSertifikatModalForEdit"
             :disabled="filteredPeserta.length === 0"
@@ -317,9 +331,21 @@
                   </span>
                 </td>
                 <td class="px-4 py-3 text-xs sm:text-sm">
-                  <span :class="getSertifikatBadgeClass(p.id_peserta)" class="text-xs">
-                    {{ getSertifikatStatus(p.id_peserta) }}
-                  </span>
+                  <div class="relative" @click.stop>
+                    <button
+                      @click="toggleStatusDropdown(p.id_peserta)"
+                      :class="getSertifikatBadgeClass(p.id_peserta)"
+                      class="text-xs cursor-pointer hover:opacity-80 transition-opacity inline-flex items-center gap-1"
+                    >
+                      {{ getSertifikatStatus(p.id_peserta) }}
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div v-if="openStatusDropdown === p.id_peserta" class="absolute left-0 mt-1 w-36 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                      <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'terbit'" @click="changeSertifikatStatus(p, 'terbit')" class="w-full text-left px-3 py-2 text-xs hover:bg-green-50 text-green-700 font-medium rounded-t-lg">Terbitkan</button>
+                      <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'draft'" @click="changeSertifikatStatus(p, 'draft')" class="w-full text-left px-3 py-2 text-xs hover:bg-yellow-50 text-yellow-700 font-medium">Draft</button>
+                      <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'dicabut'" @click="changeSertifikatStatus(p, 'dicabut')" class="w-full text-left px-3 py-2 text-xs hover:bg-red-50 text-red-700 font-medium rounded-b-lg">Cabut</button>
+                    </div>
+                  </div>
                 </td>
                 <td class="px-4 py-3 text-xs sm:text-sm">
                   <div class="flex gap-1 justify-center flex-wrap">
@@ -452,9 +478,21 @@
               </div>
               <p class="text-xs text-gray-500">{{ p.email }}</p>
             </div>
-            <span :class="getSertifikatBadgeClass(p.id_peserta)" class="text-xs whitespace-nowrap">
-              {{ getSertifikatStatus(p.id_peserta) }}
-            </span>
+            <div class="relative" @click.stop>
+              <button
+                @click="toggleStatusDropdown(p.id_peserta)"
+                :class="getSertifikatBadgeClass(p.id_peserta)"
+                class="text-xs whitespace-nowrap cursor-pointer hover:opacity-80 inline-flex items-center gap-1"
+              >
+                {{ getSertifikatStatus(p.id_peserta) }}
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div v-if="openStatusDropdown === p.id_peserta" class="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'terbit'" @click="changeSertifikatStatus(p, 'terbit')" class="w-full text-left px-3 py-2 text-xs hover:bg-green-50 text-green-700 font-medium rounded-t-lg">Terbitkan</button>
+                <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'draft'" @click="changeSertifikatStatus(p, 'draft')" class="w-full text-left px-3 py-2 text-xs hover:bg-yellow-50 text-yellow-700 font-medium">Draft</button>
+                <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'dicabut'" @click="changeSertifikatStatus(p, 'dicabut')" class="w-full text-left px-3 py-2 text-xs hover:bg-red-50 text-red-700 font-medium rounded-b-lg">Cabut</button>
+              </div>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-2 text-xs mb-3 pb-3 border-b border-gray-200">
             <div>
@@ -1378,7 +1416,7 @@
 </template>
 
 <script>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import database from '@/data/index.js'
 import { fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
@@ -1682,9 +1720,22 @@ export default {
       }
     })
 
+    const showBulkStatusMenu = ref(false)
+    const bulkStatusRef = ref(null)
+
+    const handleDocumentClick = (e) => {
+      if (openStatusDropdown.value !== null) {
+        openStatusDropdown.value = null
+      }
+      if (showBulkStatusMenu.value && bulkStatusRef.value && !bulkStatusRef.value.contains(e.target)) {
+        showBulkStatusMenu.value = false
+      }
+    }
+
     // Log page access
     onMounted(() => {
       ActivityEvents.ACCESS_PAGE('Manajemen Peserta')
+      document.addEventListener('click', handleDocumentClick)
       // Set initial filter from prop
       if (props.kegiatanId) {
         filterKegiatan.value = props.kegiatanId
@@ -1695,6 +1746,10 @@ export default {
       loadSertifikatFromAPI()
       loadPegawaiFromAPI()
       loadPenugasanPegawaiFromAPI()
+    })
+
+    onUnmounted(() => {
+      document.removeEventListener('click', handleDocumentClick)
     })
 
     const formPeserta = ref({
@@ -2227,6 +2282,106 @@ export default {
       }
 
       return classes[getRawSertifikatStatus(idPeserta)] || classes.belum_ada
+    }
+
+    const openStatusDropdown = ref(null)
+
+    const toggleStatusDropdown = (idPeserta) => {
+      openStatusDropdown.value = openStatusDropdown.value === idPeserta ? null : idPeserta
+    }
+
+    const closeStatusDropdown = () => {
+      openStatusDropdown.value = null
+    }
+
+    const changeSertifikatStatus = async (pesertaItem, newStatus) => {
+      closeStatusDropdown()
+      const currentStatus = getRawSertifikatStatus(pesertaItem.id_peserta)
+      const statusLabels = { draft: 'Draft', terbit: 'Terbit', dicabut: 'Dicabut', belum_ada: 'Belum Ada' }
+
+      const confirmText = {
+        terbit: `Terbitkan sertifikat untuk <strong>${pesertaItem.nama_lengkap}</strong>?<br><small>Status akan berubah dari "${statusLabels[currentStatus]}" menjadi "Terbit".</small>`,
+        draft: `Kembalikan sertifikat <strong>${pesertaItem.nama_lengkap}</strong> ke Draft?<br><small>Status akan berubah dari "${statusLabels[currentStatus]}" menjadi "Draft".</small>`,
+        dicabut: `Cabut sertifikat <strong>${pesertaItem.nama_lengkap}</strong>?<br><small>Status akan berubah dari "${statusLabels[currentStatus]}" menjadi "Dicabut".</small>`
+      }
+
+      const result = await Swal.fire({
+        title: 'Ubah Status Sertifikat',
+        html: confirmText[newStatus] || `Ubah status ke "${statusLabels[newStatus]}"?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Ubah',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: newStatus === 'dicabut' ? '#dc2626' : newStatus === 'terbit' ? '#16a34a' : '#ca8a04'
+      })
+
+      if (!result.isConfirmed) return
+
+      try {
+        const record = getSertifikatRecord(pesertaItem.id_peserta)
+        if (record?.id_sertifikat || record?.id) {
+          await updateAPI('sertifikat', record.id_sertifikat || record.id, { status: newStatus })
+        } else {
+          await fetchAPI('sertifikat/update-status', {
+            method: 'PATCH',
+            body: { id_peserta: pesertaItem.id_peserta, id_kegiatan: pesertaItem.id_kegiatan, status: newStatus }
+          })
+        }
+
+        await loadSertifikatFromAPI(true)
+        await Swal.fire('Berhasil', `Status sertifikat ${pesertaItem.nama_lengkap} berhasil diubah ke "${statusLabels[newStatus]}".`, 'success')
+      } catch (error) {
+        await Swal.fire('Gagal', error.message || 'Gagal mengubah status sertifikat.', 'error')
+      }
+    }
+
+    const bulkChangeStatus = async (newStatus) => {
+      if (selectedPesertaIds.value.length === 0) return
+      const count = selectedPesertaIds.value.length
+      const statusLabels = { draft: 'Draft', terbit: 'Terbit', dicabut: 'Dicabut' }
+
+      const result = await Swal.fire({
+        title: 'Ubah Status Massal',
+        html: `Ubah status <strong>${count} sertifikat</strong> ke <strong>"${statusLabels[newStatus]}"</strong>?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Ubah Semua',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: newStatus === 'dicabut' ? '#dc2626' : newStatus === 'terbit' ? '#16a34a' : '#ca8a04'
+      })
+
+      if (!result.isConfirmed) return
+
+      let successCount = 0
+      let failCount = 0
+
+      for (const idPeserta of selectedPesertaIds.value) {
+        const p = filteredPeserta.value.find(fp => fp.id_peserta === idPeserta)
+        if (!p) continue
+        try {
+          const record = getSertifikatRecord(idPeserta)
+          if (record?.id_sertifikat || record?.id) {
+            await updateAPI('sertifikat', record.id_sertifikat || record.id, { status: newStatus })
+          } else {
+            await fetchAPI('sertifikat/update-status', {
+              method: 'PATCH',
+              body: { id_peserta: idPeserta, id_kegiatan: p.id_kegiatan, status: newStatus }
+            })
+          }
+          successCount++
+        } catch {
+          failCount++
+        }
+      }
+
+      checkedPesertaIds.value = []
+      await loadSertifikatFromAPI(true)
+
+      if (failCount === 0) {
+        await Swal.fire('Berhasil', `${successCount} sertifikat berhasil diubah ke "${statusLabels[newStatus]}".`, 'success')
+      } else {
+        await Swal.fire('Selesai', `${successCount} berhasil, ${failCount} gagal.`, 'warning')
+      }
     }
 
     const formatDate = (date) => {
@@ -4207,6 +4362,15 @@ export default {
       getKegiatanById,
       getSertifikatStatus,
       getSertifikatBadgeClass,
+      getRawSertifikatStatus,
+      getSertifikatRecord,
+      openStatusDropdown,
+      toggleStatusDropdown,
+      closeStatusDropdown,
+      changeSertifikatStatus,
+      bulkChangeStatus,
+      showBulkStatusMenu,
+      bulkStatusRef,
       formatDate,
       formatDateRange,
       openDetailModal,
