@@ -997,6 +997,13 @@
                     @change="handleTemplateFileSelect"
                     class="w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                   />
+                  <p class="mt-2 text-sm text-slate-500">
+                    <a :href="base + '/storage/template_sertifikat/contoh.docx'" target="_blank" download
+                      class="text-blue-600 hover:text-blue-800 underline inline-flex items-center gap-1">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                      Unduh contoh template (.docx)
+                    </a>
+                  </p>
                   <p v-if="selectedTemplateFile"
                     class="mt-2 text-sm text-slate-500">File terpilih: {{ selectedTemplateFile.name }}</p>
                   <p v-else-if="formSertifikat.template_file"
