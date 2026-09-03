@@ -461,8 +461,9 @@ export default {
       const errors = []
 
       const progressColor = newStatus === 'dicabut' ? '#dc2626' : newStatus === 'terbit' ? '#16a34a' : '#ca8a04'
+      const ids = [...selectedIds.value]
 
-      Swal.fire({
+      await Swal.fire({
         title: 'Mengubah Status...',
         html: `
           <div id="bulk-progress-info" style="margin-bottom:12px;font-size:14px;color:#64748b;">Menyiapkan...</div>
@@ -473,62 +474,63 @@ export default {
         `,
         allowOutsideClick: false,
         showConfirmButton: false,
-        didOpen: () => Swal.showLoading()
-      })
+        didOpen: async () => {
+          Swal.showLoading()
 
-      const ids = [...selectedIds.value]
-      for (let i = 0; i < ids.length; i++) {
-        const idPeserta = ids[i]
-        const row = mergedList.value.find(r => String(r.id_peserta) === String(idPeserta))
-        const current = i + 1
-        const pct = Math.round((current / count) * 100)
+          for (let i = 0; i < ids.length; i++) {
+            const idPeserta = ids[i]
+            const row = mergedList.value.find(r => String(r.id_peserta) === String(idPeserta))
+            const current = i + 1
+            const pct = Math.round((current / count) * 100)
 
-        const infoEl = document.getElementById('bulk-progress-info')
-        const barEl = document.getElementById('bulk-progress-bar')
-        const countEl = document.getElementById('bulk-progress-count')
-        if (infoEl) infoEl.textContent = row ? row.nama_lengkap : `ID ${idPeserta}`
-        if (barEl) barEl.style.width = `${pct}%`
-        if (countEl) countEl.textContent = `${current} / ${count}`
+            const infoEl = document.getElementById('bulk-progress-info')
+            const barEl = document.getElementById('bulk-progress-bar')
+            const countEl = document.getElementById('bulk-progress-count')
+            if (infoEl) infoEl.textContent = row ? row.nama_lengkap : `ID ${idPeserta}`
+            if (barEl) barEl.style.width = `${pct}%`
+            if (countEl) countEl.textContent = `${current} / ${count}`
 
-        if (!row) {
-          failCount++
-          errors.push(`ID peserta ${idPeserta} tidak ditemukan`)
-          continue
-        }
+            if (!row) {
+              failCount++
+              errors.push(`ID peserta ${idPeserta} tidak ditemukan`)
+              continue
+            }
 
-        try {
-          if (row.id_sertifikat) {
-            await updateAPI('sertifikat', row.id_sertifikat, { status: newStatus })
+            try {
+              if (row.id_sertifikat) {
+                await updateAPI('sertifikat', row.id_sertifikat, { status: newStatus })
+              } else {
+                await fetchAPI('sertifikat/update-status', {
+                  method: 'PATCH',
+                  body: { id_peserta: row.id_peserta, id_kegiatan: row.id_kegiatan, status: newStatus }
+                })
+              }
+              successCount++
+            } catch (e) {
+              failCount++
+              errors.push(`${row.nama_lengkap}: ${e.message || 'gagal'}`)
+            }
+
+            if (i < ids.length - 1) {
+              await new Promise(r => setTimeout(r, 5000))
+            }
+          }
+
+          selectedIds.value = []
+          await loadSertifikat()
+
+          if (failCount === 0) {
+            Swal.fire('Berhasil', `${successCount} sertifikat berhasil diubah ke "${statusLabel(newStatus)}".`, 'success')
           } else {
-            await fetchAPI('sertifikat/update-status', {
-              method: 'PATCH',
-              body: { id_peserta: row.id_peserta, id_kegiatan: row.id_kegiatan, status: newStatus }
+            const detail = errors.length > 0 ? `<div class="text-left text-sm mt-2"><ul class="list-disc pl-4">${errors.slice(0, 5).map(e => `<li>${e}</li>`).join('')}</ul>${errors.length > 5 ? `<p class="mt-1 text-gray-500">...dan ${errors.length - 5} error lainnya</p>` : ''}</div>` : ''
+            Swal.fire({
+              title: 'Selesai',
+              html: `${successCount} berhasil, ${failCount} gagal.${detail}`,
+              icon: failCount > 0 ? 'warning' : 'success'
             })
           }
-          successCount++
-        } catch (e) {
-          failCount++
-          errors.push(`${row.nama_lengkap}: ${e.message || 'gagal'}`)
         }
-
-        if (i < ids.length - 1) {
-          await new Promise(r => setTimeout(r, 5000))
-        }
-      }
-
-      selectedIds.value = []
-      await loadSertifikat()
-
-      if (failCount === 0) {
-        await Swal.fire('Berhasil', `${successCount} sertifikat berhasil diubah ke "${statusLabel(newStatus)}".`, 'success')
-      } else {
-        const detail = errors.length > 0 ? `<div class="text-left text-sm mt-2"><ul class="list-disc pl-4">${errors.slice(0, 5).map(e => `<li>${e}</li>`).join('')}</ul>${errors.length > 5 ? `<p class="mt-1 text-gray-500">...dan ${errors.length - 5} error lainnya</p>` : ''}</div>` : ''
-        await Swal.fire({
-          title: 'Selesai',
-          html: `${successCount} berhasil, ${failCount} gagal.${detail}`,
-          icon: failCount > 0 ? 'warning' : 'success'
-        })
-      }
+      })
     }
 
     onMounted(() => {
