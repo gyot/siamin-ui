@@ -201,11 +201,48 @@
           class="px-3 py-1.5 text-sm border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">Berikutnya</button>
       </div>
     </div>
+
+    <div v-if="bulkProgress.visible" class="fixed inset-0 z-[10000] flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm">
+      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+        <div class="mb-5 flex items-center gap-3">
+          <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-blue-100">
+            <svg class="h-6 w-6 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-800">Mengubah Status Sertifikat</h3>
+            <p class="text-sm text-slate-500">Status tujuan: {{ statusLabel(bulkProgress.status) }}</p>
+          </div>
+        </div>
+
+        <div class="mb-4 rounded-xl bg-slate-50 p-4">
+          <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Sedang diproses</p>
+          <p class="mt-1 min-h-6 truncate font-semibold text-slate-800">{{ bulkProgress.name || 'Menyiapkan data...' }}</p>
+          <p v-if="bulkProgress.waiting" class="mt-1 text-xs font-medium text-amber-600">Menunggu 5 detik sebelum data berikutnya...</p>
+        </div>
+
+        <div class="mb-2 flex items-end justify-between">
+          <span class="text-sm font-medium text-slate-600">Progress</span>
+          <span class="text-xl font-bold text-slate-800">{{ bulkProgress.current }} / {{ bulkProgress.total }}</span>
+        </div>
+        <div class="h-4 overflow-hidden rounded-full bg-slate-200">
+          <div
+            class="h-full rounded-full transition-all duration-300"
+            :class="bulkProgress.status === 'dicabut' ? 'bg-red-600' : bulkProgress.status === 'terbit' ? 'bg-green-600' : 'bg-yellow-500'"
+            :style="{ width: `${bulkProgress.percent}%` }"
+          />
+        </div>
+        <p class="mt-2 text-center text-sm font-semibold text-slate-600">{{ bulkProgress.percent }}%</p>
+        <p class="mt-4 text-center text-xs text-slate-400">Jangan tutup atau muat ulang halaman selama proses berlangsung.</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { fetchAPI, updateAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Swal from 'sweetalert2'
@@ -228,6 +265,15 @@ export default {
     const sortBy = ref('nama_lengkap')
     const sortOrder = ref('asc')
     const selectedIds = ref([])
+    const bulkProgress = ref({
+      visible: false,
+      current: 0,
+      total: 0,
+      percent: 0,
+      name: '',
+      status: '',
+      waiting: false
+    })
 
     const statusLabels = { draft: 'Draft', terbit: 'Terbit', dicabut: 'Dicabut', belum_ada: 'Belum Ada' }
 
@@ -459,80 +505,70 @@ export default {
       let successCount = 0
       let failCount = 0
       const errors = []
-
-      const progressColor = newStatus === 'dicabut' ? '#dc2626' : newStatus === 'terbit' ? '#16a34a' : '#ca8a04'
       const ids = [...selectedIds.value]
 
-      await Swal.fire({
-        title: 'Mengubah Status...',
-        html: `
-          <div id="bulk-progress-info" style="margin-bottom:12px;font-size:14px;color:#64748b;">Menyiapkan...</div>
-          <div style="background:#e2e8f0;border-radius:9999px;height:24px;overflow:hidden;margin:0 16px;">
-            <div id="bulk-progress-bar" style="background:${progressColor};height:100%;width:0%;transition:width 0.3s ease;border-radius:9999px;"></div>
-          </div>
-          <div id="bulk-progress-count" style="margin-top:8px;font-size:20px;font-weight:700;color:#1e293b;">0 / ${count}</div>
-        `,
-        allowOutsideClick: false,
-        showConfirmButton: false,
-        willOpen: async () => {
-          Swal.showLoading()
+      bulkProgress.value = {
+        visible: true,
+        current: 0,
+        total: count,
+        percent: 0,
+        name: '',
+        status: newStatus,
+        waiting: false
+      }
+      await nextTick()
+      await new Promise(resolve => requestAnimationFrame(resolve))
 
-          for (let i = 0; i < ids.length; i++) {
-            const idPeserta = ids[i]
-            const row = mergedList.value.find(r => String(r.id_peserta) === String(idPeserta))
-            const current = i + 1
-            const pct = Math.round((current / count) * 100)
+      for (let i = 0; i < ids.length; i++) {
+        const idPeserta = ids[i]
+        const row = mergedList.value.find(r => String(r.id_peserta) === String(idPeserta))
+        bulkProgress.value.name = row?.nama_lengkap || `ID ${idPeserta}`
+        bulkProgress.value.waiting = false
 
-            const infoEl = document.getElementById('bulk-progress-info')
-            const barEl = document.getElementById('bulk-progress-bar')
-            const countEl = document.getElementById('bulk-progress-count')
-            if (infoEl) infoEl.textContent = row ? row.nama_lengkap : `ID ${idPeserta}`
-            if (barEl) barEl.style.width = `${pct}%`
-            if (countEl) countEl.textContent = `${current} / ${count}`
-
-            if (!row) {
-              failCount++
-              errors.push(`ID peserta ${idPeserta} tidak ditemukan`)
-              continue
+        if (!row) {
+          failCount++
+          errors.push(`ID peserta ${idPeserta} tidak ditemukan`)
+        } else {
+          try {
+            if (row.id_sertifikat) {
+              await updateAPI('sertifikat', row.id_sertifikat, { status: newStatus })
+            } else {
+              await fetchAPI('sertifikat/update-status', {
+                method: 'PATCH',
+                body: { id_peserta: row.id_peserta, id_kegiatan: row.id_kegiatan, status: newStatus }
+              })
             }
-
-            try {
-              if (row.id_sertifikat) {
-                await updateAPI('sertifikat', row.id_sertifikat, { status: newStatus })
-              } else {
-                await fetchAPI('sertifikat/update-status', {
-                  method: 'PATCH',
-                  body: { id_peserta: row.id_peserta, id_kegiatan: row.id_kegiatan, status: newStatus }
-                })
-              }
-              successCount++
-            } catch (e) {
-              failCount++
-              errors.push(`${row.nama_lengkap}: ${e.message || 'gagal'}`)
-            }
-
-            if (i < ids.length - 1) {
-              await new Promise(r => setTimeout(r, 5000))
-            }
-          }
-
-          selectedIds.value = []
-          await loadSertifikat()
-
-          if (failCount === 0) {
-            Swal.close()
-            await Swal.fire('Berhasil', `${successCount} sertifikat berhasil diubah ke "${statusLabel(newStatus)}".`, 'success')
-          } else {
-            const detail = errors.length > 0 ? `<div class="text-left text-sm mt-2"><ul class="list-disc pl-4">${errors.slice(0, 5).map(e => `<li>${e}</li>`).join('')}</ul>${errors.length > 5 ? `<p class="mt-1 text-gray-500">...dan ${errors.length - 5} error lainnya</p>` : ''}</div>` : ''
-            Swal.close()
-            await Swal.fire({
-              title: 'Selesai',
-              html: `${successCount} berhasil, ${failCount} gagal.${detail}`,
-              icon: failCount > 0 ? 'warning' : 'success'
-            })
+            successCount++
+          } catch (e) {
+            failCount++
+            errors.push(`${row.nama_lengkap}: ${e.message || 'gagal'}`)
           }
         }
-      })
+
+        bulkProgress.value.current = i + 1
+        bulkProgress.value.percent = Math.round(((i + 1) / count) * 100)
+
+        if (i < ids.length - 1) {
+          bulkProgress.value.waiting = true
+          await new Promise(resolve => setTimeout(resolve, 5000))
+        }
+      }
+
+      selectedIds.value = []
+      await loadSertifikat()
+      bulkProgress.value.visible = false
+      await nextTick()
+
+      if (failCount === 0) {
+        await Swal.fire('Berhasil', `${successCount} sertifikat berhasil diubah ke "${statusLabel(newStatus)}".`, 'success')
+      } else {
+        const detail = errors.length > 0 ? `<div class="text-left text-sm mt-2"><ul class="list-disc pl-4">${errors.slice(0, 5).map(e => `<li>${e}</li>`).join('')}</ul>${errors.length > 5 ? `<p class="mt-1 text-gray-500">...dan ${errors.length - 5} error lainnya</p>` : ''}</div>` : ''
+        await Swal.fire({
+          title: 'Selesai',
+          html: `${successCount} berhasil, ${failCount} gagal.${detail}`,
+          icon: 'warning'
+        })
+      }
     }
 
     onMounted(() => {
@@ -543,7 +579,7 @@ export default {
     return {
       isLoading, showApiError, apiErrorMessage,
       kegiatanList, searchQuery, filterKegiatan, filterStatus,
-      currentPage, pageSize, selectedIds,
+      currentPage, pageSize, selectedIds, bulkProgress,
       stats, filteredList, paginatedList, totalPages, pageStart, pageEnd,
       allChecked, toggleAll,
       statusLabel, badgeClass, borderColor,
