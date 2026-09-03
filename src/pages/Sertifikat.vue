@@ -456,12 +456,24 @@ export default {
 
       if (!result.isConfirmed) return
 
+      Swal.fire({
+        title: 'Memproses...',
+        html: `Mengubah status ${count} sertifikat...`,
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+      })
+
       let successCount = 0
       let failCount = 0
+      const errors = []
 
       for (const idPeserta of selectedIds.value) {
-        const row = mergedList.value.find(r => r.id_peserta === idPeserta)
-        if (!row) continue
+        const row = mergedList.value.find(r => String(r.id_peserta) === String(idPeserta))
+        if (!row) {
+          failCount++
+          errors.push(`ID peserta ${idPeserta} tidak ditemukan`)
+          continue
+        }
 
         try {
           if (row.id_sertifikat) {
@@ -473,8 +485,9 @@ export default {
             })
           }
           successCount++
-        } catch {
+        } catch (e) {
           failCount++
+          errors.push(`${row.nama_lengkap}: ${e.message || 'gagal'}`)
         }
       }
 
@@ -484,7 +497,12 @@ export default {
       if (failCount === 0) {
         await Swal.fire('Berhasil', `${successCount} sertifikat berhasil diubah ke "${statusLabel(newStatus)}".`, 'success')
       } else {
-        await Swal.fire('Selesai', `${successCount} berhasil, ${failCount} gagal.`, 'warning')
+        const detail = errors.length > 0 ? `<div class="text-left text-sm mt-2"><ul class="list-disc pl-4">${errors.slice(0, 5).map(e => `<li>${e}</li>`).join('')}</ul>${errors.length > 5 ? `<p class="mt-1 text-gray-500">...dan ${errors.length - 5} error lainnya</p>` : ''}</div>` : ''
+        await Swal.fire({
+          title: 'Selesai',
+          html: `${successCount} berhasil, ${failCount} gagal.${detail}`,
+          icon: failCount > 0 ? 'warning' : 'success'
+        })
       }
     }
 
