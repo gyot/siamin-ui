@@ -510,6 +510,10 @@ export default {
           failCount++
           errors.push(`${row.nama_lengkap}: ${e.message || 'gagal'}`)
         }
+
+        if (i < ids.length - 1) {
+          await new Promise(r => setTimeout(r, 5000))
+        }
       }
 
       selectedIds.value = []
