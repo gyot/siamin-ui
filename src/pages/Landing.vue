@@ -45,24 +45,15 @@
                 efisien dan transparan.
               </p>
               <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <!-- <RouterLink 
-                  to="/login" 
-                  class="btn-primary px-8 py-3.5 text-white rounded-xl font-semibold shadow-xl flex items-center justify-center gap-2"
+                <button
+                  @click="showCekSertifikatModal = true"
+                  class="px-8 py-3.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 rounded-xl font-semibold backdrop-blur border border-emerald-400/30 transition flex items-center justify-center gap-2"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                   </svg>
-                  Login Admin
-                </RouterLink> -->
-                <!-- <RouterLink 
-                  to="/login-peserta" 
-                  class="px-8 py-3.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-semibold backdrop-blur border border-white/20 transition flex items-center justify-center gap-2"
-                >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                  </svg>
-                  Login Peserta
-                </RouterLink> -->
+                  Cek Sertifikat
+                </button>
               </div>
             </template>
 
@@ -460,6 +451,190 @@
       </div>
     </div>
 
+    <!-- Cek Sertifikat Modal -->
+    <div v-if="showCekSertifikatModal" class="fixed inset-0 z-50 bg-black/60 p-4 flex items-center justify-center" @click.self="closeCekSertifikatModal">
+      <div class="w-full max-w-lg bg-slate-900 border border-white/20 rounded-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+          <h3 class="text-white font-semibold text-lg flex items-center gap-2">
+            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Cek Keaslian Sertifikat
+          </h3>
+          <button class="text-blue-100 hover:text-white" @click="closeCekSertifikatModal">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-5 overflow-y-auto">
+          <div>
+            <label class="block text-blue-200 text-sm mb-2">Upload file sertifikat (PDF)</label>
+            <label
+              class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-emerald-400/50 hover:bg-white/5 transition"
+              :class="{ 'border-emerald-400/50 bg-emerald-50/5': certFileName }"
+            >
+              <input
+                type="file"
+                accept="application/pdf"
+                class="hidden"
+                @change="handleCertFileChange"
+              />
+              <svg v-if="!certFileName" class="w-10 h-10 text-blue-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+              <svg v-else class="w-10 h-10 text-emerald-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span v-if="!certFileName" class="text-blue-200 text-sm">Klik untuk memilih file PDF</span>
+              <span v-else class="text-emerald-300 text-sm font-medium truncate max-w-[90%]">{{ certFileName }}</span>
+            </label>
+          </div>
+
+          <button
+            @click="cekKeaslianSertifikat"
+            :disabled="!certFile || isScanningCert"
+            class="w-full py-3 rounded-xl font-semibold text-white transition flex items-center justify-center gap-2"
+            :class="certFile && !isScanningCert ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-slate-700 cursor-not-allowed opacity-60'"
+          >
+            <svg v-if="isScanningCert" class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            {{ isScanningCert ? 'Memindai...' : 'Cek Keaslian' }}
+          </button>
+
+          <div v-if="certScanError" class="bg-red-500/10 border border-red-400/30 rounded-xl p-4">
+            <p class="text-red-300 text-sm flex items-start gap-2">
+              <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              {{ certScanError }}
+            </p>
+          </div>
+
+          <div v-if="certVerificationData" class="space-y-4">
+            <div class="bg-emerald-500/10 border border-emerald-400/30 rounded-xl p-4 flex items-center gap-3">
+              <svg class="w-8 h-8 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+              <div>
+                <p class="text-emerald-300 font-bold text-base">Sertifikat Terverifikasi</p>
+                <p class="text-emerald-200/80 text-xs">Dokumen ini tercatat dalam sistem dan dinyatakan asli.</p>
+              </div>
+            </div>
+
+            <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+              <div class="px-4 py-3 bg-emerald-500/10 border-b border-white/10 flex items-center gap-2">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+                <h4 class="text-emerald-300 font-semibold text-sm">Data Peserta</h4>
+              </div>
+              <div class="p-4 space-y-3">
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Nama</span>
+                  <span class="text-white text-sm font-medium">{{ certVerificationData.peserta.nama }}</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">NIP</span>
+                  <span class="text-white text-sm">{{ certVerificationData.peserta.nip }}</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Pangkat</span>
+                  <span class="text-white text-sm">{{ certVerificationData.peserta.pangkat }}</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Jabatan</span>
+                  <span class="text-white text-sm">{{ certVerificationData.peserta.jabatan }}</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Instansi</span>
+                  <span class="text-white text-sm">{{ certVerificationData.peserta.instansi }}</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Peran</span>
+                  <span class="text-white text-sm">{{ certVerificationData.peserta.peran }}</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Kab/Kota</span>
+                  <span class="text-white text-sm">{{ certVerificationData.peserta.kab_kota }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+              <div class="px-4 py-3 bg-cyan-500/10 border-b border-white/10 flex items-center gap-2">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                </svg>
+                <h4 class="text-cyan-300 font-semibold text-sm">Mengikuti Kegiatan</h4>
+              </div>
+              <div class="p-4 space-y-3">
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Nama Kegiatan</span>
+                  <span class="text-white text-sm font-medium">{{ certVerificationData.kegiatan.nama_kegiatan }}</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Tanggal</span>
+                  <span class="text-white text-sm">
+                    {{ formatDate(certVerificationData.kegiatan.tanggal_mulai) }}
+                    s.d.
+                    {{ formatDate(certVerificationData.kegiatan.tanggal_selesai) }}
+                  </span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Metode</span>
+                  <span class="text-white text-sm">{{ getMetodeLabel(certVerificationData.kegiatan.metode_pelaksanaan) }}</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Lokasi</span>
+                  <span class="text-white text-sm">{{ certVerificationData.kegiatan.lokasi }}<template v-if="certVerificationData.kegiatan.kabupaten_kota !== '-'">, {{ certVerificationData.kegiatan.kabupaten_kota }}</template></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+              <div class="px-4 py-3 bg-amber-500/10 border-b border-white/10 flex items-center gap-2">
+                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                <h4 class="text-amber-300 font-semibold text-sm">Disahkan oleh</h4>
+              </div>
+              <div class="p-4 space-y-3">
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Nama</span>
+                  <span class="text-white text-sm font-medium">{{ certVerificationData.penandatangan.nama }}</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Jabatan</span>
+                  <span class="text-white text-sm">{{ certVerificationData.penandatangan.jabatan }}</span>
+                </div>
+                <div class="flex items-start gap-3">
+                  <span class="text-blue-300 text-xs w-28 flex-shrink-0 pt-0.5">Pada tanggal</span>
+                  <span class="text-white text-sm">{{ formatDate(certVerificationData.penandatangan.tanggal_ttd) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else-if="certQrResult !== null && !certVerificationData && !certScanError" class="bg-blue-500/10 border border-blue-400/30 rounded-xl p-4 space-y-2">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-blue-300 font-semibold text-sm">QR Code Terdeteksi</span>
+            </div>
+            <p class="text-blue-200 text-xs">Kode QR: <span class="font-mono text-white">{{ certQrResult }}</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Footer -->
     <footer class="border-t border-white/10 py-8">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -499,6 +674,7 @@ import database from '@/data/index.js'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
 import { getKegiatanKabupatenKotaLabel, getKegiatanLocationItems, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
 import { generatePOSDocx } from '@/utils/generatePOS'
+import jsQR from 'jsqr'
 
 export default {
   name: 'Landing',
@@ -516,6 +692,15 @@ export default {
     const itemsPerPage = 4
 
     const searchQuery = ref('')
+
+    const showCekSertifikatModal = ref(false)
+    const certFile = ref(null)
+    const certFileName = ref('')
+    const isScanningCert = ref(false)
+    const certScanError = ref('')
+    const certQrResult = ref(null)
+    const certVerificationData = ref(null)
+
     function slugify(text) {
       if (!text) return ''
       return String(text)
@@ -1207,7 +1392,176 @@ export default {
       if (currentPage.value < totalPages.value) currentPage.value += 1
     }
 
-    
+    const handleCertFileChange = (event) => {
+      const file = event.target.files[0]
+      if (file && file.type === 'application/pdf') {
+        certFile.value = file
+        certFileName.value = file.name
+        certScanError.value = ''
+        certQrResult.value = null
+      } else {
+        certFile.value = null
+        certFileName.value = ''
+        certScanError.value = 'File harus berformat PDF.'
+      }
+    }
+
+    const isValidUrl = (str) => {
+      try {
+        const url = new URL(str)
+        return url.protocol === 'http:' || url.protocol === 'https:'
+      } catch {
+        return false
+      }
+    }
+
+    const cekKeaslianSertifikat = async () => {
+      if (!certFile.value) return
+
+      isScanningCert.value = true
+      certScanError.value = ''
+      certQrResult.value = null
+      certVerificationData.value = null
+
+      try {
+        const pdfjsLib = await import('pdfjs-dist')
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          'pdfjs-dist/build/pdf.worker.min.mjs',
+          import.meta.url
+        ).toString()
+
+        const arrayBuffer = await certFile.value.arrayBuffer()
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
+
+        let qrFound = false
+
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum)
+          const viewport = page.getViewport({ scale: 2.0 })
+
+          const canvas = document.createElement('canvas')
+          canvas.width = viewport.width
+          canvas.height = viewport.height
+          const ctx = canvas.getContext('2d')
+
+          await page.render({ canvasContext: ctx, viewport }).promise
+
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+          const code = jsQR(imageData.data, imageData.width, imageData.height)
+
+          if (code && code.data) {
+            certQrResult.value = code.data
+            qrFound = true
+            break
+          }
+        }
+
+        if (!qrFound) {
+          certScanError.value = 'QR Code tidak ditemukan dalam file sertifikat ini.'
+          return
+        }
+
+        const kodeQr = encodeURIComponent(certQrResult.value)
+        const rawResponse = await fetchAPI(`sertifikat/cek/${kodeQr}`)
+
+        const items = Array.isArray(rawResponse) ? rawResponse : (rawResponse?.data || [])
+        const item = items[0] || null
+
+        if (!item) {
+          certScanError.value = 'Sertifikat tidak ditemukan dalam sistem.'
+          return
+        }
+
+        const p = item.peserta || {}
+        const k = item.kegiatan || {}
+        const ttd = item.penandatangan || {}
+        const batch = item.batch || {}
+        const lok = item.lokasi || {}
+
+        certVerificationData.value = {
+          peserta: {
+            nama: p.nama_lengkap || '-',
+            nip: p.nip || '-',
+            pangkat: p.pangkat || '-',
+            jabatan: p.jabatan || '-',
+            instansi: p.nama_instansi || '-',
+            peran: p.peran || '-',
+            kab_kota: p.kab_kota || '-'
+          },
+          kegiatan: {
+            nama_kegiatan: k.nama_kegiatan || '-',
+            tanggal_mulai: k.tanggal_mulai || '-',
+            tanggal_selesai: k.tanggal_selesai || '-',
+            metode_pelaksanaan: k.metode_pelaksanaan || '-',
+            lokasi: lok.lokasi || '-',
+            kabupaten_kota: lok.kabupaten_kota || '-'
+          },
+          penandatangan: {
+            nama: ttd.nama || '-',
+            jabatan: ttd.nama_jabatan || ttd.jabatan_pdm || '-',
+            tanggal_ttd: batch.tanggal_ttd || '-'
+          }
+        }
+      } catch (error) {
+        console.error('Gagal memindai sertifikat:', error)
+        const msg = String(error?.message || '')
+        if (msg.includes('404') || msg.includes('tidak ditemukan')) {
+          certScanError.value = 'Sertifikat tidak ditemukan dalam sistem.'
+        } else if (msg.includes('Tidak dapat terhubung')) {
+          certScanError.value = 'Tidak dapat terhubung ke server. Pastikan backend berjalan.'
+        } else {
+          certScanError.value = 'Gagal memverifikasi sertifikat. ' + msg
+        }
+      } finally {
+        isScanningCert.value = false
+      }
+    }
+
+    const closeCekSertifikatModal = () => {
+      showCekSertifikatModal.value = false
+      certFile.value = null
+      certFileName.value = ''
+      certScanError.value = ''
+      certQrResult.value = null
+      certVerificationData.value = null
+      isScanningCert.value = false
+    }
+
+    const formatCertLabel = (key) => {
+      if (!key) return ''
+      const labels = {
+        nama: 'Nama',
+        nama_peserta: 'Nama Peserta',
+        nip: 'NIP',
+        nip_nik: 'NIP/NIK',
+        nik: 'NIK',
+        email: 'Email',
+        no_telepon: 'No. Telepon',
+        telepon: 'Telepon',
+        instansi: 'Instansi',
+        unit_kerja: 'Unit Kerja',
+        jabatan: 'Jabatan',
+        pangkat_golongan: 'Pangkat/Golongan',
+        nama_kegiatan: 'Nama Kegiatan',
+        tanggal_mulai: 'Tanggal Mulai',
+        tanggal_selesai: 'Tanggal Selesai',
+        tanggal_ttd: 'Tanggal TTD',
+        nama_penandatangan: 'Nama Penandatangan',
+        jabatan_penandatangan: 'Jabatan Penandatangan',
+        peran: 'Peran',
+        status: 'Status',
+        id_kegiatan: 'ID Kegiatan',
+        id_peserta: 'ID Peserta',
+        kode_qr: 'Kode QR',
+        nomor_sertifikat: 'No. Sertifikat',
+        tanggal_terbit: 'Tanggal Terbit',
+        metode_pelaksanaan: 'Metode Pelaksanaan',
+        deskripsi: 'Deskripsi',
+        lokasi: 'Lokasi'
+      }
+      if (labels[key]) return labels[key]
+      return String(key).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    }
 
     
     onMounted(() => {
@@ -1260,7 +1614,19 @@ export default {
       closeKegiatanDetail,
       prevPage,
       nextPage,
-      downloadPOS
+      downloadPOS,
+      showCekSertifikatModal,
+      certFile,
+      certFileName,
+      isScanningCert,
+      certScanError,
+      certQrResult,
+      certVerificationData,
+      handleCertFileChange,
+      cekKeaslianSertifikat,
+      closeCekSertifikatModal,
+      formatCertLabel,
+      isValidUrl
     }
   }
 }
