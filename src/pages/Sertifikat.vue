@@ -456,19 +456,40 @@ export default {
 
       if (!result.isConfirmed) return
 
-      Swal.fire({
-        title: 'Memproses...',
-        html: `Mengubah status ${count} sertifikat...`,
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-      })
-
       let successCount = 0
       let failCount = 0
       const errors = []
 
-      for (const idPeserta of selectedIds.value) {
+      const progressColor = newStatus === 'dicabut' ? '#dc2626' : newStatus === 'terbit' ? '#16a34a' : '#ca8a04'
+
+      Swal.fire({
+        title: 'Mengubah Status...',
+        html: `
+          <div id="bulk-progress-info" style="margin-bottom:12px;font-size:14px;color:#64748b;">Menyiapkan...</div>
+          <div style="background:#e2e8f0;border-radius:9999px;height:24px;overflow:hidden;margin:0 16px;">
+            <div id="bulk-progress-bar" style="background:${progressColor};height:100%;width:0%;transition:width 0.3s ease;border-radius:9999px;"></div>
+          </div>
+          <div id="bulk-progress-count" style="margin-top:8px;font-size:20px;font-weight:700;color:#1e293b;">0 / ${count}</div>
+        `,
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading()
+      })
+
+      const ids = [...selectedIds.value]
+      for (let i = 0; i < ids.length; i++) {
+        const idPeserta = ids[i]
         const row = mergedList.value.find(r => String(r.id_peserta) === String(idPeserta))
+        const current = i + 1
+        const pct = Math.round((current / count) * 100)
+
+        const infoEl = document.getElementById('bulk-progress-info')
+        const barEl = document.getElementById('bulk-progress-bar')
+        const countEl = document.getElementById('bulk-progress-count')
+        if (infoEl) infoEl.textContent = row ? row.nama_lengkap : `ID ${idPeserta}`
+        if (barEl) barEl.style.width = `${pct}%`
+        if (countEl) countEl.textContent = `${current} / ${count}`
+
         if (!row) {
           failCount++
           errors.push(`ID peserta ${idPeserta} tidak ditemukan`)
