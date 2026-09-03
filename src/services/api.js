@@ -1,5 +1,22 @@
+import axios from 'axios'
+import dbJSON from '@/data/database.json'
+
 // API Service Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL+'/api/v1/' || 'https://backend-siamin.bpmpntb.id/'
+// During development, use local proxy `/api` to avoid CORS.
+// In production, use the actual backend URL.
+const isDev = import.meta.env.DEV
+const API_HOST = isDev ? '' : (import.meta.env.VITE_API_BASE_URL || '')
+const API_BASE_URL = API_HOST.replace(/\/$/, '') + '/api/v1/'
+const API_TIMEOUT = Number(import.meta.env.VITE_API_TIMEOUT || 30000)
+let apiReadUnavailable = false
+
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: API_TIMEOUT,
+  headers: {
+    Accept: 'application/json'
+  }
+})
 
 // API Endpoints mapping
 const ENDPOINTS = {
@@ -15,53 +32,274 @@ const ENDPOINTS = {
   akunPeserta: 'akun-peserta',
   keanggotaanTim: 'keanggotaan-tim',
   logAktivitas: 'log-aktivitas',
-  suratTugas: 'surat-tugas',
-  suratTugasPegawai: 'surat-tugas-pegawai',
+  suratTugas: 'penugasan',
+  suratTugasPegawai: 'penugasan-pegawai',
+  penugasan: 'penugasan',
+  penugasanPegawai: 'penugasan-pegawai',
   unitKerja: 'unit-kerja',
   subUnitKerja: 'sub-unit-kerja'
 }
+
+const buildApiErrorMessage = (errorData, fallback) => {
+  if (!errorData || typeof errorData !== 'object') return fallback
+  if (errorData.message) {
+    // Sertakan ringkasan error validasi jika tersedia.
+    if (errorData.errors && typeof errorData.errors === 'object') {
+      const details = Object.values(errorData.errors).flat().filter(Boolean)
+      if (details.length > 0) {
+        return `${errorData.message}: ${details.join('; ')}`
+      }
+    }
+    return errorData.message
+  }
+  return fallback
+}
+
+const buildHttpError = (status, statusText, endpoint, errorData, rawText = '') => {
+  const fallbackBase = `API Error: ${status} ${statusText}`
+  const fallbackWithEndpoint = `${fallbackBase} (${endpoint})`
+  const parsedMessage = buildApiErrorMessage(errorData, fallbackWithEndpoint)
+  const raw = String(rawText || '').trim()
+  const looksLikeHtml = /<!doctype html|<html[\s>]/i.test(raw)
+  const snippet = raw && !looksLikeHtml ? ` | ${raw.slice(0, 180)}` : ''
+  return new Error(`${parsedMessage}${snippet}`)
+}
+
+const buildNetworkError = (error, endpoint) => {
+  if (error?.code === 'ECONNABORTED') {
+    return new Error(`API timeout setelah ${API_TIMEOUT}ms (${endpoint})`)
+  }
+
+  if (!error?.response) {
+    return new Error(`Tidak dapat terhubung ke backend (${endpoint})`)
+  }
+
+  return null
+}
+
+const normalizeEndpoint = (endpoint = '') =>
+  String(endpoint)
+    .replace(/^https?:\/\/[^/]+\/api\/v1\//, '')
+    .replace(/^\/?api\/v1\//, '')
+    .replace(/^api\/v1\//, '')
+    .replace(/^\/+|\/+$/g, '')
+
+const buildFallbackPenugasanList = () => {
+  const kegiatanRows = Array.isArray(dbJSON.kegiatan) ? dbJSON.kegiatan : []
+  const pegawaiRows = Array.isArray(dbJSON.pegawai) ? dbJSON.pegawai : []
+  const penugasanRows = Array.isArray(dbJSON.surat_tugas) ? dbJSON.surat_tugas : []
+  const anggotaRows = Array.isArray(dbJSON.surat_tugas_pegawai) ? dbJSON.surat_tugas_pegawai : []
+
+  const kegiatanById = new Map(
+    kegiatanRows.map((item) => [String(item?.id_kegiatan ?? item?.id ?? ''), item])
+  )
+
+  const pegawaiById = new Map(
+    pegawaiRows.map((item) => [String(item?.id_pegawai ?? item?.id ?? ''), item])
+  )
+
+  return penugasanRows.map((item) => {
+    const idPenugasan = item?.id_penugasan ?? item?.id_surat_tugas ?? item?.id ?? null
+    const idKegiatan = item?.id_kegiatan ?? item?.kegiatan_id ?? item?.kegiatan?.id_kegiatan ?? item?.kegiatan?.id ?? null
+
+    const penugasanPegawais = anggotaRows
+      .filter((anggota) => {
+        const anggotaPenugasanId = anggota?.id_penugasan ?? anggota?.penugasan_id ?? anggota?.id_surat_tugas ?? anggota?.surat_tugas_id ?? null
+        return String(anggotaPenugasanId ?? '') === String(idPenugasan ?? '')
+      })
+      .map((anggota) => {
+        const idPegawai = anggota?.id_pegawai ?? anggota?.pegawai_id ?? anggota?.pegawai?.id_pegawai ?? anggota?.pegawai?.id ?? null
+        const pegawai = pegawaiById.get(String(idPegawai ?? ''))
+
+        return {
+          ...anggota,
+          id: anggota?.id ?? anggota?.id_penugasan_pegawai ?? null,
+          id_penugasan: idPenugasan,
+          id_pegawai: idPegawai,
+          peran: anggota?.peran ?? '',
+          pegawai: pegawai
+            ? {
+                ...pegawai,
+                id_pegawai: pegawai.id_pegawai ?? pegawai.id ?? null,
+                nama: pegawai.nama ?? pegawai.name ?? '',
+                nip: pegawai.nip ?? ''
+              }
+            : null
+        }
+      })
+
+    const kegiatan = kegiatanById.get(String(idKegiatan ?? ''))
+
+    return {
+      ...item,
+      id_penugasan: idPenugasan,
+      id_kegiatan: idKegiatan,
+      kegiatan: kegiatan ? { ...kegiatan } : null,
+      penugasan_pegawais: penugasanPegawais
+    }
+  })
+}
+
+const buildFallbackPenugasanPegawaiList = () => {
+  const penugasanRows = buildFallbackPenugasanList()
+  const penugasanById = new Map(
+    penugasanRows.map((item) => [
+      String(item?.id_penugasan ?? ''),
+      {
+        id_penugasan: item?.id_penugasan ?? null,
+        id_kegiatan: item?.id_kegiatan ?? null,
+        kegiatan: item?.kegiatan ?? null
+      }
+    ])
+  )
+
+  return penugasanRows.flatMap((item) =>
+    (Array.isArray(item?.penugasan_pegawais) ? item.penugasan_pegawais : []).map((anggota) => ({
+      ...anggota,
+      penugasan: penugasanById.get(String(anggota?.id_penugasan ?? '')) ?? null
+    }))
+  )
+}
+
+const getLocalFallbackData = (endpoint) => {
+  const normalized = normalizeEndpoint(endpoint)
+  if (!normalized) return null
+
+  if (normalized === 'unit-kerja') return dbJSON.unit_kerja || []
+  if (normalized === 'kegiatan' || normalized === 'kegiatan/all') return dbJSON.kegiatan || []
+  if (normalized.startsWith('kegiatan/tim/')) {
+    const targetUnitId = normalized.split('/').pop()
+    const rows = dbJSON.kegiatan || []
+    const hasUnitRelation = rows.some((item) =>
+      item?.unit_kerja_id !== undefined ||
+      item?.id_tim !== undefined ||
+      item?.unit_kerja?.unit_kerja_id !== undefined ||
+      item?.unit_kerja?.id !== undefined
+    )
+    if (!hasUnitRelation) return rows
+
+    const target = String(targetUnitId ?? '').trim()
+    return rows.filter((item) => {
+      const itemUnitId = item?.unit_kerja_id
+        ?? item?.id_tim
+        ?? item?.unit_kerja?.unit_kerja_id
+        ?? item?.unit_kerja?.id
+      return String(itemUnitId ?? '').trim() === target
+    })
+  }
+  if (normalized === 'pegawai') return dbJSON.pegawai || []
+  if (normalized === 'users') return dbJSON.users || []
+  if (normalized === 'surat-tugas') return dbJSON.surat_tugas || []
+  if (normalized === 'surat-tugas-pegawai') return dbJSON.surat_tugas_pegawai || []
+  // New penugasan endpoints map to existing surat_tugas local data when present
+  if (normalized === 'penugasan') return buildFallbackPenugasanList()
+  if (normalized.startsWith('penugasan/')) {
+    const targetId = normalized.split('/').pop()
+    return buildFallbackPenugasanList().find((item) => String(item?.id_penugasan ?? '') === String(targetId ?? '')) || null
+  }
+  if (normalized === 'penugasan-pegawai') return buildFallbackPenugasanPegawaiList()
+  if (normalized.startsWith('penugasan-pegawai/')) {
+    const targetId = normalized.split('/').pop()
+    return buildFallbackPenugasanPegawaiList().find((item) => String(item?.id ?? '') === String(targetId ?? '')) || null
+  }
+
+  return null
+}
+
+const resolveUrl = (endpoint) =>
+  endpoint.startsWith('http')
+    ? endpoint
+    : normalizeEndpoint(ENDPOINTS[endpoint] || endpoint)
+
+const buildHeaders = (headers = {}, includeAuth = true, payload) => {
+  const authToken = localStorage.getItem('auth_token')
+  const nextHeaders = {
+    Accept: 'application/json',
+    ...headers
+  }
+
+  if (!(payload instanceof FormData) && !nextHeaders['Content-Type']) {
+    nextHeaders['Content-Type'] = 'application/json'
+  }
+
+  if (includeAuth && authToken) {
+    nextHeaders.Authorization = `Bearer ${authToken}`
+  }
+
+  return nextHeaders
+}
+
+const normalizeResponseData = (data) => (
+  Array.isArray(data) ? data : (data?.data || data)
+)
+
+const request = async (endpoint, config = {}) => {
+  const url = resolveUrl(endpoint)
+
+  try {
+    const response = await apiClient.request({
+      url,
+      method: config.method || 'GET',
+      data: config.data,
+      headers: config.headers,
+      params: config.params
+    })
+
+    return response.data
+  } catch (error) {
+    const networkError = buildNetworkError(error, endpoint)
+    if (networkError) {
+      throw networkError
+    }
+
+    const status = error?.response?.status || 0
+    const statusText = error?.response?.statusText || error?.message || 'Request failed'
+    const rawData = error?.response?.data
+    const rawText = typeof rawData === 'string' ? rawData : JSON.stringify(rawData || '')
+    throw buildHttpError(status, statusText, endpoint, rawData, rawText)
+  }
+}
+
+apiClient.interceptors.request.use((config) => {
+  const endpoint = typeof config.url === 'string' ? config.url : ''
+  const includeAuth = config.includeAuth !== false
+  config.headers = buildHeaders(config.headers || {}, includeAuth, config.data)
+  return config
+})
 
 /**
  * Fetch data from API with flexible method support
  * @param {string} endpoint - API endpoint key or full URL
  * @param {object} options - Fetch options (method, body, headers, etc.)
+ * @param {boolean} options.raw - Return original response shape, including pagination metadata
  * @returns {Promise<any>}
  */
 export const fetchAPI = async (endpoint, options = {}) => {
   try {
-    const url = endpoint.startsWith('http') 
-      ? endpoint 
-      : `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}`
-    
-    // Get auth token from localStorage
-    const authToken = localStorage.getItem('auth_token')
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...options.headers
+    const method = (options.method || 'GET').toUpperCase()
+    if (isDev && method === 'GET' && apiReadUnavailable) {
+      const cachedFallback = getLocalFallbackData(endpoint)
+      if (cachedFallback !== null) return cachedFallback
     }
-    
-    // Add Authorization header if token exists
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`
-    }
-    
-    const response = await fetch(url, {
-      method: options.method || 'GET',
-      headers,
-      ...options
+    const data = await request(endpoint, {
+      method,
+      headers: options.headers,
+      params: options.params,
+      data: options.body
     })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`)
+    return options.raw ? data : normalizeResponseData(data)
+  } catch (error) {
+    const method = (options.method || 'GET').toUpperCase()
+    if (isDev && method === 'GET') {
+      apiReadUnavailable = true
+      const fallback = getLocalFallbackData(endpoint)
+      if (fallback !== null) {
+        console.error(`[API] Request failed for ${endpoint}:`, error)
+        console.warn(`[API] Fallback local data used for ${endpoint}`)
+        return fallback
+      }
     }
 
-    const data = await response.json()
-    
-    // Handle both direct array responses and paginated responses
-    return Array.isArray(data) ? data : (data.data || data)
-  } catch (error) {
     console.error(`Error fetching from ${endpoint}:`, error)
     throw error
   }
@@ -75,34 +313,12 @@ export const fetchAPI = async (endpoint, options = {}) => {
  */
 export const postAPI = async (endpoint, payload) => {
   try {
-    const url = `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}`
-
-    // include auth header like fetchAPI does
-    const authToken = localStorage.getItem('auth_token')
-    const headers = {
-      'Accept': 'application/json'
-    }
-    // if payload is not FormData, we'll send JSON
-    if (!(payload instanceof FormData)) {
-      headers['Content-Type'] = 'application/json'
-    }
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`
-    }
-
-    const response = await fetch(url, {
+    const data = await request(endpoint, {
       method: 'POST',
-      headers,
-      body: payload instanceof FormData ? payload : JSON.stringify(payload)
+      headers: buildHeaders({}, endpoint !== 'peserta', payload),
+      data: payload
     })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    return data.data || data
+    return data?.data || data
   } catch (error) {
     console.error(`Error posting to ${endpoint}:`, error)
     throw error
@@ -118,31 +334,39 @@ export const postAPI = async (endpoint, payload) => {
  */
 export const updateAPI = async (endpoint, id, payload) => {
   try {
-    const url = `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}/${id}`
+    const resourceEndpoint = `${endpoint}/${id}`
 
-    const authToken = localStorage.getItem('auth_token')
-    const headers = {
-      'Accept': 'application/json'
-    }
-    if (!(payload instanceof FormData)) {
-      headers['Content-Type'] = 'application/json'
-    }
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`
-    }
+    try {
+      const data = await request(resourceEndpoint, {
+        method: 'PUT',
+        headers: buildHeaders({}, true, payload),
+        data: payload
+      })
+      return data?.data || data
+    } catch (error) {
+      if (String(error?.message || '').includes('401')) {
+        throw error
+      }
 
-    const response = await fetch(url, {
-      method: 'PUT',
-      headers,
-      body: payload instanceof FormData ? payload : JSON.stringify(payload)
-    })
+      let fallbackPayload
+      if (payload instanceof FormData) {
+        const fd = new FormData()
+        for (const [key, value] of payload.entries()) {
+          fd.append(key, value)
+        }
+        fd.append('_method', 'PUT')
+        fallbackPayload = fd
+      } else {
+        fallbackPayload = { ...(payload || {}), _method: 'PUT' }
+      }
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`)
+      const data = await request(resourceEndpoint, {
+        method: 'POST',
+        headers: buildHeaders({}, true, fallbackPayload),
+        data: fallbackPayload
+      })
+      return data?.data || data
     }
-
-    const data = await response.json()
-    return data.data || data
   } catch (error) {
     console.error(`Error updating ${endpoint}/${id}:`, error)
     throw error
@@ -157,28 +381,10 @@ export const updateAPI = async (endpoint, id, payload) => {
  */
 export const deleteAPI = async (endpoint, id) => {
   try {
-    const url = `${API_BASE_URL}${ENDPOINTS[endpoint] || endpoint}/${id}`
-
-    const authToken = localStorage.getItem('auth_token')
-    const headers = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    }
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`
-    }
-
-    const response = await fetch(url, {
+    return await request(`${endpoint}/${id}`, {
       method: 'DELETE',
-      headers
+      headers: buildHeaders()
     })
-
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`)
-    }
-
-    const data = await response.json()
-    return data
   } catch (error) {
     console.error(`Error deleting ${endpoint}/${id}:`, error)
     throw error
@@ -190,6 +396,7 @@ export default {
   postAPI,
   updateAPI,
   deleteAPI,
+  apiClient,
   ENDPOINTS,
   API_BASE_URL
 }

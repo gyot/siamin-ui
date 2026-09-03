@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bukti Dukung Fitur SIMAIK v1.2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+        * { font-family: 'Inter', sans-serif; margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { overflow: hidden; height: 100vh; width: 100vw; }
+        .slide { display: none; width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
+        .slide.active { display: flex; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .progress-bar { position: fixed; bottom: 0; left: 0; height: 3px; background: linear-gradient(90deg, #3b82f6, #06b6d4); transition: width 0.4s ease; z-index: 100; }
+        .slide-counter { position: fixed; bottom: 12px; right: 20px; z-index: 100; color: white; font-size: 12px; opacity: 0.6; }
+        .nav-hint { position: fixed; bottom: 12px; left: 20px; z-index: 100; color: white; font-size: 11px; opacity: 0.4; }
+        .code-block { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.5; }
+        .mock-browser { border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .mock-browser-bar { background: #1e293b; padding: 6px 12px; display: flex; align-items: center; gap: 6px; }
+        .mock-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .evidence-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 600; letter-spacing: 0.5px; }
+        .slide-scroll { overflow-y: auto; max-height: calc(100vh - 60px); padding: 40px 48px; }
+        .slide-scroll::-webkit-scrollbar { width: 4px; }
+        .slide-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+    </style>
+</head>
+<body class="bg-slate-900">
+
+    <div class="progress-bar" id="progressBar"></div>
+    <div class="slide-counter" id="slideCounter"></div>
+    <div class="nav-hint">← → navigasi</div>
+
+    <!-- SLIDE 1: COVER -->
+    <div class="slide active" id="slide-1">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #1e40af 70%, #1e3a8a 100%);">
+            <div class="relative z-10 text-center fade-in px-8">
+                <div class="mb-6">
+                    <div class="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-blue-600/30 backdrop-blur-sm border border-blue-400/30 mb-5">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.5">
+                            <path d="M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z"/>
+                            <path d="M4 13a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6z" opacity="0.7"/>
+                            <path d="M16 13a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-6z" opacity="0.5"/>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-6xl font-black text-white mb-2 tracking-tight">
+                    SIM<span style="background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AIK</span>
+                </h1>
+                <p class="text-lg text-blue-200 font-light mb-1">Sistem Manajemen Informasi Kegiatan</p>
+                <div class="w-20 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-500 mx-auto my-6 rounded-full"></div>
+                <p class="text-blue-300/80 text-sm max-w-xl mx-auto leading-relaxed">
+                    <strong class="text-white">BUKTI DUKUNG FITUR</strong><br>
+                    Dokumentasi Fitur yang Sudah Terimplementasi<br>
+                    <span class="text-blue-200 font-medium">BPMP Nusa Tenggara Barat</span>
+                </p>
+                <div class="mt-8 text-blue-400/50 text-xs">v1.2.0 &bull; 14 Juli 2026</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 2: RINGKASAN FITUR -->
+    <div class="slide" id="slide-2">
+        <div class="w-full h-full" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="slide-scroll">
+                <div class="text-center mb-8">
+                    <span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-300 text-xs font-medium rounded-full border border-blue-500/30 mb-3">Ringkasan</span>
+                    <h2 class="text-4xl font-bold text-white">19 Modul Fitur Terimplementasi</h2>
+                    <p class="text-slate-400 mt-2 text-sm">Total: <strong class="text-white">126 sub-fitur</strong> &bull; <strong class="text-white">~12.434 baris kode</strong></p>
+                </div>
+                <div class="grid grid-cols-4 gap-3 max-w-6xl mx-auto">
+                    <div class="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-blue-400">12</div>
+                        <div class="text-xs text-slate-400 mt-1">Manajemen Peserta</div>
+                        <div class="text-[10px] text-slate-500">3.611 baris</div>
+                    </div>
+                    <div class="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-purple-400">8</div>
+                        <div class="text-xs text-slate-400 mt-1">Sertifikat Digital</div>
+                        <div class="text-[10px] text-slate-500">Integrasi</div>
+                    </div>
+                    <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-emerald-400">6</div>
+                        <div class="text-xs text-slate-400 mt-1">Pegawai Management</div>
+                        <div class="text-[10px] text-slate-500">1.549 baris</div>
+                    </div>
+                    <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-amber-400">8</div>
+                        <div class="text-xs text-slate-400 mt-1">Unit Kerja</div>
+                        <div class="text-[10px] text-slate-500">683 baris</div>
+                    </div>
+                    <div class="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-rose-400">8</div>
+                        <div class="text-xs text-slate-400 mt-1">Anggota Tim</div>
+                        <div class="text-[10px] text-slate-500">436 baris</div>
+                    </div>
+                    <div class="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-cyan-400">5</div>
+                        <div class="text-xs text-slate-400 mt-1">Penugasan</div>
+                        <div class="text-[10px] text-slate-500">242 baris</div>
+                    </div>
+                    <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-indigo-400">7</div>
+                        <div class="text-xs text-slate-400 mt-1">Formulir Publik</div>
+                        <div class="text-[10px] text-slate-500">908 baris</div>
+                    </div>
+                    <div class="bg-teal-500/10 border border-teal-500/20 rounded-xl p-4 text-center">
+                        <div class="text-2xl font-bold text-teal-400">12</div>
+                        <div class="text-xs text-slate-400 mt-1">Dashboard Admin</div>
+                        <div class="text-[10px] text-slate-500">1.438 baris</div>
+                    </div>
+                </div>
+                <div class="mt-6 max-w-4xl mx-auto">
+                    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                        <div class="text-xs text-slate-400 mb-2 font-semibold">BUKTI: Struktur File</div>
+                        <div class="code-block text-green-300 text-[10px] leading-relaxed">
+src/pages/<br>
+├── Dashboard.vue .............. 1.438 baris<br>
+├── Kegiatan.vue ............... 3.535 baris<br>
+├── PesertaManagement.vue ...... 3.611 baris<br>
+├── PegawaiManagement.vue ...... 1.549 baris<br>
+├── UnitKerjaManagement.vue .... 683 baris<br>
+├── AnggotaManagement.vue ...... 436 baris<br>
+├── Penugasan.vue .............. 242 baris<br>
+├── FormulirPeserta.vue ........ 908 baris<br>
+├── DaftarPesertaPublik.vue .... 309 baris<br>
+├── UnduhSertifikatPublik.vue .. 433 baris<br>
+├── KegiatanDetailPublik.vue ... 529 baris<br>
+├── EvaluasiKegiatan.vue ....... 710 baris<br>
+├── LaporanEvaluasi.vue ........ 704 baris<br>
+├── Landing.vue ................ 1.238 baris<br>
+├── Profile.vue ................ 751 baris<br>
+├── Login.vue .................. 215 baris<br>
+├── LoginPeserta.vue ........... 218 baris<br>
+├── LihatTandatangan.vue ....... 167 baris<br>
+├── DataSyncMonitor.vue ........ 140 baris<br>
+├── Sertifikat.vue ............. 30 baris (placeholder)<br>
+└── Peserta.vue ................ 24 baris (placeholder)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 3: BUKTI FITUR 1 - MANAJEMEN PESERTA -->
+    <div class="slide" id="slide-3">
+        <div class="w-full h-full" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="slide-scroll">
+                <div class="text-center mb-6">
+                    <span class="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs font-medium rounded-full border border-emerald-500/30 mb-3">Bukti #1</span>
+                    <h2 class="text-3xl font-bold text-white">Manajemen Peserta</h2>
+                    <p class="text-slate-400 text-sm">3.611 baris kode &bull; 12 sub-fitur &bull; src/pages/PesertaManagement.vue</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 max-w-6xl mx-auto">
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[10px] text-slate-400 ml-2">admin/peserta - Manajemen Peserta</span>
+                        </div>
+                        <div class="bg-white p-3">
+                            <div class="flex justify-between items-center mb-3">
+                                <div>
+                                    <div class="text-sm font-bold text-gray-800">Manajemen Peserta</div>
+                                    <div class="text-[10px] text-gray-500">Kelola data peserta dari semua kegiatan</div>
+                                </div>
+                                <div class="flex gap-1">
+                                    <span class="bg-indigo-600 text-white text-[8px] px-2 py-1 rounded">Buat Sertifikat</span>
+                                    <span class="bg-yellow-600 text-white text-[8px] px-2 py-1 rounded">Sertifikat Batch</span>
+                                    <span class="bg-green-600 text-white text-[8px] px-2 py-1 rounded">Export Excel</span>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 rounded p-2 mb-2">
+                                <div class="grid grid-cols-3 gap-2">
+                                    <input class="text-[9px] border rounded px-2 py-1" placeholder="Cari nama peserta..." />
+                                    <select class="text-[9px] border rounded px-2 py-1"><option>Semua Kegiatan</option></select>
+                                    <select class="text-[9px] border rounded px-2 py-1"><option>Semua Kab/Kota</option></select>
+                                </div>
+                            </div>
+                            <table class="w-full text-[9px]">
+                                <thead class="bg-gray-100"><tr>
+                                    <th class="p-1 text-left"><input type="checkbox" /></th>
+                                    <th class="p-1 text-left">Nama</th>
+                                    <th class="p-1 text-left">NIP</th>
+                                    <th class="p-1 text-left">Instansi</th>
+                                    <th class="p-1 text-left">Peran</th>
+                                    <th class="p-1 text-left">Sertifikat</th>
+                                </tr></thead>
+                                <tbody>
+                                    <tr class="border-t"><td class="p-1"><input type="checkbox" /></td><td class="p-1">Ahmad Sudirman</td><td class="p-1">198501...</td><td class="p-1">BPMP NTB</td><td class="p-1">Peserta</td><td class="p-1"><span class="bg-green-100 text-green-700 px-1 rounded">Terbit</span></td></tr>
+                                    <tr class="border-t bg-gray-50"><td class="p-1"><input type="checkbox" /></td><td class="p-1">Siti Rahmawati</td><td class="p-1">198502...</td><td class="p-1">Disdik NTB</td><td class="p-1">Narasumber</td><td class="p-1"><span class="bg-yellow-100 text-yellow-700 px-1 rounded">Draft</span></td></tr>
+                                    <tr class="border-t"><td class="p-1"><input type="checkbox" /></td><td class="p-1">Budi Santoso</td><td class="p-1">198503...</td><td class="p-1">BPMP NTB</td><td class="p-1">Panitia</td><td class="p-1"><span class="bg-gray-100 text-gray-700 px-1 rounded">Belum</span></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                            <div class="text-xs text-emerald-400 font-semibold mb-2">BUKTI: Tombol Aksi</div>
+                            <div class="code-block text-[10px] text-green-300">
+// PesertaManagement.vue baris 11-51<br>
+&lt;button @click="handleGenerateMassal"&gt;<br>
+&nbsp;&nbsp;Buat Sertifikat Terpilih ({{selectedCount}})<br>
+&lt;/button&gt;<br>
+&lt;button @click="openBatchSertifikatModalForEdit"&gt;<br>
+&nbsp;&nbsp;Sertifikat Batch<br>
+&lt;/button&gt;<br>
+&lt;button @click="exportPeserta"&gt;<br>
+&nbsp;&nbsp;Export Excel<br>
+&lt;/button&gt;<br>
+&lt;button @click="downloadBatchDocxZip"&gt;<br>
+&nbsp;&nbsp;Download Batch DOCX<br>
+&lt;/button&gt;<br>
+&lt;button @click="openAllBiodataModal"&gt;<br>
+&nbsp;&nbsp;Tampilkan Semua Biodata<br>
+&lt;/button&gt;<br>
+&lt;button @click="printAllBiodata"&gt;<br>
+&nbsp;&nbsp;Cetak Semua Biodata<br>
+&lt;/button&gt;
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                            <div class="text-xs text-blue-400 font-semibold mb-2">BUKTI: Filter & Pencarian</div>
+                            <div class="code-block text-[10px] text-green-300">
+// PesertaManagement.vue baris 96-150<br>
+&lt;input v-model="searchNama"<br>
+&nbsp;&nbsp;placeholder="Cari nama peserta..." /&gt;<br>
+&lt;select v-model="filterKegiatan"&gt;<br>
+&nbsp;&nbsp;&lt;option value=""&gt;Semua Kegiatan&lt;/option&gt;<br>
+&lt;/select&gt;<br>
+&lt;select v-model="filterStatus"&gt;<br>
+&nbsp;&nbsp;&lt;option value="aktif"&gt;Aktif&lt;/option&gt;<br>
+&nbsp;&nbsp;&lt;option value="nonaktif"&gt;Nonaktif&lt;/option&gt;<br>
+&lt;/select&gt;<br>
+&lt;select v-model="filterKabKota"&gt;<br>
+&nbsp;&nbsp;&lt;option value=""&gt;Semua Kab/Kota&lt;/option&gt;<br>
+&lt;/select&gt;
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3">
+                            <div class="text-xs text-purple-400 font-semibold mb-1">Sub-Fitur (12)</div>
+                            <div class="flex flex-wrap gap-1">
+                                <span class="evidence-tag bg-emerald-500/20 text-emerald-300">Tambah</span>
+                                <span class="evidence-tag bg-blue-500/20 text-blue-300">Edit</span>
+                                <span class="evidence-tag bg-red-500/20 text-red-300">Hapus</span>
+                                <span class="evidence-tag bg-purple-500/20 text-purple-300">Detail</span>
+                                <span class="evidence-tag bg-amber-500/20 text-amber-300">Biodata</span>
+                                <span class="evidence-tag bg-cyan-500/20 text-cyan-300">Export Excel</span>
+                                <span class="evidence-tag bg-indigo-500/20 text-indigo-300">DOCX Individual</span>
+                                <span class="evidence-tag bg-rose-500/20 text-rose-300">Batch DOCX</span>
+                                <span class="evidence-tag bg-teal-500/20 text-teal-300">Semua Biodata</span>
+                                <span class="evidence-tag bg-orange-500/20 text-orange-300">Cetak</span>
+                                <span class="evidence-tag bg-lime-500/20 text-lime-300">Filter</span>
+                                <span class="evidence-tag bg-fuchsia-500/20 text-fuchsia-300">Search</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 4: BUKTI FITUR 2 - SERTIFIKAT -->
+    <div class="slide" id="slide-4">
+        <div class="w-full h-full" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="slide-scroll">
+                <div class="text-center mb-6">
+                    <span class="inline-block px-3 py-1 bg-purple-500/20 text-purple-300 text-xs font-medium rounded-full border border-purple-500/30 mb-3">Bukti #2</span>
+                    <h2 class="text-3xl font-bold text-white">Sertifikat Digital & Unduh Publik</h2>
+                    <p class="text-slate-400 text-sm">8 sub-fitur &bull; UnduhSertifikatPublik.vue (433 baris)</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 max-w-6xl mx-auto">
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[10px] text-slate-400 ml-2">admin/peserta - Sertifikat Batch</span>
+                        </div>
+                        <div class="bg-white p-3">
+                            <div class="text-sm font-bold text-gray-800 mb-2">Buat Sertifikat Terpilih</div>
+                            <div class="grid grid-cols-2 gap-2 text-[9px] mb-2">
+                                <div><label class="text-gray-600">Nomor Sertifikat</label><input class="w-full border rounded px-2 py-1" value="001/SERT/2026" /></div>
+                                <div><label class="text-gray-600">Tanggal TTD</label><input type="date" class="w-full border rounded px-2 py-1" /></div>
+                                <div><label class="text-gray-600">Penandatangan</label><select class="w-full border rounded px-2 py-1"><option>Drs. H. Ahmad, M.M.</option></select></div>
+                                <div><label class="text-gray-600">Status</label><select class="w-full border rounded px-2 py-1"><option>Terbit</option></select></div>
+                            </div>
+                            <div class="bg-gray-50 rounded p-2 mb-2">
+                                <div class="text-[9px] text-gray-600 mb-1">Template File: <span class="text-blue-600">template_sertifikat_2026.docx</span></div>
+                            </div>
+                            <div class="flex justify-end gap-1">
+                                <span class="bg-gray-200 text-gray-700 text-[8px] px-3 py-1 rounded">Batal</span>
+                                <span class="bg-blue-600 text-white text-[8px] px-3 py-1 rounded">Proses</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[10px] text-slate-400 ml-2">/unduh-sertifikat - Portal Publik</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-50 to-blue-50 p-3">
+                            <div class="text-[10px] text-blue-600 font-semibold">UNDUH SERTIFIKAT</div>
+                            <div class="text-xs font-bold text-gray-800">Pelatihan Kurikulum Merdeka</div>
+                            <div class="bg-white rounded p-2 mt-2">
+                                <table class="w-full text-[9px]">
+                                    <thead class="bg-gray-100"><tr><th class="p-1 text-left">Nama</th><th class="p-1 text-left">NIP</th><th class="p-1 text-left">Status</th><th class="p-1 text-left">Aksi</th></tr></thead>
+                                    <tbody>
+                                        <tr class="border-t"><td class="p-1">Ahmad Sudirman</td><td class="p-1">198501...</td><td class="p-1"><span class="text-green-600 font-semibold">Terbit</span></td><td class="p-1"><span class="bg-blue-600 text-white px-2 py-0.5 rounded text-[8px]">Unduh PDF</span></td></tr>
+                                        <tr class="border-t bg-gray-50"><td class="p-1">Siti Rahmawati</td><td class="p-1">198502...</td><td class="p-1"><span class="text-gray-500">Belum Terbit</span></td><td class="p-1"><span class="bg-gray-300 text-gray-500 px-2 py-0.5 rounded text-[8px]">Menunggu</span></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-2 bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                        <div class="text-xs text-purple-400 font-semibold mb-2">BUKTI: Kode Sertifikat Batch</div>
+                        <div class="code-block text-[10px] text-green-300">
+// PesertaManagement.vue baris 16-24 — Tombol Sertifikat Batch<br>
+&lt;button @click="openBatchSertifikatModalForEdit"<br>
+&nbsp;&nbsp;:disabled="filteredPeserta.length === 0"<br>
+&nbsp;&nbsp;class="... bg-yellow-600 ..."&gt;<br>
+&nbsp;&nbsp;Sertifikat Batch<br>
+&lt;/button&gt;<br><br>
+// UnduhSertifikatPublik.vue — Download PDF Publik<br>
+// Route: /unduh-sertifikat/:kode/:slugJudul?<br>
+// fitur: Cari peserta → Klik "Unduh PDF" → File PDF terunduh<br>
+// Status: "Unduh PDF" (hijau) atau "Belum Terbit" (abu-abu)
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 5: BUKTI FITUR 3 - PEGAWAI & USER -->
+    <div class="slide" id="slide-5">
+        <div class="w-full h-full" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="slide-scroll">
+                <div class="text-center mb-6">
+                    <span class="inline-block px-3 py-1 bg-emerald-500/20 text-emerald-300 text-xs font-medium rounded-full border border-emerald-500/30 mb-3">Bukti #3</span>
+                    <h2 class="text-3xl font-bold text-white">Pegawai & User Management</h2>
+                    <p class="text-slate-400 text-sm">1.549 baris kode &bull; 6 sub-fitur &bull; src/pages/PegawaiManagement.vue</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 max-w-6xl mx-auto">
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[10px] text-slate-400 ml-2">admin/pegawai - Manajemen Pegawai & User</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-3">
+                            <div class="text-sm font-bold text-gray-800 mb-2">Manajemen Pegawai & User</div>
+                            <div class="grid grid-cols-4 gap-1 mb-2">
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">Total</div><div class="text-sm font-bold text-blue-600">45</div></div>
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">Aktif</div><div class="text-sm font-bold text-green-600">42</div></div>
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">User</div><div class="text-sm font-bold text-indigo-600">12</div></div>
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">Aktif</div><div class="text-sm font-bold text-orange-600">10</div></div>
+                            </div>
+                            <div class="flex gap-1 mb-2">
+                                <span class="bg-blue-600 text-white text-[8px] px-2 py-0.5 rounded font-semibold border-b-2 border-blue-800">Data Pegawai</span>
+                                <span class="bg-white text-gray-600 text-[8px] px-2 py-0.5 rounded">Data User</span>
+                            </div>
+                            <div class="bg-white rounded p-1">
+                                <table class="w-full text-[8px]">
+                                    <thead class="bg-gray-100"><tr><th class="p-0.5 text-left">Nama</th><th class="p-0.5 text-left">NIP</th><th class="p-0.5 text-left">Jabatan</th><th class="p-0.5 text-left">Golongan</th><th class="p-0.5 text-left">Status</th></tr></thead>
+                                    <tbody>
+                                        <tr class="border-t"><td class="p-0.5">Drs. Ahmad</td><td class="p-0.5">196801...</td><td class="p-0.5">Kepala</td><td class="p-0.5">IV/b</td><td class="p-0.5"><span class="bg-green-100 text-green-700 px-1 rounded">Aktif</span></td></tr>
+                                        <tr class="border-t bg-gray-50"><td class="p-0.5">Siti Rahmawati</td><td class="p-0.5">198502...</td><td class="p-0.5">Staff</td><td class="p-0.5">III/c</td><td class="p-0.5"><span class="bg-green-100 text-green-700 px-1 rounded">Aktif</span></td></tr>
+                                        <tr class="border-t"><td class="p-0.5">Budi Santoso</td><td class="p-0.5">198503...</td><td class="p-0.5">Staff</td><td class="p-0.5">III/a</td><td class="p-0.5"><span class="bg-green-100 text-green-700 px-1 rounded">Aktif</span></td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                            <div class="text-xs text-emerald-400 font-semibold mb-2">BUKTI: Filter & Statistik</div>
+                            <div class="code-block text-[10px] text-green-300">
+// PegawaiManagement.vue baris 34-69<br>
+&lt;input v-model="searchNama"<br>
+&nbsp;&nbsp;placeholder="Cari nama pegawai..." /&gt;<br>
+&lt;select v-model="filterStatus"&gt;<br>
+&nbsp;&nbsp;&lt;option value=""&gt;Semua Status&lt;/option&gt;<br>
+&nbsp;&nbsp;&lt;option value="aktif"&gt;Aktif&lt;/option&gt;<br>
+&nbsp;&nbsp;&lt;option value="nonaktif"&gt;Nonaktif&lt;/option&gt;<br>
+&lt;/select&gt;<br>
+&lt;select v-model="filterGolongan"&gt;<br>
+&nbsp;&nbsp;&lt;option v-for="gol in uniqueGolongan"&gt;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;{{ gol }}<br>
+&nbsp;&nbsp;&lt;/option&gt;<br>
+&lt;/select&gt;<br><br>
+// Baris 72-89 — Statistik<br>
+Total Pegawai: {{ filteredPegawai.length }}<br>
+Pegawai Aktif: {{ filteredPegawaiAktif.length }}<br>
+User Terdaftar: {{ users.length }}<br>
+User Aktif: {{ userAktif.length }}
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3">
+                            <div class="text-xs text-blue-400 font-semibold mb-1">Sub-Fitur (6)</div>
+                            <div class="flex flex-wrap gap-1">
+                                <span class="evidence-tag bg-emerald-500/20 text-emerald-300">Data Pegawai</span>
+                                <span class="evidence-tag bg-blue-500/20 text-blue-300">Data User</span>
+                                <span class="evidence-tag bg-purple-500/20 text-purple-300">Filter Nama</span>
+                                <span class="evidence-tag bg-amber-500/20 text-amber-300">Filter Status</span>
+                                <span class="evidence-tag bg-cyan-500/20 text-cyan-300">Filter Golongan</span>
+                                <span class="evidence-tag bg-rose-500/20 text-rose-300">Statistik</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 6: BUKTI FITUR 4 - UNIT KERJA & ANGGOTA -->
+    <div class="slide" id="slide-6">
+        <div class="w-full h-full" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="slide-scroll">
+                <div class="text-center mb-6">
+                    <span class="inline-block px-3 py-1 bg-amber-500/20 text-amber-300 text-xs font-medium rounded-full border border-amber-500/30 mb-3">Bukti #4</span>
+                    <h2 class="text-3xl font-bold text-white">Unit Kerja & Anggota Tim</h2>
+                    <p class="text-slate-400 text-sm">1.119 baris kode &bull; 16 sub-fitur</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 max-w-6xl mx-auto">
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[10px] text-slate-400 ml-2">admin/unit-kerja</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-3">
+                            <div class="text-sm font-bold text-gray-800 mb-2">Manajemen Unit Kerja</div>
+                            <div class="grid grid-cols-4 gap-1 mb-2">
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">Total</div><div class="text-sm font-bold text-blue-600">8</div></div>
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">Utama</div><div class="text-sm font-bold text-green-600">5</div></div>
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">Pendukung</div><div class="text-sm font-bold text-orange-600">3</div></div>
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">Sub Unit</div><div class="text-sm font-bold text-indigo-600">12</div></div>
+                            </div>
+                            <div class="flex gap-1 mb-2">
+                                <span class="bg-blue-600 text-white text-[8px] px-2 py-0.5 rounded font-semibold border-b-2 border-blue-800">Data Unit Kerja</span>
+                                <span class="bg-white text-gray-600 text-[8px] px-2 py-0.5 rounded">Data Sub Unit</span>
+                            </div>
+                            <div class="bg-white rounded p-1">
+                                <table class="w-full text-[8px]">
+                                    <thead class="bg-gray-100"><tr><th class="p-0.5 text-left">Nama Unit</th><th class="p-0.5 text-left">Jenis</th><th class="p-0.5 text-left">Tahun</th><th class="p-0.5 text-left">Aksi</th></tr></thead>
+                                    <tbody>
+                                        <tr class="border-t"><td class="p-0.5">PAUD</td><td class="p-0.5">Utama</td><td class="p-0.5">2026</td><td class="p-0.5 text-blue-600">Edit | Hapus</td></tr>
+                                        <tr class="border-t bg-gray-50"><td class="p-0.5">SD</td><td class="p-0.5">Utama</td><td class="p-0.5">2026</td><td class="p-0.5 text-blue-600">Edit | Hapus</td></tr>
+                                        <tr class="border-t"><td class="p-0.5">SMP</td><td class="p-0.5">Utama</td><td class="p-0.5">2026</td><td class="p-0.5 text-blue-600">Edit | Hapus</td></tr>
+                                        <tr class="border-t bg-gray-50"><td class="p-0.5">SMA/SMK</td><td class="p-0.5">Utama</td><td class="p-0.5">2026</td><td class="p-0.5 text-blue-600">Edit | Hapus</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[10px] text-slate-400 ml-2">admin/anggota</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-3">
+                            <div class="text-sm font-bold text-gray-800 mb-2">Manajemen Anggota Tim</div>
+                            <div class="grid grid-cols-4 gap-1 mb-2">
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">Total</div><div class="text-sm font-bold text-blue-600">24</div></div>
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">Ketua</div><div class="text-sm font-bold text-green-600">5</div></div>
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">Koordinator</div><div class="text-sm font-bold text-orange-600">8</div></div>
+                                <div class="bg-white rounded p-1 text-center"><div class="text-[10px] text-gray-500">Anggota</div><div class="text-sm font-bold text-indigo-600">11</div></div>
+                            </div>
+                            <div class="bg-white rounded p-1">
+                                <table class="w-full text-[8px]">
+                                    <thead class="bg-gray-100"><tr><th class="p-0.5 text-left">Nama</th><th class="p-0.5 text-left">Unit</th><th class="p-0.5 text-left">Peran</th><th class="p-0.5 text-left">Sub Unit</th></tr></thead>
+                                    <tbody>
+                                        <tr class="border-t"><td class="p-0.5">Ahmad Sudirman</td><td class="p-0.5">PAUD</td><td class="p-0.5"><span class="bg-green-100 text-green-700 px-1 rounded">Ketua</span></td><td class="p-0.5">-</td></tr>
+                                        <tr class="border-t bg-gray-50"><td class="p-0.5">Siti Rahmawati</td><td class="p-0.5">SD</td><td class="p-0.5"><span class="bg-orange-100 text-orange-700 px-1 rounded">Koordinator</span></td><td class="p-0.5">SD Kelas Atas</td></tr>
+                                        <tr class="border-t"><td class="p-0.5">Budi Santoso</td><td class="p-0.5">SMP</td><td class="p-0.5"><span class="bg-indigo-100 text-indigo-700 px-1 rounded">Anggota</span></td><td class="p-0.5">-</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-2 bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                        <div class="text-xs text-amber-400 font-semibold mb-2">BUKTI: Filter Peran Anggota</div>
+                        <div class="code-block text-[10px] text-green-300">
+// AnggotaManagement.vue baris 43-55<br>
+&lt;select v-model="filterPeran"&gt;<br>
+&nbsp;&nbsp;&lt;option value=""&gt;Semua Peran&lt;/option&gt;<br>
+&nbsp;&nbsp;&lt;option value="Ketua"&gt;Ketua&lt;/option&gt;<br>
+&nbsp;&nbsp;&lt;option value="Anggota"&gt;Anggota&lt;/option&gt;<br>
+&nbsp;&nbsp;&lt;option value="Koordinator"&gt;Koordinator&lt;/option&gt;<br>
+&nbsp;&nbsp;&lt;option value="Wali Wilayah"&gt;Wali Wilayah&lt;/option&gt;<br>
+&nbsp;&nbsp;&lt;option value="Co-Wali Wilayah"&gt;Co-Wali Wilayah&lt;/option&gt;<br>
+&lt;/select&gt;
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 7: BUKTI FITUR 5 - FORMULIR & LANDING -->
+    <div class="slide" id="slide-7">
+        <div class="w-full h-full" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="slide-scroll">
+                <div class="text-center mb-6">
+                    <span class="inline-block px-3 py-1 bg-cyan-500/20 text-cyan-300 text-xs font-medium rounded-full border border-cyan-500/30 mb-3">Bukti #5</span>
+                    <h2 class="text-3xl font-bold text-white">Formulir Publik & Landing Page</h2>
+                    <p class="text-slate-400 text-sm">2.475 baris kode &bull; 13 sub-fitur</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 max-w-6xl mx-auto">
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[10px] text-slate-400 ml-2">/formulir - Formulir Biodata</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-3">
+                            <div class="bg-blue-50 border border-blue-200 rounded p-2 mb-2">
+                                <div class="text-xs font-semibold text-gray-800">Formulir Biodata Peserta</div>
+                                <div class="text-[9px] text-gray-600">Pelatihan Kurikulum Merdeka 2026</div>
+                            </div>
+                            <div class="bg-white rounded p-2">
+                                <div class="text-[10px] font-semibold text-gray-800 border-b-2 border-blue-500 pb-1 mb-2">Data Pribadi</div>
+                                <div class="grid grid-cols-2 gap-1 text-[8px]">
+                                    <div><label class="text-gray-600">Nama Lengkap *</label><input class="w-full border rounded px-1 py-0.5" /></div>
+                                    <div><label class="text-gray-600">NIP</label><input class="w-full border rounded px-1 py-0.5" /></div>
+                                    <div><label class="text-gray-600">Email</label><input class="w-full border rounded px-1 py-0.5" /></div>
+                                    <div><label class="text-gray-600">No. HP</label><input class="w-full border rounded px-1 py-0.5" /></div>
+                                    <div><label class="text-gray-600">Jenis Kelamin</label><select class="w-full border rounded px-1 py-0.5"><option>Laki-laki</option></select></div>
+                                    <div><label class="text-gray-600">NPWP/NIK</label><input class="w-full border rounded px-1 py-0.5" /></div>
+                                </div>
+                                <div class="mt-2 text-[10px] font-semibold text-gray-800 border-b-2 border-blue-500 pb-1 mb-1">Tanda Tangan Digital</div>
+                                <div class="border-2 border-dashed border-gray-300 rounded h-12 bg-gray-50 flex items-center justify-center text-[9px] text-gray-400">Area Tanda Tangan Digital</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[10px] text-slate-400 ml-2">/ - Landing Page</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 p-3 text-white">
+                            <div class="flex justify-between items-center mb-3">
+                                <div class="text-xs font-bold">SIMAIK</div>
+                                <div class="text-[8px] text-blue-200">BPMP NTB</div>
+                            </div>
+                            <div class="text-lg font-bold mb-1">SIMAIK</div>
+                            <div class="text-[9px] text-blue-200 mb-2">Platform terintegrasi untuk mengelola kegiatan</div>
+                            <div class="grid grid-cols-2 gap-1">
+                                <div class="bg-white/10 rounded p-1.5 border border-white/20">
+                                    <div class="text-[9px] font-semibold">PAUD</div>
+                                    <div class="text-[8px] text-blue-200">12 Kegiatan</div>
+                                </div>
+                                <div class="bg-white/10 rounded p-1.5 border border-white/20">
+                                    <div class="text-[9px] font-semibold">SD</div>
+                                    <div class="text-[8px] text-blue-200">24 Kegiatan</div>
+                                </div>
+                                <div class="bg-white/10 rounded p-1.5 border border-white/20">
+                                    <div class="text-[9px] font-semibold">SMP</div>
+                                    <div class="text-[8px] text-blue-200">18 Kegiatan</div>
+                                </div>
+                                <div class="bg-white/10 rounded p-1.5 border border-white/20">
+                                    <div class="text-[9px] font-semibold">SMA/SMK</div>
+                                    <div class="text-[8px] text-blue-200">15 Kegiatan</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-2 bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                        <div class="text-xs text-cyan-400 font-semibold mb-2">BUKTI: Tanda Tangan Digital</div>
+                        <div class="code-block text-[10px] text-green-300">
+// FormulirPeserta.vue — Fitur tanda tangan digital di browser<br>
+// Menggunakan canvas untuk menggambar tanda tangan<br>
+// Data tersimpan sebagai gambar base64 di field `tandatangan`<br>
+// Buktikan di: LihatTandatangan.vue baris 46-55<br>
+&lt;img :src="peserta.tandatangan" alt="Tandatangan Peserta"<br>
+&nbsp;&nbsp;class="w-full h-auto max-h-64 object-contain" /&gt;<br><br>
+// Landing.vue — 1.238 baris kode, menampilkan kartu unit kerja<br>
+// Route: / (root) — Halaman utama publik<br>
+// Fitur: Pilih unit kerja → Lihat kegiatan → Akses formulir
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 8: BUKTI FITUR 6 - DASHBOARD -->
+    <div class="slide" id="slide-8">
+        <div class="w-full h-full" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="slide-scroll">
+                <div class="text-center mb-6">
+                    <span class="inline-block px-3 py-1 bg-blue-500/20 text-blue-300 text-xs font-medium rounded-full border border-blue-500/30 mb-3">Bukti #6</span>
+                    <h2 class="text-3xl font-bold text-white">Dashboard Admin</h2>
+                    <p class="text-slate-400 text-sm">1.438 baris kode &bull; 12 sub-fitur &bull; src/pages/Dashboard.vue</p>
+                </div>
+                <div class="grid grid-cols-2 gap-4 max-w-6xl mx-auto">
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[10px] text-slate-400 ml-2">admin/dashboard</span>
+                        </div>
+                        <div class="bg-slate-50 p-3">
+                            <div class="text-sm font-bold text-gray-800 mb-1">Dashboard</div>
+                            <div class="text-[9px] text-gray-500 mb-2">Selamat datang kembali, Admin</div>
+                            <div class="grid grid-cols-4 gap-1 mb-2">
+                                <div class="bg-white rounded p-1 text-center border"><div class="text-[8px] text-gray-500">Kegiatan</div><div class="text-sm font-bold text-blue-600">45</div></div>
+                                <div class="bg-white rounded p-1 text-center border"><div class="text-[8px] text-gray-500">Peserta</div><div class="text-sm font-bold text-emerald-600">1.250</div></div>
+                                <div class="bg-white rounded p-1 text-center border"><div class="text-[8px] text-gray-500">Sertifikat</div><div class="text-sm font-bold text-purple-600">890</div></div>
+                                <div class="bg-white rounded p-1 text-center border"><div class="text-[8px] text-gray-500">Berjalan</div><div class="text-sm font-bold text-amber-600">8</div></div>
+                            </div>
+                            <div class="bg-white rounded p-2 border">
+                                <div class="text-[9px] font-semibold text-gray-700 mb-1">Daftar Kegiatan</div>
+                                <div class="grid grid-cols-2 gap-1">
+                                    <div class="bg-gray-50 rounded p-1 border border-gray-200">
+                                        <div class="h-0.5 bg-blue-500 rounded mb-1"></div>
+                                        <div class="text-[8px] font-semibold">Pelatihan KM</div>
+                                        <div class="text-[7px] text-gray-500">Berjalan • 25 Peserta</div>
+                                        <div class="flex gap-0.5 mt-1"><span class="bg-blue-500 text-white text-[6px] px-1 rounded">Detail</span><span class="bg-indigo-500 text-white text-[6px] px-1 rounded">Peserta</span></div>
+                                    </div>
+                                    <div class="bg-gray-50 rounded p-1 border border-gray-200">
+                                        <div class="h-0.5 bg-green-500 rounded mb-1"></div>
+                                        <div class="text-[8px] font-semibold">Workshop Kurikulum</div>
+                                        <div class="text-[7px] text-gray-500">Selesai • 40 Peserta</div>
+                                        <div class="flex gap-0.5 mt-1"><span class="bg-blue-500 text-white text-[6px] px-1 rounded">Detail</span><span class="bg-indigo-500 text-white text-[6px] px-1 rounded">Peserta</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                            <div class="text-xs text-blue-400 font-semibold mb-2">BUKTI: Statistik & QR Code</div>
+                            <div class="code-block text-[10px] text-green-300">
+// Dashboard.vue baris 51-103 — 4 Kartu Statistik<br>
+totalKegiatan → Total Kegiatan<br>
+totalPeserta → Total Peserta<br>
+totalSertifikat → Sertifikat Terbit<br>
+kegiatanBerjalan → Kegiatan Berjalan<br><br>
+// Dashboard.vue baris 852-885 — QR Code Generator<br>
+const qrCodes = ref({})<br>
+const QRCode = await import('qrcode')<br>
+nextQrCodes[key] = await QRCode.toDataURL(url)<br><br>
+// Dashboard.vue baris 354 — Tampilan QR Code<br>
+&lt;img v-if="qrCodes[link.key]"<br>
+&nbsp;&nbsp;:src="qrCodes[link.key]"<br>
+&nbsp;&nbsp;class="w-24 h-24 rounded" /&gt;
+                            </div>
+                        </div>
+                        <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                            <div class="text-xs text-emerald-400 font-semibold mb-2">BUKTI: Filter Kegiatan</div>
+                            <div class="code-block text-[10px] text-green-300">
+// Dashboard.vue baris 106-144<br>
+&lt;input v-model="searchKegiatan"<br>
+&nbsp;&nbsp;placeholder="Ketik nama kegiatan..." /&gt;<br>
+&lt;select v-model="filterTahun"&gt; ... &lt;/select&gt;<br>
+&lt;select v-model="filterStatus"&gt;<br>
+&nbsp;&nbsp;&lt;option value="berjalan"&gt;Berjalan&lt;/option&gt;<br>
+&nbsp;&nbsp;&lt;option value="akan_datang"&gt;Akan Datang&lt;/option&gt;<br>
+&nbsp;&nbsp;&lt;option value="selesai"&gt;Selesai&lt;/option&gt;<br>
+&lt;/select&gt;<br>
+&lt;select v-model="filterUnitKerja"&gt; ... &lt;/select&gt;
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 9: BUKTI FITUR 7 - LOGIN, PROFILE, SYNC -->
+    <div class="slide" id="slide-9">
+        <div class="w-full h-full" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="slide-scroll">
+                <div class="text-center mb-6">
+                    <span class="inline-block px-3 py-1 bg-rose-500/20 text-rose-300 text-xs font-medium rounded-full border border-rose-500/30 mb-3">Bukti #7</span>
+                    <h2 class="text-3xl font-bold text-white">Login, Profile & Data Sync</h2>
+                    <p class="text-slate-400 text-sm">1.343 baris kode &bull; 15 sub-fitur</p>
+                </div>
+                <div class="grid grid-cols-3 gap-3 max-w-6xl mx-auto">
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[9px] text-slate-400 ml-1">/laman-masuk</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-900 to-slate-900 p-3 text-white text-center">
+                            <div class="text-xs font-bold mb-1">Portal Administrator</div>
+                            <div class="bg-white rounded p-3">
+                                <div class="text-xs font-bold text-gray-800 mb-2">Login Admin</div>
+                                <input class="w-full text-[9px] border rounded px-2 py-1 mb-1" placeholder="Username" />
+                                <input class="w-full text-[9px] border rounded px-2 py-1 mb-2" type="password" placeholder="Password" />
+                                <div class="bg-blue-600 text-white text-[9px] py-1 rounded font-semibold">Login</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[9px] text-slate-400 ml-1">admin/profile</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-3">
+                            <div class="text-xs font-bold text-gray-800 mb-1">Profil Saya</div>
+                            <div class="bg-white rounded p-2 text-center mb-1">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full mx-auto mb-1 flex items-center justify-center text-white text-xs font-bold">A</div>
+                                <div class="text-[9px] font-semibold">Drs. Ahmad, M.M.</div>
+                                <div class="text-[8px] text-gray-500">Kepala BPMP NTB</div>
+                            </div>
+                            <div class="bg-white rounded p-1 text-[8px]">
+                                <div class="flex justify-between border-b py-0.5"><span class="text-gray-500">NIP</span><span class="font-semibold">19680101...</span></div>
+                                <div class="flex justify-between border-b py-0.5"><span class="text-gray-500">Email</span><span class="font-semibold">ahmad@bpmpntb.id</span></div>
+                                <div class="flex justify-between border-b py-0.5"><span class="text-gray-500">Unit</span><span class="font-semibold">BPMP NTB</span></div>
+                                <div class="flex justify-between py-0.5"><span class="text-gray-500">Golongan</span><span class="font-semibold">IV/b</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[9px] text-slate-400 ml-1">/data-sync</span>
+                        </div>
+                        <div class="bg-slate-900 p-3 text-white">
+                            <div class="text-xs font-bold mb-2">🔄 Data Sync Monitor</div>
+                            <div class="grid grid-cols-2 gap-1 mb-2">
+                                <div class="bg-green-900 border border-green-500 rounded p-1.5">
+                                    <div class="text-[8px] font-semibold">API Connection</div>
+                                    <div class="text-[8px] text-green-200">✅ Connected</div>
+                                </div>
+                                <div class="bg-blue-900 border border-blue-500 rounded p-1.5">
+                                    <div class="text-[8px] font-semibold">Last Sync</div>
+                                    <div class="text-[8px] text-blue-200">14/07/2026 19:30</div>
+                                </div>
+                            </div>
+                            <div class="bg-slate-800 border border-slate-700 rounded p-1.5">
+                                <div class="text-[8px] font-semibold mb-1">Data Tables Status</div>
+                                <div class="grid grid-cols-2 gap-0.5 text-[7px]">
+                                    <div class="bg-emerald-900 rounded px-1">✅ kegiatan: 45</div>
+                                    <div class="bg-emerald-900 rounded px-1">✅ peserta: 1250</div>
+                                    <div class="bg-emerald-900 rounded px-1">✅ pegawai: 45</div>
+                                    <div class="bg-yellow-900 rounded px-1">⚠️ sertifikat: 0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-3 bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                        <div class="text-xs text-rose-400 font-semibold mb-2">BUKTI: Autentikasi & Route Guard</div>
+                        <div class="code-block text-[10px] text-green-300">
+// router/index.js baris 222-287 — Route Guard<br>
+router.beforeEach((to, from, next) => {<br>
+&nbsp;&nbsp;const authStore = useAuthStore()<br>
+&nbsp;&nbsp;if (to.meta.requiresAuth && !authStore.isAuthenticated) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;next('/laman-masuk')<br>
+&nbsp;&nbsp;} else if (to.meta.requiresAdmin && !authStore.isAdmin) {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;next('/login-peserta')<br>
+&nbsp;&nbsp;} else { next() }<br>
+})<br><br>
+// Profile.vue — 751 baris: Edit profil, ubah password<br>
+// Login.vue — 215 baris: Login admin<br>
+// LoginPeserta.vue — 218 baris: Login peserta<br>
+// DataSyncMonitor.vue — 140 baris: Monitor sinkronisasi
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 10: BUKTI FITUR 8 - PENUGASAN & EVALUASI -->
+    <div class="slide" id="slide-10">
+        <div class="w-full h-full" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="slide-scroll">
+                <div class="text-center mb-6">
+                    <span class="inline-block px-3 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-medium rounded-full border border-indigo-500/30 mb-3">Bukti #8</span>
+                    <h2 class="text-3xl font-bold text-white">Penugasan, Evaluasi & Laporan</h2>
+                    <p class="text-slate-400 text-sm">1.656 baris kode &bull; 18 sub-fitur</p>
+                </div>
+                <div class="grid grid-cols-3 gap-3 max-w-6xl mx-auto">
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[9px] text-slate-400 ml-1">admin/penugasan</span>
+                        </div>
+                        <div class="bg-white p-3">
+                            <div class="text-xs font-bold text-gray-800 mb-1">Data Penugasan Pegawai</div>
+                            <div class="bg-gray-50 rounded p-1 mb-1">
+                                <input class="text-[8px] border rounded px-1 py-0.5 w-full" placeholder="Cari nama pegawai atau kegiatan" />
+                            </div>
+                            <table class="w-full text-[7px]">
+                                <thead class="bg-gray-100"><tr><th class="p-0.5 text-left">#</th><th class="p-0.5 text-left">Pegawai</th><th class="p-0.5 text-left">Kegiatan</th><th class="p-0.5 text-left">Peran</th></tr></thead>
+                                <tbody>
+                                    <tr class="border-t"><td class="p-0.5">1</td><td class="p-0.5">Ahmad</td><td class="p-0.5">Pelatihan KM</td><td class="p-0.5">Peserta</td></tr>
+                                    <tr class="border-t bg-gray-50"><td class="p-0.5">2</td><td class="p-0.5">Siti</td><td class="p-0.5">Workshop Kurikulum</td><td class="p-0.5">Narasumber</td></tr>
+                                </tbody>
+                            </table>
+                            <div class="flex justify-between text-[7px] text-gray-500 mt-1">
+                                <span>Menampilkan 1-15 dari 45</span>
+                                <span>Prev | 1 | 2 | 3 | Next</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[9px] text-slate-400 ml-1">/evaluasi</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-50 to-blue-50 p-3">
+                            <div class="text-[10px] text-blue-600 font-semibold">FORMULIR EVALUASI</div>
+                            <div class="text-[9px] font-bold text-gray-800">Pelatihan Kurikulum Merdeka</div>
+                            <div class="bg-white rounded p-2 mt-1">
+                                <div class="text-[8px] font-semibold text-gray-700 mb-1">I. Evaluasi Program</div>
+                                <div class="text-[7px] text-gray-600 mb-0.5">1. Kesesuaian Program dengan Tujuan</div>
+                                <div class="flex gap-0.5 mb-1">
+                                    <span class="border rounded px-1.5 py-0.5 text-[7px]">1</span>
+                                    <span class="border rounded px-1.5 py-0.5 text-[7px]">2</span>
+                                    <span class="border rounded px-1.5 py-0.5 text-[7px]">3</span>
+                                    <span class="border rounded px-1.5 py-0.5 text-[7px] bg-emerald-500 text-white">4</span>
+                                    <span class="border rounded px-1.5 py-0.5 text-[7px]">5</span>
+                                </div>
+                                <div class="text-[7px] text-gray-600 mb-0.5">2. Kesesuaian Bahan Ajar</div>
+                                <div class="flex gap-0.5 mb-1">
+                                    <span class="border rounded px-1.5 py-0.5 text-[7px]">1</span>
+                                    <span class="border rounded px-1.5 py-0.5 text-[7px]">2</span>
+                                    <span class="border rounded px-1.5 py-0.5 text-[7px] bg-emerald-500 text-white">3</span>
+                                    <span class="border rounded px-1.5 py-0.5 text-[7px]">4</span>
+                                    <span class="border rounded px-1.5 py-0.5 text-[7px]">5</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mock-browser bg-slate-800">
+                        <div class="mock-browser-bar">
+                            <div class="mock-dot bg-red-400"></div>
+                            <div class="mock-dot bg-yellow-400"></div>
+                            <div class="mock-dot bg-green-400"></div>
+                            <span class="text-[9px] text-slate-400 ml-1">/laporan-evaluasi</span>
+                        </div>
+                        <div class="bg-gradient-to-br from-slate-50 to-blue-50 p-3">
+                            <div class="text-[10px] text-blue-600 font-semibold">LAPORAN EVALUASI</div>
+                            <div class="text-[9px] font-bold text-gray-800">Total Evaluasi: 35</div>
+                            <div class="bg-white rounded p-2 mt-1">
+                                <div class="text-[8px] font-semibold text-gray-700 mb-1">Evaluasi Program</div>
+                                <div class="space-y-0.5">
+                                    <div class="flex items-center gap-1"><span class="text-[7px] w-16">Program</span><div class="flex-1 bg-gray-200 rounded h-2"><div class="bg-emerald-500 h-2 rounded" style="width:70%"></div></div><span class="text-[7px]">70%</span></div>
+                                    <div class="flex items-center gap-1"><span class="text-[7px] w-16">Bahan Ajar</span><div class="flex-1 bg-gray-200 rounded h-2"><div class="bg-blue-500 h-2 rounded" style="width:65%"></div></div><span class="text-[7px]">65%</span></div>
+                                    <div class="flex items-center gap-1"><span class="text-[7px] w-16">Alokasi Waktu</span><div class="flex-1 bg-gray-200 rounded h-2"><div class="bg-amber-500 h-2 rounded" style="width:55%"></div></div><span class="text-[7px]">55%</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-3 bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+                        <div class="text-xs text-indigo-400 font-semibold mb-2">BUKTI: Kode Penugasan & Evaluasi</div>
+                        <div class="code-block text-[10px] text-green-300">
+// Penugasan.vue — Export Excel<br>
+&lt;button @click="exportExcel"&gt;Export Excel&lt;/button&gt;<br>
+// Route: /admin/penugasan — Pagination + Filter<br><br>
+// EvaluasiKegiatan.vue — 710 baris, formulir evaluasi publik<br>
+// Route: /evaluasi/:kode/:idTpk?/:slugJudul?<br>
+// 4 bagian: Program (3 item), Fasilitator (per narasumber), Layanan (3 item), Saran<br><br>
+// LaporanEvaluasi.vue — 704 baris, grafik Chart.js<br>
+// Route: /laporan-evaluasi/:kode/:idTpk?/:slugJudul?<br>
+// Fitur: Bar chart, download PNG, cetak laporan
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 11: RINGKASAN BUKTI -->
+    <div class="slide" id="slide-11">
+        <div class="w-full h-full" style="background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);">
+            <div class="slide-scroll">
+                <div class="text-center mb-6">
+                    <span class="inline-block px-3 py-1 bg-green-500/20 text-green-300 text-xs font-medium rounded-full border border-green-500/30 mb-3">Ringkasan</span>
+                    <h2 class="text-3xl font-bold text-white">Rekap Bukti Dukung Fitur</h2>
+                </div>
+                <div class="max-w-5xl mx-auto">
+                    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl overflow-hidden">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-700/50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-300">#</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-300">Modul Fitur</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-300">Sub-Fitur</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-300">Baris Kode</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-slate-300">Bukti File</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-slate-300">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/50">
+                                <tr><td class="px-4 py-2 text-slate-400">1</td><td class="px-4 py-2 text-white font-medium">Manajemen Peserta</td><td class="px-4 py-2 text-center text-emerald-400">12</td><td class="px-4 py-2 text-center text-blue-400">3.611</td><td class="px-4 py-2 text-slate-400 text-xs">PesertaManagement.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">2</td><td class="px-4 py-2 text-white font-medium">Sertifikat Digital</td><td class="px-4 py-2 text-center text-emerald-400">8</td><td class="px-4 py-2 text-center text-blue-400">-</td><td class="px-4 py-2 text-slate-400 text-xs">UnduhSertifikatPublik.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">3</td><td class="px-4 py-2 text-white font-medium">Pegawai Management</td><td class="px-4 py-2 text-center text-emerald-400">6</td><td class="px-4 py-2 text-center text-blue-400">1.549</td><td class="px-4 py-2 text-slate-400 text-xs">PegawaiManagement.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">4</td><td class="px-4 py-2 text-white font-medium">Unit Kerja Management</td><td class="px-4 py-2 text-center text-emerald-400">8</td><td class="px-4 py-2 text-center text-blue-400">683</td><td class="px-4 py-2 text-slate-400 text-xs">UnitKerjaManagement.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">5</td><td class="px-4 py-2 text-white font-medium">Anggota Tim Management</td><td class="px-4 py-2 text-center text-emerald-400">8</td><td class="px-4 py-2 text-center text-blue-400">436</td><td class="px-4 py-2 text-slate-400 text-xs">AnggotaManagement.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">6</td><td class="px-4 py-2 text-white font-medium">Penugasan Pegawai</td><td class="px-4 py-2 text-center text-emerald-400">5</td><td class="px-4 py-2 text-center text-blue-400">242</td><td class="px-4 py-2 text-slate-400 text-xs">Penugasan.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">7</td><td class="px-4 py-2 text-white font-medium">Formulir Peserta Publik</td><td class="px-4 py-2 text-center text-emerald-400">7</td><td class="px-4 py-2 text-center text-blue-400">908</td><td class="px-4 py-2 text-slate-400 text-xs">FormulirPeserta.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">8</td><td class="px-4 py-2 text-white font-medium">Daftar Peserta Publik</td><td class="px-4 py-2 text-center text-emerald-400">5</td><td class="px-4 py-2 text-center text-blue-400">309</td><td class="px-4 py-2 text-slate-400 text-xs">DaftarPesertaPublik.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">9</td><td class="px-4 py-2 text-white font-medium">Detail Kegiatan Publik</td><td class="px-4 py-2 text-center text-emerald-400">6</td><td class="px-4 py-2 text-center text-blue-400">529</td><td class="px-4 py-2 text-slate-400 text-xs">KegiatanDetailPublik.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">10</td><td class="px-4 py-2 text-white font-medium">Landing Page</td><td class="px-4 py-2 text-center text-emerald-400">6</td><td class="px-4 py-2 text-center text-blue-400">1.238</td><td class="px-4 py-2 text-slate-400 text-xs">Landing.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">11</td><td class="px-4 py-2 text-white font-medium">Dashboard Admin</td><td class="px-4 py-2 text-center text-emerald-400">12</td><td class="px-4 py-2 text-center text-blue-400">1.438</td><td class="px-4 py-2 text-slate-400 text-xs">Dashboard.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">12</td><td class="px-4 py-2 text-white font-medium">Login Admin</td><td class="px-4 py-2 text-center text-emerald-400">5</td><td class="px-4 py-2 text-center text-blue-400">215</td><td class="px-4 py-2 text-slate-400 text-xs">Login.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">13</td><td class="px-4 py-2 text-white font-medium">Login Peserta</td><td class="px-4 py-2 text-center text-emerald-400">5</td><td class="px-4 py-2 text-center text-blue-400">218</td><td class="px-4 py-2 text-slate-400 text-xs">LoginPeserta.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">14</td><td class="px-4 py-2 text-white font-medium">Profile Pengguna</td><td class="px-4 py-2 text-center text-emerald-400">5</td><td class="px-4 py-2 text-center text-blue-400">751</td><td class="px-4 py-2 text-slate-400 text-xs">Profile.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">15</td><td class="px-4 py-2 text-white font-medium">Lihat Tanda Tangan</td><td class="px-4 py-2 text-center text-emerald-400">4</td><td class="px-4 py-2 text-center text-blue-400">167</td><td class="px-4 py-2 text-slate-400 text-xs">LihatTandatangan.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">16</td><td class="px-4 py-2 text-white font-medium">Data Sync Monitor</td><td class="px-4 py-2 text-center text-emerald-400">5</td><td class="px-4 py-2 text-center text-blue-400">140</td><td class="px-4 py-2 text-slate-400 text-xs">DataSyncMonitor.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">17</td><td class="px-4 py-2 text-white font-medium">Multi-TPK</td><td class="px-4 py-2 text-center text-emerald-400">5</td><td class="px-4 py-2 text-center text-blue-400">-</td><td class="px-4 py-2 text-slate-400 text-xs">Kegiatan.vue</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">18</td><td class="px-4 py-2 text-white font-medium">Export & Download</td><td class="px-4 py-2 text-center text-emerald-400">8</td><td class="px-4 py-2 text-center text-blue-400">-</td><td class="px-4 py-2 text-slate-400 text-xs">Beberapa file</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                                <tr><td class="px-4 py-2 text-slate-400">19</td><td class="px-4 py-2 text-white font-medium">Autentikasi & Otorisasi</td><td class="px-4 py-2 text-center text-emerald-400">6</td><td class="px-4 py-2 text-center text-blue-400">-</td><td class="px-4 py-2 text-slate-400 text-xs">router/index.js, stores/auth.js</td><td class="px-4 py-2 text-center"><span class="text-green-400">✅</span></td></tr>
+                            </tbody>
+                            <tfoot class="bg-slate-700/30">
+                                <tr>
+                                    <td colspan="2" class="px-4 py-3 text-white font-bold">TOTAL</td>
+                                    <td class="px-4 py-3 text-center text-emerald-400 font-bold">126</td>
+                                    <td class="px-4 py-3 text-center text-blue-400 font-bold">~12.434</td>
+                                    <td colspan="2" class="px-4 py-3 text-slate-400 text-xs">22 file Vue.js</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 12: PENUTUP -->
+    <div class="slide" id="slide-12">
+        <div class="w-full h-full flex items-center justify-center" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #1e40af 70%, #1e3a8a 100%);">
+            <div class="relative z-10 text-center fade-in px-8">
+                <div class="mb-6">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-blue-600/30 backdrop-blur-sm border border-blue-400/30 mb-5">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.5">
+                            <path d="M4 5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5z"/>
+                            <path d="M4 13a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-6z" opacity="0.7"/>
+                            <path d="M16 13a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-6z" opacity="0.5"/>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-5xl font-black text-white mb-3">
+                    Terima <span style="background: linear-gradient(135deg, #fbbf24, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Kasih</span>
+                </h1>
+                <div class="w-20 h-0.5 bg-gradient-to-r from-yellow-400 to-amber-500 mx-auto my-6 rounded-full"></div>
+                <p class="text-blue-200 text-lg mb-2 font-light">SIMAIK v1.2.0</p>
+                <p class="text-blue-300/70 text-sm max-w-lg mx-auto leading-relaxed mb-6">
+                    19 Modul &bull; 126 Sub-Fitur &bull; ~12.434 Baris Kode<br>
+                    BPMP Nusa Tenggara Barat
+                </p>
+                <div class="flex items-center justify-center gap-6 text-xs text-blue-300/50">
+                    <span>api-siamin.bpmpntb.id</span>
+                    <span>&bull;</span>
+                    <span>Kementerian Pendidikan Dasar dan Menengah</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 12;
+
+        function showSlide(n) {
+            document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+            const slide = document.getElementById('slide-' + n);
+            if (slide) {
+                slide.classList.add('active');
+                slide.querySelectorAll('.fade-in').forEach(el => {
+                    el.style.animation = 'none';
+                    el.offsetHeight;
+                    el.style.animation = '';
+                });
+            }
+            document.getElementById('progressBar').style.width = ((n / totalSlides) * 100) + '%';
+            document.getElementById('slideCounter').textContent = n + ' / ' + totalSlides;
+            currentSlide = n;
+        }
+
+        function nextSlide() { if (currentSlide < totalSlides) showSlide(currentSlide + 1); }
+        function prevSlide() { if (currentSlide > 1) showSlide(currentSlide - 1); }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') { e.preventDefault(); nextSlide(); }
+            if (e.key === 'ArrowLeft' || e.key === 'Backspace') { e.preventDefault(); prevSlide(); }
+            if (e.key === 'Home') { e.preventDefault(); showSlide(1); }
+            if (e.key === 'End') { e.preventDefault(); showSlide(totalSlides); }
+        });
+
+        document.addEventListener('click', (e) => {
+            const x = e.clientX / window.innerWidth;
+            if (x > 0.5) nextSlide(); else prevSlide();
+        });
+
+        let touchStartX = 0;
+        document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+        document.addEventListener('touchend', (e) => {
+            const diff = touchStartX - e.changedTouches[0].clientX;
+            if (Math.abs(diff) > 50) { if (diff > 0) nextSlide(); else prevSlide(); }
+        });
+
+        showSlide(1);
+    </script>
+</body>
+</html>

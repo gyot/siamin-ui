@@ -2,7 +2,11 @@
 
 // Option 1: Using Database Module (Recommended for most cases)
 // ============================================================
-import database from '@/data/index.js'
+// note: data module no longer fetches all tables on import. call
+// `ensureDataLoaded()` before touching `database` if you want to make sure
+// the cache has been primed (usually not necessary for pages that use
+// `loadDataFromAPI()` directly).
+import database, { ensureDataLoaded } from '@/data/index.js'
 
 export default {
   name: 'ExampleComponent1',

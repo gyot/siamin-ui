@@ -141,9 +141,6 @@ fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api
   method: 'OPTIONS'
 })
 .then(r => {
-  console.log('Headers:')
-  console.log('  Access-Control-Allow-Origin:', r.headers.get('Access-Control-Allow-Origin'))
-  console.log('  Access-Control-Allow-Methods:', r.headers.get('Access-Control-Allow-Methods'))
 })
 ```
 
@@ -161,7 +158,6 @@ fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api
   })
 })
 .then(r => r.json())
-.then(d => console.log('✅ Login works:', d))
 .catch(e => console.error('❌ Still error:', e.message))
 ```
 

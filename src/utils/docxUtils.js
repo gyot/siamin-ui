@@ -31,16 +31,16 @@ export const replacePlaceholdersInXml = (xmlContent, data) => {
   let result = xmlContent
   
   Object.entries(data).forEach(([key, value]) => {
-    // Escape special regex characters
-    const escapedValue = String(value || '-').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const safeKey = String(key).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const xmlValue = escapeXml(value ?? '-')
     
     // Method 1: Direct replacement jika placeholder dalam satu run
-    const regex1 = new RegExp(`(<w:t[^>]*>)\\{${key}\\}(</w:t>)`, 'g')
-    result = result.replace(regex1, `$1${escapedValue}$2`)
+    const regex1 = new RegExp(`(<w:t[^>]*>)\\{${safeKey}\\}(</w:t>)`, 'g')
+    result = result.replace(regex1, `$1${xmlValue}$2`)
     
     // Method 2: Handle placeholder yang tersebar di multiple runs
-    const regex2 = new RegExp(`\\{${key}\\}`, 'g')
-    result = result.replace(regex2, escapedValue)
+    const regex2 = new RegExp(`\\{${safeKey}\\}`, 'g')
+    result = result.replace(regex2, xmlValue)
   })
   
   return result
@@ -54,7 +54,6 @@ export const debugXmlStructure = (xmlContent, placeholder) => {
   const index = xmlContent.indexOf(searchPattern)
   
   if (index === -1) {
-    console.log(`DEBUG: Placeholder ${searchPattern} not found`)
     return
   }
   
@@ -63,9 +62,6 @@ export const debugXmlStructure = (xmlContent, placeholder) => {
   const end = Math.min(xmlContent.length, index + 500)
   const context = xmlContent.substring(start, end)
   
-  console.log('=== XML Context Around Placeholder ===')
-  console.log(context)
-  console.log('=== End Context ===')
 }
 
 /**
@@ -88,11 +84,9 @@ const escapeXml = (str) => {
  */
 export const generateTableXml = (rows) => {
   if (!rows || rows.length === 0) {
-    console.log('[generateTableXml] No rows provided, returning empty table')
     return ''
   }
 
-  console.log(`[generateTableXml] Generating table for ${rows.length} rows`)
 
   // Build header row
   const headerRow = `<w:tr><w:trPr><w:trHeight w:val="400" w:type="atLeast"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="1440" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>No</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>Nama</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>Jabatan</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/><w:shd w:fill="4472C4"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:color w:val="FFFFFF"/></w:rPr><w:t>Peran</w:t></w:r></w:p></w:tc></w:tr>`
@@ -103,7 +97,6 @@ export const generateTableXml = (rows) => {
     const jabatan = escapeXml(row.jabatan || '-')
     const peran = escapeXml(row.peran || '-')
     
-    console.log(`[generateTableXml] Row ${index + 1}: ${nama}, ${jabatan}, ${peran}`)
     
     return `<w:tr><w:trPr><w:trHeight w:val="300" w:type="atLeast"/></w:trPr><w:tc><w:tcPr><w:tcW w:w="1440" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${index + 1}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${nama}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${jabatan}</w:t></w:r></w:p></w:tc><w:tc><w:tcPr><w:tcW w:w="2880" w:type="dxa"/></w:tcPr><w:p><w:r><w:t>${peran}</w:t></w:r></w:p></w:tc></w:tr>`
   }).join('')
@@ -111,7 +104,6 @@ export const generateTableXml = (rows) => {
   // Build complete table
   const table = `<w:tbl><w:tblPr><w:tblW w:w="10080" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:left w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:bottom w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:right w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:insideH w:val="single" w:sz="12" w:space="0" w:color="000000"/><w:insideV w:val="single" w:sz="12" w:space="0" w:color="000000"/></w:tblBorders></w:tblPr>${headerRow}${dataRows}</w:tbl>`
 
-  console.log(`[generateTableXml] Table generated, length: ${table.length}`)
   return table
 }
 
@@ -130,14 +122,12 @@ export const replaceTablePlaceholder = (xmlContent, placeholder, rows) => {
   }
 
   const searchPattern = `{${placeholder}}`
-  console.log(`[Table] Searching for placeholder: ${searchPattern}`)
   
   if (!xmlContent.includes(searchPattern)) {
     console.warn(`[Table] Placeholder NOT found`)
     return xmlContent
   }
 
-  console.log(`[Table] Placeholder found!`)
   
   // Strategy: Find paragraph with placeholder, remove placeholder text, then insert table after </w:p>
   // This preserves the paragraph structure above and inserts table right after
@@ -152,17 +142,52 @@ export const replaceTablePlaceholder = (xmlContent, placeholder, rows) => {
   }
   
   const fullParagraph = match[1]
-  console.log(`[Table] Found paragraph, length: ${fullParagraph.length}`)
   
   // Step 2: Remove the placeholder text from paragraph (keep structure, just remove {DAFTAR_TIM})
   const paragraphWithoutPlaceholder = fullParagraph.replace(searchPattern, '')
-  console.log(`[Table] Removed placeholder from paragraph`)
   
   // Step 3: Replace paragraph with (paragraph without placeholder + table after it)
   const result = xmlContent.replace(fullParagraph, paragraphWithoutPlaceholder + tableXml)
   
-  console.log(`[Table] Injection done successfully`)
   return result
+}
+
+/**
+ * Generate table XML untuk Daftar Hadir (No, Nama, NIP, Instansi, Tanda Tangan)
+ * Matches template_daftar_hadir.docx column structure
+ * @param {Array<Object>} rows - Array of row objects: { nama_lengkap, nip, nama_instansi }
+ * @returns {string} Table XML
+ */
+export const generateDaftarHadirTableXml = (rows, options = {}) => {
+  if (!rows || rows.length === 0) return ''
+
+  const showKabKota = options.showKabKota !== false
+
+  const headerCells = `${makeHeaderCell('500', 'No.')}${makeHeaderCell('2800', 'Nama')}${makeHeaderCell('1600', 'NIP')}${makeHeaderCell('1600', 'Instansi')}${showKabKota ? makeHeaderCell('1400', 'Kab/Kota') : ''}${makeHeaderCell('1600', 'Tanda Tangan')}`
+  const headerRow = `<w:tr w14:paraId="H001"><w:tblPrEx><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:left w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:bottom w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:right w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideH w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideV w:val="single" w:color="auto" w:sz="4" w:space="0"/></w:tblBorders><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPrEx><w:trPr><w:trHeight w:val="485" w:hRule="atLeast"/></w:trPr>${headerCells}</w:tr>`
+
+  const dataRows = rows.map((row, i) => {
+    const nama = escapeXml(row.nama_lengkap || '-')
+    const nip = escapeXml(row.nip || '-')
+    const instansi = escapeXml(row.nama_instansi || '-')
+    const kabKota = escapeXml(row.kab_kota || row.kabupaten_kota || '-')
+    const dataCells = `${makeDataCell('500', String(i + 1))}${makeDataCell('2800', nama)}${makeDataCell('1600', nip)}${makeDataCell('1600', instansi)}${showKabKota ? makeDataCell('1400', kabKota) : ''}${makeDataCell('1600', '')}`
+    return `<w:tr w14:paraId="D${String(i).padStart(3,'0')}"><w:tblPrEx><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:left w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:bottom w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:right w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideH w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideV w:val="single" w:color="auto" w:sz="4" w:space="0"/></w:tblBorders><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPrEx><w:trPr><w:trHeight w:val="529" w:hRule="atLeast"/></w:trPr>${dataCells}</w:tr>`
+  }).join('')
+
+  const gridCols = showKabKota
+    ? '<w:gridCol w:w="500"/><w:gridCol w:w="2800"/><w:gridCol w:w="1600"/><w:gridCol w:w="1600"/><w:gridCol w:w="1400"/><w:gridCol w:w="1600"/>'
+    : '<w:gridCol w:w="500"/><w:gridCol w:w="2800"/><w:gridCol w:w="1600"/><w:gridCol w:w="1600"/><w:gridCol w:w="1600"/>'
+
+  return `<w:tbl><w:tblPr><w:tblStyle w:val="5"/><w:tblW w:w="0" w:type="auto"/><w:tblInd w:w="0" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:left w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:bottom w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:right w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideH w:val="single" w:color="auto" w:sz="4" w:space="0"/><w:insideV w:val="single" w:color="auto" w:sz="4" w:space="0"/></w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${gridCols}</w:tblGrid>${headerRow}${dataRows}</w:tbl>`
+}
+
+const makeHeaderCell = (width, text) => {
+  return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/><w:vAlign w:val="center"/></w:tcPr><w:p><w:pPr><w:jc w:val="center"/><w:rPr><w:b/><w:bCs/></w:rPr></w:pPr><w:r><w:rPr><w:b/><w:bCs/></w:rPr><w:t>${escapeXml(text)}</w:t></w:r></w:p></w:tc>`
+}
+
+const makeDataCell = (width, text) => {
+  return `<w:tc><w:tcPr><w:tcW w:w="${width}" w:type="dxa"/></w:tcPr><w:p><w:r><w:t xml:space="preserve">${text || ' '}</w:t></w:r></w:p></w:tc>`
 }
 
 /**
@@ -170,7 +195,7 @@ export const replaceTablePlaceholder = (xmlContent, placeholder, rows) => {
  * @param {string} xmlContent - Modified XML content
  * @param {Blob} originalDocx - Original DOCX for resources
  * @param {string} filename - Output filename
- * @returns {Promise<void>}
+ * @returns {Promise<Blob>}
  */
 export const generateDocxFromXml = async (xmlContent, originalDocx, filename = 'document.docx') => {
   try {
@@ -185,7 +210,10 @@ export const generateDocxFromXml = async (xmlContent, originalDocx, filename = '
     
     // Generate new DOCX
     const newDocxBlob = await zip.generateAsync({ type: 'blob' })
-    downloadBlob(newDocxBlob, filename)
+    if (filename) {
+      downloadBlob(newDocxBlob, filename)
+    }
+    return newDocxBlob
   } catch (error) {
     console.error('Error generating DOCX from XML:', error)
     throw error
@@ -215,7 +243,7 @@ export const downloadBlob = (blob, filename) => {
  * @param {File|Blob} templateDocx - Template DOCX file
  * @param {Object} data - Data untuk replace
  * @param {string} filename - Output filename
- * @returns {Promise<void>}
+ * @returns {Promise<Blob>}
  */
 export const processDocxTemplate = async (templateDocx, data, filename = 'document.docx') => {
   try {
@@ -226,7 +254,7 @@ export const processDocxTemplate = async (templateDocx, data, filename = 'docume
     const modifiedXml = replacePlaceholdersInXml(xmlContent, data)
     
     // 3. Generate DOCX baru dengan structure original
-    await generateDocxFromXml(modifiedXml, templateDocx, filename)
+    return await generateDocxFromXml(modifiedXml, templateDocx, filename)
   } catch (error) {
     console.error('Error processing DOCX template:', error)
     throw error

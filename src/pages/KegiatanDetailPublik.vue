@@ -1,0 +1,551 @@
+<template>
+  <div class="min-h-screen bg-[radial-gradient(circle_at_top,#1e3a8a_0%,#0f172a_55%,#020617_100%)] text-slate-100">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <router-link to="/" class="inline-flex items-center gap-2 text-cyan-200 hover:text-cyan-100 text-sm">
+          <span>&larr;</span>
+          <span>Kembali ke Beranda</span>
+        </router-link>
+        <button
+          @click="shareDetailPage"
+          class="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-300/40 text-cyan-100 hover:bg-cyan-400/25 text-sm"
+        >
+          Share Halaman
+        </button>
+      </div>
+
+      <div v-if="isLoading" class="rounded-2xl border border-white/10 bg-white/5 p-8 text-center text-blue-100">
+        Memuat detail kegiatan...
+      </div>
+
+      <div v-else-if="errorMessage" class="rounded-2xl border border-red-300/30 bg-red-500/10 p-5 text-red-100">
+        {{ errorMessage }}
+      </div>
+
+      <div v-else-if="kegiatan" class="space-y-6">
+        <section class="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/85 to-blue-950/80 p-5 sm:p-7 shadow-2xl">
+          <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6">
+            <div>
+              <p class="text-xs uppercase tracking-[0.2em] text-cyan-200/90 mb-3">Detail Kegiatan</p>
+              <h1 class="text-2xl sm:text-3xl font-bold leading-tight text-white">{{ kegiatan.nama_kegiatan || '-' }}</h1>
+              <p class="text-sm text-blue-100 mt-3">{{ kegiatan.deskripsi || 'Tidak ada deskripsi kegiatan.' }}</p>
+              <div class="mt-4" v-if="resourceLinks.length > 0">
+                <div class="flex flex-wrap gap-2">
+                  <a v-for="item in resourceLinks" :key="item.key" :href="item.url" target="_blank"
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white/10 hover:bg-white/20 text-white border border-white/20 transition">
+                    <svg v-if="item.key === 'dokumentasi_url'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <svg v-else-if="item.key === 'materi_url'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    {{ item.label }}
+                  </a>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5 text-sm">
+                <div class="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p class="text-blue-200">Tanggal</p>
+                  <p class="text-white font-medium">{{ formatDate(kegiatan.tanggal_mulai) }} - {{ formatDate(kegiatan.tanggal_selesai) }}</p>
+                </div>
+                <!-- <div class="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p class="text-blue-200">Lokasi</p>
+                  <p class="text-white font-medium">{{ getKegiatanLocationLabel(kegiatan) }}</p>
+                </div> -->
+                <div v-if="tpkRows.length <= 1" class="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p class="text-blue-200">Kabupaten/Kota</p>
+                  <p class="text-white font-medium">{{ getKabupatenKotaLabel(kegiatan) }}</p>
+                </div>
+                <div class="rounded-xl border border-white/10 bg-white/5 p-3">
+                  <p class="text-blue-200">Metode</p>
+                  <p class="text-white font-medium">{{ getMetodeLabel(kegiatan.metode_pelaksanaan) }}</p>
+                </div>
+                  <div v-if="tpkRows.length > 0" class="col-span-full rounded-2xl border border-white/10 bg-white/5 p-2 sm:p-2 mt-3">
+                    <h2 class="text-lg font-semibold text-white mb-4">Tempat Pelaksanaan Kegiatan (TPK)</h2>
+                    <div class="overflow-x-auto">
+                      <table class="w-full text-sm">
+                        <thead class="text-blue-200">
+                          <tr>
+                            <th class="px-4 py-2 text-left font-medium">No</th>
+                            <th class="px-4 py-2 text-left font-medium">Lokasi</th>
+                            <th class="px-4 py-2 text-left font-medium">Kabupaten/Kota</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(tpk, idx) in tpkRows" :key="idx" class="border-t border-white/10">
+                            <td class="px-4 py-2 text-blue-100">{{ idx + 1 }}</td>
+                            <td class="px-4 py-2 text-white font-medium">{{ tpk.lokasi || '-' }}</td>
+                            <td class="px-4 py-2 text-blue-100">{{ tpk.kabupaten_kota || '-' }}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+              </div>
+            </div>
+
+            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+              <img
+                v-if="flyerUrl"
+                :src="flyerUrl"
+                :alt="`Flyer ${kegiatan.nama_kegiatan}`"
+                class="w-full h-[320px] object-cover rounded-xl"
+                loading="lazy"
+              />
+              <div v-else class="w-full h-[320px] rounded-xl border border-white/10 flex items-center justify-center text-blue-200 text-sm">
+                Flyer belum tersedia
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <h2 class="text-lg font-semibold text-white">Link Publik</h2>
+            <button
+              @click="copyLink(detailPageUrl)"
+              class="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-sm text-blue-100"
+            >
+              Copy Link Halaman
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 mb-6">
+            <div class="bg-white p-2 rounded-lg w-fit">
+              <img
+                v-if="getQrCodeUrl(detailPageUrl)"
+                :src="getQrCodeUrl(detailPageUrl)"
+                alt="QR Detail Kegiatan"
+                class="w-28 h-28 sm:w-36 sm:h-36"
+              />
+            </div>
+            <div>
+              <p class="text-blue-200 text-sm mb-1">Link Detail Kegiatan</p>
+              <a :href="detailPageUrl" target="_blank" class="text-cyan-200 hover:text-cyan-100 break-all">{{ detailPageUrl }}</a>
+            </div>
+          </div>
+
+          <p v-if="!isWithinKegiatanDateRange" class="text-amber-200 text-sm mb-4">
+            Link tetap ditampilkan. Pengisian biodata hanya tersedia pada tanggal kegiatan.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <article v-for="item in visibleBiodataLinks" :key="item.label" class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
+              <p class="text-xs uppercase tracking-wide text-cyan-200">{{ item.label }}</p>
+              <a :href="item.url" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ item.url }}</a>
+              <div class="mt-3 flex items-center gap-3">
+                <img
+                  v-if="getQrCodeUrl(item.url)"
+                  :src="getQrCodeUrl(item.url)"
+                  :alt="`QR ${item.label}`"
+                  class="w-20 h-20 rounded bg-white p-1"
+                />
+                <button
+                  @click="copyLink(item.url)"
+                  class="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-xs text-blue-100"
+                >
+                  Copy Link
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- Link Evaluasi dan Laporan Evaluasi -->
+        <section v-if="isLastDayOfKegiatan" class="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+          <h2 class="text-lg font-semibold text-white mb-4">Link Evaluasi</h2>
+          
+          <div v-if="evaluasiLinks.length === 0" class="text-sm text-slate-400">Tidak ada TPK untuk kegiatan ini.</div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <article v-for="item in evaluasiLinks" :key="item.id_tpk" class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
+              <p class="text-xs uppercase tracking-wide text-cyan-200">{{ item.nama_tpk }}</p>
+              <a :href="item.url" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ item.url }}</a>
+              <div class="mt-3 flex items-center gap-3">
+                <img
+                  v-if="qrCodeMap[item.url]"
+                  :src="qrCodeMap[item.url]"
+                  :alt="`QR ${item.nama_tpk}`"
+                  class="w-20 h-20 rounded bg-white p-1"
+                />
+                <button
+                  @click="copyLink(item.url)"
+                  class="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-xs text-blue-100"
+                >
+                  Copy Link
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { fetchAPI } from '@/services/api'
+import database from '@/data/index.js'
+import { buildPublicUrl as buildAppUrl, buildStorageUrl } from '@/utils/url'
+import { getKegiatanKabupatenKotaLabel, getKegiatanLocationItems, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
+
+export default {
+  name: 'KegiatanDetailPublik',
+  setup() {
+    const route = useRoute()
+    const kode = route.params.kode
+
+    const kegiatan = ref(null)
+    const isLoading = ref(true)
+    const errorMessage = ref('')
+    const qrCodeMap = ref({})
+
+    const normalize = (value) => String(value || '').toLowerCase().trim()
+
+    const slugify = (text) => {
+      if (!text) return ''
+      return String(text)
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-')
+    }
+
+    const buildPublicUrl = (path = '') => {
+      return buildAppUrl(path)
+    }
+
+    const formatDate = (dateString) => {
+      if (!dateString) return '-'
+      const date = new Date(dateString)
+      return date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
+    }
+
+    const getStatusLabel = (status) => {
+      const labels = { berjalan: 'Berjalan', akan_datang: 'Akan Datang', selesai: 'Selesai', draft: 'Draft', dibatalkan: 'Dibatalkan' }
+      return labels[status] || status || '-'
+    }
+
+    const getMetodeLabel = (metode) => {
+      const labels = { daring: 'Daring', luring: 'Luring', hybrid: 'Hybrid' }
+      return labels[metode] || metode || '-'
+    }
+
+    const getKabupatenKotaLabel = (item) => getKegiatanKabupatenKotaLabel(item)
+
+    const flyerUrl = computed(() => {
+      const flyer = kegiatan.value?.flyer || kegiatan.value?.flyer_path || kegiatan.value?.path
+      if (!flyer) return ''
+      if (/^https?:\/\//.test(flyer) || String(flyer).startsWith('data:')) return flyer
+
+      return buildStorageUrl(flyer)
+    })
+
+    const detailPageUrl = computed(() => {
+      const judul = kegiatan.value?.nama_kegiatan || route.params.slugJudul || ''
+      return buildPublicUrl(`/kegiatan/${kode}/${slugify(judul)}`)
+    })
+
+    const toDateOnly = (value) => {
+      if (!value) return null
+      const str = String(value).slice(0, 10)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return null
+      return str
+    }
+
+    const getTodayDateOnly = () => {
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = String(now.getMonth() + 1).padStart(2, '0')
+      const day = String(now.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    const getValueByPath = (obj, path) => {
+      if (!obj || !path) return ''
+      return String(path)
+        .split('.')
+        .reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj)
+    }
+
+    const firstNonEmptyValue = (obj, paths = []) => {
+      for (const path of paths) {
+        const value = getValueByPath(obj, path)
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+          return value
+        }
+      }
+      return ''
+    }
+
+    const buildAbsoluteUrl = (rawUrl) => {
+      if (!rawUrl) return ''
+      const value = String(rawUrl).trim()
+      if (!value) return ''
+      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
+      return buildPublicUrl(value)
+    }
+
+    const getStorageFileUrl = (path) => {
+      if (!path) return ''
+      const value = String(path).trim()
+      if (!value) return ''
+      if (/^(https?:\/\/|data:|mailto:|tel:)/i.test(value)) return value
+      return buildStorageUrl(value)
+    }
+
+    const getRoleLinksFromKegiatan = (item, role) => {
+      const roleLower = String(role || '').toLowerCase()
+      const formUrl = firstNonEmptyValue(item, [
+        `link_form_${roleLower}`,
+        `form_${roleLower}_url`,
+        `url_form_${roleLower}`,
+        `link_biodata_${roleLower}`,
+        `url_biodata_${roleLower}`,
+        `biodata_${roleLower}_url`,
+        `formulir_${roleLower}`,
+        `link_formulir_${roleLower}`,
+        `links.${roleLower}.form`,
+        `links.${roleLower}.url`,
+        `link_biodata.${roleLower}`,
+        `form_biodata.${roleLower}`
+      ])
+
+      const templateUrl = firstNonEmptyValue(item, [
+        'template_biodata',
+        'template_biodata_path',
+        `template_biodata_${roleLower}_url`,
+        `url_template_biodata_${roleLower}`,
+        `contoh_template_biodata_${roleLower}_url`,
+        `link_template_biodata_${roleLower}`,
+        `template_${roleLower}_url`,
+        `contoh_template_${roleLower}_url`,
+        `template_biodata.${roleLower}`,
+        `contoh_template_biodata.${roleLower}`,
+        `templates.${roleLower}.biodata`,
+        `templates.${roleLower}.url`,
+        `template_biodata_url`,
+        `contoh_template_biodata_url`
+      ])
+
+      return {
+        formUrl: buildAbsoluteUrl(formUrl),
+        templateUrl: getStorageFileUrl(templateUrl) || buildAbsoluteUrl(templateUrl)
+      }
+    }
+
+    const biodataLinks = computed(() => {
+      const judul = kegiatan.value?.nama_kegiatan || route.params.slugJudul || ''
+      const slug = slugify(judul)
+      const item = kegiatan.value || {}
+      const roles = ['Peserta', 'Panitia', 'Narasumber', 'Pendamping']
+      const tpkItems = getKegiatanLocationItems(kegiatan.value)
+      const roleLinks = []
+
+      if (tpkItems.length > 0) {
+        for (const tpk of tpkItems) {
+          const namaTpk = tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi
+          for (const role of roles) {
+            const dbLinks = getRoleLinksFromKegiatan(item, role)
+            roleLinks.push({
+              label: `${role} - ${namaTpk}`,
+              url: dbLinks.formUrl || buildPublicUrl(`/formulir/${kode}/${role}/${tpk.id_tpk}/${slug}`),
+              templateUrl: dbLinks.templateUrl
+            })
+          }
+        }
+      } else {
+        for (const role of roles) {
+          const dbLinks = getRoleLinksFromKegiatan(item, role)
+          roleLinks.push({
+            label: `Form ${role}`,
+            url: dbLinks.formUrl || buildPublicUrl(`/formulir/${kode}/${role}/${slug}`),
+            templateUrl: dbLinks.templateUrl
+          })
+        }
+      }
+
+      return [
+        ...roleLinks,
+        { label: 'Daftar Peserta', url: buildPublicUrl(`/daftar-peserta/${kode}/${slug}`), templateUrl: '' },
+        { label: 'Unduh Sertifikat', url: buildPublicUrl(`/unduh-sertifikat/${kode}/${slug}`), templateUrl: '' }
+      ]
+    })
+
+    const visibleBiodataLinks = computed(() => {
+      if (isWithinKegiatanDateRange.value) return biodataLinks.value
+      const roles = ['peserta', 'panitia', 'narasumber', 'pendamping']
+      return biodataLinks.value.filter(item => {
+        const lower = item.label.toLowerCase()
+        return !roles.some(r => lower.startsWith(`form ${r}`) || lower.startsWith(`${r} -`))
+      })
+    })
+
+    const resourceLinks = computed(() => {
+      const item = kegiatan.value || {}
+      const candidates = [
+        { key: 'dokumentasi_url', label: 'Dokumentasi', url: item.dokumentasi_url },
+        { key: 'materi_url', label: 'Materi', url: item.materi_url },
+        { key: 'panduan_url', label: 'Panduan', url: item.panduan_url }
+      ]
+      return candidates
+        .map((entry) => ({ ...entry, url: buildAbsoluteUrl(entry.url) }))
+        .filter((entry) => Boolean(entry.url))
+    })
+
+    const tpkRows = computed(() => getKegiatanLocationItems(kegiatan.value))
+
+    const isWithinKegiatanDateRange = computed(() => {
+      const start = toDateOnly(kegiatan.value?.tanggal_mulai)
+      const end = toDateOnly(kegiatan.value?.tanggal_selesai)
+      if (!start || !end) return false
+      const today = getTodayDateOnly()
+      return today >= start && today <= end
+    })
+
+    const isLastDayOfKegiatan = computed(() => {
+      const end = toDateOnly(kegiatan.value?.tanggal_selesai)
+      if (!end) return false
+      const today = getTodayDateOnly()
+      return today === end
+    })
+
+    const evaluasiLinks = computed(() => {
+      if (!kegiatan.value) return []
+      const kode = kegiatan.value.id_kegiatan || ''
+      const slug = slugify(kegiatan.value.nama_kegiatan || '')
+      const items = getKegiatanLocationItems(kegiatan.value)
+      if (items.length === 0) return []
+      return items.map(tpk => ({
+        id_tpk: tpk.id_tpk,
+        nama_tpk: tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi,
+        url: buildPublicUrl(`/evaluasi/${kode}/${tpk.id_tpk}/${slug}`)
+      }))
+    })
+
+    const loadKegiatan = async () => {
+      isLoading.value = true
+      errorMessage.value = ''
+      kegiatan.value = null
+      console.log(kode);
+      
+      try {
+        try {
+          const detail = await fetchAPI(`kegiatan/${kode}`)
+          if (detail && !Array.isArray(detail)) {
+            kegiatan.value = detail
+          }
+        } catch (error) {
+          // ignore and continue to fallback list
+        }
+
+        if (!kegiatan.value) {
+          try {
+            let list = await fetchAPI('kegiatan')
+            if (!Array.isArray(list) || list.length === 0) {
+              list = await fetchAPI('kegiatan/all')
+            }
+            const rows = Array.isArray(list) ? list : (Array.isArray(list?.data) ? list.data : [])
+            kegiatan.value = rows.find((item) => normalize(item.id_kegiatan) === normalize(kode)) || null
+          } catch (error) {
+            kegiatan.value = (database.kegiatan || []).find((item) => normalize(item.id_kegiatan) === normalize(kode)) || null
+          }
+        }
+      } finally {
+        if (!kegiatan.value) {
+          errorMessage.value = 'Kegiatan tidak ditemukan.'
+        }
+        isLoading.value = false
+      }
+    }
+
+    const generateQrCodes = async () => {
+      const QRCode = (await import('qrcode')).default || (await import('qrcode'))
+      const biodataTargets = biodataLinks.value.map((item) => item.url)
+      const targets = [detailPageUrl.value, ...biodataTargets].filter(Boolean)
+      const nextMap = {}
+      await Promise.all(targets.map(async (url) => {
+        try {
+          nextMap[url] = await QRCode.toDataURL(url, { width: 220, margin: 1 })
+        } catch (error) {
+          nextMap[url] = ''
+        }
+      }))
+
+      // Generate QR codes for evaluation links if it's the last day
+      if (isLastDayOfKegiatan.value) {
+        try {
+          for (const item of evaluasiLinks.value) {
+            if (item.url) {
+              nextMap[item.url] = await QRCode.toDataURL(item.url, { width: 220, margin: 1 })
+            }
+          }
+        } catch (error) {
+          console.error('[KegiatanDetailPublik] Gagal generate QR Evaluasi:', error)
+        }
+      }
+
+      qrCodeMap.value = nextMap
+    }
+
+    const getQrCodeUrl = (url) => qrCodeMap.value[url] || ''
+
+    const copyLink = async (url) => {
+      try {
+        await navigator.clipboard.writeText(url)
+        alert('Link berhasil disalin.')
+      } catch (error) {
+        window.prompt('Salin link berikut:', url)
+      }
+    }
+
+    const shareDetailPage = async () => {
+      const url = detailPageUrl.value
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: kegiatan.value?.nama_kegiatan || 'Detail Kegiatan',
+            text: 'Detail kegiatan publik',
+            url
+          })
+          return
+        } catch (error) {
+          if (error?.name === 'AbortError') return
+        }
+      }
+      await copyLink(url)
+    }
+
+    onMounted(loadKegiatan)
+
+    watch([detailPageUrl, biodataLinks, isLastDayOfKegiatan], () => {
+      generateQrCodes()
+    }, { immediate: true })
+
+    return {
+      kegiatan,
+      isLoading,
+      errorMessage,
+      flyerUrl,
+      detailPageUrl,
+      biodataLinks,
+      visibleBiodataLinks,
+      resourceLinks,
+      tpkRows,
+      isWithinKegiatanDateRange,
+      isLastDayOfKegiatan,
+      evaluasiLinks,
+      qrCodeMap,
+      formatDate,
+      getStatusLabel,
+      getMetodeLabel,
+      getKabupatenKotaLabel,
+      getKegiatanLocationLabel,
+      getQrCodeUrl,
+      copyLink,
+      shareDetailPage
+    }
+  }
+}
+</script>

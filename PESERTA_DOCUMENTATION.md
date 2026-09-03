@@ -1,8 +1,8 @@
-# Dokumentasi Data dan Halaman Peserta - SIAMIN
+# Dokumentasi Data dan Halaman Peserta - SIMAIK
 
 ## Struktur Database
 
-Database SIAMIN memiliki 9 tabel utama yang telah didokumentasikan dalam file `src/data/database.json`:
+Database SIMAIK memiliki 9 tabel utama yang telah didokumentasikan dalam file `src/data/database.json`:
 
 ### 1. **Tabel Pegawai**
 Data master untuk semua pegawai pemerintah yang ada dalam sistem.

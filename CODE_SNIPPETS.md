@@ -71,15 +71,12 @@ const authStore = useAuthStore()
 
 // In component
 if (authStore.isAuthenticated) {
-  console.log('User logged in as:', authStore.currentUser.name)
 }
 
 if (authStore.isAdmin) {
-  console.log('This is an admin user')
 }
 
 if (authStore.isPeserta) {
-  console.log('This is a peserta user')
 }
 ```
 
@@ -91,9 +88,6 @@ const authStore = useAuthStore()
 
 // In component
 const currentUser = authStore.currentUser
-console.log('User:', currentUser.name)
-console.log('Email:', currentUser.email)
-console.log('ID:', currentUser.id)
 ```
 
 ## API Service Methods
@@ -245,7 +239,7 @@ const handleLogout = async () => {
 ```vue
 <template>
   <header v-if="authStore.isAuthenticated" class="header">
-    <div class="logo">SIAMIN</div>
+    <div class="logo">SIMAIK</div>
     
     <div class="user-info">
       <span class="user-name">{{ authStore.currentUser.name }}</span>
@@ -360,7 +354,6 @@ fetch('http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/lo
 })
 .then(r => r.json())
 .then(d => {
-  console.log('Response:', d)
   localStorage.setItem('auth_token', d.token)
 })
 ```
@@ -374,7 +367,6 @@ fetch('http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiata
   }
 })
 .then(r => r.json())
-.then(d => console.log('Data:', d))
 ```
 
 ### Test Logout
@@ -389,7 +381,6 @@ fetch('http://127.0.0.1:8000/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/lo
 })
 .then(r => r.json())
 .then(d => {
-  console.log('Logout:', d)
   localStorage.removeItem('auth_token')
 })
 ```

@@ -1,7 +1,7 @@
 # API Integration Documentation
 
 ## Overview
-Aplikasi SIAMIN Vue UI telah diintegrasikan dengan API backend. Sistem menggunakan fallback ke data lokal (JSON) jika API tidak tersedia.
+Aplikasi SIMAIK Vue UI telah diintegrasikan dengan API backend. Sistem menggunakan fallback ke data lokal (JSON) jika API tidak tersedia.
 
 ## Configuration
 

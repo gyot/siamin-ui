@@ -7,7 +7,7 @@
           <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">Manajemen Pegawai & User</h1>
           <p class="text-xs sm:text-sm text-gray-600">Kelola data pegawai dan akun user admin</p>
         </div>
-        <div class="flex gap-2">
+        <!-- <div class="flex gap-2">
           <button
             @click="$refs.fileInput?.click()"
             class="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 text-sm"
@@ -27,7 +27,7 @@
           >
             + Tambah Pegawai
           </button>
-        </div>
+        </div> -->
       </div>
 
       <!-- Filter dan Search -->
@@ -101,7 +101,7 @@
         >
           Data Pegawai
         </button>
-        <button
+        <!-- <button
           @click="activeTab = 'user'"
           :class="[
             'px-4 sm:px-6 py-3 text-sm sm:text-base font-medium border-b-2 transition-colors',
@@ -111,7 +111,7 @@
           ]"
         >
           Data User Admin
-        </button>
+        </button> -->
       </div>
 
       <!-- Tab: Data Pegawai -->
@@ -164,7 +164,7 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                     </svg>
                   </button>
-                  <button
+                  <!-- <button
                     @click="editPegawai(p.id_pegawai)"
                     class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition mr-2"
                     title="Edit"
@@ -181,7 +181,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                     </svg>
-                  </button>
+                  </button> -->
                 </td>
               </tr>
             </tbody>
@@ -190,6 +190,14 @@
       </div>
 
       <!-- Tab: Data User Admin -->
+      <div v-if="activeTab === 'user'" class="mb-6">
+        <button
+          @click="showAddUserModal = true"
+          class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base"
+        >
+          + Tambah User Admin
+        </button>
+      </div>
       <div v-if="activeTab === 'user'" class="bg-white rounded-lg shadow-lg overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -768,13 +776,145 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal Tambah User Admin -->
+    <div v-if="showAddUserModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
+          <h3 class="text-lg sm:text-xl font-bold text-gray-800">Tambah User Admin</h3>
+          <button @click="showAddUserModal = false" class="text-gray-400 hover:text-gray-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <form @submit.prevent="saveNewUser" class="p-6 space-y-4">
+          <div v-if="formUserErrors.length > 0" class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p class="text-sm font-medium text-red-800 mb-2">Ada kesalahan:</p>
+            <ul class="list-disc list-inside space-y-1">
+              <li v-for="error in formUserErrors" :key="error" class="text-sm text-red-700">{{ error }}</li>
+            </ul>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Pegawai *</label>
+              <select
+                v-model.number="formNewUser.id_pegawai"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option :value="null">Pilih Pegawai</option>
+                <option v-for="p in pegawai" :key="p.id_pegawai" :value="p.id_pegawai">
+                  {{ p.nama }} ({{ p.nip }})
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+              <input
+                v-model="formNewUser.email"
+                type="email"
+                placeholder="user@example.com"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Role *</label>
+              <select
+                v-model="formNewUser.role"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="admin">Admin</option>
+                <option value="operator">Operator</option>
+                <option value="verifikator">Verifikator</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Status *</label>
+              <select
+                v-model="formNewUser.status"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="aktif">Aktif</option>
+                <option value="nonaktif">Nonaktif</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+              <div class="relative">
+                <input
+                  v-model="formNewUser.password"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="Minimal 6 karakter"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  @click="showPassword = !showPassword"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg v-if="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-4.803m5.596-3.856a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Konfirmasi Password *</label>
+              <div class="relative">
+                <input
+                  v-model="formNewUser.confirmPassword"
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="Ulangi password"
+                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button
+                  type="button"
+                  @click="showPassword = !showPassword"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <svg v-if="!showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-4.803m5.596-3.856a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex gap-3 pt-4 border-t border-gray-200">
+            <button
+              type="submit"
+              class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition font-medium"
+            >
+              Simpan User
+            </button>
+            <button
+              type="button"
+              @click="showAddUserModal = false"
+              class="flex-1 bg-gray-200 text-gray-800 py-2.5 rounded-lg hover:bg-gray-300 transition font-medium"
+            >
+              Batal
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import database from '@/data/index.js'
-import * as XLSX from 'xlsx'
+import { ActivityEvents } from '@/services/activityLogger'
+import { fetchAPI, postAPI, updateAPI } from '@/services/api'
 
 export default {
   name: 'PegawaiManagement',
@@ -787,6 +927,7 @@ export default {
     const filterGolongan = ref('')
     const activeTab = ref('pegawai')
     const showAddPegawaiModal = ref(false)
+    const showAddUserModal = ref(false)
     const showEditUserModal = ref(false)
     const editingPegawaiId = ref(null)
     const editingUserId = ref(null)
@@ -829,6 +970,15 @@ export default {
       confirmPassword: ''
     })
 
+    const formNewUser = ref({
+      id_pegawai: null,
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: 'operator',
+      status: 'aktif'
+    })
+
     const resetFormPegawai = () => {
       formPegawai.value = {
         id_pegawai: null,
@@ -856,6 +1006,32 @@ export default {
       }
       editingPegawaiId.value = null
       formErrors.value = []
+    }
+
+    const loadPegawaiFromAPI = async () => {
+      try {
+        const data = await fetchAPI('pegawai')
+        if (Array.isArray(data)) {
+          pegawai.value = data
+        } else {
+          console.warn('Unexpected response for pegawai API:', data)
+        }
+      } catch (error) {
+        console.error('Gagal memuat data pegawai dari API:', error)
+      }
+    }
+
+    const loadUsersFromAPI = async () => {
+      try {
+        const data = await fetchAPI('users')
+        if (Array.isArray(data)) {
+          users.value = data
+        } else {
+          console.warn('Unexpected response for users API:', data)
+        }
+      } catch (error) {
+        console.error('Gagal memuat data user dari API:', error)
+      }
     }
 
     const validateFormPegawai = () => {
@@ -921,31 +1097,70 @@ export default {
       }
     }
 
-    const savePegawai = () => {
+    const savePegawai = async () => {
       if (!validateFormPegawai()) return
 
-      if (editingPegawaiId.value) {
-        const index = pegawai.value.findIndex(p => p.id_pegawai === editingPegawaiId.value)
-        if (index !== -1) {
-          pegawai.value[index] = { ...formPegawai.value }
+      try {
+        if (editingPegawaiId.value) {
+          // Update existing pegawai
+          const index = pegawai.value.findIndex(p => p.id_pegawai === editingPegawaiId.value)
+          if (index !== -1) {
+            const updateData = { ...formPegawai.value }
+            delete updateData.id_pegawai // Remove ID before sending
+            
+            try {
+              await updateAPI('pegawai', editingPegawaiId.value, updateData)
+            } catch (apiError) {
+              console.error('Error updating pegawai to API:', apiError)
+              // Still update locally if API fails
+            }
+            
+            pegawai.value[index] = { ...formPegawai.value }
+          }
+          // Log update
+          ActivityEvents.UPDATE_PEGAWAI(formPegawai.value.nama)
+        } else {
+          // Create new pegawai
+          const newPegawaiData = { ...formPegawai.value }
+          delete newPegawaiData.id_pegawai // Remove ID before sending
+          
+          let savedData
+          try {
+            savedData = await postAPI('pegawai', newPegawaiData)
+          } catch (apiError) {
+            console.error('API save failed:', apiError)
+            alert('Peringatan: Data pegawai disimpan lokal tapi gagal dikirim ke server. Error: ' + apiError.message)
+            // Continue with local save
+            savedData = null
+          }
+          
+          const newId = Math.max(...pegawai.value.map(p => p.id_pegawai || 0), 0) + 1
+          pegawai.value.push({
+            ...formPegawai.value,
+            id_pegawai: savedData?.id_pegawai || savedData?.id || newId,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          // Log creation
+          ActivityEvents.CREATE_PEGAWAI(formPegawai.value.nama, formPegawai.value.nip)
         }
-      } else {
-        const newId = Math.max(...pegawai.value.map(p => p.id_pegawai), 0) + 1
-        pegawai.value.push({
-          ...formPegawai.value,
-          id_pegawai: newId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-      }
 
-      showAddPegawaiModal.value = false
-      resetFormPegawai()
+        showAddPegawaiModal.value = false
+        resetFormPegawai()
+      } catch (error) {
+        console.error('Error saving pegawai:', error)
+        alert('Gagal menyimpan pegawai: ' + error.message)
+      }
     }
 
     const deletePegawai = (id) => {
       if (confirm('Apakah Anda yakin ingin menghapus pegawai ini?')) {
+        const pegawaiToDelete = pegawai.value.find(p => p.id_pegawai === id)
         pegawai.value = pegawai.value.filter(p => p.id_pegawai !== id)
+        // Log deletion
+        if (pegawaiToDelete) {
+          ActivityEvents.DELETE_PEGAWAI(pegawaiToDelete.nama, pegawaiToDelete.nip)
+        }
       }
     }
 
@@ -1039,6 +1254,99 @@ export default {
       }
     }
 
+    const resetFormNewUser = () => {
+      formNewUser.value = {
+        id_pegawai: null,
+        email: '',
+        password: '',
+        confirmPassword: '',
+        role: 'operator',
+        status: 'aktif'
+      }
+      formUserErrors.value = []
+    }
+
+    const validateFormNewUser = () => {
+      formUserErrors.value = []
+      
+      // Validasi email
+      if (!formNewUser.value.email) {
+        formUserErrors.value.push('Email wajib diisi')
+      } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(formNewUser.value.email)) {
+          formUserErrors.value.push('Format email tidak valid')
+        }
+        
+        // Cek email sudah digunakan atau tidak
+        const emailExists = users.value.some(u => u.email === formNewUser.value.email)
+        if (emailExists) {
+          formUserErrors.value.push('Email sudah digunakan oleh user lain')
+        }
+      }
+      
+      // Validasi password
+      if (!formNewUser.value.password) {
+        formUserErrors.value.push('Password wajib diisi')
+      } else if (formNewUser.value.password.length < 6) {
+        formUserErrors.value.push('Password minimal 6 karakter')
+      }
+      
+      // Validasi konfirmasi password
+      if (formNewUser.value.password !== formNewUser.value.confirmPassword) {
+        formUserErrors.value.push('Password tidak cocok')
+      }
+      
+      // Validasi pegawai
+      if (!formNewUser.value.id_pegawai) {
+        formUserErrors.value.push('Pegawai wajib dipilih')
+      }
+      
+      return formUserErrors.value.length === 0
+    }
+
+    const saveNewUser = async () => {
+      if (!validateFormNewUser()) return
+
+      try {
+        const userData = {
+          id_pegawai: formNewUser.value.id_pegawai,
+          email: formNewUser.value.email,
+          password: formNewUser.value.password,
+          role: formNewUser.value.role,
+          status: formNewUser.value.status
+        }
+
+        let savedData
+        try {
+          savedData = await postAPI('users', userData)
+        } catch (apiError) {
+          console.error('API save failed:', apiError)
+          alert('Peringatan: User disimpan lokal tapi gagal dikirim ke server. Error: ' + apiError.message)
+          savedData = null
+        }
+
+        const newId = Math.max(...users.value.map(u => u.id_user || 0), 0) + 1
+        users.value.push({
+          id_user: savedData?.id_user || savedData?.id || newId,
+          id_pegawai: formNewUser.value.id_pegawai,
+          email: formNewUser.value.email,
+          password: formNewUser.value.password,
+          role: formNewUser.value.role,
+          status: formNewUser.value.status,
+          last_login: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+
+        showAddUserModal.value = false
+        resetFormNewUser()
+      } catch (error) {
+        console.error('Error saving user:', error)
+        alert('Gagal menyimpan user: ' + error.message)
+      }
+    }
+
     // State untuk detail pegawai
     const showDetailModal = ref(false)
     const detailPegawai = ref(null)
@@ -1075,6 +1383,7 @@ export default {
       if (!file) return
 
       try {
+        const XLSX = (await import('xlsx')).default || await import('xlsx')
         const buffer = await file.arrayBuffer()
         const workbook = XLSX.read(buffer, { type: 'array' })
         const sheet = workbook.Sheets[workbook.SheetNames[0]]
@@ -1106,24 +1415,24 @@ export default {
         // Import data
         let importedCount = 0
         let skippedCount = 0
+        let errorCount = 0
+        const failedRows = []
 
-        data.forEach(row => {
-          // Skip rows with empty nip or nama
+        for (const row of data) {
+          // Skip rows with empty nip atau nama
           if (!row.nip || !row.nama) {
             skippedCount++
-            return
+            continue
           }
 
-          // Check if NIP already exists
+          // Check if NIP already exists locally
           if (pegawai.value.some(p => p.nip?.toString() === row.nip?.toString())) {
             console.warn(`NIP ${row.nip} sudah ada, skip`)
             skippedCount++
-            return
+            continue
           }
 
-          const newId = Math.max(...pegawai.value.map(p => p.id_pegawai || 0), 0) + 1
-          pegawai.value.push({
-            id_pegawai: newId,
+          const pegawaiData = {
             nip: row.nip?.toString() || '',
             nama: row.nama?.toString() || '',
             tempat_lahir: row.tempat_lahir?.toString() || '',
@@ -1144,14 +1453,36 @@ export default {
             latihan_jabatan: row.latihan_jabatan?.toString() || '',
             perkiraan_pensiun: row.perkiraan_pensiun?.toString() || '',
             status_kepegawaian: row.status_kepegawaian?.toString() || 'PNS',
-            status: row.status?.toString() || 'aktif',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          importedCount++
-        })
+            status: row.status?.toString() || 'aktif'
+          }
 
-        const message = `${importedCount} data pegawai berhasil diimpor${skippedCount > 0 ? `. ${skippedCount} baris diabaikan (NIP kosong, duplikat, atau data tidak lengkap)` : ''}`
+          try {
+            // Kirim ke API backend
+            const result = await postAPI('pegawai', pegawaiData)
+            
+            // Jika berhasil, tambahkan ke state lokal
+            pegawai.value.push({
+              ...pegawaiData,
+              id_pegawai: result.id_pegawai || result.id,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            
+            importedCount++
+          } catch (apiError) {
+            console.error(`Error mengirim data pegawai ${row.nip}:`, apiError.message)
+            errorCount++
+            failedRows.push(row.nip)
+          }
+        }
+
+        let message = `${importedCount} data pegawai berhasil diimpor ke server`
+        if (skippedCount > 0) {
+          message += `. ${skippedCount} baris diabaikan (NIP kosong atau duplikat)`
+        }
+        if (errorCount > 0) {
+          message += `. ${errorCount} baris gagal dikirim ke server: ${failedRows.join(', ')}`
+        }
         alert(message)
         fileInput.value.value = '' // Reset file input
       } catch (error) {
@@ -1159,6 +1490,12 @@ export default {
         alert('Gagal mengimpor file: ' + error.message)
       }
     }
+
+    // Log page access
+    onMounted(async () => {
+      ActivityEvents.ACCESS_PAGE('Manajemen Pegawai & User')
+      await Promise.all([loadPegawaiFromAPI(), loadUsersFromAPI()])
+    })
 
     return {
       pegawai,
@@ -1168,12 +1505,14 @@ export default {
       filterGolongan,
       activeTab,
       showAddPegawaiModal,
+      showAddUserModal,
       showEditUserModal,
       showDetailModal,
       editingPegawaiId,
       editingUserId,
       formPegawai,
       formUser,
+      formNewUser,
       formErrors,
       formUserErrors,
       showPassword,
@@ -1195,7 +1534,10 @@ export default {
       getUnitKerjaName,
       getSubUnitName,
       resetFormPegawai,
+      resetFormNewUser,
       validateFormUser,
+      validateFormNewUser,
+      saveNewUser,
       fileInput,
       handleImportFile
     }

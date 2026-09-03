@@ -1,7 +1,7 @@
 <template>
   <aside :class="[
-    'fixed lg:static left-0 top-0 h-full w-64 bg-white border-r border-slate-200 flex flex-col overflow-hidden transition-transform duration-300 ease-in-out z-40',
-    !isOpen ? '-translate-x-full lg:translate-x-0' : 'translate-x-0'
+    'fixed md:static left-0 top-0 h-full w-64 bg-white border-r border-slate-200 flex flex-col overflow-hidden transition-transform duration-300 ease-in-out z-40',
+    !isOpen ? '-translate-x-full md:translate-x-0' : 'translate-x-0'
   ]">
     <!-- Logo -->
     <div class="p-4 sm:p-6 border-b border-slate-200 flex-shrink-0">
@@ -12,7 +12,7 @@
           </svg>
         </div>
         <div class="min-w-0">
-          <h1 class="font-bold text-slate-800 truncate text-sm sm:text-base">SIAMIN</h1>
+          <h1 class="font-bold text-slate-800 truncate text-sm sm:text-base">SIMAIK</h1>
           <p class="text-xs text-slate-500 truncate">v1.2.0</p>
         </div>
       </div>
@@ -40,7 +40,7 @@
         </svg>
         <span class="truncate text-sm">Kegiatan</span>
       </RouterLink>
-      <RouterLink 
+      <!-- <RouterLink 
         to="/admin/peserta" 
         class="sidebar-item"
         @click="handleClick"
@@ -49,8 +49,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
         </svg>
         <span class="truncate text-sm">Peserta</span>
-      </RouterLink>
-      <RouterLink 
+      </RouterLink> -->
+      <!-- <RouterLink 
         to="/admin/surat-tugas" 
         class="sidebar-item"
         @click="handleClick"
@@ -59,8 +59,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
         <span class="truncate text-sm">Surat Tugas</span>
-      </RouterLink>
-      <RouterLink 
+      </RouterLink> -->
+      <!-- <RouterLink 
         to="/admin/sertifikat" 
         class="sidebar-item"
         @click="handleClick"
@@ -69,11 +69,11 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
         </svg>
         <span class="truncate text-sm">Sertifikat</span>
-      </RouterLink>
+      </RouterLink> -->
 
       <!-- Admin Only Menu -->
-      <div v-if="userRole === 'admin'" class="pt-2 mt-2 border-t border-slate-100">
-        <p class="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Admin</p>
+      <!-- <div v-if="userRole === 'admin'" class="pt-2 mt-2 border-t border-slate-100">-->
+         <p class="px-4 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">Admin</p>
         <RouterLink 
           to="/admin/pegawai" 
           class="sidebar-item"
@@ -85,6 +85,26 @@
           <span class="truncate text-sm">Pegawai & User</span>
         </RouterLink>
         <RouterLink 
+          to="/admin/penugasan" 
+          class="sidebar-item"
+          @click="handleClick"
+        >
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-6a2 2 0 012-2h2a2 2 0 012 2v6M7 21h10" />
+          </svg>
+          <span class="truncate text-sm">Penugasan</span>
+        </RouterLink>
+        <RouterLink 
+          to="/admin/paket-soal" 
+          class="sidebar-item"
+          @click="handleClick"
+        >
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+          <span class="truncate text-sm">Paket Soal</span>
+        </RouterLink>
+        <!-- <RouterLink 
           to="/admin/unit-kerja" 
           class="sidebar-item"
           @click="handleClick"
@@ -104,7 +124,7 @@
           </svg>
           <span class="truncate text-sm">Anggota Tim</span>
         </RouterLink>
-      </div>
+      </div> -->
     </nav>
 
     <!-- Footer -->
@@ -165,7 +185,7 @@ export default {
   padding-left: calc(1rem - 3px);
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 767px) {
   aside {
     box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
   }

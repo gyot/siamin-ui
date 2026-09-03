@@ -1,7 +1,7 @@
-# 📊 Database Schema SIAMIN - Implementasi Lengkap
+# 📊 Database Schema SIMAIK - Implementasi Lengkap
 
 ## Overview
-Database SIAMIN telah diimplementasikan sebagai JSON dummy data yang mengikuti struktur SQL yang Anda berikan. Semua tabel dan relasi sudah tercakup dengan sample data yang realistis.
+Database SIMAIK telah diimplementasikan sebagai JSON dummy data yang mengikuti struktur SQL yang Anda berikan. Semua tabel dan relasi sudah tercakup dengan sample data yang realistis.
 
 ---
 

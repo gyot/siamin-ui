@@ -43,7 +43,6 @@ Test-NetConnection backend-siamin.bpmpntb.id -Port 443
 Copy-paste this in browser console:
 ```javascript
 fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan')
-  .then(r => console.log('✅ Connected, Status:', r.status))
   .catch(e => console.error('❌ Error:', e.message))
 ```
 

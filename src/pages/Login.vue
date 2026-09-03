@@ -10,15 +10,9 @@
           <span>Kembali</span>
         </RouterLink>
         <div class="flex items-center gap-4 mb-8">
-          <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl">
-            <svg class="w-10 h-10 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <div>
-            <h1 class="text-2xl font-bold text-white">SIAMIN</h1>
-            <p class="text-blue-200 text-sm">Kementerian Komunikasi dan Informatika</p>
-          </div>
+          <!-- <RouterLink to="/" class="flex items-center gap-3">
+            <img src="/src/assets/logo.png" alt="Logo SIMAIK" class="h-16 object-contain">
+          </RouterLink> -->
         </div>
         <h2 class="text-4xl font-bold text-white leading-tight mb-4">
           Portal Administrator
@@ -67,23 +61,20 @@
         
         <div class="bg-white rounded-2xl shadow-2xl p-8">
           <div class="text-center mb-8">
-            <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-              </svg>
-            </div>
-            <h3 class="text-2xl font-bold text-slate-800">Login Administrator</h3>
+            <RouterLink to="/" class="flex items-center gap-3">
+              <img src="/src/assets/logo.png" alt="Logo SIMAIK" class="h-16 object-contain">
+            </RouterLink>
             <p class="text-slate-500 mt-2">Masuk dengan akun admin Anda</p>
           </div>
 
           <form @submit.prevent="handleLogin" class="space-y-5">
             <!-- Email Input -->
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-2">Email</label>
+              <label class="block text-sm font-medium text-slate-700 mb-2">Username</label>
               <input 
                 v-model="formData.email"
                 type="text" 
-                placeholder="admin@instansi.go.id"
+                placeholder="Masukkan username Anda"
                 class="input-field w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:outline-none transition"
                 required
               />
@@ -118,13 +109,13 @@
             </div>
 
             <!-- Remember Me & Forgot Password -->
-            <div class="flex items-center justify-between">
+            <!-- <div class="flex items-center justify-between">
               <label class="flex items-center gap-2">
                 <input v-model="formData.remember" type="checkbox" class="w-4 h-4 rounded border-slate-300" />
                 <span class="text-sm text-slate-600">Ingat saya</span>
               </label>
               <a href="#" class="text-sm text-blue-600 hover:text-blue-700">Lupa password?</a>
-            </div>
+            </div> -->
 
             <!-- Login Button -->
             <button 
@@ -145,20 +136,20 @@
             </div>
 
             <!-- Demo Credentials -->
-            <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <!-- <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p class="text-xs font-medium text-blue-900 mb-2">Demo Credentials:</p>
               <p class="text-xs text-blue-700">Email: admin@kemkominfo.go.id</p>
               <p class="text-xs text-blue-700">Password: password123</p>
-            </div>
+            </div> -->
           </form>
 
           <!-- Switch to Peserta Login -->
-          <div class="mt-6 text-center">
+          <!-- <div class="mt-6 text-center">
             <p class="text-slate-600 text-sm">Masuk sebagai peserta?</p>
             <RouterLink to="/login-peserta" class="text-blue-600 hover:text-blue-700 font-medium text-sm">
               Login Peserta
             </RouterLink>
-          </div>
+          </div> -->
         </div>
       </div>
     </div>

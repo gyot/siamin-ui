@@ -77,6 +77,32 @@
       "status": "aktif",
       "created_at": "2023-01-01T00:00:00Z",
       "updated_at": "2024-01-15T10:30:00Z"
+    },
+    {
+      "id_pegawai": 4,
+      "nip": "199203201015012002",
+      "nama": "Ahmad Hidayat s",
+      "tempat_lahir": "Surabaya",
+      "tanggal_lahir": "1992-03-20",
+      "tmt_cpns": "2015-01-20",
+      "tmt_pangkat": "2021-04-01",
+      "pangkat": "Penata",
+      "golongan": "III/c",
+      "nama_jabatan": "Verifikator",
+      "tmt_jabatan": "2023-01-01",
+      "unit_kerja": "Bidang Verifikasi dan Validasi",
+      "pendidikan_terakhir": "S1",
+      "jurusan": "Teknik Informatika",
+      "tempat_pendidikan": "Institut Teknologi Sepuluh Nopember",
+      "tahun_lulus": 2014,
+      "masa_kerja_tahun": 9,
+      "masa_kerja_bulan": 0,
+      "latihan_jabatan": "Diklat Fungsional IT",
+      "perkiraan_pensiun": 2052,
+      "status_kepegawaian": "PPPK",
+      "status": "aktif",
+      "created_at": "2023-01-01T00:00:00Z",
+      "updated_at": "2024-01-15T10:30:00Z"
     }
   ],
   "users": [
@@ -109,6 +135,17 @@
       "password": "$2b$10$hashedpassword3",
       "role": "verifikator",
       "last_login": "2026-01-21T10:00:00Z",
+      "status": "aktif",
+      "created_at": "2023-01-01T00:00:00Z",
+      "updated_at": "2024-01-15T10:30:00Z"
+    },
+    {
+      "id_user": 4,
+      "id_pegawai": 4,
+      "email": "verifikator2@kemkominfo.go.id",
+      "password": "$2b$10$hashedpassword4",
+      "role": "verifikator",
+      "last_login": "2026-01-21T11:00:00Z",
       "status": "aktif",
       "created_at": "2023-01-01T00:00:00Z",
       "updated_at": "2024-01-15T10:30:00Z"

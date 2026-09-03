@@ -14,18 +14,19 @@
       <div v-if="kegiatan" class="bg-blue-50 border border-blue-200 rounded-lg  p-4 sm:p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div class="flex-1">
-            <h2 class="text-xl font-semibold text-slate-800">Detail Kegiatan</h2>
+            <h2 class="text-xl font-semibold text-slate-800">Formulir Biodata {{ peran }}</h2>
             <p class="text-sm text-slate-600">{{ kegiatan.nama_kegiatan }}</p>
 
             <div class="mt-3 text-sm text-slate-600">
               <p><strong>Tanggal:</strong> {{ formatDate(kegiatan.tanggal_mulai) }} - {{
                 formatDate(kegiatan.tanggal_selesai) }}</p>
-              <p><strong>Lokasi:</strong> {{ kegiatan.lokasi || '-' }}</p>
+              <p><strong>Lokasi:</strong> {{ displayLokasi }}</p>
+              <p v-if="currentTpk && currentTpk.kabupaten_kota"><strong>Kab/Kota:</strong> {{ currentTpk.kabupaten_kota }}</p>
             </div>
           </div>
 
           <div class="w-full sm:w-48 flex-shrink-0">
-            <img v-if="flyerUrl" :src="flyerUrl" :alt="`Flyer ${kegiatan.nama_kegiatan}`"
+            <img v-if="flyerUrl" :src="flyerUrl" loading="lazy" :alt="`Flyer ${kegiatan.nama_kegiatan}`"
               class="rounded-md object-cover w-full h-32" />
             <div v-else
               class="w-full h-32 bg-gray-100 rounded-md flex items-center justify-center text-sm text-slate-500">Tidak
@@ -37,12 +38,13 @@
           <p class="mt-3 font-semibold">Deskripsi</p>
           <p class="text-slate-600 whitespace-pre-wrap">{{ kegiatan.deskripsi || '-' }}</p>
         </div>
+
       </div>
 
 
 
       <!-- Form -->
-      <div class="bg-white rounded-lg shadow-lg p-6 sm:p-8">
+      <div v-if="!isLoadingKegiatan" class="bg-white rounded-lg shadow-lg p-6 sm:p-8">
         <form @submit.prevent="submitForm" class="space-y-6">
           <!-- Data Pribadi Section -->
           <div>
@@ -114,7 +116,12 @@
                 <select v-model="formData.pangkat"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   <option value="">Pilih Pangkat</option>
-
+                  <optgroup label="Non-ASN">
+                    <option value="Non ASN">Non ASN</option>
+                    <option value="Honorer">Honorer</option>
+                    <option value="Swasta">Swasta</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </optgroup>
                   <!-- PNS -->
                   <optgroup label="Golongan I">
                     <option value="Juru Muda / Ia">Juru Muda / Ia</option>
@@ -179,6 +186,19 @@
                 <input v-model="formData.jabatan" type="text" placeholder="Masukkan jabatan"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
+              <div v-if="tpkItems.length > 0">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Tempat Pelaksanaan (TPK)</label>
+                <select v-model="formData.id_tpk"
+                  :disabled="!!idTpkFromRoute"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  :class="idTpkFromRoute ? 'bg-slate-100 text-slate-600' : ''">
+                  <option value="">Pilih TPK</option>
+                  <option v-for="tpk in tpkItems" :key="tpk.id_tpk" :value="tpk.id_tpk">
+                    {{ tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi }}
+                  </option>
+                </select>
+                <p v-if="idTpkFromRoute" class="text-xs text-slate-500 mt-1">TPK ditentukan dari link yang Anda akses.</p>
+              </div>
             </div>
           </div>
 
@@ -191,6 +211,19 @@
                 <input v-model="formData.nama_instansi" type="text" placeholder="Masukkan nama instansi"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-2">NPSN (jika instansi pendidikan)</label>
+                <input
+                  v-model="formData.npsn"
+                  type="text"
+                  inputmode="numeric"
+                  pattern="[0-9]*"
+                  maxlength="8"
+                  placeholder="Masukkan NPSN (angka saja)"
+                  @input="onNpsnInput"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
               </div>
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-2">Kabupaten / Kota</label>
@@ -264,27 +297,20 @@
             <p class="text-sm text-slate-600 mb-4">Silakan tandatangani di area bawah ini dengan menggunakan mouse atau
               stylus.</p>
 
-            <div class="border-2 border-dashed border-slate-300 rounded-lg p-4 mb-4 bg-slate-50">
-              <canvas ref="signatureCanvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
-                @mouseout="stopDrawing" @touchstart="startDrawing" @touchmove="draw" @touchend="stopDrawing"
-                class="w-full border border-slate-300 rounded-lg cursor-crosshair bg-white"
-                style="height: 200px; display: block;"></canvas>
-            </div>
-
-            <div class="flex gap-3 mb-4">
+            <div class="relative border-2 border-dashed border-slate-300 rounded-lg p-4 mb-4 bg-slate-50" style="aspect-ratio: 1 / 1; width: 100%; max-width: 400px;">
               <button type="button" @click="clearSignature"
-                class="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium text-sm">
+                class="absolute right-3 top-3 px-2 py-1 bg-white border border-slate-300 text-slate-700 rounded-md text-[11px] font-medium shadow-sm hover:bg-slate-100 transition-colors">
                 Hapus Tandatangan
               </button>
-              <button type="button" @click="downloadSignature"
-                class="flex-1 px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 transition-colors font-medium text-sm">
-                Unduh Tandatangan
-              </button>
+              <canvas ref="signatureCanvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
+                @mouseout="stopDrawing" @touchstart="startDrawing" @touchmove="draw" @touchend="stopDrawing"
+                class="w-full h-full border border-slate-300 rounded-lg cursor-crosshair bg-white block"
+                style="touch-action: none; outline: none;"></canvas>
             </div>
 
-            <div v-if="signatureData" class="p-3 bg-green-50 border border-green-200 rounded-lg">
+            <!-- <div v-if="signatureData" class="p-3 bg-green-50 border border-green-200 rounded-lg">
               <p class="text-green-800 text-sm">✓ Tandatangan sudah disimpan</p>
-            </div>
+            </div> -->
           </div>
 
           <!-- Form Errors -->
@@ -315,7 +341,7 @@
       </div>
 
       <!-- Footer Info -->
-      <div class="mt-8 text-center text-sm text-slate-600">
+      <div v-if="!isLoadingKegiatan" class="mt-8 text-center text-sm text-slate-600">
         <p>Dengan mengklik "Daftar Sekarang", Anda setuju dengan syarat dan ketentuan yang berlaku.</p>
       </div>
     </div>
@@ -323,22 +349,27 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, watchEffect, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import database from '@/data/index.js'
 import Swal from 'sweetalert2'
-import { listKegiatan } from '@/services/kegiatan'
+import { listKegiatan, getKegiatan } from '@/services/kegiatan'
 import { postAPI } from '@/services/api'
 import Spinner from '@/components/Spinner.vue'
+import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
+import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
 
 export default {
   name: 'FormulirPeserta',
   components: { Spinner },
   setup() {
     const route = useRoute()
+    const router = useRouter()
     const kode = route.params.kode
+    // Debug kode route
     const peran = route.params.peran
     const slugJudul = route.params.slugJudul
+    const idTpkFromRoute = route.params.idTpk || ''
 
     const formErrors = ref([])
     const showSuccessMessage = ref(false)
@@ -346,31 +377,87 @@ export default {
     const signatureData = ref(null)
     let isDrawing = false
 
-    // API-backed kegiatan (fallback to local database)
+    // API-backed kegiatan (fallback ke local database)
     const apiKegiatan = ref([])
+    const fallbackKegiatan = ref(null)
     const isLoadingKegiatan = ref(false)
 
     const loadKegiatan = async () => {
       isLoadingKegiatan.value = true
       try {
         const data = await listKegiatan()
-        apiKegiatan.value = data || []
+        apiKegiatan.value = Array.isArray(data) ? data : [data]
+
+        if (!apiKegiatan.value.find((item) => String(item.id_kegiatan).toLowerCase().trim() === String(kode).toLowerCase().trim())) {
+          try {
+            const singleKegiatan = await getKegiatan(kode)
+            if (singleKegiatan && !Array.isArray(singleKegiatan)) {
+              fallbackKegiatan.value = singleKegiatan
+            }
+          } catch (innerErr) {
+            // ignore fallback failure
+          }
+        }
       } catch (err) {
         console.warn('Gagal mengambil kegiatan dari API, gunakan lokal', err)
       } finally {
         isLoadingKegiatan.value = false
+        // Form dirender setelah loading selesai, jadi canvas perlu diinisialisasi ulang.
+        initializeCanvas()
       }
     }
 
     onMounted(() => {
       loadKegiatan()
+      
+      // initialize canvas dimensions after the DOM is rendered
+      // this ensures the canvas has proper DPI-aware dimensions
+      setTimeout(() => {
+        const canvas = signatureCanvas.value
+        if (!canvas) return
+
+        const rect = canvas.getBoundingClientRect()
+        // set canvas internal resolution
+        canvas.width = rect.width
+        canvas.height = rect.height
+
+        // set up canvas context defaults
+        const ctx = canvas.getContext('2d')
+        ctx.strokeStyle = '#1e293b'
+        ctx.lineWidth = 2
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+      }, 100)
     })
 
     // Find kegiatan by code/ID (prefer API result)
     const kegiatan = computed(() => {
-      const fromApi = apiKegiatan.value.find(k => String(k.id_kegiatan) === String(kode))
-      if (fromApi) return fromApi
-      return database.kegiatan.find(k => k.id_kegiatan === kode)
+      // Cari dengan toleransi: id_kegiatan bisa string/number, kode dari route juga
+      const norm = v => (v === undefined || v === null) ? '' : String(v).toLowerCase().trim()
+      const kodeNorm = norm(kode)
+
+      // Cek di API list
+      let fromApi = apiKegiatan.value.find(k => norm(k.id_kegiatan) === kodeNorm)
+      if (!fromApi) {
+        fromApi = apiKegiatan.value.find(k => String(k.id_kegiatan) === String(kode))
+      }
+      if (fromApi) {
+        return fromApi
+      }
+
+      // Cek fallback single-item load
+      if (fallbackKegiatan.value && norm(fallbackKegiatan.value.id_kegiatan) === kodeNorm) {
+        return fallbackKegiatan.value
+      }
+
+      // Cek di database lokal
+      let fromDb = database.kegiatan.find(k => norm(k.id_kegiatan) === kodeNorm)
+      if (!fromDb) {
+        fromDb = database.kegiatan.find(k => String(k.id_kegiatan) === String(kode))
+      }
+      if (fromDb) {
+      }
+      return fromDb
     })
 
     const namaKegiatan = computed(() => {
@@ -379,6 +466,30 @@ export default {
 
     const metode_pembayaran = computed(() => {
       return kegiatan.value?.metode_pembayaran || ''
+    })
+
+    const tpkItems = computed(() => {
+      if (!kegiatan.value) return []
+      return getKegiatanLocationItems(kegiatan.value)
+    })
+
+    const currentTpk = computed(() => {
+      if (!idTpkFromRoute || tpkItems.value.length === 0) return null
+      return tpkItems.value.find(tpk => String(tpk.id_tpk) === String(idTpkFromRoute)) || null
+    })
+
+    const displayLokasi = computed(() => {
+      if (currentTpk.value) {
+        return currentTpk.value.kabupaten_kota
+          ? `${currentTpk.value.lokasi} (${currentTpk.value.kabupaten_kota})`
+          : currentTpk.value.lokasi
+      }
+      if (tpkItems.value.length > 0) {
+        return tpkItems.value.map(tpk =>
+          tpk.kabupaten_kota ? `${tpk.lokasi} (${tpk.kabupaten_kota})` : tpk.lokasi
+        ).join(', ')
+      }
+      return kegiatan.value?.lokasi || '-'
     })
 
     const kabKota = ref([
@@ -408,13 +519,114 @@ export default {
     const flyerUrl = computed(() => {
       const f = kegiatan.value?.flyer || kegiatan.value?.flyer_path || kegiatan.value?.path || null
       if (!f) return null
-      if (/^https?:\/\//.test(f)) return f
-      const base = import.meta.env.VITE_API_BASE_URL + '/storage/' || ''
-      return base.replace(/\/$/, '') + '/' + String(f).replace(/^\//, '')
+      return buildStorageUrl(f)
+    })
+
+    const setMetaTag = (attrName, attrValue, isProperty = false) => {
+      if (!attrValue) return
+      const selector = isProperty
+        ? `meta[property="${attrName}"]`
+        : `meta[name="${attrName}"]`
+      let tag = document.querySelector(selector)
+      if (!tag) {
+        tag = document.createElement('meta')
+        if (isProperty) {
+          tag.setAttribute('property', attrName)
+        } else {
+          tag.setAttribute('name', attrName)
+        }
+        document.head.appendChild(tag)
+      }
+      tag.setAttribute('content', attrValue)
+    }
+
+    const updateShareMeta = () => {
+      if (!kegiatan.value) return
+      const kegiatanTitle = kegiatan.value.nama_kegiatan || ''
+      const lokasiText = kegiatan.value.lokasi || '-'
+      const pageTitle = `Formulir Biodata ${peran} ${kegiatanTitle} TPK ${lokasiText}`.trim()
+      const tanggalText = `${formatDate(kegiatan.value.tanggal_mulai)} - ${formatDate(kegiatan.value.tanggal_selesai)}`
+      const description = kegiatan.value.deskripsi
+        ? `Tanggal kegiatan: ${tanggalText}. ${kegiatan.value.deskripsi}`
+        : `Tanggal kegiatan: ${tanggalText}. Lokasi: ${lokasiText}.`
+
+      document.title = pageTitle
+      setMetaTag('description', description)
+      setMetaTag('og:title', pageTitle, true)
+      setMetaTag('og:description', description, true)
+      setMetaTag('og:type', 'article', true)
+      setMetaTag('og:image', flyerUrl.value || '', true)
+      setMetaTag('twitter:card', flyerUrl.value ? 'summary_large_image' : 'summary')
+      setMetaTag('twitter:title', pageTitle)
+      setMetaTag('twitter:description', description)
+      if (flyerUrl.value) {
+        setMetaTag('twitter:image', flyerUrl.value)
+      }
+    }
+
+    watchEffect(() => {
+      if (kegiatan.value) {
+        updateShareMeta()
+      }
+    })
+
+    const getValueByPath = (obj, path) => {
+      if (!obj || !path) return ''
+      return String(path)
+        .split('.')
+        .reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj)
+    }
+
+    const firstNonEmptyValue = (obj, paths = []) => {
+      for (const path of paths) {
+        const value = getValueByPath(obj, path)
+        if (value !== undefined && value !== null && String(value).trim() !== '') {
+          return value
+        }
+      }
+      return ''
+    }
+
+    const buildAbsoluteUrl = (rawUrl) => {
+      if (!rawUrl) return ''
+      const value = String(rawUrl).trim()
+      if (!value) return ''
+      return buildPublicUrl(value)
+    }
+
+    const getStorageFileUrl = (path) => {
+      if (!path) return ''
+      const value = String(path).trim()
+      if (!value) return ''
+      return buildStorageUrl(value)
+    }
+
+    const biodataTemplateDownloadUrl = computed(() => {
+      const item = kegiatan.value
+      if (!item) return ''
+      const roleLower = String(peran || 'Peserta').toLowerCase()
+      const templateUrl = firstNonEmptyValue(item, [
+        'template_biodata',
+        'template_biodata_path',
+        `template_biodata_${roleLower}_url`,
+        `url_template_biodata_${roleLower}`,
+        `contoh_template_biodata_${roleLower}_url`,
+        `link_template_biodata_${roleLower}`,
+        `template_${roleLower}_url`,
+        `contoh_template_${roleLower}_url`,
+        `template_biodata.${roleLower}`,
+        `contoh_template_biodata.${roleLower}`,
+        `templates.${roleLower}.biodata`,
+        `templates.${roleLower}.url`,
+        `template_biodata_url`,
+        `contoh_template_biodata_url`
+      ])
+      return getStorageFileUrl(templateUrl) || buildAbsoluteUrl(templateUrl)
     })
 
     const formData = ref({
       id_kegiatan: kode,
+      id_tpk: idTpkFromRoute,
       nama_lengkap: '',
       nip: '',
       pangkat: '',
@@ -428,6 +640,7 @@ export default {
       tanggal_lahir: '',
       jenis_kelamin: '',
       nama_instansi: '',
+      npsn: '',
       alamat_instansi: '',
       kab_kota: '',
       provinsi: '',
@@ -442,6 +655,7 @@ export default {
     const resetForm = () => {
       formData.value = {
         id_kegiatan: kode,
+        id_tpk: '',
         nama_lengkap: '',
         nip: '',
         pangkat: '',
@@ -455,6 +669,7 @@ export default {
         tanggal_lahir: '',
         jenis_kelamin: '',
         nama_instansi: '',
+        npsn: '',
         alamat_instansi: '',
         kab_kota: '',
         provinsi: '',
@@ -482,8 +697,15 @@ export default {
       if (formData.value.email && !emailRegex.test(formData.value.email)) {
         formErrors.value.push('Format email tidak valid')
       }
+      if (formData.value.npsn && !/^\d+$/.test(formData.value.npsn)) {
+        formErrors.value.push('NPSN hanya boleh berisi angka')
+      }
 
       return formErrors.value.length === 0
+    }
+
+    const onNpsnInput = () => {
+      formData.value.npsn = String(formData.value.npsn || '').replace(/\D/g, '')
     }
 
     const base64ToFile = (dataUrl, filename = 'tanda_tangan.png') => {
@@ -544,6 +766,10 @@ export default {
 
         resetForm()
         showSuccessMessage.value = false
+        const redirectPath = slugJudul
+          ? `/daftar-peserta/${kode}/${slugJudul}`
+          : `/daftar-peserta/${kode}`
+        await router.push(redirectPath)
       } catch (err) {
         console.error('Gagal menyimpan peserta:', err)
         Swal.fire({
@@ -556,6 +782,7 @@ export default {
     }
 
     const startDrawing = (e) => {
+      e.preventDefault() // prevent scrolling and other default behaviors
       isDrawing = true
       const canvas = signatureCanvas.value
       if (!canvas) return
@@ -564,8 +791,14 @@ export default {
       const scaleX = canvas.width / rect.width
       const scaleY = canvas.height / rect.height
 
-      const x = (e.clientX - rect.left) * scaleX || (e.touches && (e.touches[0].clientX - rect.left) * scaleX)
-      const y = (e.clientY - rect.top) * scaleY || (e.touches && (e.touches[0].clientY - rect.top) * scaleY)
+      // determine source of coordinates (mouse or touch)
+      const clientX = e.clientX !== undefined ? e.clientX : e.touches[0]?.clientX
+      const clientY = e.clientY !== undefined ? e.clientY : e.touches[0]?.clientY
+
+      if (clientX === undefined || clientY === undefined) return
+
+      const x = (clientX - rect.left) * scaleX
+      const y = (clientY - rect.top) * scaleY
 
       const ctx = canvas.getContext('2d')
       ctx.beginPath()
@@ -574,6 +807,7 @@ export default {
 
     const draw = (e) => {
       if (!isDrawing) return
+      e.preventDefault() // prevent scrolling and other default behaviors
 
       const canvas = signatureCanvas.value
       if (!canvas) return
@@ -582,18 +816,20 @@ export default {
       const scaleX = canvas.width / rect.width
       const scaleY = canvas.height / rect.height
 
-      const x = (e.clientX - rect.left) * scaleX || (e.touches && (e.touches[0].clientX - rect.left) * scaleX)
-      const y = (e.clientY - rect.top) * scaleY || (e.touches && (e.touches[0].clientY - rect.top) * scaleY)
+      // determine source of coordinates (mouse or touch)
+      const clientX = e.clientX !== undefined ? e.clientX : e.touches[0]?.clientX
+      const clientY = e.clientY !== undefined ? e.clientY : e.touches[0]?.clientY
+
+      if (clientX === undefined || clientY === undefined) return
+
+      const x = (clientX - rect.left) * scaleX
+      const y = (clientY - rect.top) * scaleY
 
       const ctx = canvas.getContext('2d')
       ctx.lineTo(x, y)
-      ctx.lineWidth = 2
-      ctx.lineCap = 'round'
-      ctx.lineJoin = 'round'
-      ctx.strokeStyle = '#1e293b'
       ctx.stroke()
 
-      // Save signature data
+      // save signature data after drawing
       signatureData.value = canvas.toDataURL('image/png')
     }
 
@@ -659,20 +895,26 @@ export default {
       kode,
       peran,
       slugJudul,
+      idTpkFromRoute,
       namaKegiatan,
       kegiatan,
       flyerUrl,
+      biodataTemplateDownloadUrl,
       kabKota,
       formData,
       formatDate,
       formErrors,
       showSuccessMessage,
       metode_pembayaran,
+      tpkItems,
+      currentTpk,
+      displayLokasi,
       signatureCanvas,
       signatureData,
       isLoadingKegiatan,
       resetForm,
       validateForm,
+      onNpsnInput,
       submitForm,
       startDrawing,
       draw,

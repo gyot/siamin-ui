@@ -26,10 +26,8 @@
 // Test if API is reachable
 fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'kegiatan')
   .then(r => {
-    console.log('Status:', r.status)
     return r.json()
   })
-  .then(d => console.log('Data:', d))
   .catch(e => console.error('Error:', e.message))
 ```
 
@@ -135,7 +133,6 @@ Failed to fetch
 // Check what URL is being used
 import { useAuthStore } from '@/stores/auth'
 const auth = useAuthStore()
-console.log('API Base URL:', auth.constructor.name)
 
 // Or check api.js directly
 fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api/v1/'auth/login-admin', {...})

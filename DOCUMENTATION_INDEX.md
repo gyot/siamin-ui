@@ -1,6 +1,6 @@
 # 📚 Documentation Index - API Sanctum Integration
 
-Complete documentation for the Laravel Sanctum API integration in the SIAMIN Vue.js frontend.
+Complete documentation for the Laravel Sanctum API integration in the SIMAIK Vue.js frontend.
 
 ---
 

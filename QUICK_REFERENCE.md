@@ -1,4 +1,4 @@
-# ⚡ Quick Start - SIAMIN Login Fix
+# ⚡ Quick Start - SIMAIK Login Fix
 
 ## The Problem
 ❌ Halaman login tidak dapat diklik (tidak responsif)

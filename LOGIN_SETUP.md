@@ -1,4 +1,4 @@
-﻿# SIAMIN Vue UI - Login Issue Fixed
+﻿# SIMAIK Vue UI - Login Issue Fixed
 
 ## Problem
 Halaman login tidak dapat diklik (tidak responsif terhadap interaksi user)

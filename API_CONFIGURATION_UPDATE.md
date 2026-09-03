@@ -99,7 +99,6 @@ fetch('https://backend-siamin.bpmpntb.id/import.meta.env.VITE_API_BASE_URL+'/api
   body: JSON.stringify({ email: 'admin@...', password: '...' })
 })
 .then(r => r.json())
-.then(d => console.log(d))
 ```
 
 ---

@@ -16,8 +16,8 @@
             </svg>
           </div>
           <div>
-            <h1 class="text-2xl font-bold text-white">SIAMIN</h1>
-            <p class="text-emerald-200 text-sm">Kementerian Komunikasi dan Informatika</p>
+            <h1 class="text-2xl font-bold text-white">SIMAIK</h1>
+            <p class="text-emerald-200 text-sm">Kementerian Pendidikan Dasar dan Menengah</p>
           </div>
         </div>
         <h2 class="text-4xl font-bold text-white leading-tight mb-4">
@@ -155,7 +155,7 @@
           <!-- Switch to Admin Login -->
           <div class="mt-6 text-center">
             <p class="text-slate-600 text-sm">Masuk sebagai admin?</p>
-            <RouterLink to="/login" class="text-emerald-600 hover:text-emerald-700 font-medium text-sm">
+            <RouterLink to="/laman-masuk" class="text-emerald-600 hover:text-emerald-700 font-medium text-sm">
               Login Admin
             </RouterLink>
           </div>

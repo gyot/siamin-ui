@@ -334,7 +334,7 @@ Your frontend is now:
 
 ## 🚀 Final Words
 
-Your Vue.js SIAMIN application is now **fully integrated** with your Laravel Sanctum API login system. 
+Your Vue.js SIMAIK application is now **fully integrated** with your Laravel Sanctum API login system. 
 
 **All code is in place. All documentation is complete. You're ready to test and deploy!**
 
