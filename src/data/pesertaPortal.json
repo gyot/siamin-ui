@@ -1,0 +1,78 @@
+{
+  "accounts": [
+    {
+      "id": 1,
+      "participant_id": 5503,
+      "username": "peserta123",
+      "email": "wahyuramdhani.ti@gmail.com",
+      "password": "password123",
+      "name": "Wahyu Ramdhani, S.Kom",
+      "nip": "199502102025211047",
+      "jabatan": "Penata Layanan Operasional",
+      "instansi": "BPMP NTB",
+      "kabupaten_kota": "Kota Mataram"
+    }
+  ],
+  "participants": [
+    {
+      "id_peserta": 5503,
+      "nama_lengkap": "Wahyu Ramdhani, S.Kom",
+      "nip": "199502102025211047",
+      "jabatan": "Penata Layanan Operasional",
+      "nama_instansi": "BPMP NTB",
+      "email": "wahyuramdhani.ti@gmail.com",
+      "no_hp": "087866977250",
+      "kab_kota": "Kota Mataram",
+      "kegiatan": [
+        {
+          "id_kegiatan": 93,
+          "nama_kegiatan": "Penguatan Kapasitas Calon Fasilitator Daerah BOSP Kinerja Terbaik Tahun 2026",
+          "tanggal_mulai": "2026-07-26",
+          "tanggal_selesai": "2026-07-29",
+          "lokasi": "BPMP Provinsi NTB",
+          "kabupaten_kota": "Kota Mataram",
+          "metode_pelaksanaan": "luring",
+          "peran": "Panitia",
+          "status": "selesai",
+          "durasi_jam": 32,
+          "sertifikat": {
+            "nomor": "CERT/BOSP/2026/5503",
+            "status": "terbit"
+          }
+        },
+        {
+          "id_kegiatan": 81,
+          "nama_kegiatan": "Workshop Pemanfaatan Platform Digital untuk Pembelajaran",
+          "tanggal_mulai": "2026-05-12",
+          "tanggal_selesai": "2026-05-14",
+          "lokasi": "Hotel Lombok Raya",
+          "kabupaten_kota": "Kota Mataram",
+          "metode_pelaksanaan": "luring",
+          "peran": "Peserta",
+          "status": "selesai",
+          "durasi_jam": 24,
+          "sertifikat": {
+            "nomor": "CERT/DIGITAL/2026/5503",
+            "status": "terbit"
+          }
+        },
+        {
+          "id_kegiatan": 72,
+          "nama_kegiatan": "Bimbingan Teknis Perencanaan Berbasis Data",
+          "tanggal_mulai": "2026-03-03",
+          "tanggal_selesai": "2026-03-05",
+          "lokasi": "Daring melalui Zoom Meeting",
+          "kabupaten_kota": "Kota Mataram",
+          "metode_pelaksanaan": "daring",
+          "peran": "Peserta",
+          "status": "selesai",
+          "durasi_jam": 20,
+          "sertifikat": {
+            "nomor": null,
+            "status": "draft"
+          }
+        }
+      ]
+    }
+  ]
+}

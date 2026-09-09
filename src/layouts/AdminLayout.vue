@@ -18,7 +18,7 @@
     </div>
 
     <!-- Sidebar -->
-    <Sidebar :is-open="sidebarOpen" :user-role="currentUser.role" @close="sidebarOpen = false"/>
+    <Sidebar :is-open="sidebarOpen" :user-role="currentUser.role" :can-access-pengesahan="isKepala" @close="sidebarOpen = false"/>
     
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -86,6 +86,13 @@ export default {
       } catch (e) {
         return this.currentUser
       }
+    },
+    isKepala() {
+      try {
+        return useAuthStore().isKepala
+      } catch {
+        return false
+      }
     }
   },
   watch: {
@@ -97,6 +104,7 @@ export default {
         'kegiatan-peserta': 'Peserta Kegiatan',
         'peserta': 'Manajemen Peserta',
         'sertifikat': 'Manajemen Sertifikat',
+        'pengesahan': 'Pengesahan',
         'pegawai': 'Manajemen Pegawai & User'
       }
       const routeName = this.$route.name

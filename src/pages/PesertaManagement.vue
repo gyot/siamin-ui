@@ -10,7 +10,8 @@
         <div class="flex gap-2">
           <button
             @click="handleGenerateMassal"
-            :disabled="selectedCount === 0 || isGeneratingSertifikat"
+            :disabled="selectedCount === 0 || isGeneratingSertifikat || !canGenerateSelectedCertificates"
+            :title="!canGenerateSelectedCertificates && selectedCount > 0 ? certificateAccessMessage : ''"
             class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {{ isGeneratingSertifikat ? 'Memproses...' : `Buat Sertifikat Terpilih (${selectedCount})` }}
@@ -31,7 +32,8 @@
           </div>
           <button
             @click="openBatchSertifikatModalForEdit"
-            :disabled="filteredPeserta.length === 0"
+            :disabled="filteredPeserta.length === 0 || !canManageActiveCertificateBatch"
+            :title="!canManageActiveCertificateBatch ? certificateAccessMessage : ''"
             class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             Sertifikat Batch
@@ -364,7 +366,9 @@
                     </button>
                     <button
                       @click="openSertifikatModal(p)"
-                      class="px-2 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                      :disabled="!canManageCertificateForPeserta(p)"
+                      :title="!canManageCertificateForPeserta(p) ? certificateAccessMessage : ''"
+                      class="px-2 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors text-xs font-semibold whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Sertifikat
                     </button>
@@ -454,7 +458,8 @@
           </div>
           <button
             @click="handleGenerateMassal"
-            :disabled="selectedCount === 0 || isGeneratingSertifikat"
+            :disabled="selectedCount === 0 || isGeneratingSertifikat || !canGenerateSelectedCertificates"
+            :title="!canGenerateSelectedCertificates && selectedCount > 0 ? certificateAccessMessage : ''"
             class="w-full px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {{ isGeneratingSertifikat ? 'Memproses...' : `Buat Sertifikat Terpilih (${selectedCount})` }}
@@ -537,7 +542,9 @@
             </button>
             <button
               @click="openSertifikatModal(p)"
-              class="flex-1 px-3 py-2 bg-indigo-500 text-white rounded text-xs font-semibold hover:bg-indigo-600 transition-colors"
+              :disabled="!canManageCertificateForPeserta(p)"
+              :title="!canManageCertificateForPeserta(p) ? certificateAccessMessage : ''"
+              class="flex-1 px-3 py-2 bg-indigo-500 text-white rounded text-xs font-semibold hover:bg-indigo-600 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
             >
               Sertifikat
             </button>
@@ -2645,6 +2652,28 @@ export default {
       ))
     }
 
+    const certificateAccessMessage = 'Hanya pengguna yang terdaftar dalam penugasan kegiatan ini yang dapat mengelola sertifikat.'
+
+    const canManageCertificateForPeserta = (pesertaData) => {
+      const kegiatanId = getPesertaKegiatanId(pesertaData)
+      return Boolean(kegiatanId) && isUserAssignedToKegiatan(kegiatanId)
+    }
+
+    const canManageActiveCertificateBatch = computed(() => {
+      const kegiatanId = getActiveKegiatanId()
+      return Boolean(kegiatanId) && isUserAssignedToKegiatan(kegiatanId)
+    })
+
+    const canGenerateSelectedCertificates = computed(() => {
+      if (selectedPesertaIds.value.length === 0) return false
+      return selectedPesertaIds.value.every((idPeserta) => {
+        const pesertaItem = filteredPeserta.value.find(item => String(item.id_peserta) === String(idPeserta))
+        return pesertaItem && canManageCertificateForPeserta(pesertaItem)
+      })
+    })
+
+    const showCertificateAccessDenied = () => Swal.fire('Akses Ditolak', certificateAccessMessage, 'warning')
+
     const canManagePeserta = (pesertaData) => {
       const pesertaKegiatanId = getPesertaKegiatanId(pesertaData)
       if (!pesertaKegiatanId || !isOpenedKegiatan(pesertaKegiatanId)) return false
@@ -3632,6 +3661,10 @@ export default {
     }
 
     const openBatchSertifikatModalForEdit = async () => {
+      if (!canManageActiveCertificateBatch.value) {
+        await showCertificateAccessDenied()
+        return
+      }
       pendingSertifikatMode.value = null
       pendingSertifikatPeserta.value = null
       pendingSertifikatPesertaIds.value = []
@@ -3641,12 +3674,20 @@ export default {
     }
 
     const openBatchSertifikatModal = async () => {
+      if (!canManageActiveCertificateBatch.value) {
+        await showCertificateAccessDenied()
+        return
+      }
       resetFormSertifikat()
       await loadCurrentSertifikatBatch()
       showSertifikatModal.value = true
     }
 
     const openSertifikatModal = async (p) => {
+      if (!canManageCertificateForPeserta(p)) {
+        await showCertificateAccessDenied()
+        return
+      }
       selectedPeserta.value = p
       pendingSertifikatMode.value = 'single'
       pendingSertifikatPeserta.value = p
@@ -3712,6 +3753,10 @@ export default {
 
     const handleGenerateMassal = async () => {
       if (selectedPesertaIds.value.length === 0) return
+      if (!canGenerateSelectedCertificates.value) {
+        await showCertificateAccessDenied()
+        return
+      }
 
       pendingSertifikatMode.value = 'massal'
       pendingSertifikatPeserta.value = null
@@ -4508,6 +4553,10 @@ export default {
       openBatchSertifikatModalForEdit,
       currentSertifikatBatch,
       isUserAssignedToKegiatan,
+      canManageCertificateForPeserta,
+      canManageActiveCertificateBatch,
+      canGenerateSelectedCertificates,
+      certificateAccessMessage,
       canDeletePeserta,
       canEditPeserta,
       getPesertaKegiatanId,

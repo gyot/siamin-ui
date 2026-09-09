@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { apiClient } from '@/services/api'
+import { getDummyParticipantAccount } from '@/services/pesertaPortal'
 
 export const useAuthStore = defineStore('auth', () => {
   let fetchMePromise = null
@@ -141,9 +142,23 @@ export const useAuthStore = defineStore('auth', () => {
     const role = String(currentUser.value?.role || '').toLowerCase()
     return type === 'peserta' || type === '2' || role === 'peserta' || role === '2'
   })
+  const isKepala = computed(() => {
+    const user = currentUser.value || {}
+    const jabatan = user.nama_jabatan
+      || user.jabatan
+      || user.jabatan_pdm
+      || user.pegawai?.nama_jabatan
+      || user.pegawai?.jabatan
+      || ''
+    return String(jabatan).toLowerCase().includes('kepala')
+  })
 
   const fetchMe = async () => {
     if (!token.value) return null
+    if (String(token.value).startsWith('dummy-peserta-')) {
+      hasRevalidatedSession.value = true
+      return { user: currentUser.value }
+    }
     if (fetchMePromise) return fetchMePromise
 
     fetchMePromise = (async () => {
@@ -203,7 +218,13 @@ export const useAuthStore = defineStore('auth', () => {
           id_pegawai: currentUser.value?.id_pegawai || mePegawai.id_pegawai || null,
           name: currentUser.value?.name || mePegawai.nama || meUser.email || 'User',
           email: currentUser.value?.email || meUser.email || null,
-          role: meUser.role
+          role: meUser.role,
+          nama_jabatan: mePegawai.nama_jabatan
+            || mePegawai.jabatan
+            || meUser.nama_jabatan
+            || meUser.jabatan
+            || currentUser.value?.nama_jabatan
+            || null
         }
 
         const finalIds = mergeUnitKerjaIds(unit_kerja_id.value, meUnitKerjaIds)
@@ -246,6 +267,7 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       const { token: apiToken, user } = res.data
+      const pegawai = res.data.pegawai || user.pegawai || {}
       const resolvedUnitKerjaIds = pickNonEmptyIds(
         res?.data?.unit_kerja_id,
         user?.unit_kerja_id,
@@ -261,7 +283,12 @@ export const useAuthStore = defineStore('auth', () => {
         unit_kerja: resolvedUnitKerja,
         name: user.name ?? user.email ?? 'Admin',
         email: user.email,
-        role: user.role || 'admin'
+        role: user.role || 'admin',
+        nama_jabatan: pegawai.nama_jabatan
+          || pegawai.jabatan
+          || user.nama_jabatan
+          || user.jabatan
+          || null
       }
       userType.value = 'admin'
 
@@ -289,50 +316,38 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
 
     try {
+      const account = getDummyParticipantAccount(username, password)
+      if (!account) throw new Error('Username atau password salah')
 
-      const response = await apiClient.post(
-        'auth/login-peserta',
-        { email: username, username, password },
-        { includeAuth: false }
-      )
-      const res = response.data || {}
-      const payload = res?.data || res
-
-      if (!payload?.token || !payload?.user) {
-        throw new Error('Format response API tidak valid')
-      }
-
-      token.value = payload.token
-      const resolvedUnitKerjaIds = pickNonEmptyIds(
-        payload?.unit_kerja_id,
-        payload?.user?.unit_kerja_id,
-        payload?.user?.id_tim
-      )
-      const resolvedUnitKerja = Array.isArray(payload?.unit_kerja) ? payload.unit_kerja : []
+      const dummyToken = `dummy-peserta-${account.id}`
+      token.value = dummyToken
       currentUser.value = {
-        id: payload.user.id,
-        name: payload.user.name,
-        username: payload.user.username,
-        nip: payload.user.nip,
-        instansi: payload.user.instansi ?? '-',
-        email: payload.user.email,
-        unit_kerja_id: resolvedUnitKerjaIds,
-        unit_kerja: resolvedUnitKerja,
+        id: account.id,
+        participant_id: account.participant_id,
+        name: account.name,
+        username: account.username,
+        nip: account.nip,
+        jabatan: account.jabatan,
+        instansi: account.instansi,
+        kabupaten_kota: account.kabupaten_kota,
+        email: account.email,
+        unit_kerja_id: [],
+        unit_kerja: [],
         role: 'peserta'
       }
       userType.value = 'peserta'
 
-      localStorage.setItem('auth_token', payload.token)
+      localStorage.setItem('auth_token', dummyToken)
       localStorage.setItem('user_data', JSON.stringify(currentUser.value))
       localStorage.setItem('user_type', 'peserta')
       hasRestoredSession.value = true
-      hasRevalidatedSession.value = false
+      hasRevalidatedSession.value = true
       fetchMePromise = null
-      applyUnitKerjaData(resolvedUnitKerjaIds, resolvedUnitKerja)
+      applyUnitKerjaData([], [])
 
       return true
     } catch (err) {
-      const message = buildErrorMessage(err, 'Username atau password salah')
+      const message = err?.message || 'Username atau password salah'
       console.error('[Auth] Login peserta gagal:', message)
       error.value = message
       throw new Error(message)
@@ -343,7 +358,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async () => {
     try {
-      if (token.value) {
+      if (token.value && !String(token.value).startsWith('dummy-peserta-')) {
         await apiClient.post('logout', null, {
           headers: {
             Authorization: `Bearer ${token.value}`
@@ -422,6 +437,7 @@ export const useAuthStore = defineStore('auth', () => {
     hasRevalidatedSession,
     isAuthenticated,
     isAdmin,
+    isKepala,
     isPeserta,
     loginAdmin,
     loginPeserta,

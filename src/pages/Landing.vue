@@ -45,6 +45,15 @@
                 efisien dan transparan.
               </p>
               <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <RouterLink
+                  to="/login-peserta"
+                  class="px-8 py-3.5 bg-blue-500 hover:bg-blue-400 text-white rounded-xl font-semibold shadow-lg shadow-blue-950/20 transition flex items-center justify-center gap-2"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Login Peserta
+                </RouterLink>
                 <button
                   @click="showCekSertifikatModal = true"
                   class="px-8 py-3.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 rounded-xl font-semibold backdrop-blur border border-emerald-400/30 transition flex items-center justify-center gap-2"

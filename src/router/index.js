@@ -28,6 +28,10 @@ const DataSyncMonitor = () => import('../pages/DataSyncMonitor.vue')
 const TestUjian = () => import('../pages/TestUjian.vue')
 const TestLaporan = () => import('../pages/TestLaporan.vue')
 const PaketSoal = () => import('../pages/PaketSoal.vue')
+const Pengesahan = () => import('../pages/Pengesahan.vue')
+const PesertaLayout = () => import('../layouts/PesertaLayout.vue')
+const PesertaDashboard = () => import('../pages/PesertaDashboard.vue')
+const PesertaKegiatan = () => import('../pages/PesertaKegiatan.vue')
 
 let fetchAPI = null
 let database = null
@@ -153,7 +157,7 @@ const router = createRouter({
       description: 'Pantau status sinkronisasi data SIMAIK.'
     }
   },
- {path:'/admin',component:AdminLayout,meta:{requiresAuth:true,requiresAdmin:true},children:[
+  {path:'/admin',component:AdminLayout,meta:{requiresAuth:true,requiresAdmin:true},children:[
     {path:'dashboard',name:'dashboard',component:Dashboard,meta:{title:'Dashboard',description:'Ringkasan data utama SIMAIK.'}},
     {path:'kegiatan',name:'kegiatan',component:Kegiatan,meta:{title:'Manajemen Kegiatan',description:'Kelola seluruh kegiatan.'}},
     {path:'kegiatan/:id/peserta',name:'kegiatan-peserta',component:KegiatanPeserta,meta:{title:'Peserta Kegiatan',description:'Kelola peserta per kegiatan.'}},
@@ -165,8 +169,19 @@ const router = createRouter({
     {path:'unit-kerja',name:'unit-kerja',component:UnitKerjaManagement,meta:{title:'Unit Kerja',description:'Kelola unit kerja.'}},
     {path:'anggota',name:'anggota',component:AnggotaManagement,meta:{title:'Keanggotaan Tim',description:'Kelola anggota tim kerja.'}},
     {path:'penugasan',name:'penugasan',component:Penugasan,meta:{title:'Penugasan Pegawai',description:'Lihat dan filter penugasan pegawai.'}},
+    {path:'pengesahan',name:'pengesahan',component:Pengesahan,meta:{title:'Pengesahan',description:'Halaman pengesahan dokumen.',requiresKepala:true}},
     {path:'profile',name:'profile',component:Profile,meta:{title:'Profil',description:'Kelola profil pengguna.'}}
-  ]}
+  ]},
+  {
+    path: '/peserta',
+    component: PesertaLayout,
+    redirect: '/peserta/dashboard',
+    meta: { requiresAuth: true, requiresPeserta: true },
+    children: [
+      { path: 'dashboard', name: 'peserta-dashboard', component: PesertaDashboard, meta: { title: 'Dashboard Peserta', description: 'Ringkasan kegiatan peserta.' } },
+      { path: 'kegiatan', name: 'peserta-kegiatan', component: PesertaKegiatan, meta: { title: 'Kegiatan Saya', description: 'Riwayat kegiatan yang pernah diikuti peserta.' } }
+    ]
+  }
  ]
 })
 
@@ -240,7 +255,7 @@ const findKegiatanByKode = async (kode) => {
 }
 
 // Route guards
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
   // Sync restore from localStorage (instant, no network)
@@ -250,7 +265,15 @@ router.beforeEach((to, from, next) => {
 
   // Defer revalidation to background (non-blocking)
   if (to.meta.requiresAuth && authStore.token && !authStore.hasRevalidatedSession) {
-    authStore.fetchMe().catch(() => {})
+    if (to.meta.requiresKepala) {
+      try {
+        await authStore.fetchMe()
+      } catch {
+        // The authentication checks below handle an invalid session.
+      }
+    } else {
+      authStore.fetchMe().catch(() => {})
+    }
   }
 
   let routeTitle = resolveMetaValue(to.meta?.title, to)
@@ -301,9 +324,13 @@ router.beforeEach((to, from, next) => {
 
   if (to.meta.requiresAuth) {
     if (!authStore.isAuthenticated) {
-      next('/laman-masuk')
+      next(to.meta.requiresPeserta ? '/login-peserta' : '/laman-masuk')
     } else if (to.meta.requiresAdmin && !authStore.isAdmin) {
       next('/login-peserta')
+    } else if (to.meta.requiresPeserta && !authStore.isPeserta) {
+      next('/admin/dashboard')
+    } else if (to.meta.requiresKepala && !authStore.isKepala) {
+      next('/admin/dashboard')
     } else {
       next()
     }

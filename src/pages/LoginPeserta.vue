@@ -186,17 +186,16 @@ const handleLogin = async () => {
     return
   }
 
-  // Call auth store login (akan cek API dulu, jika gagal cek fallback data)
-  const success = await authStore.loginPeserta(formData.value.username, formData.value.password)
-  
-  if (success) {
-    // Reset form
-    formData.value.username = ''
-    formData.value.password = ''
-    formData.value.remember = false
-    
-    // Redirect ke dashboard peserta
-    router.push('/peserta/dashboard')
+  try {
+    const success = await authStore.loginPeserta(formData.value.username, formData.value.password)
+    if (success) {
+      formData.value.username = ''
+      formData.value.password = ''
+      formData.value.remember = false
+      router.push('/peserta/dashboard')
+    }
+  } catch {
+    // Error login ditampilkan oleh auth store.
   }
 }
 </script>
