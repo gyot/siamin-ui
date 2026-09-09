@@ -306,7 +306,7 @@
                       <th class="text-left px-4 py-2 w-12">No</th>
                       <th class="text-left px-4 py-2">Lokasi</th>
                       <th class="text-left px-4 py-2">Kabupaten/Kota</th>
-                      <th class="text-right px-4 py-2 w-20">Aksi</th>
+                      <th class="text-right px-4 py-2 w-32">Aksi</th>
                     </tr>
                   </thead>
                   <tbody class="divide-y divide-slate-100">
@@ -314,7 +314,11 @@
                       <td class="px-4 py-2">{{ index + 1 }}</td>
                       <td class="px-4 py-2 text-slate-700">{{ item.lokasi }}</td>
                       <td class="px-4 py-2 text-slate-700">{{ item.kabupaten_kota || '-' }}</td>
-                      <td class="px-4 py-2 text-right">
+                      <td class="px-4 py-2 text-right whitespace-nowrap">
+                        <button type="button" @click="editTpkItem(index)"
+                          class="mr-3 text-xs text-blue-600 hover:text-blue-700">
+                          Edit
+                        </button>
                         <button type="button" @click="removeTpkItem(index)"
                           class="text-xs text-red-600 hover:text-red-700">
                           Hapus
@@ -342,9 +346,14 @@
               </div>
               <div class="mt-3 flex items-center gap-3">
                 <p v-if="tpkError" class="text-xs text-red-600">{{ tpkError }}</p>
+                <button v-if="editingTpkIndex !== null" type="button" @click="cancelEditTpk"
+                  class="ml-auto px-4 py-2 text-sm border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">
+                  Batal Edit
+                </button>
                 <button type="button" @click="addTpkItem"
-                  class="ml-auto px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-                  Tambah TPK
+                  :class="editingTpkIndex === null ? 'ml-auto' : ''"
+                  class="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+                  {{ editingTpkIndex === null ? 'Tambah TPK' : 'Simpan Perubahan' }}
                 </button>
               </div>
             </div>
@@ -1654,12 +1663,14 @@ export default {
     const atkItems = ref([])
     const atkError = ref('')
     const createEmptyTpkForm = () => ({
+      id_tpk: null,
       lokasi: '',
       kabupaten_kota: ''
     })
     const tpkForm = ref(createEmptyTpkForm())
     const tpkItems = ref([])
     const tpkError = ref('')
+    const editingTpkIndex = ref(null)
 
     const formData = ref({
       nama_kegiatan: '',
@@ -1888,6 +1899,7 @@ export default {
       tpkForm.value = createEmptyTpkForm()
       tpkItems.value = []
       tpkError.value = ''
+      editingTpkIndex.value = null
       formError.value = ''
     }
 
@@ -2383,6 +2395,8 @@ export default {
 
     const loadKegiatanTpkItems = (item) => {
       tpkError.value = ''
+      tpkForm.value = createEmptyTpkForm()
+      editingTpkIndex.value = null
       tpkItems.value = getKegiatanTpkRows(item)
         .map(normalizeTpkItem)
         .filter((row) => row.lokasi)
@@ -2406,13 +2420,39 @@ export default {
         return
       }
 
-      tpkItems.value.push(item)
+      if (editingTpkIndex.value === null) {
+        tpkItems.value.push(item)
+      } else {
+        tpkItems.value.splice(editingTpkIndex.value, 1, item)
+      }
+
       tpkForm.value = createEmptyTpkForm()
+      tpkError.value = ''
+      editingTpkIndex.value = null
+    }
+
+    const editTpkItem = (index) => {
+      const item = tpkItems.value[index]
+      if (!item) return
+
+      tpkForm.value = { ...normalizeTpkItem(item) }
+      editingTpkIndex.value = index
+      tpkError.value = ''
+    }
+
+    const cancelEditTpk = () => {
+      tpkForm.value = createEmptyTpkForm()
+      editingTpkIndex.value = null
       tpkError.value = ''
     }
 
     const removeTpkItem = (index) => {
       tpkItems.value.splice(index, 1)
+      if (editingTpkIndex.value === index) {
+        cancelEditTpk()
+      } else if (editingTpkIndex.value !== null && index < editingTpkIndex.value) {
+        editingTpkIndex.value -= 1
+      }
     }
 
     const buildTpkPayloadItems = () =>
@@ -2420,6 +2460,7 @@ export default {
         .map(normalizeTpkItem)
         .filter((item) => item.lokasi)
         .map((item) => ({
+          id_tpk: item.id_tpk || null,
           lokasi: item.lokasi,
           kabupaten_kota: item.kabupaten_kota || null
         }))
@@ -2632,6 +2673,9 @@ export default {
             }
           })
           daftarTpkPayload.forEach((item, index) => {
+            if (item.id_tpk) {
+              payload.append(`daftar_tpk[${index}][id_tpk]`, item.id_tpk)
+            }
             payload.append(`daftar_tpk[${index}][lokasi]`, item.lokasi)
             payload.append(`daftar_tpk[${index}][kabupaten_kota]`, item.kabupaten_kota || '')
           })
@@ -3362,7 +3406,10 @@ export default {
       tpkForm,
       tpkItems,
       tpkError,
+      editingTpkIndex,
       addTpkItem,
+      editTpkItem,
+      cancelEditTpk,
       removeTpkItem,
       getKegiatanLocationLabel,
       openPesertaList,
