@@ -1,0 +1,12 @@
+{
+  "appId": "com.bpmpntb.simaik",
+  "appName": "SIMAIK",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#F0F2F5"
+  }
+}
