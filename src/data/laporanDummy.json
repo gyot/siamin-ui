@@ -1,0 +1,141 @@
+{
+  "kegiatan": {
+    "id_kegiatan": 93,
+    "nama_kegiatan": "Penguatan Kapasitas Calon Fasilitator Daerah BOSP Kinerja Terbaik Tahun 2026",
+    "angkatan": "Angkatan I",
+    "tanggal_mulai": "2026-07-26",
+    "tanggal_selesai": "2026-07-29",
+    "metode_pelaksanaan": "luring",
+    "durasi_jam": 32,
+    "deskripsi": "Bimbingan teknis untuk penguatan kapasitas calon fasilitator daerah program BOSP Kinerja Terbaik.",
+    "unit_kerja": "BPMP Provinsi NTB"
+  },
+  "tpk": {
+    "id_tpk": 101,
+    "lokasi": "Hotel Lombok Raya",
+    "kabupaten_kota": "Kota Mataram"
+  },
+  "pengesahan": [
+    { "peran": "Disusun oleh", "nama": "Muhammad Idrus, M.Ag", "nip": "197503222005011001", "jabatan": "Analis Mutu Pendidikan", "tanggal": "2026-07-30" },
+    { "peran": "Diverifikasi oleh", "nama": "H. Selamet Riyadi, S.Pd, M.Pd.", "nip": "196805151993031002", "jabatan": "Widyaprada Ahli Madya", "tanggal": "2026-07-31" },
+    { "peran": "Divalidasi oleh", "nama": "Drs. H. Muh. Irfan, MM", "nip": "196508171992031003", "jabatan": "Kepala BPMP Prov. NTB", "tanggal": "2026-08-01" }
+  ],
+  "kata_pengantar": "Puji syukur kami panjatkan kepada Allah SWT yang telah melimpahkan rahmat dan karunia-Nya sehingga Laporan Penguatan Kapasitas Calon Fasilitator Daerah BOSP Kinerja Terbaik Tahun 2026 telah dapat disusun.\n\nLaporan ini secara garis besar menjelaskan tentang latar belakang, tujuan, sasaran, dan teknis kegiatan. Diharapkan dari laporan ini dapat menjadi acuan untuk kegiatan selanjutnya.\n\nKami ucapkan terima kasih kepada seluruh pihak yang berkontribusi pada kegiatan ini.",
+  "latar_belakang": "Program BOSP Kinerja Terbaik merupakan salah satu upaya Kementerian Pendidikan untuk meningkatkan mutu pendidikan di daerah. Dalam pelaksanaannya, diperlukan fasilitator daerah yang memiliki kapasitas memadai untuk mendampingi sekolah sasaran.\n\nBerdasarkan evaluasi tahun sebelumnya, masih ditemukan kendala dalam hal kapasitas fasilitator yang belum merata. Oleh karena itu, diperlukan bimbingan teknis untuk memperkuat kapasitas calon fasilitator daerah.",
+  "dasar_hukum": [
+    "Undang-Undang Sistem Pendidikan Nasional Nomor 20 Tahun 2003",
+    "Peraturan Pemerintah Nomor 57 Tahun 2021 tentang Standar Nasional Pendidikan",
+    "Peraturan Menteri Pendidikan dan Kebudayaan Nomor 11 Tahun 2022 tentang Organisasi dan Tata Kerja BBPMP dan BPMP",
+    "DIPA BPMP Provinsi NTB Tahun 2026"
+  ],
+  "tujuan": "Kegiatan bimtek ini bertujuan untuk memberikan pengetahuan dan keterampilan dalam hal:\n1. Pemahaman instrumen penilaian BOSP Kinerja Terbaik\n2. Strategi pendampingan sekolah sasaran\n3. Penyusunan rencana tindak lanjut untuk penguatan komunitas belajar",
+  "sasaran": "Adapun jumlah peserta yang menjadi sasaran bimtek yaitu 45 orang calon fasilitator daerah yang berasal dari berbagai kabupaten/kota di Nusa Tenggara Barat. Peserta terdiri dari unsur Pengawas Sekolah, Kepala Sekolah, dan Guru Penggerak.",
+  "pembiayaan": "Pembiayaan kegiatan ini sepenuhnya dibebankan pada DIPA BPMP Provinsi NTB Tahun Anggaran 2026.",
+  "peserta": [
+    { "nama": "Wahyu Ramdhani, S.Kom", "nip": "199502102025211047", "instansi": "BPMP NTB", "jabatan": "Penata Layanan Operasional", "peran": "Panitia" },
+    { "nama": "Ahmad Fauzi, S.Pd", "nip": "198801152010011002", "instansi": "Dinas Dikbud Kota Mataram", "jabatan": "Pengawas Sekolah", "peran": "Panitia" },
+    { "nama": "Siti Nurhaliza, M.Pd", "nip": "198505202008012003", "instansi": "BPMP NTB", "jabatan": "Widyaprada", "peran": "Pendamping" },
+    { "nama": "Budi Santoso, S.Pd", "nip": "199003102012011004", "instansi": "SDN 1 Mataram", "jabatan": "Kepala Sekolah", "peran": "Peserta" },
+    { "nama": "Dewi Kartika, S.Pd.SD", "nip": "199208152014012005", "instansi": "SDN 3 Cakranegara", "jabatan": "Guru Kelas", "peran": "Peserta" },
+    { "nama": "Rizki Pratama, S.Pd", "nip": "199106202013011006", "instansi": "SDN 5 Ampenan", "jabatan": "Guru Kelas", "peran": "Peserta" },
+    { "nama": "Lukmanulhakim, M.Pd", "nip": "197112311991021012", "instansi": "Dinas Dikbud Lombok Timur", "jabatan": "Pengawas Sekolah Madya", "peran": "Fasilitator" },
+    { "nama": "Pathurrahman, S.Pd.SD", "nip": "197212311998031040", "instansi": "SDN 1 Mamben Lauk", "jabatan": "Kepala Sekolah", "peran": "Fasilitator" }
+  ],
+  "struktur_program": [
+    { "kategori": "Umum", "materi": "Pembukaan", "jp": 0 },
+    { "kategori": "Umum", "materi": "Pre Test dan Post Test", "jp": 1 },
+    { "kategori": "Pokok", "materi": "Pemahaman Instrumen BOSP Kinerja Terbaik", "jp": 2 },
+    { "kategori": "Pokok", "materi": "Strategi Pendampingan Sekolah Sasaran", "jp": 4 },
+    { "kategori": "Pokok", "materi": "Analisis Data dan Rapor Pendidikan", "jp": 3 },
+    { "kategori": "Pokok", "materi": "Penyusunan Rencana Pendampingan", "jp": 4 },
+    { "kategori": "Pokok", "materi": "Komunikasi Efektif dengan Sekolah", "jp": 3 },
+    { "kategori": "Pokok", "materi": "Monitoring dan Evaluasi Pendampingan", "jp": 3 },
+    { "kategori": "Penunjang", "materi": "Refleksi dan Koneksi Antar Materi", "jp": 1 },
+    { "kategori": "Penunjang", "materi": "Rencana Tindak Lanjut", "jp": 1 }
+  ],
+  "jadwal_harian": [
+    {
+      "hari": "Hari Pertama",
+      "tanggal": "2026-07-26",
+      "items": [
+        { "waktu": "07.30 - 08.30", "kegiatan": "Registrasi Peserta", "pj": "Panitia" },
+        { "waktu": "08.30 - 09.30", "kegiatan": "Pembukaan", "pj": "Panitia" },
+        { "waktu": "09.30 - 10.00", "kegiatan": "Pre Test", "pj": "Tim BPMP" },
+        { "waktu": "10.00 - 10.15", "kegiatan": "Rehat", "pj": "-" },
+        { "waktu": "10.15 - 12.15", "kegiatan": "Pemahaman Instrumen BOSP", "pj": "Fasilitator 1" },
+        { "waktu": "12.15 - 13.30", "kegiatan": "Isoma", "pj": "-" },
+        { "waktu": "13.30 - 15.30", "kegiatan": "Strategi Pendampingan", "pj": "Fasilitator 2" }
+      ]
+    },
+    {
+      "hari": "Hari Kedua",
+      "tanggal": "2026-07-27",
+      "items": [
+        { "waktu": "08.00 - 10.00", "kegiatan": "Analisis Data", "pj": "Fasilitator 1" },
+        { "waktu": "10.00 - 10.15", "kegiatan": "Rehat", "pj": "-" },
+        { "waktu": "10.15 - 12.15", "kegiatan": "Analisis Data (Lanjutan)", "pj": "Fasilitator 1" },
+        { "waktu": "12.15 - 13.30", "kegiatan": "Isoma", "pj": "-" },
+        { "waktu": "13.30 - 15.30", "kegiatan": "Penyusunan Rencana", "pj": "Fasilitator 2" }
+      ]
+    },
+    {
+      "hari": "Hari Ketiga",
+      "tanggal": "2026-07-28",
+      "items": [
+        { "waktu": "08.00 - 10.00", "kegiatan": "Komunikasi Efektif", "pj": "Fasilitator 1" },
+        { "waktu": "10.00 - 10.15", "kegiatan": "Rehat", "pj": "-" },
+        { "waktu": "10.15 - 12.15", "kegiatan": "Komunikasi Efektif (Lanjutan)", "pj": "Fasilitator 1" },
+        { "waktu": "12.15 - 13.30", "kegiatan": "Isoma", "pj": "-" },
+        { "waktu": "13.30 - 15.30", "kegiatan": "Monitoring dan Evaluasi", "pj": "Fasilitator 2" }
+      ]
+    },
+    {
+      "hari": "Hari Keempat",
+      "tanggal": "2026-07-29",
+      "items": [
+        { "waktu": "08.00 - 10.00", "kegiatan": "Monitoring (Lanjutan)", "pj": "Fasilitator 2" },
+        { "waktu": "10.00 - 10.15", "kegiatan": "Rehat", "pj": "-" },
+        { "waktu": "10.15 - 11.15", "kegiatan": "Refleksi", "pj": "Fasilitator 1" },
+        { "waktu": "11.15 - 12.15", "kegiatan": "RTL", "pj": "Fasilitator 2" },
+        { "waktu": "12.15 - 13.30", "kegiatan": "Isoma", "pj": "-" },
+        { "waktu": "13.30 - 14.30", "kegiatan": "Post Test", "pj": "Tim BPMP" },
+        { "waktu": "14.30 - 15.30", "kegiatan": "Penutupan", "pj": "Panitia" }
+      ]
+    }
+  ],
+  "rekaman_proses": [
+    { "hari": "Hari Pertama", "tanggal": "2026-07-26", "narasi": "Kegiatan dimulai dengan registrasi peserta pada pukul 07.30. Pembukaan dilakukan oleh perwakilan BPMP Provinsi NTB. Setelah pembukaan, peserta mengikuti pre test. Materi pertama disampaikan oleh Fasilitator 1 mengenai Pemahaman Instrumen BOSP Kinerja Terbaik." },
+    { "hari": "Hari Kedua", "tanggal": "2026-07-27", "narasi": "Pada hari kedua, peserta diajarkan cara menganalisis data dan membaca rapor pendidikan. Fasilitator 1 memberikan contoh kasus nyata dari sekolah sasaran." },
+    { "hari": "Hari Ketiga", "tanggal": "2026-07-28", "narasi": "Hari ketiga difokuskan pada keterampilan komunikasi efektif. Fasilitator 1 menggunakan metode role play untuk melatih peserta." },
+    { "hari": "Hari Keempat", "tanggal": "2026-07-29", "narasi": "Pada hari terakhir, peserta menyelesaikan materi, mengikuti post test dan evaluasi. Kegiatan ditutup secara resmi oleh panitia." }
+  ],
+  "evaluasi": {
+    "total_responden": 45,
+    "program": {
+      "kesesuaian_program_tujuan": { "sangat_sesuai": 32, "sesuai": 13, "cukup": 0, "kurang": 0 },
+      "kesesuaian_bahan_ajar": { "sangat_sesuai": 25, "sesuai": 20, "cukup": 0, "kurang": 0 },
+      "kesesuaian_alokasi_waktu": { "sangat_sesuai": 20, "sesuai": 23, "cukup": 2, "kurang": 0 }
+    },
+    "fasilitator": [
+      {
+        "nama": "Lukmanulhakim, M.Pd",
+        "penguasaan_materi": { "sangat_sesuai": 34, "sesuai": 9, "cukup": 2, "kurang": 0 },
+        "sistematika_penyajian": { "sangat_sesuai": 32, "sesuai": 13, "cukup": 0, "kurang": 0 },
+        "sikap_kehadiran": { "sangat_sesuai": 38, "sesuai": 7, "cukup": 0, "kurang": 0 }
+      },
+      {
+        "nama": "Pathurrahman, S.Pd.SD",
+        "penguasaan_materi": { "sangat_sesuai": 32, "sesuai": 9, "cukup": 2, "kurang": 2 },
+        "sistematika_penyajian": { "sangat_sesuai": 27, "sesuai": 16, "cukup": 2, "kurang": 0 },
+        "sikap_kehadiran": { "sangat_sesuai": 38, "sesuai": 7, "cukup": 0, "kurang": 0 }
+      }
+    ],
+    "layanan": {
+      "sikap_pelayanan_panitia": { "sangat_sesuai": 29, "sesuai": 16, "cukup": 0, "kurang": 0 },
+      "fasilitas_kebersihan": { "sangat_sesuai": 27, "sesuai": 18, "cukup": 0, "kurang": 0 },
+      "kualitas_konsumsi": { "sangat_sesuai": 25, "sesuai": 20, "cukup": 0, "kurang": 0 }
+    }
+  },
+  "simpulan": "Kegiatan Penguatan Kapasitas Calon Fasilitator Daerah BOSP Kinerja Terbaik Tahun 2026 selama 4 hari (26 s.d. 29 Juli 2026) di Hotel Lombok Raya secara umum berjalan lancar, tertib, optimal dan efektif sesuai perencanaan dan jadwal yang ditetapkan.",
+  "saran": "Untuk lebih efisien dan efektifnya kegiatan selanjutnya, diharapkan:\n1. Koordinasi antar unsur terkait harus lebih intensif\n2. Penambahan waktu praktik pendampingan langsung ke sekolah sasaran\n3. Penyediaan modul cetak untuk setiap peserta\n4. Pelaksanaan follow-up 3 bulan setelah kegiatan"
+}
