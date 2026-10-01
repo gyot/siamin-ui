@@ -231,28 +231,34 @@
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                   <option value="">Pilih Kabupaten/Kota</option>
                   <option v-for="k in kabKota" :key="k" :value="k">{{ k }}</option>
+                  <option value="__lainnya__">Lainnya (Luar NTB)</option>
                 </select>
               </div>
-              <!-- <div>
-                <label class="block text-sm font-medium text-slate-700 mb-2">Provinsi</label>
+              <div v-if="formData.kab_kota === '__lainnya__'">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Nama Kabupaten / Kota *</label>
+                <input v-model="formData.kab_kota_manual" type="text" placeholder="Masukkan nama kabupaten/kota"
+                  class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+              </div>
+              <div v-if="formData.kab_kota === '__lainnya__'">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Provinsi *</label>
                 <input v-model="formData.provinsi" type="text" placeholder="Masukkan provinsi"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
-              <div>
+              <div v-if="formData.kab_kota === '__lainnya__'">
                 <label class="block text-sm font-medium text-slate-700 mb-2">Telepon Instansi</label>
                 <input v-model="formData.telp_instansi" type="tel" placeholder="Masukkan telepon instansi"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
-              <div>
+              <div v-if="formData.kab_kota === '__lainnya__'">
                 <label class="block text-sm font-medium text-slate-700 mb-2">Email Instansi</label>
                 <input v-model="formData.email_instansi" type="email" placeholder="Masukkan email instansi"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
-              <div class="sm:col-span-2">
+              <div v-if="formData.kab_kota === '__lainnya__'" class="sm:col-span-2">
                 <label class="block text-sm font-medium text-slate-700 mb-2">Alamat Instansi</label>
                 <textarea v-model="formData.alamat_instansi" rows="3" placeholder="Masukkan alamat instansi"
                   class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
-              </div> -->
+              </div>
             </div>
           </div>
 
@@ -643,6 +649,7 @@ export default {
       npsn: '',
       alamat_instansi: '',
       kab_kota: '',
+      kab_kota_manual: '',
       provinsi: '',
       telp_instansi: '',
       email_instansi: '',
@@ -672,6 +679,7 @@ export default {
         npsn: '',
         alamat_instansi: '',
         kab_kota: '',
+        kab_kota_manual: '',
         provinsi: '',
         telp_instansi: '',
         email_instansi: '',
@@ -724,8 +732,15 @@ export default {
       if (!validateForm()) return
 
       const fd = new FormData()
+      // Resolve __lainnya__ to manual value
+      const payload = { ...formData.value }
+      if (payload.kab_kota === '__lainnya__') {
+        payload.kab_kota = payload.kab_kota_manual || 'Lainnya'
+      }
+      delete payload.kab_kota_manual
+
       // Append all formData fields
-      Object.entries(formData.value).forEach(([key, val]) => {
+      Object.entries(payload).forEach(([key, val]) => {
         if (val !== undefined && val !== null && val !== '') {
           fd.append(key, val)
         }

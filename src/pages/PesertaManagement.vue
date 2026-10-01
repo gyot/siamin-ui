@@ -24,7 +24,7 @@
               Ubah Status Terpilih ({{ selectedCount }})
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
-            <div v-if="showBulkStatusMenu" class="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+            <div v-if="showBulkStatusMenu" class="absolute right-0 mt-1 w-48 bg-white rounded-2xl shadow-2xl shadow-xl border border-gray-200 z-50">
               <button @click="bulkChangeStatus('terbit'); showBulkStatusMenu = false" class="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 text-green-700 font-medium rounded-t-lg">Terbitkan</button>
               <button @click="bulkChangeStatus('draft'); showBulkStatusMenu = false" class="w-full text-left px-4 py-2.5 text-sm hover:bg-yellow-50 text-yellow-700 font-medium">Set Draft</button>
               <button @click="bulkChangeStatus('dicabut'); showBulkStatusMenu = false" class="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 text-red-700 font-medium rounded-b-lg">Cabut</button>
@@ -119,7 +119,7 @@
       </div>
 
       <!-- Loading State -->
-      <div v-if="isLoadingPeserta" class="mb-6 p-4 flex items-center justify-center bg-white rounded-lg shadow-md">
+      <div v-if="isLoadingPeserta" class="mb-6 p-4 flex items-center justify-center bg-white rounded-2xl shadow-2xl shadow-md">
         <div class="flex items-center gap-3">
           <div class="animate-spin">
             <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -131,7 +131,7 @@
       </div>
 
       <!-- Filter dan Search -->
-      <div class="bg-white rounded-lg p-3 sm:p-4 mb-6">
+      <div class="bg-white rounded-2xl shadow-2xl p-3 sm:p-4 mb-6">
         <div :class="kegiatanId ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4'">
           <div>
             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">Cari Nama</label>
@@ -229,23 +229,23 @@
 
       <!-- Statistik -->
       <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
-        <div class="bg-white rounded-lg shadow-md p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
           <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Total Peserta</p>
           <p class="text-2xl sm:text-3xl font-bold text-blue-600">{{ sertifikatStats.total }}</p>
         </div>
-        <div class="bg-white rounded-lg shadow-md p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
           <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Sudah Terbit</p>
           <p class="text-2xl sm:text-3xl font-bold text-green-600">{{ sertifikatStats.terbit }}</p>
         </div>
-        <div class="bg-white rounded-lg shadow-md p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
           <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Draft</p>
           <p class="text-2xl sm:text-3xl font-bold text-yellow-600">{{ sertifikatStats.draft }}</p>
         </div>
-        <div class="bg-white rounded-lg shadow-md p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
           <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Dicabut</p>
           <p class="text-2xl sm:text-3xl font-bold text-red-600">{{ sertifikatStats.dicabut }}</p>
         </div>
-        <div class="bg-white rounded-lg shadow-md p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
           <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Belum Ada</p>
           <p class="text-2xl sm:text-3xl font-bold text-gray-600">{{ sertifikatStats.belum_ada }}</p>
         </div>
@@ -268,7 +268,7 @@
       </div>
 
       <!-- Tabel Peserta - Desktop View -->
-      <div class="bg-white rounded-lg shadow-lg overflow-hidden hidden md:block">
+      <div class="bg-white rounded-2xl shadow-2xl shadow-lg overflow-hidden hidden md:block">
         
         <div class="overflow-x-auto">
           <table class="min-w-[1200px] w-full text-sm">
@@ -342,7 +342,7 @@
                       {{ getSertifikatStatus(p.id_peserta) }}
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                     </button>
-                    <div v-if="openStatusDropdown === p.id_peserta" class="absolute left-0 mt-1 w-36 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+                    <div v-if="openStatusDropdown === p.id_peserta" class="absolute left-0 mt-1 w-36 bg-white rounded-2xl shadow-2xl shadow-xl border border-gray-200 z-50">
                       <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'terbit'" @click="changeSertifikatStatus(p, 'terbit')" class="w-full text-left px-3 py-2 text-xs hover:bg-green-50 text-green-700 font-medium rounded-t-lg">Terbitkan</button>
                       <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'draft'" @click="changeSertifikatStatus(p, 'draft')" class="w-full text-left px-3 py-2 text-xs hover:bg-yellow-50 text-yellow-700 font-medium">Draft</button>
                       <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'dicabut'" @click="changeSertifikatStatus(p, 'dicabut')" class="w-full text-left px-3 py-2 text-xs hover:bg-red-50 text-red-700 font-medium rounded-b-lg">Cabut</button>
@@ -431,10 +431,10 @@
 
       <!-- Card View - Mobile -->
       <div class="md:hidden space-y-3">
-        <div v-if="filteredPeserta.length === 0" class="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
+        <div v-if="filteredPeserta.length === 0" class="bg-white rounded-2xl shadow-2xl shadow-md p-6 text-center text-gray-500">
           <p class="text-sm">Tidak ada data peserta</p>
         </div>
-        <div v-else class="bg-white rounded-lg border border-gray-100 p-3 flex flex-col gap-3">
+        <div v-else class="bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 flex flex-col gap-3">
           <p class="text-xs text-gray-600">
             Menampilkan <span class="font-semibold text-gray-900">{{ paginationStart }}</span>-<span class="font-semibold text-gray-900">{{ paginationEnd }}</span>
             dari <span class="font-semibold text-gray-900">{{ filteredPeserta.length }}</span> peserta
@@ -468,7 +468,7 @@
         <div
           v-for="(p, index) in paginatedPeserta"
           :key="p.id_peserta"
-          class="bg-white rounded-lg shadow-md p-4 space-y-2 border-l-4 border-blue-500"
+          class="bg-white rounded-2xl shadow-2xl shadow-md p-4 space-y-2 border-l-4 border-blue-500"
         >
           <div class="flex justify-between items-start gap-2 mb-3">
             <div class="flex-1">
@@ -492,7 +492,7 @@
                 {{ getSertifikatStatus(p.id_peserta) }}
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
               </button>
-              <div v-if="openStatusDropdown === p.id_peserta" class="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+              <div v-if="openStatusDropdown === p.id_peserta" class="absolute right-0 mt-1 w-36 bg-white rounded-2xl shadow-2xl shadow-xl border border-gray-200 z-50">
                 <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'terbit'" @click="changeSertifikatStatus(p, 'terbit')" class="w-full text-left px-3 py-2 text-xs hover:bg-green-50 text-green-700 font-medium rounded-t-lg">Terbitkan</button>
                 <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'draft'" @click="changeSertifikatStatus(p, 'draft')" class="w-full text-left px-3 py-2 text-xs hover:bg-yellow-50 text-yellow-700 font-medium">Draft</button>
                 <button v-if="getRawSertifikatStatus(p.id_peserta) !== 'dicabut'" @click="changeSertifikatStatus(p, 'dicabut')" class="w-full text-left px-3 py-2 text-xs hover:bg-red-50 text-red-700 font-medium rounded-b-lg">Cabut</button>
@@ -568,9 +568,9 @@
 
 
       <!-- Modal Tambah/Edit Peserta -->
-      <div v-if="showAddModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
-        <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center sticky top-0">
+      <div v-if="showAddModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div class="bg-white border-b border-[#E4E6E9] text-[#050505] px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center sticky top-0">
             <h2 class="text-lg sm:text-xl font-bold">
               {{ editingPeserta ? 'Edit Peserta' : 'Tambah Peserta Baru' }}
             </h2>
@@ -852,9 +852,9 @@
       </div>
 
       <!-- Modal Detail Peserta -->
-      <div v-if="showDetailModal && selectedPeserta" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-          <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 flex justify-between items-center sticky top-0">
+      <div v-if="showDetailModal && selectedPeserta" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+          <div class="bg-white border-b border-[#E4E6E9] text-[#050505] px-6 py-4 flex justify-between items-center sticky top-0">
             <h2 class="text-xl font-bold">Detail Peserta</h2>
             <button @click="showDetailModal = false" class="text-2xl hover:text-blue-200">&times;</button>
           </div>
@@ -925,9 +925,9 @@
       </div>
 
       <!-- Modal Batch Sertifikat -->
-      <div v-if="showSertifikatModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-          <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 flex justify-between items-center sticky top-0">
+      <div v-if="showSertifikatModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div class="bg-white border-b border-[#E4E6E9] text-[#050505] px-6 py-4 flex justify-between items-center sticky top-0">
             <div>
               <h2 class="text-xl font-bold">{{ currentSertifikatBatch ? 'Edit Batch Sertifikat' : 'Batch Sertifikat' }}</h2>
               <p class="text-sm text-blue-100 mt-1">
@@ -1138,22 +1138,27 @@
                 <div>{{ selectedPesertaBiodata.kab_kota || '-' }}</div>
               </div>
               <div class="grid grid-cols-3 gap-2 mb-2">
-                <div class="font-semibold">7. No. HP/WhatsApp</div>
+                <div class="font-semibold">7. Provinsi</div>
+                <div class="text-center">:</div>
+                <div>{{ selectedPesertaBiodata.provinsi || '-' }}</div>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mb-2">
+                <div class="font-semibold">8. No. HP/WhatsApp</div>
                 <div class="text-center">:</div>
                 <div>{{ selectedPesertaBiodata.no_hp || '-' }}</div>
               </div>
               <div class="grid grid-cols-3 gap-2 mb-2">
-                <div class="font-semibold">8. E-Mail</div>
+                <div class="font-semibold">9. E-Mail</div>
                 <div class="text-center">:</div>
                 <div>{{ selectedPesertaBiodata.email || '-' }}</div>
               </div>
               <div class="grid grid-cols-3 gap-2 mb-2">
-                <div class="font-semibold">9. Peran Dalam Kegiatan</div>
+                <div class="font-semibold">10. Peran Dalam Kegiatan</div>
                 <div class="text-center">:</div>
                 <div>{{ selectedPesertaBiodata.peran || 'Peserta' }}</div>
               </div>
               <div v-if="selectedPesertaBiodata.tpk" class="grid grid-cols-3 gap-2 mb-2">
-                <div class="font-semibold">10. Tempat Pelaksanaan</div>
+                <div class="font-semibold">11. Tempat Pelaksanaan</div>
                 <div class="text-center">:</div>
                 <div>{{ selectedPesertaBiodata.tpk.lokasi }}{{ selectedPesertaBiodata.tpk.kabupaten_kota ? ` (${selectedPesertaBiodata.tpk.kabupaten_kota})` : '' }}</div>
               </div>
@@ -3037,26 +3042,31 @@ export default {
               <div class="info-separator">:</div>
               <div class="info-value">${p.jabatan_kedinasan || p.jabatan || '-'}</div>
             </div>
-            <div class="info-row">
-              <div class="info-label">6. Kabupaten/Kota</div>
-              <div class="info-separator">:</div>
-              <div class="info-value">${kabupatenKota}</div>
-            </div>
-            <div class="info-row">
-              <div class="info-label">7. No. HP/WhatsApp</div>
-              <div class="info-separator">:</div>
-              <div class="info-value">${p.no_hp || '-'}</div>
-            </div>
-            <div class="info-row">
-              <div class="info-label">8. E-Mail</div>
-              <div class="info-separator">:</div>
-              <div class="info-value">${p.email || '-'}</div>
-            </div>
-            <div class="info-row">
-              <div class="info-label">9. Peran Dalam Kegiatan</div>
-              <div class="info-separator">:</div>
-              <div class="info-value">${peran}</div>
-            </div>
+              <div class="info-row">
+                <div class="info-label">6. Kabupaten/Kota</div>
+                <div class="info-separator">:</div>
+                <div class="info-value">${kabupatenKota}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">7. Provinsi</div>
+                <div class="info-separator">:</div>
+                <div class="info-value">${p.provinsi || '-'}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">8. No. HP/WhatsApp</div>
+                <div class="info-separator">:</div>
+                <div class="info-value">${p.no_hp || '-'}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">9. E-Mail</div>
+                <div class="info-separator">:</div>
+                <div class="info-value">${p.email || '-'}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">10. Peran Dalam Kegiatan</div>
+                <div class="info-separator">:</div>
+                <div class="info-value">${peran}</div>
+              </div>
           </div>
 
           <div class="tables-row">
@@ -3268,9 +3278,10 @@ export default {
               <div class="info-row"><div class="info-label">4. Nama Instansi</div><div class="info-separator">:</div><div class="info-value">${p.nama_instansi || '-'}</div></div>
               <div class="info-row"><div class="info-label">5. Jabatan Kedinasan</div><div class="info-separator">:</div><div class="info-value">${p.jabatan_kedinasan || p.jabatan || '-'}</div></div>
               <div class="info-row"><div class="info-label">6. Kabupaten/Kota</div><div class="info-separator">:</div><div class="info-value">${kabupatenKota}</div></div>
-              <div class="info-row"><div class="info-label">7. No. HP/WhatsApp</div><div class="info-separator">:</div><div class="info-value">${p.no_hp || '-'}</div></div>
-              <div class="info-row"><div class="info-label">8. E-Mail</div><div class="info-separator">:</div><div class="info-value">${p.email || '-'}</div></div>
-              <div class="info-row"><div class="info-label">9. Peran Dalam Kegiatan</div><div class="info-separator">:</div><div class="info-value">${peran}</div></div>
+              <div class="info-row"><div class="info-label">7. Provinsi</div><div class="info-separator">:</div><div class="info-value">${p.provinsi || '-'}</div></div>
+              <div class="info-row"><div class="info-label">8. No. HP/WhatsApp</div><div class="info-separator">:</div><div class="info-value">${p.no_hp || '-'}</div></div>
+              <div class="info-row"><div class="info-label">9. E-Mail</div><div class="info-separator">:</div><div class="info-value">${p.email || '-'}</div></div>
+              <div class="info-row"><div class="info-label">10. Peran Dalam Kegiatan</div><div class="info-separator">:</div><div class="info-value">${peran}</div></div>
             </div>
             <div class="tables-row">
               ${buildAdministrasiTableHTML()}

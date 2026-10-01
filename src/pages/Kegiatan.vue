@@ -1,12 +1,12 @@
 <template>
-  <div class="p-6 bg-slate-50">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+  <div class="p-4 sm:p-6 bg-[#F0F2F5]">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
       <div>
-        <h1 class="text-2xl font-bold text-slate-800">Manajemen Kegiatan</h1>
-        <p class="text-slate-500">Kelola semua kegiatan yang ada</p>
+        <h1 class="text-xl font-bold text-[#050505]">Manajemen Kegiatan</h1>
+        <p class="text-[13px] text-[#65676B]">Kelola semua kegiatan yang ada</p>
       </div>
       <button @click="(showAddModal = true, editingId = null, isViewing = false, resetForm())"
-        class="btn-primary px-5 py-2.5 text-white rounded-lg font-medium shadow flex items-center gap-2 w-fit">
+        class="px-4 py-2 bg-[#1877F2] text-white rounded-lg font-semibold text-sm shadow hover:bg-[#166FE5] transition flex items-center gap-2 w-fit">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -14,218 +14,144 @@
       </button>
     </div>
 
-    <!-- optionally show current user info for debugging -->
-    <div v-if="currentUser.id_pegawai" class="mb-2 text-xs text-slate-500">
+    <div v-if="currentUser.id_pegawai" class="mb-2 text-xs text-[#65676B]">
       Logged in pegawai ID: <strong>{{ currentUser.id_pegawai }}</strong>
-      {{ currentUser}}
     </div>
+
     <!-- Filters -->
-    <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-4 mb-6">
-      <div class="flex flex-col sm:flex-row gap-4">
+    <div class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-3 mb-4">
+      <div class="flex flex-col sm:flex-row gap-2">
         <div class="relative flex-1">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#65676B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
           <input v-model="searchQuery" type="text" placeholder="Cari kegiatan..."
-            class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none text-sm" />
-          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </span>
+            class="w-full pl-10 pr-4 py-2 bg-[#F0F2F5] rounded-full border-none focus:outline-none focus:ring-2 focus:ring-[#1877F2] focus:bg-white text-[15px] placeholder:text-[#65676B]" />
         </div>
         <div class="flex gap-2">
           <select v-model="filterTahun"
-            class="px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none text-sm bg-white">
+            class="px-3 py-2 bg-[#F0F2F5] rounded-full text-[13px] border-none focus:outline-none focus:ring-2 focus:ring-[#1877F2]">
             <option value="">Semua Tahun</option>
-            <option v-for="tahun in getAvailableTahun" :key="tahun" :value="tahun">
-              {{ tahun }}
-            </option>
+            <option v-for="tahun in getAvailableTahun" :key="tahun" :value="tahun">{{ tahun }}</option>
           </select>
           <select v-model="activeFilter"
-            class="px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none text-sm bg-white">
+            class="px-3 py-2 bg-[#F0F2F5] rounded-full text-[13px] border-none focus:outline-none focus:ring-2 focus:ring-[#1877F2]">
             <option value="all">Semua Status</option>
             <option value="berjalan">Berjalan</option>
             <option value="akan_datang">Akan Datang</option>
             <option value="selesai">Selesai</option>
           </select>
-          <button
-            class="px-4 py-2.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition flex items-center gap-2 text-slate-600">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            <span class="hidden sm:inline">Filter</span>
-          </button>
         </div>
       </div>
     </div>
 
-    <!-- Informational Notice: Empty State -->
     <div v-if="kegiatan.length === 0 && !isLoadingKegiatan"
-      class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded text-blue-800 text-sm">
+      class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-[#1877F2] text-sm">
       Tidak ada kegiatan untuk akun anda.
       Silakan buat kegiatan baru atau hubungi administrator jika Anda seharusnya punya akses.
     </div>
 
-    <!-- Loading State -->
+    <!-- Card List -->
+    <div v-if="isLoadingKegiatan" class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-8 text-center">
+      <div class="w-8 h-8 border-4 border-[#E4E6E9] border-t-[#1877F2] rounded-full animate-spin mx-auto"></div>
+      <p class="text-[13px] text-[#65676B] mt-3">Memuat data kegiatan...</p>
+    </div>
 
+    <div v-else-if="filteredKegiatan.length === 0" class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-8 text-center">
+      <p class="text-[#65676B] text-[15px]">Tidak ada kegiatan yang sesuai</p>
+    </div>
 
-    <!-- Table -->
-    <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-      <div class="overflow-x-auto">
-        <table class="w-full">
-          <thead>
-            <tr class="bg-slate-50 border-b border-slate-100">
-              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">No</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Kegiatan
-              </th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Tanggal</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Lokasi</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Unit Kerja
-              </th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Metode</th>
-              <th class="text-left px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
-              <th class="text-right px-5 py-3 text-xs font-semibold text-slate-600 uppercase tracking-wider">Aksi</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr colspans="7" v-if="isLoadingKegiatan" class="table-row">
-              <td colspan="8" class="px-5 py-4">
-                <div class="flex items-center gap-3 justify-center">
-                  <div class="animate-spin">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                      </path>
-                    </svg>
-                  </div>
-                  <p class="text-sm text-gray-600">Memuat data kegiatan...</p>
-                </div>
-              </td>
-            </tr>
-            <!-- <div v-if="isLoadingKegiatan" class="mb-4 p-4 flex items-center justify-center">
-              <Spinner message="Memuat data kegiatan..." />
-            </div> -->
-            <tr v-for="(k, index) in paginatedKegiatan" :key="k.id_kegiatan" class="table-row hover:bg-slate-50">
-              <td class="px-5 py-4 text-sm text-slate-600">
-                {{ paginationStart + index + 1 }}
-              </td>
-              <td class="px-5 py-4">
-                <div class="font-medium text-slate-800">{{ k.nama_kegiatan }}</div>
-                <div class="text-xs text-slate-500">{{ k.id_kegiatan }}</div>
-              </td>
-              <td class="px-5 py-4 text-sm text-slate-600">
-                {{ formatDate(k.tanggal_mulai) }} s/d {{ formatDate(k.tanggal_selesai) }}
-              </td>
-              <td class="px-5 py-4 text-sm text-slate-600">{{ getKegiatanLocationLabel(k) }}</td>
-              <td class="px-5 py-4 text-sm text-slate-600">{{ getUnitKerjaLabel(k) }}</td>
-              <td class="px-5 py-4">
-                <span class="badge bg-slate-100 text-slate-700">{{ getMetodeLabel(k.metode_pelaksanaan) }}</span>
-              </td>
-              <td class="px-5 py-4">
-                <span class="badge" :class="getStatusBadgeClass(getKegiatanStatus(k))">
-                  {{ getStatusLabel(getKegiatanStatus(k)) }}
-                </span>
-              </td>
-              <td class="px-5 py-4">
-                <div class="flex items-center justify-end gap-2">
-                  <!-- <button @click="openPesertaList(k.id_kegiatan)"
-                    class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-green-600" title="Peserta">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M12 4.354a4 4 0 110 8.308 4 4 0 010-8.308M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </button>
-                  <button @click="handleSuratTugas(k.id_kegiatan)"
-                    class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-orange-600"
-                    title="Lihat/Buat Penugasan">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </button> -->
+    <div v-else class="space-y-4">
+      <div v-for="(k, index) in paginatedKegiatan" :key="k.id_kegiatan"
+        class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] overflow-hidden">
+        <!-- Card Header -->
+        <div class="flex items-center gap-3 p-4 pb-2">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
+            :class="getKegiatanStatus(k) === 'selesai' ? 'bg-emerald-500' : getKegiatanStatus(k) === 'berjalan' ? 'bg-blue-500' : 'bg-amber-500'">
+            {{ (k.nama_kegiatan || 'K').charAt(0) }}
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-[15px] font-semibold text-[#050505] leading-tight truncate">{{ k.nama_kegiatan }}</p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="text-[13px] text-[#65676B]">{{ formatDate(k.tanggal_mulai) }} - {{ formatDate(k.tanggal_selesai) }}</span>
+              <span class="text-[#65676B]">&middot;</span>
+              <span class="text-[12px] px-2 py-0.5 rounded-full font-medium"
+                :class="getStatusBadgeClass(getKegiatanStatus(k))">
+                {{ getStatusLabel(getKegiatanStatus(k)) }}
+              </span>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button @click="viewDetail(k.id_kegiatan)"
+              class="p-2 rounded-lg hover:bg-[#F0F2F5] text-[#65676B] hover:text-[#050505] transition" title="Lihat Detail">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+            <button @click="deleteKegiatan(k.id_kegiatan)"
+              class="p-2 rounded-lg hover:bg-red-50 text-[#65676B] hover:text-red-600 transition" title="Hapus">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </div>
+        </div>
 
-                  <button @click="shareKegiatanPublikLink(k)"
-                    class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-blue-600"
-                    title="Share Tautan Publik Kegiatan">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                  </button>
-                  <button @click="sharePublicPesertaLink(k)"
-                    class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-emerald-600"
-                    title="Share Link Publik Peserta">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8.684 13.342C9.886 12.511 11.342 12 12.914 12c1.572 0 3.028.511 4.23 1.342M9 6.75A2.25 2.25 0 1113.5 6.75 2.25 2.25 0 019 6.75zm6.75 10.5a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zM3.75 15a2.25 2.25 0 114.5 0 2.25 2.25 0 01-4.5 0z" />
-                    </svg>
-                  </button>
-                  <button @click="viewDetail(k.id_kegiatan)"
-                    class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700" title="Lihat">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </button>
-                  <!-- <button @click="editKegiatan(k.id_kegiatan)"
-                    class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-blue-600" title="Edit">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                  <button @click="duplicateKegiatan(k)"
-                    class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-indigo-600" title="Duplikat">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V9a2 2 0 012-2z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7V5a2 2 0 012-2h8" />
-                    </svg>
-                  </button> -->
-                  <button @click="deleteKegiatan(k.id_kegiatan)"
-                    class="p-2 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-red-600" title="Hapus">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr v-if="filteredKegiatan.length === 0 && kegiatan.length > 0">
-              <td colspan="8" class="px-5 py-8 text-center text-slate-500">
-                Tidak ada kegiatan yang sesuai dengan filter
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <!-- Card Body -->
+        <div class="px-4 pb-3">
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-[#65676B] mb-2">
+            <span class="flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+              {{ getKegiatanLocationLabel(k) }}
+            </span>
+            <span class="flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+              {{ getUnitKerjaLabel(k) }}
+            </span>
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-[#F0F2F5] text-[12px] font-medium text-[#050505]">
+              {{ getMetodeLabel(k.metode_pelaksanaan) }}
+            </span>
+          </div>
+          <p v-if="k.peserta_ringkasan" class="text-[13px] text-[#65676B]">{{ k.peserta_ringkasan }}</p>
+        </div>
+
+        <!-- Card Actions -->
+        <div class="border-t border-[#E4E6E9] px-2 py-1 flex">
+          <button @click="shareKegiatanPublikLink(k)"
+            class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] transition text-[14px] font-semibold text-[#65676B]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+            Share Link
+          </button>
+          <div class="w-px bg-[#E4E6E9] my-1"></div>
+          <button @click="sharePublicPesertaLink(k)"
+            class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] transition text-[14px] font-semibold text-[#65676B]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C9.886 12.511 11.342 12 12.914 12c1.572 0 3.028.511 4.23 1.342M9 6.75A2.25 2.25 0 1113.5 6.75 2.25 2.25 0 019 6.75zm6.75 10.5a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zM3.75 15a2.25 2.25 0 114.5 0 2.25 2.25 0 01-4.5 0z"/></svg>
+            Link Peserta
+          </button>
+          <div class="w-px bg-[#E4E6E9] my-1"></div>
+          <button @click="viewDetail(k.id_kegiatan)"
+            class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] transition text-[14px] font-semibold text-[#65676B]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            Detail
+          </button>
+        </div>
       </div>
 
       <!-- Pagination -->
       <div v-if="kegiatan.length > 0"
-        class="px-5 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p class="text-sm text-slate-500">
-          Menampilkan {{ paginationFrom }}-{{ paginationTo }} dari {{ filteredKegiatan.length }} data
+        class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p class="text-[13px] text-[#65676B]">
+          {{ paginationFrom }}-{{ paginationTo }} dari {{ filteredKegiatan.length }}
         </p>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1">
           <button @click="goToPage(currentPage - 1)" :disabled="currentPage <= 1"
-            class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50"
-            title="Halaman sebelumnya">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
+            class="px-3 py-1.5 rounded-lg hover:bg-[#F0F2F5] text-[#1877F2] disabled:opacity-40 transition text-[13px] font-medium">
+            &larr; Prev
           </button>
           <button v-for="page in paginationPages" :key="page" @click="goToPage(page)"
-            class="px-4 py-2 rounded-lg font-medium"
-            :class="page === currentPage ? 'bg-blue-600 text-white' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'">
+            class="w-8 h-8 rounded-lg text-[13px] font-semibold transition"
+            :class="page === currentPage ? 'bg-[#1877F2] text-white' : 'hover:bg-[#F0F2F5] text-[#1877F2]'">
             {{ page }}
           </button>
           <button @click="goToPage(currentPage + 1)" :disabled="currentPage >= totalPages"
-            class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-600 disabled:opacity-50"
-            title="Halaman berikutnya">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
+            class="px-3 py-1.5 rounded-lg hover:bg-[#F0F2F5] text-[#1877F2] disabled:opacity-40 transition text-[13px] font-medium">
+            Next &rarr;
           </button>
         </div>
       </div>
@@ -233,10 +159,10 @@
   </div>
 
   <!-- Modal Tambah/Edit -->
-  <div v-if="showAddModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+  <div v-if="showAddModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between p-6 border-b border-slate-100 sticky top-0 bg-white">
-        <h3 class="text-xl font-bold text-slate-800">{{ isViewing ? 'Detail' : editingId ? 'Edit' : 'Tambah' }} Kegiatan</h3>
+      <div class="flex items-center justify-between p-6 border-b border-[#E4E6E9] sticky top-0 bg-white">
+        <h3 class="text-[17px] font-bold text-[#050505]">{{ isViewing ? 'Detail' : editingId ? 'Edit' : 'Tambah' }} Kegiatan</h3>
         <button @click="showAddModal = false" class="text-slate-400 hover:text-slate-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -424,6 +350,82 @@
                   </div>
                 </div>
               </div>
+            </div>
+            <div class="md:col-span-2">
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h5 class="text-sm font-semibold text-slate-700">Jadwal Harian</h5>
+                  <p class="text-xs text-slate-400 mt-0.5">Isi jadwal per hari. Materi akan dihitung JP-nya otomatis. Istirahat tidak dihitung sebagai JP.</p>
+                </div>
+                <div class="flex gap-2">
+                  <button v-if="formData.tanggal_mulai && formData.tanggal_selesai" type="button" @click="generateJadwalFromDates"
+                    class="text-xs px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium">
+                    Generate dari Tanggal
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="jadwalKelasList.length > 1" class="flex flex-wrap gap-2 mb-4">
+                <button v-for="(k, ki) in jadwalKelasList" :key="ki" type="button" @click="switchJadwalKelas(ki)"
+                  class="px-3 py-1.5 text-xs rounded-lg font-medium transition"
+                  :class="activeJadwalKelas === ki ? 'bg-violet-600 text-white' : 'bg-violet-100 text-violet-700 hover:bg-violet-200'">
+                  {{ k.nama_kelas }}
+                  <span class="ml-1 opacity-70">({{ getJadwalForKelas(k.id_kelas).length }} hari)</span>
+                </button>
+              </div>
+
+              <div v-if="jadwalHarian.length > 0" class="space-y-4">
+                <div v-for="(day, di) in jadwalHarian" :key="di" class="border border-slate-200 rounded-lg overflow-hidden">
+                  <div class="flex items-center justify-between bg-slate-50 px-4 py-3 border-b border-slate-200">
+                    <div class="flex items-center gap-3">
+                      <input v-model="day.hari" class="w-36 px-2 py-1 text-sm font-semibold border border-slate-200 rounded focus:border-blue-500 focus:outline-none" />
+                      <input type="date" v-model="day.tanggal" class="px-2 py-1 text-sm border border-slate-200 rounded focus:border-blue-500 focus:outline-none" />
+                      <span class="text-xs text-slate-400 ml-2">Total JP: {{ hitungTotalJP(day) }}</span>
+                    </div>
+                    <button type="button" @click="removeJadwalDay(di)" class="text-xs text-red-600 hover:text-red-700 font-medium">Hapus Hari</button>
+                  </div>
+
+                  <div class="p-4 space-y-2">
+                    <div v-for="(item, ii) in day.items" :key="ii" class="flex items-start gap-2 p-2 rounded-lg" :class="item.tipe === 'istirahat' ? 'bg-amber-50' : 'bg-white border border-slate-100'">
+                      <div class="flex items-center gap-1 pt-1">
+                        <span class="text-xs text-slate-400 w-5 text-center">{{ ii + 1 }}</span>
+                        <select v-model="item.tipe" class="px-1.5 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none bg-white" :class="item.tipe === 'istirahat' ? 'border-amber-300' : ''">
+                          <option value="materi">Materi</option>
+                          <option value="istirahat">Istirahat</option>
+                        </select>
+                      </div>
+
+                      <div class="flex-1 grid gap-2" :class="item.tipe === 'istirahat' ? 'grid-cols-[100px_100px_1fr]' : 'grid-cols-[100px_100px_60px_1fr_120px_100px]'">
+                        <input type="time" v-model="item.jam_mulai" @change="onJamMulaiChange(di, ii)" class="px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none" />
+                        <input type="time" v-model="item.jam_selesai" @change="onJamSelesaiChange(di, ii)" class="px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none" />
+                        <template v-if="item.tipe !== 'istirahat'">
+                          <div class="flex items-center">
+                            <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">{{ item.jp || 0 }} JP</span>
+                          </div>
+                          <input v-model="item.kegiatan" class="px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none" placeholder="Nama materi" />
+                          <select v-model="item.kategori" class="px-1.5 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none bg-white">
+                            <option value="Umum">Umum</option>
+                            <option value="Pokok">Pokok</option>
+                            <option value="Penunjang">Penunjang</option>
+                          </select>
+                          <input v-model="item.pj" class="px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none" placeholder="PJ" />
+                        </template>
+                        <template v-else>
+                          <input v-model="item.kegiatan" class="px-2 py-1 border border-amber-200 rounded text-xs focus:border-amber-400 focus:outline-none bg-amber-50" placeholder="Keterangan (opsional)" />
+                        </template>
+                      </div>
+
+                      <button type="button" @click="day.items.splice(ii, 1)" class="text-red-400 hover:text-red-600 pt-1">&times;</button>
+                    </div>
+                  </div>
+
+                  <div class="flex gap-2 px-4 pb-4">
+                    <button type="button" @click="addJadwalItem(di, 'materi')" class="text-xs px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium">+ Materi</button>
+                    <button type="button" @click="addJadwalItem(di, 'istirahat')" class="text-xs px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 font-medium">+ Istirahat</button>
+                  </div>
+                </div>
+              </div>
+              <p v-else class="text-xs text-slate-400">Klik "Generate dari Tanggal" untuk membuat jadwal otomatis berdasarkan rentang tanggal kegiatan.</p>
             </div>
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-slate-700 mb-2">Flyer</label>
@@ -747,6 +749,33 @@
           </div>
         </div>
 
+        <div v-if="loadedJadwal.length > 0" class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Jadwal Harian</h4>
+          <div v-for="(day, di) in loadedJadwal" :key="di" class="mb-4">
+            <h5 class="text-sm font-bold text-slate-700 mb-2">{{ day.hari }} - {{ formatDateShort(day.tanggal) }}</h5>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-slate-600">
+                  <tr>
+                    <th class="px-3 py-1.5 text-left w-28">Waktu</th>
+                    <th class="px-3 py-1.5 text-left">Kegiatan / Materi</th>
+                    <th class="px-3 py-1.5 text-center w-12">JP</th>
+                    <th class="px-3 py-1.5 text-left w-28">PJ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(item, ii) in day.items" :key="ii" class="border-t" :class="item.tipe === 'istirahat' ? 'bg-amber-50' : ''">
+                    <td class="px-3 py-1.5">{{ item.jam_mulai || item.waktu }} - {{ item.jam_selesai || '' }}</td>
+                    <td class="px-3 py-1.5" :class="item.tipe === 'istirahat' ? 'text-amber-600 italic' : ''">{{ item.kegiatan || '-' }}</td>
+                    <td class="px-3 py-1.5 text-center">{{ item.tipe === 'istirahat' ? '-' : item.jp }}</td>
+                    <td class="px-3 py-1.5">{{ item.pj || '-' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <div class="border-b border-slate-100 pb-6">
           <h4 class="text-lg font-semibold text-slate-800 mb-4">Daftar ATK</h4>
           <div v-if="atkItems.length > 0" class="overflow-x-auto">
@@ -876,6 +905,8 @@
             class="flex-1 min-w-[140px] px-4 py-2.5 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-700">Lihat Peserta</button>
           <button type="button" @click="openTestLaporan"
             class="flex-1 min-w-[140px] px-4 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700">Laporan Test</button>
+          <button type="button" @click="openBuatLaporan"
+            class="flex-1 min-w-[140px] px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">Buat Laporan</button>
           <button type="button" @click="duplicateKegiatan(selectedKegiatan)"
             class="flex-1 min-w-[140px] px-4 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700">Duplikat</button>
           <button type="button" @click="openEditFromDetail"
@@ -889,9 +920,9 @@
 
   <!-- Modal Detail Penugasan -->
   <div v-if="showSuratTugasModal && selectedSuratTugas"
-    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-      <div class="flex items-center justify-between p-6 border-b border-slate-100 sticky top-0 bg-white">
+      <div class="flex items-center justify-between p-6 border-b border-[#E4E6E9] sticky top-0 bg-white">
         <h3 class="text-2xl font-bold text-slate-800">Detail Penugasan</h3>
         <button @click="showSuratTugasModal = false" class="text-slate-400 hover:text-slate-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1044,7 +1075,7 @@
     class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
     <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8">
       <div
-        class="flex items-center justify-between p-6 border-b border-slate-100 sticky top-0 bg-white rounded-t-2xl print:hidden">
+        class="flex items-center justify-between p-6 border-b border-[#E4E6E9] sticky top-0 bg-white rounded-t-2xl print:hidden">
         <h3 class="text-2xl font-bold text-slate-800">Biodata Peserta</h3>
         <button @click="showBiodataModal = false" class="text-slate-400 hover:text-slate-600">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1122,17 +1153,22 @@
               <div>{{ selectedPeserta.kabupaten_kota || '-' }}</div>
             </div>
             <div class="grid grid-cols-3 gap-2 mb-2">
-              <div class="font-semibold">7. No. HP/WhatsApp</div>
+              <div class="font-semibold">7. Provinsi</div>
+              <div class="text-center">:</div>
+              <div>{{ selectedPeserta.provinsi || '-' }}</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 mb-2">
+              <div class="font-semibold">8. No. HP/WhatsApp</div>
               <div class="text-center">:</div>
               <div>{{ selectedPeserta.no_hp || '-' }}</div>
             </div>
             <div class="grid grid-cols-3 gap-2 mb-2">
-              <div class="font-semibold">8. E-Mail</div>
+              <div class="font-semibold">9. E-Mail</div>
               <div class="text-center">:</div>
               <div>{{ selectedPeserta.email || '-' }}</div>
             </div>
             <div class="grid grid-cols-3 gap-2 mb-2">
-              <div class="font-semibold">9. Peran Dalam Kegiatan</div>
+              <div class="font-semibold">10. Peran Dalam Kegiatan</div>
               <div class="text-center">:</div>
               <div>{{ selectedPeserta.peran || 'Peserta' }}</div>
             </div>
@@ -1304,6 +1340,8 @@ import { useRouter } from 'vue-router'
 import database from '../data/index.js'
 import { useAuthStore } from '@/stores/auth.js'
 import { listKegiatanTimSaya, getKegiatan, createKegiatan, updateKegiatan, removeKegiatan } from '@/services/kegiatan'
+import { getKelasByKegiatan } from '@/services/kelas'
+import { saveJadwal } from '@/services/laporan'
 import { fetchAPI, postAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Spinner from '@/components/Spinner.vue'
@@ -1803,6 +1841,11 @@ export default {
     const tpkItems = ref([])
     const tpkError = ref('')
     const editingTpkIndex = ref(null)
+    const jadwalKelasList = ref([])
+    const activeJadwalKelas = ref(0)
+    const jadwalDataStore = ref({})
+    const jadwalHarian = ref([])
+    const loadedJadwal = ref([])
     const paketSoalItems = ref([])
     const allPaketSoal = ref([])
     const paketSoalSearch = ref('')
@@ -2075,6 +2118,11 @@ export default {
       tpkItems.value = []
       tpkError.value = ''
       editingTpkIndex.value = null
+      jadwalKelasList.value = []
+      activeJadwalKelas.value = 0
+      jadwalDataStore.value = {}
+      jadwalHarian.value = []
+      loadedJadwal.value = []
       paketSoalItems.value = []
       paketSoalSearch.value = ''
       showPaketSoalDropdown.value = false
@@ -2303,6 +2351,8 @@ export default {
         loadKegiatanAtkItems(selectedKegiatan.value)
         loadKegiatanTpkItems(selectedKegiatan.value)
         loadKegiatanPaketSoal(selectedKegiatan.value)
+        loadKelasForJadwal(selectedKegiatan.value.id_kegiatan)
+        loadJadwalForView(selectedKegiatan.value.id_kegiatan)
         editingId.value = null
         isViewing.value = true
         showAddModal.value = true
@@ -2326,6 +2376,33 @@ export default {
         loadKegiatanTpkItems(selectedKegiatan.value)
         loadKegiatanPaketSoal(selectedKegiatan.value)
         loadAllPaketSoal()
+
+        // Load jadwal from API into form state for editing
+        const id = selectedKegiatan.value.id_kegiatan
+        await loadKelasForJadwal(id)
+        try {
+          const { getJadwal: fetchJadwal } = await import('@/services/laporan')
+          const result = await fetchJadwal(id)
+          if (result.jadwal_per_kelas?.length > 0) {
+            const store = {}
+            result.jadwal_per_kelas.forEach(k => {
+              store[String(k.id_kelas)] = k.jadwal || []
+            })
+            jadwalDataStore.value = store
+            activeJadwalKelas.value = 0
+            jadwalHarian.value = store[String(result.jadwal_per_kelas[0].id_kelas)] || []
+          } else if (result.jadwal_harian?.length > 0) {
+            jadwalDataStore.value = { default: result.jadwal_harian }
+            activeJadwalKelas.value = 0
+            jadwalHarian.value = result.jadwal_harian
+          } else {
+            jadwalDataStore.value = {}
+            jadwalHarian.value = []
+          }
+        } catch {
+          jadwalDataStore.value = {}
+          jadwalHarian.value = []
+        }
       }
     }
 
@@ -2633,6 +2710,208 @@ export default {
       tpkError.value = ''
     }
 
+    const generateJadwalFromDates = () => {
+      const start = new Date(formData.value.tanggal_mulai)
+      const end = new Date(formData.value.tanggal_selesai)
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return
+      const labels = ['Pertama', 'Kedua', 'Ketiga', 'Keempat', 'Kelima', 'Keenam', 'Ketujuh']
+      const makeJadwal = () => {
+        const days = []
+        const current = new Date(start)
+        let i = 0
+        while (current <= end) {
+          days.push({
+            hari: `Hari ${labels[i] || (i + 1)}`,
+            tanggal: current.toISOString().split('T')[0],
+            items: [
+              { tipe: 'materi', jam_mulai: '08:00', jam_selesai: '10:00', jp: 2, kegiatan: '', kategori: 'Pokok', pj: '' },
+              { tipe: 'istirahat', jam_mulai: '10:00', jam_selesai: '10:15', jp: 0, kegiatan: 'Rehat', kategori: '', pj: '' },
+              { tipe: 'materi', jam_mulai: '10:15', jam_selesai: '12:15', jp: 2, kegiatan: '', kategori: 'Pokok', pj: '' },
+              { tipe: 'istirahat', jam_mulai: '12:15', jam_selesai: '13:30', jp: 0, kegiatan: 'Isoma', kategori: '', pj: '' },
+              { tipe: 'materi', jam_mulai: '13:30', jam_selesai: '15:30', jp: 2, kegiatan: '', kategori: 'Pokok', pj: '' }
+            ]
+          })
+          current.setDate(current.getDate() + 1)
+          i++
+        }
+        return days
+      }
+
+      if (jadwalKelasList.value.length > 0) {
+        const store = {}
+        jadwalKelasList.value.forEach(k => {
+          store[String(k.id_kelas)] = makeJadwal()
+        })
+        jadwalDataStore.value = store
+        activeJadwalKelas.value = 0
+        jadwalHarian.value = store[String(jadwalKelasList.value[0].id_kelas)] || []
+      } else {
+        jadwalDataStore.value = { default: makeJadwal() }
+        activeJadwalKelas.value = 0
+        jadwalHarian.value = jadwalDataStore.value.default
+      }
+    }
+
+    const removeJadwalDay = (index) => {
+      jadwalHarian.value.splice(index, 1)
+    }
+
+    const loadKelasForJadwal = async (idKegiatan) => {
+      if (!idKegiatan) { jadwalKelasList.value = []; return }
+      try {
+        const data = await getKelasByKegiatan(idKegiatan)
+        const list = Array.isArray(data) ? data : (data?.data || [])
+        jadwalKelasList.value = list.length > 0
+          ? list.map(k => ({ id_kelas: k.id_kelas, nama_kelas: k.nama_kelas }))
+          : []
+      } catch {
+        jadwalKelasList.value = []
+      }
+    }
+
+    const loadJadwalForView = async (idKegiatan) => {
+      loadedJadwal.value = []
+      if (!idKegiatan) return
+      try {
+        const { getJadwal: fetchJadwal } = await import('@/services/laporan')
+        const result = await fetchJadwal(idKegiatan)
+        if (result.jadwal_per_kelas?.length > 0) {
+          loadedJadwal.value = result.jadwal_per_kelas.flatMap(k => k.jadwal || [])
+        } else if (result.jadwal_harian?.length > 0) {
+          loadedJadwal.value = result.jadwal_harian
+        }
+      } catch { /* optional */ }
+    }
+
+    const formatDateShort = (value) => {
+      if (!value) return '-'
+      const d = new Date(value)
+      if (Number.isNaN(d.getTime())) return value
+      return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+    }
+
+    const switchJadwalKelas = (index) => {
+      const currentKey = getKelasKey(activeJadwalKelas.value)
+      jadwalDataStore.value[currentKey] = [...jadwalHarian.value]
+      activeJadwalKelas.value = index
+      const newKey = getKelasKey(index)
+      if (!jadwalDataStore.value[newKey]) {
+        jadwalDataStore.value[newKey] = []
+      }
+      jadwalHarian.value = jadwalDataStore.value[newKey]
+    }
+
+    const getKelasKey = (index) => {
+      if (jadwalKelasList.value.length > 0 && jadwalKelasList.value[index]) {
+        return String(jadwalKelasList.value[index].id_kelas)
+      }
+      return 'default'
+    }
+
+    const getJadwalForKelas = (idKelas) => {
+      return jadwalDataStore.value[String(idKelas)] || []
+    }
+
+    const addJadwalItem = (dayIndex, tipe) => {
+      const day = jadwalHarian.value[dayIndex]
+      if (!day) return
+      const lastItem = day.items[day.items.length - 1]
+      const defaultJamMulai = lastItem?.jam_selesai || '08:00'
+      const parts = defaultJamMulai.split(':')
+      const defaultJamSelesai = parts.length === 2 ? `${String(Math.min(23, Number(parts[0]) + 2)).padStart(2, '0')}:${parts[1]}` : '10:00'
+      day.items.push({
+        tipe,
+        jam_mulai: defaultJamMulai,
+        jam_selesai: tipe === 'istirahat' ? defaultJamSelesai.replace(/\d+/, m => String(Math.min(23, Number(m) + 0)).padStart(2, '0')) : defaultJamSelesai,
+        jp: 0,
+        kegiatan: tipe === 'istirahat' ? 'Rehat' : '',
+        kategori: tipe === 'istirahat' ? '' : 'Pokok',
+        pj: ''
+      })
+      updateJP(day.items[day.items.length - 1])
+    }
+
+    const updateJP = (item) => {
+      if (!item.jam_mulai || !item.jam_selesai) { item.jp = 0; return }
+      const [sh, sm] = item.jam_mulai.split(':').map(Number)
+      const [eh, em] = item.jam_selesai.split(':').map(Number)
+      if ([sh, sm, eh, em].some(v => Number.isNaN(v))) { item.jp = 0; return }
+      const diffMinutes = (eh * 60 + em) - (sh * 60 + sm)
+      item.jp = item.tipe === 'istirahat' ? 0 : Math.max(0, Math.round((diffMinutes / 60) * 10) / 10)
+    }
+
+    const timeToMinutes = (t) => {
+      if (!t) return 0
+      const [h, m] = t.split(':').map(Number)
+      return (h || 0) * 60 + (m || 0)
+    }
+
+    const minutesToTime = (mins) => {
+      const h = Math.floor(mins / 60)
+      const m = mins % 60
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
+    }
+
+    const cascadeTimes = (day, startIndex) => {
+      for (let i = startIndex; i < day.items.length; i++) {
+        const current = day.items[i]
+        const prev = day.items[i - 1]
+        if (prev && prev.jam_selesai) {
+          const prevEnd = timeToMinutes(prev.jam_selesai)
+          const curStart = timeToMinutes(current.jam_mulai)
+          if (curStart < prevEnd) {
+            current.jam_mulai = prev.jam_selesai
+            const duration = timeToMinutes(current.jam_selesai) - timeToMinutes(current.jam_mulai)
+            if (duration <= 0) {
+              const defaultDuration = current.tipe === 'istirahat' ? 15 : 120
+              current.jam_selesai = minutesToTime(prevEnd + defaultDuration)
+            }
+            updateJP(current)
+          }
+        }
+      }
+    }
+
+    const onJamMulaiChange = (dayIndex, itemIndex) => {
+      const day = jadwalHarian.value[dayIndex]
+      if (!day) return
+      const item = day.items[itemIndex]
+      if (!item) return
+
+      if (itemIndex > 0) {
+        const prev = day.items[itemIndex - 1]
+        if (prev.jam_selesai && timeToMinutes(item.jam_mulai) < timeToMinutes(prev.jam_selesai)) {
+          item.jam_mulai = prev.jam_selesai
+        }
+      }
+
+      if (!item.jam_selesai || timeToMinutes(item.jam_selesai) <= timeToMinutes(item.jam_mulai)) {
+        const duration = item.tipe === 'istirahat' ? 15 : 120
+        item.jam_selesai = minutesToTime(timeToMinutes(item.jam_mulai) + duration)
+      }
+
+      updateJP(item)
+      cascadeTimes(day, itemIndex + 1)
+    }
+
+    const onJamSelesaiChange = (dayIndex, itemIndex) => {
+      const day = jadwalHarian.value[dayIndex]
+      if (!day) return
+      const item = day.items[itemIndex]
+      if (!item) return
+
+      if (timeToMinutes(item.jam_selesai) <= timeToMinutes(item.jam_mulai)) {
+        item.jam_selesai = minutesToTime(timeToMinutes(item.jam_mulai) + (item.tipe === 'istirahat' ? 15 : 60))
+      }
+
+      updateJP(item)
+      cascadeTimes(day, itemIndex + 1)
+    }
+
+    const hitungTotalJP = (day) => {
+      return day.items.reduce((sum, item) => sum + (item.tipe === 'istirahat' ? 0 : (Number(item.jp) || 0)), 0)
+    }
+
     const removeTpkItem = (index) => {
       tpkItems.value.splice(index, 1)
       if (editingTpkIndex.value === index) {
@@ -2773,6 +3052,32 @@ export default {
           loadKegiatanTpkItems(item)
           loadKegiatanPaketSoal(item)
           loadAllPaketSoal()
+
+          // Load jadwal from API into form state
+          await loadKelasForJadwal(id)
+          try {
+            const { getJadwal: fetchJadwal } = await import('@/services/laporan')
+            const result = await fetchJadwal(id)
+            if (result.jadwal_per_kelas?.length > 0) {
+              const store = {}
+              result.jadwal_per_kelas.forEach(k => {
+                store[String(k.id_kelas)] = k.jadwal || []
+              })
+              jadwalDataStore.value = store
+              activeJadwalKelas.value = 0
+              jadwalHarian.value = store[String(result.jadwal_per_kelas[0].id_kelas)] || []
+            } else if (result.jadwal_harian?.length > 0) {
+              jadwalDataStore.value = { default: result.jadwal_harian }
+              activeJadwalKelas.value = 0
+              jadwalHarian.value = result.jadwal_harian
+            } else {
+              jadwalDataStore.value = {}
+              jadwalHarian.value = []
+            }
+          } catch {
+            jadwalDataStore.value = {}
+            jadwalHarian.value = []
+          }
         }
       } catch (err) {
         const item = kegiatan.value.find(k => String(k.id_kegiatan) === String(id))
@@ -2970,6 +3275,31 @@ export default {
           })
         }
 
+        // Save jadwal harian
+        const savedKegiatanId = editingId.value || created?.id_kegiatan
+        if (savedKegiatanId && Object.keys(jadwalDataStore.value).length > 0) {
+          try {
+            const jadwalArray = []
+            for (const [kelasKey, days] of Object.entries(jadwalDataStore.value)) {
+              const idKelas = kelasKey === 'default' ? null : Number(kelasKey)
+              days.forEach((day, idx) => {
+                jadwalArray.push({
+                  hari: day.hari,
+                  tanggal: day.tanggal,
+                  items: day.items || [],
+                  id_kelas: idKelas,
+                  urutan: idx
+                })
+              })
+            }
+            if (jadwalArray.length > 0) {
+              await saveJadwal(savedKegiatanId, jadwalArray)
+            }
+          } catch (e) {
+            console.error('Gagal menyimpan jadwal:', e)
+          }
+        }
+
         showAddModal.value = false
         editingId.value = null
         resetForm()
@@ -3003,6 +3333,10 @@ export default {
 
     const openTestLaporan = () => {
       router.push({ name: 'test-laporan', params: { id: selectedKegiatan.value?.id_kegiatan } })
+    }
+
+    const openBuatLaporan = () => {
+      router.push({ name: 'buat-laporan', params: { id: selectedKegiatan.value?.id_kegiatan } })
     }
 
     const openPesertaListFromDetail = () => {
@@ -3705,6 +4039,23 @@ export default {
       editTpkItem,
       cancelEditTpk,
       removeTpkItem,
+      jadwalKelasList,
+      activeJadwalKelas,
+      jadwalDataStore,
+      jadwalHarian,
+      loadedJadwal,
+      generateJadwalFromDates,
+      removeJadwalDay,
+      loadKelasForJadwal,
+      switchJadwalKelas,
+      getJadwalForKelas,
+      loadJadwalForView,
+      formatDateShort,
+      addJadwalItem,
+      updateJP,
+      onJamMulaiChange,
+      onJamSelesaiChange,
+      hitungTotalJP,
       paketSoalItems,
       allPaketSoal,
       paketSoalSearch,
@@ -3718,6 +4069,7 @@ export default {
       getKegiatanLocationLabel,
       openPesertaList,
       openTestLaporan,
+      openBuatLaporan,
       handleSuratTugas,
       openBiodataModal,
       printBiodata,
