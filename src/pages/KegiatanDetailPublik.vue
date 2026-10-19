@@ -97,6 +97,41 @@
           </div>
         </section>
 
+        <section v-if="jadwalPerKelas.length > 0" class="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
+          <h2 class="text-lg font-semibold text-white mb-4">Jadwal Kegiatan</h2>
+          <div v-for="kelas in jadwalPerKelas" :key="kelas.nama_kelas" class="mb-6 last:mb-0">
+            <h3 v-if="jadwalPerKelas.length > 1" class="text-base font-semibold text-cyan-300 mb-3">{{ kelas.nama_kelas }}</h3>
+            <div v-for="day in kelas.jadwal" :key="day.hari" class="mb-4 last:mb-0">
+              <h4 class="text-sm font-semibold text-white mb-2">{{ day.hari }} - {{ formatDate(day.tanggal) }}</h4>
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="text-blue-200">
+                    <tr>
+                      <th class="px-3 py-2 text-left font-medium w-28">Waktu</th>
+                      <th class="px-3 py-2 text-left font-medium">Kegiatan / Materi</th>
+                      <th class="px-3 py-2 text-center font-medium w-12">JP</th>
+                      <th class="px-3 py-2 text-left font-medium w-28">PJ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(item, ii) in day.items" :key="ii" class="border-t border-white/10" :class="item.tipe === 'istirahat' ? 'bg-amber-500/10' : ''">
+                      <td class="px-3 py-2 text-blue-100">{{ item.jam_mulai }} - {{ item.jam_selesai }}</td>
+                      <td class="px-3 py-2" :class="item.tipe === 'istirahat' ? 'text-amber-300 italic' : 'text-white'">{{ item.kegiatan || '-' }}</td>
+                      <td class="px-3 py-2 text-center text-blue-100">{{ item.tipe === 'istirahat' ? '-' : item.jp }}</td>
+                      <td class="px-3 py-2 text-blue-100">{{ item.pj || '-' }}</td>
+                    </tr>
+                    <tr class="border-t border-white/10 bg-white/5">
+                      <td colspan="2" class="px-3 py-2 text-right text-blue-200 font-medium">Total JP</td>
+                      <td class="px-3 py-2 text-center text-white font-bold">{{ day.items.reduce((s, i) => s + (i.tipe === 'istirahat' ? 0 : Number(i.jp) || 0), 0) }}</td>
+                      <td class="px-3 py-2"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
             <h2 class="text-lg font-semibold text-white">Link Publik</h2>
@@ -185,6 +220,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchAPI } from '@/services/api'
+import { getJadwal } from '@/services/laporan'
 import database from '@/data/index.js'
 import { buildPublicUrl as buildAppUrl, buildStorageUrl } from '@/utils/url'
 import { getKegiatanKabupatenKotaLabel, getKegiatanLocationItems, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
@@ -396,6 +432,14 @@ export default {
 
     const tpkRows = computed(() => getKegiatanLocationItems(kegiatan.value))
 
+    const jadwalData = ref({ jadwal_per_kelas: [], jadwal_harian: [] })
+
+    const jadwalPerKelas = computed(() => {
+      if (jadwalData.value.jadwal_per_kelas?.length > 0) return jadwalData.value.jadwal_per_kelas
+      if (jadwalData.value.jadwal_harian?.length > 0) return [{ nama_kelas: 'Semua Peserta', jadwal: jadwalData.value.jadwal_harian }]
+      return []
+    })
+
     const isWithinKegiatanDateRange = computed(() => {
       const start = toDateOnly(kegiatan.value?.tanggal_mulai)
       const end = toDateOnly(kegiatan.value?.tanggal_selesai)
@@ -455,6 +499,10 @@ export default {
       } finally {
         if (!kegiatan.value) {
           errorMessage.value = 'Kegiatan tidak ditemukan.'
+        } else {
+          try {
+            jadwalData.value = await getJadwal(kegiatan.value.id_kegiatan)
+          } catch { /* jadwal optional */ }
         }
         isLoading.value = false
       }
@@ -533,6 +581,8 @@ export default {
       visibleBiodataLinks,
       resourceLinks,
       tpkRows,
+      jadwalData,
+      jadwalPerKelas,
       isWithinKegiatanDateRange,
       isLastDayOfKegiatan,
       evaluasiLinks,

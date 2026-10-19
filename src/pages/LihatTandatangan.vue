@@ -99,8 +99,8 @@
       </div>
 
       <!-- Fullscreen Modal -->
-      <div v-if="showFullsize" @click="showFullsize = false" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div @click.stop class="bg-white rounded-lg shadow-2xl max-w-2xl max-h-96 overflow-auto p-4">
+      <div v-if="showFullsize" @click="showFullsize = false" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div @click.stop class="bg-white rounded-2xl shadow-2xl max-w-2xl max-h-96 overflow-auto p-4">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-xl font-bold text-slate-800">Tandatangan - Ukuran Penuh</h3>
             <button @click="showFullsize = false" class="text-2xl text-slate-500 hover:text-slate-700">

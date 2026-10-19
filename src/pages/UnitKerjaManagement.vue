@@ -220,9 +220,9 @@
     </div>
 
     <!-- Modal Tambah/Edit Unit Kerja -->
-    <div v-if="showAddUnitModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
+    <div v-if="showAddUnitModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-6 border-b border-[#E4E6E9] sticky top-0 bg-white">
           <h3 class="text-lg sm:text-xl font-bold text-gray-800">{{ editingUnitId ? 'Edit' : 'Tambah' }} Unit Kerja</h3>
           <button @click="showAddUnitModal = false" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -310,9 +310,9 @@
     </div>
 
     <!-- Modal Detail Unit Kerja -->
-    <div v-if="showDetailModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
+    <div v-if="showDetailModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-6 border-b border-[#E4E6E9] sticky top-0 bg-white">
           <h3 class="text-lg sm:text-xl font-bold text-gray-800">Detail Unit Kerja</h3>
           <button @click="showDetailModal = false" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -377,9 +377,9 @@
     </div>
 
     <!-- Modal Edit Sub Unit -->
-    <div v-if="showEditSubUnitModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
+    <div v-if="showEditSubUnitModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-6 border-b border-[#E4E6E9] sticky top-0 bg-white">
           <h3 class="text-lg sm:text-xl font-bold text-gray-800">Edit Sub Unit Kerja</h3>
           <button @click="showEditSubUnitModal = false" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

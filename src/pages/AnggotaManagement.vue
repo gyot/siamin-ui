@@ -153,9 +153,9 @@
     </div>
 
     <!-- Modal Tambah/Edit Anggota -->
-    <div v-if="showAddMemberModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between p-6 border-b border-gray-200 sticky top-0 bg-white">
+    <div v-if="showAddMemberModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-6 border-b border-[#E4E6E9] sticky top-0 bg-white">
           <h3 class="text-lg sm:text-xl font-bold text-gray-800">{{ editingMemberId ? 'Edit' : 'Tambah' }} Anggota Tim</h3>
           <button @click="showAddMemberModal = false" class="text-gray-400 hover:text-gray-600">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

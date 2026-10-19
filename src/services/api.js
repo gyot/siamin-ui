@@ -391,6 +391,11 @@ export const deleteAPI = async (endpoint, id) => {
   }
 }
 
+export const registerPeserta = async (data) => {
+  const response = await apiClient.post('auth/register', data, { includeAuth: false })
+  return response.data
+}
+
 export default {
   fetchAPI,
   postAPI,

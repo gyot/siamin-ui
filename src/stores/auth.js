@@ -356,6 +356,71 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  const loginUnified = async (username, password) => {
+    isLoading.value = true
+    error.value = null
+
+    try {
+      const response = await apiClient.post(
+        'auth/login',
+        { email: username, password },
+        { includeAuth: false }
+      )
+      const res = response.data || {}
+      const payload = res?.data || res
+
+      if (!payload?.token || !payload?.user) {
+        throw new Error('Format response API tidak valid')
+      }
+
+      token.value = payload.token
+      const resolvedUnitKerjaIds = pickNonEmptyIds(
+        payload?.unit_kerja_id,
+        payload?.user?.unit_kerja_id
+      )
+      const resolvedUnitKerja = Array.isArray(payload?.unit_kerja) ? payload.unit_kerja : []
+
+      const isPesertaLogin = payload.login_as === 'peserta'
+
+      currentUser.value = {
+        id: payload.user.id || payload.user.id_user || payload.user.id_akun_peserta,
+        participant_id: payload.user.id_peserta || null,
+        name: payload.user.name || payload.user.nama || payload.user.nama_lengkap || username,
+        username: payload.user.username || username,
+        nip: payload.user.nip || null,
+        jabatan: payload.user.nama_jabatan || payload.user.jabatan || null,
+        instansi: payload.user.instansi || payload.user.nama_instansi || '-',
+        email: payload.user.email || null,
+        unit_kerja_id: resolvedUnitKerjaIds,
+        unit_kerja: resolvedUnitKerja,
+        role: isPesertaLogin ? 'peserta' : (payload.user.role || 'admin'),
+        login_as: payload.login_as || 'unknown',
+        nama_jabatan: payload.user.nama_jabatan || null
+      }
+      userType.value = isPesertaLogin ? 'peserta' : 'admin'
+
+      localStorage.setItem('auth_token', payload.token)
+      localStorage.setItem('user_data', JSON.stringify(currentUser.value))
+      localStorage.setItem('user_type', isPesertaLogin ? 'peserta' : 'admin')
+      hasRestoredSession.value = true
+      hasRevalidatedSession.value = isPesertaLogin
+      fetchMePromise = null
+      applyUnitKerjaData(resolvedUnitKerjaIds, resolvedUnitKerja)
+
+      return true
+    } catch (err) {
+      const message = err?.response?.data?.message
+        || err?.response?.data?.errors?.email?.[0]
+        || err?.message
+        || 'Username atau password salah'
+      console.error('[Auth] Login unified gagal:', message)
+      error.value = message
+      return false
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   const logout = async () => {
     try {
       if (token.value && !String(token.value).startsWith('dummy-peserta-')) {
@@ -441,6 +506,7 @@ export const useAuthStore = defineStore('auth', () => {
     isPeserta,
     loginAdmin,
     loginPeserta,
+    loginUnified,
     logout,
     restoreAuth,
     fetchMe

@@ -18,7 +18,7 @@
 
     <!-- List Mode -->
     <div v-if="!selectedPaket" class="bg-white rounded-xl border border-slate-100 shadow-sm">
-      <div class="p-4 border-b border-slate-100">
+      <div class="p-4 border-b border-[#E4E6E9]">
         <input v-model="searchQuery" @input="debouncedSearch" type="text" placeholder="Cari paket soal..." class="w-full sm:w-80 px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none text-sm" />
       </div>
       <div class="overflow-x-auto">
@@ -39,7 +39,7 @@
             <tr v-else-if="paketList.length === 0">
               <td colspan="5" class="py-8 text-center text-slate-400">Belum ada paket soal</td>
             </tr>
-            <tr v-for="p in paketList" :key="p.id_paket_soal" class="border-b border-slate-100 hover:bg-slate-50">
+            <tr v-for="p in paketList" :key="p.id_paket_soal" class="border-b border-[#E4E6E9] hover:bg-slate-50">
               <td class="py-3 px-4">
                 <button @click="openSoalEditor(p)" class="font-medium text-blue-600 hover:text-blue-800 hover:underline">{{ p.nama_paket }}</button>
               </td>
@@ -93,7 +93,7 @@
 
       <!-- Soal List -->
       <div class="bg-white rounded-xl border border-slate-100 shadow-sm">
-        <div class="p-4 border-b border-slate-100">
+        <div class="p-4 border-b border-[#E4E6E9]">
           <h3 class="font-semibold text-slate-700">Daftar Soal ({{ soalList.length }})</h3>
         </div>
         <div v-if="loadingSoal" class="p-8 text-center text-slate-400">Memuat soal...</div>
@@ -145,9 +145,9 @@
     </div>
 
     <!-- Modal: Create/Edit Paket Soal -->
-    <div v-if="showPaketModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div v-if="showPaketModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
-        <div class="flex items-center justify-between p-6 border-b border-slate-100">
+        <div class="flex items-center justify-between p-6 border-b border-[#E4E6E9]">
           <h3 class="text-xl font-bold text-slate-800">{{ editingPaket ? 'Edit Paket Soal' : 'Tambah Paket Soal' }}</h3>
           <button @click="showPaketModal = false" class="text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>
@@ -175,9 +175,9 @@
     </div>
 
     <!-- Modal: Add Soal Manual -->
-    <div v-if="showSoalModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    <div v-if="showSoalModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between p-6 border-b border-slate-100 sticky top-0 bg-white">
+        <div class="flex items-center justify-between p-6 border-b border-[#E4E6E9] sticky top-0 bg-white">
           <h3 class="text-xl font-bold text-slate-800">Tambah Soal</h3>
           <button @click="showSoalModal = false" class="text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
         </div>

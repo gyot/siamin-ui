@@ -1,286 +1,242 @@
 <template>
-  <div class="p-6 bg-slate-50 min-h-screen">
-    <div class="mb-6">
-      <h1 class="text-2xl font-bold text-slate-800">Dashboard</h1>
-      <p class="text-slate-500">Selamat datang kembali, {{ profilePegawai?.nama || 'Admin' }}</p>
-      <p class="text-slate-600">Sistem Manajemen Informasi Kegiatan (SIMAIK) membantu Anda mengelola
-        kegiatan, peserta, penugasan, dan sertifikat digital secara terintegrasi.</p>
+  <div class="min-h-screen bg-[#F0F2F5]">
+    <!-- Stories-like Stats Bar -->
+    <div class="max-w-[1920px] mx-auto px-4 pt-4 pb-2">
+      <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        <div v-for="(stat, i) in statsCards" :key="i"
+          class="flex-shrink-0 w-44 h-24 rounded-xl overflow-hidden relative cursor-pointer hover:opacity-90 transition shadow-sm"
+          :class="stat.bg">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
+          <div class="absolute bottom-2 left-3 right-3">
+            <p class="text-white text-xl font-bold leading-none">{{ stat.value }}</p>
+            <p class="text-white/80 text-[11px] mt-0.5">{{ stat.label }}</p>
+          </div>
+          <div class="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center" :class="stat.iconBg">
+            <span class="text-sm" v-html="stat.icon"></span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- Profile Card -->
-    <div v-if="profilePegawai" class="mb-6 bg-white rounded-xl p-6 border border-slate-100 shadow-sm">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="md:col-span-1">
-          <div class="flex flex-col items-center">
-            <div
-              class="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white mb-3">
-              <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    <!-- Main 3-Column Layout -->
+    <div class="max-w-[1920px] mx-auto px-4 pb-6">
+      <div class="flex gap-4">
+
+        <!-- Center Feed -->
+        <main class="flex-1 min-w-0 max-w-[680px] mx-auto lg:mx-0">
+
+          <!-- Search Box -->
+          <div class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-3 mb-4">
+            <div class="relative">
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#65676B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
+              <input v-model="searchKegiatan" type="text" placeholder="Cari kegiatan..."
+                class="w-full pl-10 pr-4 py-2.5 bg-[#F0F2F5] rounded-full border-none focus:outline-none focus:ring-2 focus:ring-[#1877F2] focus:bg-white text-[15px] placeholder:text-[#65676B]" />
             </div>
-            <h3 class="text-lg font-semibold text-slate-800 text-center">{{ profilePegawai.nama }}</h3>
-            <p class="text-sm text-slate-500 text-center">{{ profilePegawai.nama_jabatan || profilePegawai.jabatan ||
-              '-' }}</p>
-          </div>
-        </div>
-        <div class="md:col-span-2">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <p class="text-xs font-medium text-slate-600 uppercase">NIP</p>
-              <p class="text-sm font-semibold text-slate-800">{{ profilePegawai.nip || '-' }}</p>
-            </div>
-            <div>
-              <p class="text-xs font-medium text-slate-600 uppercase">Email</p>
-              <p class="text-sm font-semibold text-slate-800">{{ profilePegawai.email || '-' }}</p>
-            </div>
-            <div>
-              <p class="text-xs font-medium text-slate-600 uppercase">Unit Kerja</p>
-              <p class="text-sm font-semibold text-slate-800">{{ profilePegawai.unit_kerja || '-' }}</p>
-            </div>
-            <div>
-              <p class="text-xs font-medium text-slate-600 uppercase">Golongan</p>
-              <p class="text-sm font-semibold text-slate-800">{{ profilePegawai.golongan || '-' }}</p>
+            <div class="flex gap-2 mt-3 px-1">
+              <select v-model="filterTahun"
+                class="flex-1 px-3 py-1.5 bg-[#F0F2F5] rounded-full text-[13px] border-none focus:outline-none focus:ring-2 focus:ring-[#1877F2]">
+                <option value="">Semua Tahun</option>
+                <option v-for="tahun in availableTahun" :key="tahun" :value="tahun">{{ tahun }}</option>
+              </select>
+              <select v-model="filterStatus"
+                class="flex-1 px-3 py-1.5 bg-[#F0F2F5] rounded-full text-[13px] border-none focus:outline-none focus:ring-2 focus:ring-[#1877F2]">
+                <option value="">Semua Status</option>
+                <option value="berjalan">Berjalan</option>
+                <option value="akan_datang">Akan Datang</option>
+                <option value="selesai">Selesai</option>
+              </select>
+              <select v-model="filterUnitKerja"
+                class="flex-1 px-3 py-1.5 bg-[#F0F2F5] rounded-full text-[13px] border-none focus:outline-none focus:ring-2 focus:ring-[#1877F2]">
+                <option value="">Semua Unit Kerja</option>
+                <option v-for="unit in availableUnitKerja" :key="unit" :value="unit">{{ unit }}</option>
+              </select>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
-      <div class="card-stat bg-white rounded-xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition">
-        <div class="flex items-center justify-between mb-3">
-          <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+          <!-- Loading -->
+          <div v-if="isLoadingKegiatan" class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-8 text-center">
+            <div class="w-8 h-8 border-4 border-[#E4E6E9] border-t-[#1877F2] rounded-full animate-spin mx-auto"></div>
+            <p class="text-[#65676B] text-sm mt-3">Memuat kegiatan...</p>
           </div>
-          <!-- <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+12%</span> -->
-        </div>
-        <div class="text-2xl font-bold text-slate-800 mb-1">{{ totalKegiatan }}</div>
-        <div class="text-slate-500 text-sm">Total Kegiatan</div>
-      </div>
-      <div class="card-stat bg-white rounded-xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition">
-        <div class="flex items-center justify-between mb-3">
-          <div class="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-emerald-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
-          </div>
-          <!-- <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+8%</span> -->
-        </div>
-        <div class="text-2xl font-bold text-slate-800 mb-1">{{ totalPeserta }}</div>
-        <div class="text-slate-500 text-sm">Total Peserta</div>
-      </div>
-      <div class="card-stat bg-white rounded-xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition">
-        <div class="flex items-center justify-between mb-3">
-          <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-purple-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-            </svg>
-          </div>
-          <!-- <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded-full">+15%</span> -->
-        </div>
-        <div class="text-2xl font-bold text-slate-800 mb-1">{{ totalSertifikat }}</div>
-        <div class="text-slate-500 text-sm">Sertifikat Terbit</div>
-      </div>
-      <div class="card-stat bg-white rounded-xl p-5 border border-slate-100 shadow-sm hover:shadow-md transition">
-        <div class="flex items-center justify-between mb-3">
-          <div class="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          </div>
-        </div>
-        <div class="text-2xl font-bold text-slate-800 mb-1">{{ kegiatanBerjalan }}</div>
-        <div class="text-slate-500 text-sm">Kegiatan Berjalan</div>
-      </div>
-    </div>
 
-    <!-- Filter Section -->
-    <div class="bg-white rounded-xl p-4 border border-slate-100 shadow-sm mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">Cari Kegiatan</label>
-          <input v-model="searchKegiatan" type="text" placeholder="Ketik nama kegiatan..."
-            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">Filter Tahun</label>
-          <select v-model="filterTahun"
-            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="">Semua Tahun</option>
-            <option v-for="tahun in availableTahun" :key="tahun" :value="tahun">
-              {{ tahun }}
-            </option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">Filter Status</label>
-          <select v-model="filterStatus"
-            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="">Semua Status</option>
-            <option value="berjalan">Berjalan</option>
-            <option value="akan_datang">Akan Datang</option>
-            <option value="selesai">Selesai</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-slate-700 mb-2">Filter Unit Kerja</label>
-          <select v-model="filterUnitKerja"
-            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <option value="">Semua Unit Kerja</option>
-            <option v-for="unit in availableUnitKerja" :key="unit" :value="unit">
-              {{ unit }}
-            </option>
-          </select>
-        </div>
-      </div>
-    </div>
+          <!-- Empty -->
+          <div v-else-if="filteredKegiatan.length === 0" class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-8 text-center">
+            <p class="text-[#65676B] text-[15px]">Tidak ada kegiatan yang sesuai</p>
+          </div>
 
-    <!-- Kegiatan List -->
-    <div class="mb-6">
-      <h3 class="text-lg font-semibold text-slate-800 mb-4">Daftar Kegiatan</h3>
-      <div v-if="isLoadingKegiatan" class="bg-white rounded-xl p-8 border border-slate-100 shadow-sm text-center">
-        <div class="flex items-center justify-center gap-2">
-          <div class="w-5 h-5 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
-          <p class="text-slate-500">Memuat kegiatan...</p>
-        </div>
-      </div>
-      <div v-else-if="filteredKegiatan.length === 0"
-        class="bg-white rounded-xl p-8 border border-slate-100 shadow-sm text-center">
-        <p class="text-slate-500">Tidak ada kegiatan yang sesuai dengan filter</p>
-      </div>
-      <div v-else class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div v-for="k in filteredKegiatan" :key="k.id_kegiatan"
-            class="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition overflow-hidden">
-            <div :class="getStatusColor(getKegiatanStatus(k))" class="h-1"></div>
-            <div class="p-4">
-              <div class="flex items-start justify-between mb-2">
-                <h4 class="font-semibold text-slate-800 text-sm flex-1">{{ k.nama_kegiatan }}</h4>
-                <span :class="getStatusBadge(getKegiatanStatus(k))" class="text-xs whitespace-nowrap ml-2">
-                  {{ formatStatus(getKegiatanStatus(k)) }}
-                </span>
-              </div>
-              <p class="text-xs text-slate-500 mb-3">{{ k.peserta_ringkasan }}</p>
-              <div v-if="resolveUnitKerjaName(k)" class="mb-3">
-                <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700 text-[11px] font-semibold uppercase tracking-[0.18em]">
-                  {{ resolveUnitKerjaName(k) }}
-                </span>
+          <!-- Feed Cards -->
+          <div v-else class="space-y-4">
+            <div v-for="k in filteredKegiatan" :key="k.id_kegiatan"
+              class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] overflow-hidden">
+              <!-- Card Header -->
+              <div class="flex items-center gap-3 p-4 pb-2">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                  :class="getStatusColor(getKegiatanStatus(k)) === 'bg-green-500' ? 'bg-green-500' : getStatusColor(getKegiatanStatus(k)) === 'bg-blue-500' ? 'bg-blue-500' : 'bg-amber-500'">
+                  {{ (k.nama_kegiatan || '').charAt(0) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-[15px] font-semibold text-[#050505] leading-tight truncate">{{ k.nama_kegiatan }}</p>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-[13px] text-[#65676B]">{{ formatDateRange(k.tanggal_mulai, k.tanggal_selesai) }}</span>
+                    <span class="text-[#65676B]">·</span>
+                    <span :class="getStatusBadge(getKegiatanStatus(k))" class="text-[12px] px-2 py-0.5 rounded-full font-medium">
+                      {{ formatStatus(getKegiatanStatus(k)) }}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <div class="mb-3">
-                <p class="text-xs font-medium text-slate-500 uppercase mb-2">Dokumen</p>
-                <div class="space-y-1">
+              <!-- Card Body -->
+              <div class="px-4 pb-3">
+                <div v-if="resolveUnitKerjaName(k)" class="mb-2">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-[#E7F3FF] text-[#1877F2] text-[12px] font-semibold">
+                    {{ resolveUnitKerjaName(k) }}
+                  </span>
+                </div>
+                <p v-if="k.peserta_ringkasan" class="text-[13px] text-[#65676B] mb-2">{{ k.peserta_ringkasan }}</p>
+
+                <div class="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-[#65676B]">
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
+                    {{ getKegiatanLocationLabel(k) }}
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    {{ k.total_peserta }} Peserta
+                  </span>
+                </div>
+
+                <!-- Document Links -->
+                <div v-if="getDocumentLinks(k).some(l => l.available)" class="flex flex-wrap gap-1.5 mt-3">
                   <template v-for="link in getDocumentLinks(k)" :key="link.label">
                     <a v-if="link.available" :href="link.url" target="_blank"
-                      class="block text-xs text-blue-600 hover:underline truncate">
+                      class="inline-flex items-center gap-1 px-2.5 py-1 bg-[#F0F2F5] rounded-full text-[12px] text-[#1877F2] hover:bg-[#E4E6E9] transition font-medium">
                       {{ link.label }}
                     </a>
-                    <span v-else class="flex items-center gap-1.5 text-xs text-red-500">
-                      {{ link.label }}
-                      <span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Tidak Ada</span>
-                    </span>
                   </template>
                 </div>
               </div>
 
-              <div class="space-y-2 text-xs text-slate-600 mb-4">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span>{{ formatDateRange(k.tanggal_mulai, k.tanggal_selesai) }}</span>
-                </div>
-                <div class="flex items-start gap-2">
-                  <svg class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  </svg>
-                  <span class="leading-relaxed">
-                    <span class="font-medium text-slate-700">Lokasi:</span> {{ getKegiatanLocationLabel(k) }}
-                  </span>
-                </div>
-                <div class="flex items-start gap-2">
-                  <svg class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4M9 9h1m-1 4h1m-1 4h1m5-4h1m-1 4h1" />
-                  </svg>
-                  <span class="leading-relaxed">
-                    <span class="font-medium text-slate-700">Kab/Kota:</span> {{ getKegiatanKabupatenKotaLabel(k) }}
-                  </span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-                  <span>{{ k.total_peserta }} Peserta</span>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2">
+              <!-- Card Actions -->
+              <div class="border-t border-[#E4E6E9] px-2 py-1 flex">
                 <button @click="openDetailModal(k)"
-                  class="w-full px-3 py-2 bg-blue-500 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 transition-colors">
-                  Lihat Detail
+                  class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] transition text-[14px] font-semibold text-[#65676B]">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  Detail
                 </button>
+                <div class="w-px bg-[#E4E6E9] my-1"></div>
                 <button @click="openPesertaKegiatan(k)"
-                  class="w-full px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
-                  Lihat Data Peserta
+                  class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-[#F0F2F5] transition text-[14px] font-semibold text-[#65676B]">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.856-1.487M9 20H4v-2a3 3 0 015.856-1.487M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  Peserta
+                </button>
+              </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-3 flex items-center justify-between">
+              <p class="text-[13px] text-[#65676B]">
+                {{ (currentPage - 1) * pageSize + 1 }}-{{ Math.min(currentPage * pageSize, totalKegiatanCount) }} dari {{ totalKegiatanCount }}
+              </p>
+              <div class="flex gap-1">
+                <button @click="currentPage > 1 && (currentPage--, fetchKegiatanData())"
+                  :disabled="currentPage <= 1 || isLoadingKegiatan"
+                  class="px-3 py-1.5 rounded-lg text-[13px] font-medium hover:bg-[#F0F2F5] disabled:opacity-40 transition text-[#1877F2]">
+                  ← Prev
+                </button>
+                <button v-for="page in totalPages" :key="page" @click="currentPage = page; fetchKegiatanData()"
+                  :disabled="isLoadingKegiatan" :class="[
+                    'w-9 h-9 rounded-lg text-[13px] font-semibold transition',
+                    currentPage === page ? 'bg-[#1877F2] text-white' : 'hover:bg-[#F0F2F5] text-[#1877F2]'
+                  ]">
+                  {{ page }}
+                </button>
+                <button @click="currentPage < totalPages && (currentPage++, fetchKegiatanData())"
+                  :disabled="currentPage >= totalPages || isLoadingKegiatan"
+                  class="px-3 py-1.5 rounded-lg text-[13px] font-medium hover:bg-[#F0F2F5] disabled:opacity-40 transition text-[#1877F2]">
+                  Next →
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        </main>
 
-        <!-- Pagination Controls -->
-        <div class="flex items-center justify-between bg-white rounded-xl p-4 border border-slate-100 shadow-sm">
-          <div class="text-sm text-slate-600">
-            Menampilkan <span class="font-semibold">{{ (currentPage - 1) * pageSize + 1 }}</span>-<span
-              class="font-semibold">{{ Math.min(currentPage * pageSize, totalKegiatanCount) }}</span> dari <span
-              class="font-semibold">{{ totalKegiatanCount }}</span> kegiatan
-          </div>
-          <div class="flex gap-2">
-            <button @click="currentPage > 1 && (currentPage = currentPage - 1, fetchKegiatanData())"
-              :disabled="currentPage <= 1 || isLoadingKegiatan"
-              class="px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
-              ← Sebelumnya
-            </button>
-            <div class="flex items-center gap-1">
-              <button v-for="page in totalPages" :key="page" @click="currentPage = page; fetchKegiatanData()"
-                :disabled="isLoadingKegiatan" :class="[
-                  'px-3 py-2 rounded-lg text-sm font-medium transition',
-                  currentPage === page
-                    ? 'bg-blue-600 text-white'
-                    : 'border border-slate-300 text-slate-700 hover:bg-slate-50'
-                ]">
-                {{ page }}
-              </button>
+        <!-- Right Sidebar - Profile & Info -->
+        <aside class="hidden xl:block w-[280px] flex-shrink-0 sticky top-4 self-start space-y-4">
+          <!-- Profile Card -->
+          <div v-if="profilePegawai" class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-4">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                {{ initial }}
+              </div>
+              <div class="min-w-0">
+                <p class="text-[15px] font-semibold text-[#050505] truncate">{{ profilePegawai.nama }}</p>
+                <p class="text-[13px] text-[#65676B] truncate">{{ profilePegawai.nama_jabatan || profilePegawai.jabatan || '-' }}</p>
+              </div>
             </div>
-            <button @click="currentPage < totalPages && (currentPage = currentPage + 1, fetchKegiatanData())"
-              :disabled="currentPage >= totalPages || isLoadingKegiatan"
-              class="px-3 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition">
-              Berikutnya →
-            </button>
+            <div class="space-y-2 text-[13px]">
+              <div class="flex justify-between"><span class="text-[#65676B]">NIP</span><span class="text-[#050505] font-medium">{{ profilePegawai.nip || '-' }}</span></div>
+              <div class="flex justify-between"><span class="text-[#65676B]">Unit Kerja</span><span class="text-[#050505] font-medium text-right truncate max-w-[140px]">{{ profilePegawai.unit_kerja || '-' }}</span></div>
+              <div class="flex justify-between"><span class="text-[#65676B]">Golongan</span><span class="text-[#050505] font-medium">{{ profilePegawai.golongan || '-' }}</span></div>
+            </div>
           </div>
-        </div>
+
+          <!-- Quick Info -->
+          <div class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-4">
+            <h3 class="text-[15px] font-semibold text-[#050505] mb-3">Ringkasan</h3>
+            <div class="space-y-3">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
+                <div>
+                  <p class="text-[15px] font-semibold text-[#050505]">{{ totalKegiatan }}</p>
+                  <p class="text-[12px] text-[#65676B]">Total Kegiatan</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </div>
+                <div>
+                  <p class="text-[15px] font-semibold text-[#050505]">{{ totalPeserta }}</p>
+                  <p class="text-[12px] text-[#65676B]">Total Peserta</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4"/></svg>
+                </div>
+                <div>
+                  <p class="text-[15px] font-semibold text-[#050505]">{{ totalSertifikat }}</p>
+                  <p class="text-[12px] text-[#65676B]">Sertifikat Terbit</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <div>
+                  <p class="text-[15px] font-semibold text-[#050505]">{{ kegiatanBerjalan }}</p>
+                  <p class="text-[12px] text-[#65676B]">Berjalan</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
       </div>
     </div>
 
 
     <!-- Detail Modal -->
     <div v-if="showDetailModal && selectedKegiatan"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div
-          class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 flex justify-between items-center sticky top-0">
+          class="bg-white border-b border-[#E4E6E9] text-[#050505] px-6 py-4 flex justify-between items-center sticky top-0">
           <h2 class="text-xl font-bold">Detail Kegiatan</h2>
           <button @click="showDetailModal = false" class="text-2xl hover:text-blue-200">&times;</button>
         </div>
@@ -567,6 +523,15 @@ export default {
     const totalPeserta = computed(() => dashboardStats.value.total_peserta)
     const totalSertifikat = computed(() => dashboardStats.value.total_sertifikat)
     const kegiatanBerjalan = computed(() => dashboardStats.value.total_kegiatan_berjalan)
+
+    const initial = computed(() => String(profilePegawai.value?.nama || 'A').charAt(0).toUpperCase())
+
+    const statsCards = computed(() => [
+      { value: totalKegiatan.value, label: 'Kegiatan', bg: 'bg-gradient-to-br from-blue-500 to-blue-700', iconBg: 'bg-white/20', icon: '📅' },
+      { value: totalPeserta.value, label: 'Peserta', bg: 'bg-gradient-to-br from-emerald-500 to-emerald-700', iconBg: 'bg-white/20', icon: '👥' },
+      { value: totalSertifikat.value, label: 'Sertifikat', bg: 'bg-gradient-to-br from-purple-500 to-purple-700', iconBg: 'bg-white/20', icon: '✅' },
+      { value: kegiatanBerjalan.value, label: 'Berjalan', bg: 'bg-gradient-to-br from-amber-500 to-amber-700', iconBg: 'bg-white/20', icon: '⚡' }
+    ])
 
     const searchKegiatan = ref('')
     const filterTahun = ref(new Date().getFullYear().toString())
@@ -1414,6 +1379,8 @@ export default {
       totalPeserta,
       totalSertifikat,
       kegiatanBerjalan,
+      initial,
+      statsCards,
       kegiatan,
       searchKegiatan,
       filterTahun,

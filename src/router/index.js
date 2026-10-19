@@ -17,6 +17,8 @@ const Profile = () => import('../pages/Profile.vue')
 const Landing = () => import('../pages/Landing.vue')
 const Login = () => import('../pages/Login.vue')
 const LoginPeserta = () => import('../pages/LoginPeserta.vue')
+const LoginUnified = () => import('../pages/LoginUnified.vue')
+const RegisterPeserta = () => import('../pages/RegisterPeserta.vue')
 const FormulirPeserta = () => import('../pages/FormulirPeserta.vue')
 const DaftarPesertaPublik = () => import('../pages/DaftarPesertaPublik.vue')
 const UnduhSertifikatPublik = () => import('../pages/UnduhSertifikatPublik.vue')
@@ -29,6 +31,8 @@ const TestUjian = () => import('../pages/TestUjian.vue')
 const TestLaporan = () => import('../pages/TestLaporan.vue')
 const PaketSoal = () => import('../pages/PaketSoal.vue')
 const Pengesahan = () => import('../pages/Pengesahan.vue')
+const LaporanKegiatan = () => import('../pages/LaporanKegiatan.vue')
+const BuatLaporan = () => import('../pages/BuatLaporan.vue')
 const PesertaLayout = () => import('../layouts/PesertaLayout.vue')
 const PesertaDashboard = () => import('../pages/PesertaDashboard.vue')
 const PesertaKegiatan = () => import('../pages/PesertaKegiatan.vue')
@@ -75,6 +79,22 @@ const router = createRouter({
     meta:{
       title: 'Login Peserta',
       description: 'Masuk sebagai peserta kegiatan.'
+    }
+  },
+  {
+    path:'/login',
+    component:LoginUnified,
+    meta:{
+      title: 'Login SIMAIK',
+      description: 'Masuk ke SIMAIK.'
+    }
+  },
+  {
+    path:'/register',
+    component:RegisterPeserta,
+    meta:{
+      title: 'Daftar Akun',
+      description: 'Buat akun peserta baru.'
     }
   },
   {
@@ -162,6 +182,7 @@ const router = createRouter({
     {path:'kegiatan',name:'kegiatan',component:Kegiatan,meta:{title:'Manajemen Kegiatan',description:'Kelola seluruh kegiatan.'}},
     {path:'kegiatan/:id/peserta',name:'kegiatan-peserta',component:KegiatanPeserta,meta:{title:'Peserta Kegiatan',description:'Kelola peserta per kegiatan.'}},
     {path:'kegiatan/:id/test-laporan',name:'test-laporan',component:TestLaporan,meta:{title:'Laporan Test',description:'Laporan hasil test kegiatan.'}},
+    {path:'kegiatan/:id/buat-laporan',name:'buat-laporan',component:BuatLaporan,meta:{title:'Buat Laporan',description:'Buat dan preview laporan kegiatan.'}},
     {path:'paket-soal',name:'paket-soal',component:PaketSoal,meta:{title:'Paket Soal',description:'Kelola paket soal dan soal ujian.'}},
     {path:'peserta',name:'peserta',component:PesertaManagement,meta:{title:'Manajemen Peserta',description:'Kelola data peserta kegiatan.'}},
     {path:'sertifikat',name:'sertifikat',component:Sertifikat,meta:{title:'Sertifikat',description:'Kelola sertifikat peserta.'}},
@@ -170,6 +191,7 @@ const router = createRouter({
     {path:'anggota',name:'anggota',component:AnggotaManagement,meta:{title:'Keanggotaan Tim',description:'Kelola anggota tim kerja.'}},
     {path:'penugasan',name:'penugasan',component:Penugasan,meta:{title:'Penugasan Pegawai',description:'Lihat dan filter penugasan pegawai.'}},
     {path:'pengesahan',name:'pengesahan',component:Pengesahan,meta:{title:'Pengesahan',description:'Halaman pengesahan dokumen.',requiresKepala:true}},
+    {path:'laporan-kegiatan',name:'laporan-kegiatan',component:LaporanKegiatan,meta:{title:'Laporan Kegiatan',description:'Preview dan download laporan kegiatan.'}},
     {path:'profile',name:'profile',component:Profile,meta:{title:'Profil',description:'Kelola profil pengguna.'}}
   ]},
   {
@@ -327,7 +349,7 @@ router.beforeEach(async (to, from, next) => {
       next(to.meta.requiresPeserta ? '/login-peserta' : '/laman-masuk')
     } else if (to.meta.requiresAdmin && !authStore.isAdmin) {
       next('/login-peserta')
-    } else if (to.meta.requiresPeserta && !authStore.isPeserta) {
+    } else if (to.meta.requiresPeserta && !authStore.isPeserta && !authStore.isAdmin) {
       next('/admin/dashboard')
     } else if (to.meta.requiresKepala && !authStore.isKepala) {
       next('/admin/dashboard')
