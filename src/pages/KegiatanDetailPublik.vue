@@ -1,216 +1,296 @@
 <template>
-  <div class="min-h-screen bg-[radial-gradient(circle_at_top,#1e3a8a_0%,#0f172a_55%,#020617_100%)] text-slate-100">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
-      <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <router-link to="/" class="inline-flex items-center gap-2 text-cyan-200 hover:text-cyan-100 text-sm">
-          <span>&larr;</span>
-          <span>Kembali ke Beranda</span>
+  <div class="min-h-screen bg-[#f0f4ff]">
+    <!-- Top Nav -->
+    <div class="bg-white shadow-sm sticky top-0 z-50">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+        <router-link to="/" class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 text-sm font-semibold transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+          <span>Kembali</span>
         </router-link>
         <button
           @click="shareDetailPage"
-          class="px-4 py-2 rounded-lg bg-cyan-500/20 border border-cyan-300/40 text-cyan-100 hover:bg-cyan-400/25 text-sm"
+          class="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-md shadow-indigo-200 transition-all duration-200 hover:shadow-lg hover:shadow-indigo-300"
         >
-          Share Halaman
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+          Share
         </button>
       </div>
+    </div>
 
-      <div v-if="isLoading" class="rounded-2xl border border-white/10 bg-white/5 p-8 text-center text-blue-100">
-        Memuat detail kegiatan...
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <!-- Loading -->
+      <div v-if="isLoading" class="bg-white rounded-2xl shadow-lg p-12 text-center">
+        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p class="text-lg text-gray-600 font-medium">Memuat detail kegiatan...</p>
       </div>
 
-      <div v-else-if="errorMessage" class="rounded-2xl border border-red-300/30 bg-red-500/10 p-5 text-red-100">
-        {{ errorMessage }}
+      <!-- Error -->
+      <div v-else-if="errorMessage" class="bg-red-50 border-l-4 border-red-500 rounded-xl p-8 shadow-md">
+        <div class="flex items-center gap-3">
+          <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <p class="text-lg text-red-700 font-semibold">{{ errorMessage }}</p>
+        </div>
       </div>
 
       <div v-else-if="kegiatan" class="space-y-6">
-        <section class="rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900/85 to-blue-950/80 p-5 sm:p-7 shadow-2xl">
-          <div class="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6">
-            <div>
-              <p class="text-xs uppercase tracking-[0.2em] text-cyan-200/90 mb-3">Detail Kegiatan</p>
-              <h1 class="text-2xl sm:text-3xl font-bold leading-tight text-white">{{ kegiatan.nama_kegiatan || '-' }}</h1>
-              <p class="text-sm text-blue-100 mt-3">{{ kegiatan.deskripsi || 'Tidak ada deskripsi kegiatan.' }}</p>
-              <div class="mt-4" v-if="resourceLinks.length > 0">
-                <div class="flex flex-wrap gap-2">
-                  <a v-for="item in resourceLinks" :key="item.key" :href="item.url" target="_blank"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-white/10 hover:bg-white/20 text-white border border-white/20 transition">
-                    <svg v-if="item.key === 'dokumentasi_url'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    <svg v-else-if="item.key === 'materi_url'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-                    <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    {{ item.label }}
-                  </a>
+        <!-- Hero Header -->
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
+          <div class="bg-indigo-600 p-8">
+            <div class="flex flex-col lg:flex-row gap-8">
+              <div class="flex-1">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-semibold mb-4">
+                  <div class="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+                  Detail Kegiatan
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold leading-tight text-white drop-shadow-sm">
+                  {{ kegiatan.nama_kegiatan || '-' }}
+                </h1>
+                <div class="mt-4">
+                  <p class="text-base text-white/90 leading-relaxed max-w-2xl" :class="!isDescExpanded && 'line-clamp-3'">
+                    {{ kegiatan.deskripsi || 'Tidak ada deskripsi kegiatan.' }}
+                  </p>
+                  <button
+                    v-if="kegiatan.deskripsi && kegiatan.deskripsi.length > 150"
+                    @click="isDescExpanded = !isDescExpanded"
+                    class="mt-2 text-sm text-white/80 hover:text-white font-semibold underline underline-offset-2 transition-colors"
+                  >
+                    {{ isDescExpanded ? 'Sembunyikan' : 'Baca selengkapnya' }}
+                  </button>
                 </div>
               </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-5 text-sm">
-                <div class="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p class="text-blue-200">Tanggal</p>
-                  <p class="text-white font-medium">{{ formatDate(kegiatan.tanggal_mulai) }} - {{ formatDate(kegiatan.tanggal_selesai) }}</p>
-                </div>
-                <!-- <div class="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p class="text-blue-200">Lokasi</p>
-                  <p class="text-white font-medium">{{ getKegiatanLocationLabel(kegiatan) }}</p>
-                </div> -->
-                <div v-if="tpkRows.length <= 1" class="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p class="text-blue-200">Kabupaten/Kota</p>
-                  <p class="text-white font-medium">{{ getKabupatenKotaLabel(kegiatan) }}</p>
-                </div>
-                <div class="rounded-xl border border-white/10 bg-white/5 p-3">
-                  <p class="text-blue-200">Metode</p>
-                  <p class="text-white font-medium">{{ getMetodeLabel(kegiatan.metode_pelaksanaan) }}</p>
-                </div>
-                  <div v-if="tpkRows.length > 0" class="col-span-full rounded-2xl border border-white/10 bg-white/5 p-2 sm:p-2 mt-3">
-                    <h2 class="text-lg font-semibold text-white mb-4">Tempat Pelaksanaan Kegiatan (TPK)</h2>
-                    <div class="overflow-x-auto">
-                      <table class="w-full text-sm">
-                        <thead class="text-blue-200">
-                          <tr>
-                            <th class="px-4 py-2 text-left font-medium">No</th>
-                            <th class="px-4 py-2 text-left font-medium">Lokasi</th>
-                            <th class="px-4 py-2 text-left font-medium">Kabupaten/Kota</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr v-for="(tpk, idx) in tpkRows" :key="idx" class="border-t border-white/10">
-                            <td class="px-4 py-2 text-blue-100">{{ idx + 1 }}</td>
-                            <td class="px-4 py-2 text-white font-medium">{{ tpk.lokasi || '-' }}</td>
-                            <td class="px-4 py-2 text-blue-100">{{ tpk.kabupaten_kota || '-' }}</td>
-                          </tr>
-                        </tbody>
-                      </table>
+              <div class="lg:w-[340px] flex-shrink-0">
+                <div class="rounded-2xl overflow-hidden shadow-2xl bg-white/10">
+                  <img
+                    v-if="flyerUrl"
+                    :src="flyerUrl"
+                    :alt="`Flyer ${kegiatan.nama_kegiatan}`"
+                    class="w-full h-[300px] object-cover"
+                    loading="lazy"
+                  />
+                  <div v-else class="w-full h-[300px] flex items-center justify-center text-white/70 text-sm bg-white/10">
+                    <div class="text-center">
+                      <svg class="w-12 h-12 mx-auto mb-2 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                      Flyer belum tersedia
                     </div>
                   </div>
-              </div>
-            </div>
-
-            <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-              <img
-                v-if="flyerUrl"
-                :src="flyerUrl"
-                :alt="`Flyer ${kegiatan.nama_kegiatan}`"
-                class="w-full h-[320px] object-cover rounded-xl"
-                loading="lazy"
-              />
-              <div v-else class="w-full h-[320px] rounded-xl border border-white/10 flex items-center justify-center text-blue-200 text-sm">
-                Flyer belum tersedia
+                </div>
               </div>
             </div>
           </div>
-        </section>
 
-        <section v-if="jadwalPerKelas.length > 0" class="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
-          <h2 class="text-lg font-semibold text-white mb-4">Jadwal Kegiatan</h2>
-          <div v-for="kelas in jadwalPerKelas" :key="kelas.nama_kelas" class="mb-6 last:mb-0">
-            <h3 v-if="jadwalPerKelas.length > 1" class="text-base font-semibold text-cyan-300 mb-3">{{ kelas.nama_kelas }}</h3>
-            <div v-for="day in kelas.jadwal" :key="day.hari" class="mb-4 last:mb-0">
-              <h4 class="text-sm font-semibold text-white mb-2">{{ day.hari }} - {{ formatDate(day.tanggal) }}</h4>
-              <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                  <thead class="text-blue-200">
-                    <tr>
-                      <th class="px-3 py-2 text-left font-medium w-28">Waktu</th>
-                      <th class="px-3 py-2 text-left font-medium">Kegiatan / Materi</th>
-                      <th class="px-3 py-2 text-center font-medium w-12">JP</th>
-                      <th class="px-3 py-2 text-left font-medium w-28">PJ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="(item, ii) in day.items" :key="ii" class="border-t border-white/10" :class="item.tipe === 'istirahat' ? 'bg-amber-500/10' : ''">
-                      <td class="px-3 py-2 text-blue-100">{{ item.jam_mulai }} - {{ item.jam_selesai }}</td>
-                      <td class="px-3 py-2" :class="item.tipe === 'istirahat' ? 'text-amber-300 italic' : 'text-white'">{{ item.kegiatan || '-' }}</td>
-                      <td class="px-3 py-2 text-center text-blue-100">{{ item.tipe === 'istirahat' ? '-' : item.jp }}</td>
-                      <td class="px-3 py-2 text-blue-100">{{ item.pj || '-' }}</td>
-                    </tr>
-                    <tr class="border-t border-white/10 bg-white/5">
-                      <td colspan="2" class="px-3 py-2 text-right text-blue-200 font-medium">Total JP</td>
-                      <td class="px-3 py-2 text-center text-white font-bold">{{ day.items.reduce((s, i) => s + (i.tipe === 'istirahat' ? 0 : Number(i.jp) || 0), 0) }}</td>
-                      <td class="px-3 py-2"></td>
-                    </tr>
-                  </tbody>
-                </table>
+          <!-- Resource Links (BESAR) -->
+          <div class="border-t border-gray-100 p-6">
+            <p class="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-4">Lampiran & Materi</p>
+            <div v-if="resourceLinks.length > 0" class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <a v-for="item in resourceLinks" :key="item.key" :href="item.url" target="_blank"
+                class="group flex items-center gap-4 p-5 bg-white rounded-2xl border-2 border-gray-100 hover:border-indigo-300 shadow-md hover:shadow-xl transition-all duration-200 hover:-translate-y-1">
+                <div class="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg" :class="getResourceIconBg(item.key)">
+                  <svg v-if="item.key === 'dokumentasi_url'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  <svg v-else-if="item.key === 'materi_url'" class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                  <svg v-else class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                </div>
+                <div>
+                  <p class="text-xl font-bold text-gray-800 group-hover:text-indigo-600 transition-colors">{{ item.label }}</p>
+                  <p class="text-sm text-gray-500 mt-1">Klik untuk membuka</p>
+                </div>
+                <svg class="w-5 h-5 text-indigo-400 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </a>
+            </div>
+            <div v-else class="text-gray-400 text-sm">Tidak ada lampiran untuk kegiatan ini.</div>
+          </div>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div class="bg-white rounded-2xl shadow-lg border-l-4 border-cyan-500 p-5 hover:shadow-xl transition-shadow duration-200">
+            <div class="w-11 h-11 rounded-xl bg-cyan-100 flex items-center justify-center mb-3">
+              <svg class="w-5 h-5 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <p class="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1">Tanggal</p>
+            <p class="text-sm font-bold text-gray-800">{{ formatDate(kegiatan.tanggal_mulai) }} - {{ formatDate(kegiatan.tanggal_selesai) }}</p>
+          </div>
+          <div v-if="tpkRows.length <= 1" class="bg-white rounded-2xl shadow-lg border-l-4 border-purple-500 p-5 hover:shadow-xl transition-shadow duration-200">
+            <div class="w-11 h-11 rounded-xl bg-purple-100 flex items-center justify-center mb-3">
+              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <p class="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1">Kabupaten/Kota</p>
+            <p class="text-sm font-bold text-gray-800">{{ getKabupatenKotaLabel(kegiatan) }}</p>
+          </div>
+          <div class="bg-white rounded-2xl shadow-lg border-l-4 border-pink-500 p-5 hover:shadow-xl transition-shadow duration-200">
+            <div class="w-11 h-11 rounded-xl bg-pink-100 flex items-center justify-center mb-3">
+              <svg class="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            </div>
+            <p class="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-1">Metode</p>
+            <p class="text-sm font-bold text-gray-800">{{ getMetodeLabel(kegiatan.metode_pelaksanaan) }}</p>
+          </div>
+        </div>
+
+        <!-- TPK -->
+        <div v-if="tpkRows.length > 0" class="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div class="bg-teal-500 px-6 py-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              Tempat Pelaksanaan Kegiatan (TPK)
+            </h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-gray-50">
+                  <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">No</th>
+                  <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Lokasi</th>
+                  <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kabupaten/Kota</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(tpk, idx) in tpkRows" :key="idx" class="border-t border-gray-100 hover:bg-cyan-50 transition-colors">
+                  <td class="px-6 py-3.5 text-gray-400 font-medium">{{ idx + 1 }}</td>
+                  <td class="px-6 py-3.5 text-gray-800 font-semibold">{{ tpk.lokasi || '-' }}</td>
+                  <td class="px-6 py-3.5 text-gray-600">{{ tpk.kabupaten_kota || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Jadwal -->
+        <div v-if="jadwalPerKelas.length > 0" class="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div class="bg-amber-500 px-6 py-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Jadwal Kegiatan
+            </h2>
+          </div>
+          <div class="p-6">
+            <div v-for="kelas in jadwalPerKelas" :key="kelas.nama_kelas" class="mb-6 last:mb-0">
+              <h3 v-if="jadwalPerKelas.length > 1" class="text-base font-bold text-indigo-600 mb-3 flex items-center gap-2">
+                <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                {{ kelas.nama_kelas }}
+              </h3>
+              <div v-for="day in kelas.jadwal" :key="day.hari" class="mb-5 last:mb-0">
+                <h4 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  {{ day.hari }} - {{ formatDate(day.tanggal) }}
+                </h4>
+                <div class="overflow-x-auto rounded-xl border border-gray-200">
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="bg-gray-50">
+                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-28">Waktu</th>
+                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Kegiatan / Materi</th>
+                        <th class="px-4 py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-12">JP</th>
+                        <th class="px-4 py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-28">PJ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(item, ii) in day.items" :key="ii" class="border-t border-gray-100 transition-colors" :class="item.tipe === 'istirahat' ? 'bg-amber-50' : 'hover:bg-indigo-50'">
+                        <td class="px-4 py-2.5 text-gray-500">{{ item.jam_mulai }} - {{ item.jam_selesai }}</td>
+                        <td class="px-4 py-2.5" :class="item.tipe === 'istirahat' ? 'text-amber-600 font-medium italic' : 'text-gray-800 font-medium'">{{ item.kegiatan || '-' }}</td>
+                        <td class="px-4 py-2.5 text-center text-gray-500">{{ item.tipe === 'istirahat' ? '-' : item.jp }}</td>
+                        <td class="px-4 py-2.5 text-gray-500">{{ item.pj || '-' }}</td>
+                      </tr>
+                      <tr class="border-t border-gray-200 bg-indigo-50">
+                        <td colspan="2" class="px-4 py-2.5 text-right text-gray-700 font-bold">Total JP</td>
+                        <td class="px-4 py-2.5 text-center text-indigo-700 font-extrabold">{{ day.items.reduce((s, i) => s + (i.tipe === 'istirahat' ? 0 : Number(i.jp) || 0), 0) }}</td>
+                        <td class="px-4 py-2.5"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        <section class="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-            <h2 class="text-lg font-semibold text-white">Link Publik</h2>
+        <!-- Link Publik -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div class="bg-green-500 px-6 py-4 flex items-center justify-between">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+              Link Publik
+            </h2>
             <button
               @click="copyLink(detailPageUrl)"
-              class="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-sm text-blue-100"
+              class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 hover:bg-white/35 text-white text-xs font-semibold transition-all duration-200"
             >
-              Copy Link Halaman
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+              Copy Link
             </button>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 mb-6">
-            <div class="bg-white p-2 rounded-lg w-fit">
-              <img
-                v-if="getQrCodeUrl(detailPageUrl)"
-                :src="getQrCodeUrl(detailPageUrl)"
-                alt="QR Detail Kegiatan"
-                class="w-28 h-28 sm:w-36 sm:h-36"
-              />
+          <div class="p-6">
+            <div v-if="!isWithinKegiatanDateRange" class="rounded-xl bg-amber-50 border border-amber-200 p-4 mb-6">
+              <p class="text-amber-700 text-sm flex items-center gap-2 font-medium">
+                <svg class="w-4 h-4 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                Link tetap ditampilkan. Pengisian biodata hanya tersedia pada tanggal kegiatan.
+              </p>
             </div>
-            <div>
-              <p class="text-blue-200 text-sm mb-1">Link Detail Kegiatan</p>
-              <a :href="detailPageUrl" target="_blank" class="text-cyan-200 hover:text-cyan-100 break-all">{{ detailPageUrl }}</a>
+
+            <!-- Biodata Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <a
+                v-for="item in visibleBiodataLinks"
+                :key="item.label"
+                :href="item.url"
+                target="_blank"
+                class="group rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+              >
+                <div class="p-5" :class="getCardHeaderBg(item.label)">
+                  <div class="w-12 h-12 rounded-xl bg-white/25 flex items-center justify-center mb-3">
+                    <svg v-if="getBiodataIconType(item.label) === 'form'" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <svg v-else-if="getBiodataIconType(item.label) === 'list'" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <svg v-else-if="getBiodataIconType(item.label) === 'certificate'" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <svg v-else class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                  </div>
+                  <p class="text-lg font-bold text-white leading-snug">{{ item.label }}</p>
+                </div>
+                <div class="bg-white px-5 py-4 flex items-center justify-between">
+                  <span class="text-sm font-semibold text-gray-600">{{ getBiodataActionLabel(item.label) }}</span>
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 group-hover:scale-110" :class="getCardArrowBg(item.label)">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                  </div>
+                </div>
+              </a>
             </div>
           </div>
+        </div>
 
-          <p v-if="!isWithinKegiatanDateRange" class="text-amber-200 text-sm mb-4">
-            Link tetap ditampilkan. Pengisian biodata hanya tersedia pada tanggal kegiatan.
-          </p>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <article v-for="item in visibleBiodataLinks" :key="item.label" class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
-              <p class="text-xs uppercase tracking-wide text-cyan-200">{{ item.label }}</p>
-              <a :href="item.url" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ item.url }}</a>
-              <div class="mt-3 flex items-center gap-3">
-                <img
-                  v-if="getQrCodeUrl(item.url)"
-                  :src="getQrCodeUrl(item.url)"
-                  :alt="`QR ${item.label}`"
-                  class="w-20 h-20 rounded bg-white p-1"
-                />
-                <button
-                  @click="copyLink(item.url)"
-                  class="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-xs text-blue-100"
-                >
-                  Copy Link
-                </button>
-              </div>
-            </article>
+        <!-- Evaluasi -->
+        <div v-if="isLastDayOfKegiatan" class="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div class="bg-rose-500 px-6 py-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+              Link Evaluasi
+            </h2>
           </div>
-        </section>
+          <div class="p-6">
+            <div v-if="evaluasiLinks.length === 0" class="text-gray-400 text-sm font-medium">Tidak ada TPK untuk kegiatan ini.</div>
 
-        <!-- Link Evaluasi dan Laporan Evaluasi -->
-        <section v-if="isLastDayOfKegiatan" class="rounded-2xl border border-white/10 bg-white/5 p-5 sm:p-6">
-          <h2 class="text-lg font-semibold text-white mb-4">Link Evaluasi</h2>
-          
-          <div v-if="evaluasiLinks.length === 0" class="text-sm text-slate-400">Tidak ada TPK untuk kegiatan ini.</div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <article v-for="item in evaluasiLinks" :key="item.id_tpk" class="rounded-xl border border-white/10 bg-slate-900/35 p-4">
-              <p class="text-xs uppercase tracking-wide text-cyan-200">{{ item.nama_tpk }}</p>
-              <a :href="item.url" target="_blank" class="mt-2 block text-sm text-blue-100 hover:text-cyan-100 break-all">{{ item.url }}</a>
-              <div class="mt-3 flex items-center gap-3">
-                <img
-                  v-if="qrCodeMap[item.url]"
-                  :src="qrCodeMap[item.url]"
-                  :alt="`QR ${item.nama_tpk}`"
-                  class="w-20 h-20 rounded bg-white p-1"
-                />
-                <button
-                  @click="copyLink(item.url)"
-                  class="px-3 py-1.5 rounded-lg border border-white/20 hover:bg-white/10 text-xs text-blue-100"
-                >
-                  Copy Link
-                </button>
-              </div>
-            </article>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <a
+                v-for="item in evaluasiLinks"
+                :key="item.id_tpk"
+                :href="item.url"
+                target="_blank"
+                class="group rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+              >
+                <div class="bg-emerald-500 p-5">
+                  <div class="w-12 h-12 rounded-xl bg-white/25 flex items-center justify-center mb-3">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                  </div>
+                  <p class="text-lg font-bold text-white leading-snug">{{ item.nama_tpk }}</p>
+                </div>
+                <div class="bg-white px-5 py-4 flex items-center justify-between">
+                  <span class="text-sm font-semibold text-gray-600">Isi Evaluasi</span>
+                  <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center transition-all duration-200 group-hover:scale-110">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                  </div>
+                </div>
+              </a>
+            </div>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   </div>
@@ -235,6 +315,7 @@ export default {
     const isLoading = ref(true)
     const errorMessage = ref('')
     const qrCodeMap = ref({})
+    const isDescExpanded = ref(false)
 
     const normalize = (value) => String(value || '').toLowerCase().trim()
 
@@ -385,7 +466,7 @@ export default {
           for (const role of roles) {
             const dbLinks = getRoleLinksFromKegiatan(item, role)
             roleLinks.push({
-              label: `${role} - ${namaTpk}`,
+              label: `Biodata ${role} - ${namaTpk}`,
               url: dbLinks.formUrl || buildPublicUrl(`/formulir/${kode}/${role}/${tpk.id_tpk}/${slug}`),
               templateUrl: dbLinks.templateUrl
             })
@@ -395,7 +476,7 @@ export default {
         for (const role of roles) {
           const dbLinks = getRoleLinksFromKegiatan(item, role)
           roleLinks.push({
-            label: `Form ${role}`,
+            label: `Biodata ${role}`,
             url: dbLinks.formUrl || buildPublicUrl(`/formulir/${kode}/${role}/${slug}`),
             templateUrl: dbLinks.templateUrl
           })
@@ -414,7 +495,7 @@ export default {
       const roles = ['peserta', 'panitia', 'narasumber', 'pendamping']
       return biodataLinks.value.filter(item => {
         const lower = item.label.toLowerCase()
-        return !roles.some(r => lower.startsWith(`form ${r}`) || lower.startsWith(`${r} -`))
+        return !roles.some(r => lower.startsWith(`biodata ${r}`))
       })
     })
 
@@ -537,6 +618,50 @@ export default {
       qrCodeMap.value = nextMap
     }
 
+    const getBiodataIconType = (label) => {
+      const lower = String(label || '').toLowerCase()
+      if (lower.includes('daftar')) return 'list'
+      if (lower.includes('sertifikat')) return 'certificate'
+      return 'form'
+    }
+
+    const getCardHeaderBg = (label) => {
+      const type = getBiodataIconType(label)
+      const lower = String(label || '').toLowerCase()
+      if (type === 'certificate') return 'bg-amber-500'
+      if (type === 'list') return 'bg-emerald-500'
+      if (lower.includes('peserta')) return 'bg-blue-600'
+      if (lower.includes('panitia')) return 'bg-purple-600'
+      if (lower.includes('narasumber')) return 'bg-teal-500'
+      if (lower.includes('pendamping')) return 'bg-pink-500'
+      return 'bg-blue-600'
+    }
+
+    const getCardArrowBg = (label) => {
+      const type = getBiodataIconType(label)
+      const lower = String(label || '').toLowerCase()
+      if (type === 'certificate') return 'bg-amber-500'
+      if (type === 'list') return 'bg-emerald-500'
+      if (lower.includes('peserta')) return 'bg-blue-500'
+      if (lower.includes('panitia')) return 'bg-purple-500'
+      if (lower.includes('narasumber')) return 'bg-teal-500'
+      if (lower.includes('pendamping')) return 'bg-pink-500'
+      return 'bg-blue-500'
+    }
+
+    const getResourceIconBg = (key) => {
+      if (key === 'dokumentasi_url') return 'bg-cyan-500'
+      if (key === 'materi_url') return 'bg-amber-500'
+      return 'bg-purple-600'
+    }
+
+    const getBiodataActionLabel = (label) => {
+      const type = getBiodataIconType(label)
+      if (type === 'list') return 'Lihat Daftar Peserta'
+      if (type === 'certificate') return 'Unduh Sertifikat'
+      return 'Isi Formulir Biodata'
+    }
+
     const getQrCodeUrl = (url) => qrCodeMap.value[url] || ''
 
     const copyLink = async (url) => {
@@ -575,6 +700,7 @@ export default {
       kegiatan,
       isLoading,
       errorMessage,
+      isDescExpanded,
       flyerUrl,
       detailPageUrl,
       biodataLinks,
@@ -593,6 +719,11 @@ export default {
       getKabupatenKotaLabel,
       getKegiatanLocationLabel,
       getQrCodeUrl,
+      getBiodataIconType,
+      getCardHeaderBg,
+      getCardArrowBg,
+      getResourceIconBg,
+      getBiodataActionLabel,
       copyLink,
       shareDetailPage
     }
