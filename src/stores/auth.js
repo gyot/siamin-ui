@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { apiClient } from '@/services/api'
 import { getDummyParticipantAccount } from '@/services/pesertaPortal'
 import { storageSet, storageGet, storageRemoveAll, preloadNativeAuth } from '@/utils/secureStorage'
+import { initPushNotifications } from '@/services/pushNotifications'
 
 export const useAuthStore = defineStore('auth', () => {
   let fetchMePromise = null
@@ -297,6 +298,10 @@ export const useAuthStore = defineStore('auth', () => {
       fetchMePromise = null
       applyUnitKerjaData(resolvedUnitKerjaIds, resolvedUnitKerja)
 
+      // Init push notifications
+      const pushUserId = currentUser.value.id_pegawai || currentUser.value.id
+      initPushNotifications(pushUserId).catch(() => {})
+
       return true
     } catch (err) {
       const message = buildErrorMessage(err, 'Email atau password salah')
@@ -403,6 +408,10 @@ export const useAuthStore = defineStore('auth', () => {
       hasRevalidatedSession.value = isPesertaLogin
       fetchMePromise = null
       applyUnitKerjaData(resolvedUnitKerjaIds, resolvedUnitKerja)
+
+      // Init push notifications
+      const pushUserId = currentUser.value.id_pegawai || currentUser.value.id
+      initPushNotifications(pushUserId).catch(() => {})
 
       return true
     } catch (err) {
