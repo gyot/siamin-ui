@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { apiClient } from '@/services/api'
 import { getDummyParticipantAccount } from '@/services/pesertaPortal'
+import { storageSet, storageGet, storageRemoveAll, preloadNativeAuth } from '@/utils/secureStorage'
 
 export const useAuthStore = defineStore('auth', () => {
   let fetchMePromise = null
@@ -16,7 +17,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const parseJsonStorage = (key, fallback) => {
-    const raw = localStorage.getItem(key)
+    const raw = storageGet(key)
     if (!raw) return fallback
     try {
       return JSON.parse(raw)
@@ -81,11 +82,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const clearPersistedAuth = () => {
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('user_data')
-    localStorage.removeItem('user_type')
-    localStorage.removeItem('unit_kerja_id')
-    localStorage.removeItem('unit_kerja')
+    storageRemoveAll(['auth_token', 'user_data', 'user_type', 'unit_kerja_id', 'unit_kerja'])
   }
 
   const clearSessionState = () => {
@@ -109,15 +106,15 @@ export const useAuthStore = defineStore('auth', () => {
   const unit_kerja_id = ref(parseJsonStorage('unit_kerja_id', []))
   const unit_kerja = ref(parseJsonStorage('unit_kerja', []))
   const userType = ref(null)
-  const token = ref(localStorage.getItem('auth_token'))
+  const token = ref(storageGet('auth_token'))
   const isLoading = ref(false)
   const error = ref(null)
   const hasRestoredSession = ref(false)
   const hasRevalidatedSession = ref(false)
 
   const persistUnitKerja = () => {
-    localStorage.setItem('unit_kerja_id', JSON.stringify(unit_kerja_id.value))
-    localStorage.setItem('unit_kerja', JSON.stringify(unit_kerja.value))
+    storageSet('unit_kerja_id', JSON.stringify(unit_kerja_id.value))
+    storageSet('unit_kerja', JSON.stringify(unit_kerja.value))
   }
 
   const applyUnitKerjaData = (ids, units) => {
@@ -230,7 +227,7 @@ export const useAuthStore = defineStore('auth', () => {
         const finalIds = mergeUnitKerjaIds(unit_kerja_id.value, meUnitKerjaIds)
         const finalUnits = mergeUnitKerjaList(unit_kerja.value, meUnitKerja)
         applyUnitKerjaData(finalIds, finalUnits)
-        localStorage.setItem('user_data', JSON.stringify(currentUser.value))
+        storageSet('user_data', JSON.stringify(currentUser.value))
         hasRevalidatedSession.value = true
         return data
       } catch (err) {
@@ -292,9 +289,9 @@ export const useAuthStore = defineStore('auth', () => {
       }
       userType.value = 'admin'
 
-      localStorage.setItem('auth_token', apiToken)
-      localStorage.setItem('user_data', JSON.stringify(currentUser.value))
-      localStorage.setItem('user_type', 'admin')
+      storageSet('auth_token', apiToken)
+      storageSet('user_data', JSON.stringify(currentUser.value))
+      storageSet('user_type', 'admin')
       hasRestoredSession.value = true
       hasRevalidatedSession.value = false
       fetchMePromise = null
@@ -337,9 +334,9 @@ export const useAuthStore = defineStore('auth', () => {
       }
       userType.value = 'peserta'
 
-      localStorage.setItem('auth_token', dummyToken)
-      localStorage.setItem('user_data', JSON.stringify(currentUser.value))
-      localStorage.setItem('user_type', 'peserta')
+      storageSet('auth_token', dummyToken)
+      storageSet('user_data', JSON.stringify(currentUser.value))
+      storageSet('user_type', 'peserta')
       hasRestoredSession.value = true
       hasRevalidatedSession.value = true
       fetchMePromise = null
@@ -399,9 +396,9 @@ export const useAuthStore = defineStore('auth', () => {
       }
       userType.value = isPesertaLogin ? 'peserta' : 'admin'
 
-      localStorage.setItem('auth_token', payload.token)
-      localStorage.setItem('user_data', JSON.stringify(currentUser.value))
-      localStorage.setItem('user_type', isPesertaLogin ? 'peserta' : 'admin')
+      storageSet('auth_token', payload.token)
+      storageSet('user_data', JSON.stringify(currentUser.value))
+      storageSet('user_type', isPesertaLogin ? 'peserta' : 'admin')
       hasRestoredSession.value = true
       hasRevalidatedSession.value = isPesertaLogin
       fetchMePromise = null
@@ -440,6 +437,12 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const restoreAuth = async ({ revalidate = false } = {}) => {
+    try {
+      await preloadNativeAuth()
+    } catch {
+      // native preload failure should not block session restore
+    }
+
     if (hasRestoredSession.value) {
       if (revalidate && token.value && !hasRevalidatedSession.value) {
         try {
@@ -453,9 +456,9 @@ export const useAuthStore = defineStore('auth', () => {
       return currentUser.value
     }
 
-    const savedToken = localStorage.getItem('auth_token')
-    const savedUser = localStorage.getItem('user_data')
-    const savedType = localStorage.getItem('user_type')
+    const savedToken = storageGet('auth_token')
+    const savedUser = storageGet('user_data')
+    const savedType = storageGet('user_type')
     const savedUnitKerjaId = parseJsonStorage('unit_kerja_id', [])
     const savedUnitKerja = parseJsonStorage('unit_kerja', [])
 

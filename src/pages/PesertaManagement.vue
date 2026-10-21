@@ -3,10 +3,10 @@
     <div class="max-w-7xl mx-auto">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
-        <div>
+        <!-- <div>
           <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-1 sm:mb-2">Manajemen Peserta</h1>
           <p class="text-xs sm:text-sm text-gray-600">Kelola data peserta dari semua kegiatan</p>
-        </div>
+        </div> -->
         <div class="flex gap-2">
           <button
             @click="handleGenerateMassal"
@@ -2292,6 +2292,9 @@ export default {
     }
 
     const getPesertaLokasiKegiatan = (p) => {
+      if (p.tpk && p.tpk.lokasi) {
+        return p.tpk.kabupaten_kota ? `${p.tpk.lokasi} (${p.tpk.kabupaten_kota})` : p.tpk.lokasi
+      }
       const kegData = resolveKegiatanData(p)
       return kegData.lokasi || '-'
     }
@@ -2302,12 +2305,16 @@ export default {
 
     const getPesertaBiodata = (p) => {
       const kegData = resolveKegiatanData(p)
+      const tpkLokasi = (p.tpk && p.tpk.lokasi)
+        ? (p.tpk.kabupaten_kota ? `${p.tpk.lokasi} (${p.tpk.kabupaten_kota})` : p.tpk.lokasi)
+        : null
       return {
         ...p,
         nama_kegiatan: kegData.nama_kegiatan || getNamaKegiatan(getPesertaKegiatanId(p)) || '-',
         tanggal_mulai: kegData.tanggal_mulai || '',
         tanggal_selesai: kegData.tanggal_selesai || '',
-        lokasi: kegData.lokasi || '-',
+        lokasi: tpkLokasi || kegData.lokasi || '-',
+        tpk: p.tpk || null,
         pangkat_golongan: [p.pangkat, p.gol].filter(Boolean).join(' / ') || '',
         jabatan_kedinasan: p.jabatan || '',
         kabupaten_kota: p.kab_kota || p.kabupaten_kota || '',
@@ -2989,7 +2996,10 @@ export default {
       const kabupatenKota = p.kab_kota || p.kabupaten_kota || '-'
       const peran = p.peran || 'Peserta'
       const waktu = formatDateRange(kegiatanData.tanggal_mulai, kegiatanData.tanggal_selesai)
-      const lokasi = kegiatanData.lokasi || '-'
+      const tpkLokasi = (p.tpk && p.tpk.lokasi)
+        ? (p.tpk.kabupaten_kota ? `${p.tpk.lokasi} (${p.tpk.kabupaten_kota})` : p.tpk.lokasi)
+        : null
+      const lokasi = tpkLokasi || kegiatanData.lokasi || '-'
       const daftarAtk = kegiatanData.daftar_atk || []
 
       return `
@@ -3256,7 +3266,10 @@ export default {
         const kabupatenKota = p.kab_kota || p.kabupaten_kota || '-'
         const peran = p.peran || 'Peserta'
         const waktu = formatDateRange(kegiatanData.tanggal_mulai, kegiatanData.tanggal_selesai)
-        const lokasi = kegiatanData.lokasi || '-'
+        const tpkLokasi = (p.tpk && p.tpk.lokasi)
+          ? (p.tpk.kabupaten_kota ? `${p.tpk.lokasi} (${p.tpk.kabupaten_kota})` : p.tpk.lokasi)
+          : null
+        const lokasi = tpkLokasi || kegiatanData.lokasi || '-'
         const daftarAtk = kegiatanData.daftar_atk || []
         const sigLokasi = p.kab_kota || p.kabupaten_kota || kegiatanData.lokasi || '-'
         const sigTanggal = formatDate(kegiatanData.tanggal_mulai)
@@ -3478,12 +3491,15 @@ export default {
 
     const openBiodataModal = (p) => {
       const kegiatanData = resolveKegiatanData(p)
+      const tpkLokasi = (p.tpk && p.tpk.lokasi)
+        ? (p.tpk.kabupaten_kota ? `${p.tpk.lokasi} (${p.tpk.kabupaten_kota})` : p.tpk.lokasi)
+        : null
       selectedPesertaBiodata.value = {
         ...p,
         nama_kegiatan: kegiatanData.nama_kegiatan || getNamaKegiatan(getPesertaKegiatanId(p)) || '-',
         tanggal_mulai: kegiatanData.tanggal_mulai || '',
         tanggal_selesai: kegiatanData.tanggal_selesai || '',
-        lokasi: kegiatanData.lokasi || '-',
+        lokasi: tpkLokasi || kegiatanData.lokasi || '-',
         tpk: p.tpk || null,
         
         // Get ATK from kegiatan

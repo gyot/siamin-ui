@@ -280,9 +280,13 @@ const findKegiatanByKode = async (kode) => {
 router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
 
-  // Sync restore from localStorage (instant, no network)
+  // Restore session from native storage (await so token is available before auth checks)
   if (!authStore.hasRestoredSession) {
-    authStore.restoreAuth({ revalidate: false })
+    try {
+      await authStore.restoreAuth({ revalidate: false })
+    } catch {
+      // restoreAuth handles its own errors, but never block navigation
+    }
   }
 
   // Defer revalidation to background (non-blocking)

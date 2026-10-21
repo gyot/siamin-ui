@@ -1,5 +1,6 @@
 import axios from 'axios'
 import dbJSON from '@/data/database.json'
+import { storageGet } from '@/utils/secureStorage'
 
 // API Service Configuration
 // During development, use local proxy `/api` to avoid CORS.
@@ -212,7 +213,7 @@ const resolveUrl = (endpoint) =>
     : normalizeEndpoint(ENDPOINTS[endpoint] || endpoint)
 
 const buildHeaders = (headers = {}, includeAuth = true, payload) => {
-  const authToken = localStorage.getItem('auth_token')
+  const authToken = storageGet('auth_token')
   const nextHeaders = {
     Accept: 'application/json',
     ...headers

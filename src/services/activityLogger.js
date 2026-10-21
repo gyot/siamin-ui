@@ -3,6 +3,7 @@
  * Mencatat setiap aktivitas pengguna ke backend API
  */
 import { postAPI } from '@/services/api'
+import { storageGet } from '@/utils/secureStorage'
 import { useAuthStore } from '@/stores/auth'
 
 /**
@@ -15,7 +16,7 @@ export const logActivity = async (action, description, metadata = {}) => {
   try {
     const authStore = useAuthStore()
     const currentUser = authStore.currentUser
-    const authToken = authStore.token || localStorage.getItem('auth_token')
+    const authToken = authStore.token || storageGet('auth_token')
     
     if (!currentUser) {
       console.warn('[ActivityLogger] No authenticated user')

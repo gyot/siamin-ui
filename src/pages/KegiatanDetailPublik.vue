@@ -211,11 +211,11 @@
               Link Publik
             </h2>
             <button
-              @click="copyLink(detailPageUrl)"
+              @click="shareDetailPage"
               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/20 hover:bg-white/35 text-white text-xs font-semibold transition-all duration-200"
             >
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
-              Copy Link
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+              Share Link
             </button>
           </div>
 
@@ -233,7 +233,7 @@
                 v-for="item in visibleBiodataLinks"
                 :key="item.label"
                 :href="item.url"
-                target="_blank"
+                @click.prevent="navigateTo(item.url)"
                 class="group rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
               >
                 <div class="p-5" :class="getCardHeaderBg(item.label)">
@@ -272,7 +272,7 @@
                 v-for="item in evaluasiLinks"
                 :key="item.id_tpk"
                 :href="item.url"
-                target="_blank"
+                @click.prevent="navigateTo(item.url)"
                 class="group rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
               >
                 <div class="bg-emerald-500 p-5">
@@ -298,7 +298,7 @@
 
 <script>
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { fetchAPI } from '@/services/api'
 import { getJadwal } from '@/services/laporan'
 import database from '@/data/index.js'
@@ -309,6 +309,7 @@ export default {
   name: 'KegiatanDetailPublik',
   setup() {
     const route = useRoute()
+    const router = useRouter()
     const kode = route.params.kode
 
     const kegiatan = ref(null)
@@ -664,6 +665,21 @@ export default {
 
     const getQrCodeUrl = (url) => qrCodeMap.value[url] || ''
 
+    const navigateTo = (url) => {
+      if (!url) return
+      const value = String(url).trim()
+      const simaikBase = String(import.meta.env.VITE_SIMAIK_BASE || '').replace(/\/+$/, '')
+      let path = value
+      if (simaikBase && value.startsWith(simaikBase)) {
+        path = value.slice(simaikBase.length) || '/'
+      }
+      if (path.startsWith('/') && !path.startsWith('//')) {
+        router.push(path)
+      } else {
+        window.open(value, '_blank')
+      }
+    }
+
     const copyLink = async (url) => {
       try {
         await navigator.clipboard.writeText(url)
@@ -675,11 +691,12 @@ export default {
 
     const shareDetailPage = async () => {
       const url = detailPageUrl.value
+      const title = kegiatan.value?.nama_kegiatan || 'Detail Kegiatan'
       if (navigator.share) {
         try {
           await navigator.share({
-            title: kegiatan.value?.nama_kegiatan || 'Detail Kegiatan',
-            text: 'Detail kegiatan publik',
+            title,
+            text: `Detail kegiatan: ${title}`,
             url
           })
           return
@@ -719,6 +736,7 @@ export default {
       getKabupatenKotaLabel,
       getKegiatanLocationLabel,
       getQrCodeUrl,
+      navigateTo,
       getBiodataIconType,
       getCardHeaderBg,
       getCardArrowBg,

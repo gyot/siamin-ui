@@ -17,7 +17,12 @@ export const saveLaporanDraft = async (idKegiatan, data) => {
 export const getJadwal = async (idKegiatan) => {
   try {
     const response = await fetchAPI(`laporan/${idKegiatan}/jadwal`)
-    return response || { jadwal_per_kelas: [], jadwal_harian: [], kelas: [] }
+    const data = response?.data || response || {}
+    return {
+      jadwal_per_kelas: Array.isArray(data.jadwal_per_kelas) ? data.jadwal_per_kelas : (Array.isArray(data?.jadwal) ? data.jadwal : []),
+      jadwal_harian: Array.isArray(data.jadwal_harian) ? data.jadwal_harian : [],
+      kelas: Array.isArray(data.kelas) ? data.kelas : []
+    }
   } catch {
     return { jadwal_per_kelas: [], jadwal_harian: [], kelas: [] }
   }

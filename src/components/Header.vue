@@ -192,7 +192,7 @@ export default {
       }).then(r => {
         if (r.isConfirmed) {
           authStore.logout()
-          router.push('/laman-masuk')
+          router.push('/')
         }
       })
     }

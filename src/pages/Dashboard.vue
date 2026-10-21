@@ -71,13 +71,13 @@
             <div v-for="k in filteredKegiatan" :key="k.id_kegiatan"
               class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] overflow-hidden">
               <!-- Card Header -->
-              <div class="flex items-center gap-3 p-4 pb-2">
-                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
+              <div class="flex items-start gap-3 p-4 pb-2">
+                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
                   :class="getStatusColor(getKegiatanStatus(k)) === 'bg-green-500' ? 'bg-green-500' : getStatusColor(getKegiatanStatus(k)) === 'bg-blue-500' ? 'bg-blue-500' : 'bg-amber-500'">
                   {{ (k.nama_kegiatan || '').charAt(0) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-[15px] font-semibold text-[#050505] leading-tight truncate">{{ k.nama_kegiatan }}</p>
+                  <p class="text-[15px] font-semibold text-[#050505] leading-tight">{{ k.nama_kegiatan }}</p>
                   <div class="flex items-center gap-2 mt-0.5">
                     <span class="text-[13px] text-[#65676B]">{{ formatDateRange(k.tanggal_mulai, k.tanggal_selesai) }}</span>
                     <span class="text-[#65676B]">·</span>
@@ -85,6 +85,15 @@
                       {{ formatStatus(getKegiatanStatus(k)) }}
                     </span>
                   </div>
+                </div>
+                <!-- QR Code -->
+                <div v-if="listQrCodes[k.id_kegiatan]" class="flex-shrink-0">
+                  <img
+                    :src="listQrCodes[k.id_kegiatan]"
+                    :alt="`QR ${k.nama_kegiatan}`"
+                    class="w-16 h-16 rounded-lg border border-[#E4E6E9] p-0.5"
+                    title="Scan untuk membuka detail kegiatan"
+                  />
                 </div>
               </div>
 
@@ -298,6 +307,25 @@
               <p class="text-lg font-semibold text-slate-900">{{ selectedKegiatan.rincian_kegiatan }}</p>
             </div>
           </div>
+          <!-- QR Detail Kegiatan Publik -->
+          <div class="mt-6">
+            <p class="text-sm text-slate-600 font-medium mb-3">Link Detail Kegiatan Publik</p>
+            <div class="rounded-lg border border-slate-200 p-4 bg-white flex items-start gap-4">
+              <img
+                v-if="qrCodes['detail_kegiatan']"
+                :src="qrCodes['detail_kegiatan']"
+                alt="QR Detail Kegiatan"
+                class="w-28 h-28 rounded bg-white p-1 border border-slate-200"
+              />
+              <div>
+                <p class="text-xs text-slate-500 mb-1">Scan QR code atau buka link berikut:</p>
+                <a :href="detailKegiatanPublicUrl" target="_blank" class="text-blue-600 hover:text-blue-700 underline text-sm break-all">
+                  {{ detailKegiatanPublicUrl }}
+                </a>
+              </div>
+            </div>
+          </div>
+
           <!-- form links -->
           <div class="mt-6">
             <p class="text-sm text-slate-600 font-medium mb-3">Formulir</p>
@@ -836,6 +864,14 @@ export default {
     })
 
     const qrCodes = ref({})
+    const listQrCodes = ref({})
+
+    const detailKegiatanPublicUrl = computed(() => {
+      if (!selectedKegiatan.value) return ''
+      const kode = selectedKegiatan.value.id_kegiatan || ''
+      const slug = slugify(selectedKegiatan.value.nama_kegiatan || '')
+      return buildAppUrl(`kegiatan/${kode}/${slug}`)
+    })
 
     const generateQrCodes = async () => {
       if (!selectedKegiatan.value) {
@@ -856,6 +892,15 @@ export default {
           }
         })
       )
+
+      // Generate QR for detail kegiatan public URL
+      if (detailKegiatanPublicUrl.value) {
+        try {
+          nextQrCodes['detail_kegiatan'] = await QRCode.toDataURL(detailKegiatanPublicUrl.value, { width: 180, margin: 1 })
+        } catch {
+          nextQrCodes['detail_kegiatan'] = ''
+        }
+      }
 
       // Generate QR for per-TPK evaluasi links
       for (const link of evaluationLinks.value) {
@@ -880,6 +925,26 @@ export default {
       }
 
       qrCodes.value = nextQrCodes
+    }
+
+    const generateListQrCodes = async (list) => {
+      if (!list || list.length === 0) {
+        listQrCodes.value = {}
+        return
+      }
+      const QRCode = (await import('qrcode')).default || (await import('qrcode'))
+      const nextMap = {}
+      await Promise.all(list.map(async (k) => {
+        const kode = k.id_kegiatan || ''
+        const slug = slugify(k.nama_kegiatan || '')
+        const url = buildAppUrl(`kegiatan/${kode}/${slug}`)
+        try {
+          nextMap[k.id_kegiatan] = await QRCode.toDataURL(url, { width: 120, margin: 1 })
+        } catch {
+          nextMap[k.id_kegiatan] = ''
+        }
+      }))
+      listQrCodes.value = nextMap
     }
 
     const pesertaInSelected = computed(() => {
@@ -1283,6 +1348,10 @@ export default {
       }
     })())
 
+    watch(filteredKegiatan, (list) => {
+      generateListQrCodes(list)
+    }, { immediate: true })
+
     // Load kegiatan saat component mount atau saat filter/search berubah
     // onMounted(async () => {
     //   // Load pegawai dan users data dari API terlebih dahulu sebelum rendering greeting
@@ -1408,6 +1477,8 @@ export default {
       selectedKegiatan,
       activityLinks,
       qrCodes,
+      listQrCodes,
+      detailKegiatanPublicUrl,
       pesertaInSelected,
       viewPesertaList,
       exportPesertaKegiatan,

@@ -500,6 +500,7 @@ import { ref, computed, onMounted } from 'vue'
 import Swal from 'sweetalert2'
 import { useAuthStore } from '@/stores/auth'
 import { apiClient, fetchAPI } from '@/services/api'
+import { storageGet, storageSet } from '@/utils/secureStorage'
 
 export default {
   name: 'Profile',
@@ -605,7 +606,7 @@ export default {
       try {
         const res = await apiClient.get('me', {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem('auth_token')}`
+            Authorization: `Bearer ${storageGet('auth_token')}`
           }
         })
 
@@ -669,7 +670,7 @@ export default {
       authStore.currentUser.email = editFormData.value.email
       authStore.currentUser.instansi = editFormData.value.instansi
 
-      localStorage.setItem('user_data', JSON.stringify(authStore.currentUser))
+      storageSet('user_data', JSON.stringify(authStore.currentUser))
 
       editMode.value = false
 

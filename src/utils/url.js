@@ -1,10 +1,29 @@
+import { Capacitor } from '@capacitor/core'
+
 const ABSOLUTE_URL_PATTERN = /^(https?:\/\/|data:|mailto:|tel:)/i
 
 const trimTrailingSlash = (value = '') => String(value || '').replace(/\/+$/, '')
 
 export const isAbsoluteUrl = (value = '') => ABSOLUTE_URL_PATTERN.test(String(value || '').trim())
 
+const isNativePlatform = () => {
+  try {
+    return Capacitor.isNativePlatform()
+  } catch {
+    return false
+  }
+}
+
 export const getAppBaseUrl = () => {
+  const simaikBase = String(import.meta.env.VITE_SIMAIK_BASE || '').trim()
+  if (simaikBase) {
+    return trimTrailingSlash(simaikBase)
+  }
+
+  if (isNativePlatform()) {
+    return ''
+  }
+
   const basePath = String(import.meta.env.BASE_URL || '/')
 
   if (typeof window !== 'undefined' && window.location?.origin) {

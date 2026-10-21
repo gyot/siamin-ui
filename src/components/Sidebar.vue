@@ -148,7 +148,6 @@
 
 <script>
 import { useAuthStore } from '@/stores/auth'
-import { useRouter } from 'vue-router'
 
 export default {
   name: 'Sidebar',
@@ -173,8 +172,7 @@ export default {
     async handleLogout() {
       const auth = useAuthStore()
       await auth.logout()
-      const router = useRouter()
-      router.push('/login')
+      this.$router.push('/')
     }
   }
 }

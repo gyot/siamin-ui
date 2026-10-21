@@ -57,7 +57,7 @@ const authStore = useAuthStore()
 const handleLogout = async () => {
   emit('close')
   await authStore.logout()
-  router.replace('/login-peserta')
+  router.replace('/')
 }
 </script>
 

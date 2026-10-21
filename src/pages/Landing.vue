@@ -7,14 +7,6 @@
           <RouterLink to="/" class="flex items-center gap-3">
             <img src="/src/assets/logo.png" alt="Logo SIMAIK" class="h-16 object-contain">
           </RouterLink>
-          <div class="flex items-center gap-3">
-            <!-- <RouterLink 
-              to="/login" 
-              class="btn-primary px-5 py-2.5 text-white rounded-lg font-medium shadow-lg"
-            >
-              Login
-            </RouterLink> -->
-          </div>
         </div>
       </nav>
     </header>
@@ -46,13 +38,16 @@
               </p>
               <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <RouterLink
-                  to="/login"
+                  :to="dashboardUrl"
                   class="px-8 py-3.5 bg-blue-500 hover:bg-blue-400 text-white rounded-xl font-semibold shadow-lg shadow-blue-950/20 transition flex items-center justify-center gap-2"
                 >
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg v-if="isLoggedIn" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                  <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  Login
+                  {{ isLoggedIn ? 'Masuk Dashboard' : 'Login' }}
                 </RouterLink>
                 <button
                   @click="showCekSertifikatModal = true"
@@ -117,7 +112,7 @@
                     <div class="flex items-center gap-2">
                       <a
                         :href="buildKegiatanDetailUrl(item)"
-                        target="_blank"
+                        @click.prevent="navigateTo(buildKegiatanDetailUrl(item))"
                         class="px-3 py-1 rounded-lg text-xs border border-cyan-300/40 text-cyan-100 hover:bg-cyan-400/15 transition"
                       >
                         Detail
@@ -294,7 +289,7 @@
   <div class="mb-4">
     <a
       :href="buildDaftarPesertaUrl(selectedKegiatanDetail)"
-      target="_blank"
+      @click.prevent="navigateTo(buildDaftarPesertaUrl(selectedKegiatanDetail))"
       class="inline-flex items-center justify-center rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-400"
     >
       Lihat Peserta
@@ -306,7 +301,7 @@
     <p class="text-blue-200 text-sm mb-1">Link Halaman Detail Kegiatan</p>
     <a
       :href="buildKegiatanDetailUrl(selectedKegiatanDetail)"
-      target="_blank"
+      @click.prevent="navigateTo(buildKegiatanDetailUrl(selectedKegiatanDetail))"
       class="text-cyan-300 hover:text-cyan-200 break-all"
     >
       {{ buildKegiatanDetailUrl(selectedKegiatanDetail) }}
@@ -358,7 +353,7 @@
         </strong>
         <a
           :href="item.url"
-          target="_blank"
+          @click.prevent="navigateTo(item.url)"
           class="text-cyan-300 hover:text-cyan-200
                  break-all transition duration-200"
         >
@@ -412,7 +407,7 @@
         <strong class="text-white mb-1">{{ item.nama_tpk }}</strong>
         <a
           :href="item.url"
-          target="_blank"
+          @click.prevent="navigateTo(item.url)"
           class="text-cyan-300 hover:text-cyan-200
                  break-all transition duration-200"
         >
@@ -676,6 +671,8 @@
 
 <script>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import { getKegiatanTim, getAllKegiatanTimKegiatan, listKegiatan } from '@/services/kegiatan'
 import { getUnitKerja } from '@/services/unit_kerja'
 import { fetchAPI } from '@/services/api'
@@ -688,6 +685,8 @@ import jsQR from 'jsqr'
 export default {
   name: 'Landing',
   setup() {
+    const router = useRouter()
+    const authStore = useAuthStore()
     const kegiatan = ref([])
     const isLoadingKegiatan = ref(false)
     const selectedTimker = ref(null)
@@ -1011,6 +1010,27 @@ export default {
       const idKegiatan = item?.id_kegiatan ?? '-'
       const slug = slugify(item?.nama_kegiatan || '')
       return buildPublicUrl(`/daftar-peserta/${idKegiatan}/${slug}`)
+    }
+
+    const isLoggedIn = computed(() => authStore.isAuthenticated)
+    const dashboardUrl = computed(() => {
+      if (!authStore.isAuthenticated) return '/login'
+      return authStore.isPeserta ? '/peserta/dashboard' : '/admin/dashboard'
+    })
+
+    const navigateTo = (url) => {
+      if (!url) return
+      const value = String(url).trim()
+      const simaikBase = String(import.meta.env.VITE_SIMAIK_BASE || '').replace(/\/+$/, '')
+      let path = value
+      if (simaikBase && value.startsWith(simaikBase)) {
+        path = value.slice(simaikBase.length) || '/'
+      }
+      if (path.startsWith('/') && !path.startsWith('//')) {
+        router.push(path)
+      } else {
+        window.open(value, '_blank')
+      }
     }
 
     const getValueByPath = (obj, path) => {
@@ -1604,6 +1624,9 @@ export default {
       slugify,
       buildKegiatanDetailUrl,
       buildDaftarPesertaUrl,
+      navigateTo,
+      isLoggedIn,
+      dashboardUrl,
       getQrCodeUrl,
       getStatusLabel,
       formatStatus,

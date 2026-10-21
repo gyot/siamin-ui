@@ -1347,6 +1347,7 @@ import { ActivityEvents } from '@/services/activityLogger'
 import Spinner from '@/components/Spinner.vue'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
 import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
+import { storageGet } from '@/utils/secureStorage'
 import {
   groupPenugasanByKegiatan,
   listPenugasanPegawai,
@@ -3166,7 +3167,7 @@ export default {
         : 'Kegiatan baru sedang dibuat di server.'
 
       try {
-        const authToken = localStorage.getItem('auth_token')
+        const authToken = storageGet('auth_token')
         if (!authToken) {
           formError.value = 'Sesi login tidak ditemukan. Silakan login ulang.'
           showSubmitStatus({
@@ -3344,12 +3345,16 @@ export default {
     }
 
     const openBiodataModal = (peserta) => {
+      const tpkLokasi = (peserta.tpk && peserta.tpk.lokasi)
+        ? (peserta.tpk.kabupaten_kota ? `${peserta.tpk.lokasi} (${peserta.tpk.kabupaten_kota})` : peserta.tpk.lokasi)
+        : null
       selectedPeserta.value = {
         ...peserta,
         nama_kegiatan: peserta.nama_kegiatan || selectedKegiatan.value?.nama_kegiatan || '-',
         tanggal_mulai: peserta.tanggal_mulai || selectedKegiatan.value?.tanggal_mulai || '',
         tanggal_selesai: peserta.tanggal_selesai || selectedKegiatan.value?.tanggal_selesai || '',
-        lokasi: peserta.lokasi || selectedKegiatan.value?.lokasi || '-',
+        lokasi: tpkLokasi || peserta.lokasi || selectedKegiatan.value?.lokasi || '-',
+        tpk: peserta.tpk || null,
         // Get ATK from kegiatan
         daftar_atk: selectedKegiatan.value?.daftar_atk || []
       }
