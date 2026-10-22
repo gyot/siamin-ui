@@ -117,6 +117,11 @@
       <!-- Tab: Data Pegawai -->
       <div v-if="activeTab === 'pegawai'" class="bg-white rounded-lg shadow-lg overflow-hidden">
         <div class="overflow-x-auto">
+          <LoadingState
+            :state="filteredPegawai.length === 0 ? 'empty' : 'ready'"
+            empty-title="Tidak ada data pegawai"
+            empty-message="Belum ada data pegawai yang tersedia."
+          >
           <table class="w-full text-sm">
             <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white sticky top-0">
               <tr>
@@ -131,11 +136,6 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-              <tr v-if="filteredPegawai.length === 0" class="hover:bg-gray-50">
-                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
-                  <p class="text-sm sm:text-base">Tidak ada data pegawai</p>
-                </td>
-              </tr>
               <tr v-for="(p, index) in filteredPegawai" :key="p.id_pegawai" class="hover:bg-gray-50 transition">
                 <td class="px-4 py-3 text-gray-800 font-medium">{{ index + 1 }}</td>
                 <td class="px-4 py-3 text-gray-800 font-medium">{{ p.nama }}</td>
@@ -186,6 +186,7 @@
               </tr>
             </tbody>
           </table>
+          </LoadingState>
         </div>
       </div>
 
@@ -200,6 +201,11 @@
       </div>
       <div v-if="activeTab === 'user'" class="bg-white rounded-lg shadow-lg overflow-hidden">
         <div class="overflow-x-auto">
+          <LoadingState
+            :state="users.length === 0 ? 'empty' : 'ready'"
+            empty-title="Tidak ada data user"
+            empty-message="Belum ada data user admin yang tersedia."
+          >
           <table class="w-full text-sm">
             <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white sticky top-0">
               <tr>
@@ -213,11 +219,6 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-              <tr v-if="users.length === 0" class="hover:bg-gray-50">
-                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
-                  <p class="text-sm sm:text-base">Tidak ada data user</p>
-                </td>
-              </tr>
               <tr v-for="(u, index) in users" :key="u.id_user" class="hover:bg-gray-50 transition">
                 <td class="px-4 py-3 text-gray-800 font-medium">{{ index + 1 }}</td>
                 <td class="px-4 py-3 text-gray-800 font-medium">{{ u.email }}</td>
@@ -270,6 +271,7 @@
               </tr>
             </tbody>
           </table>
+          </LoadingState>
         </div>
       </div>
     </div>
@@ -915,9 +917,11 @@ import { ref, computed, onMounted } from 'vue'
 import database from '@/data/index.js'
 import { ActivityEvents } from '@/services/activityLogger'
 import { fetchAPI, postAPI, updateAPI } from '@/services/api'
+import LoadingState from '@/components/LoadingState.vue'
 
 export default {
   name: 'PegawaiManagement',
+  components: { LoadingState },
   setup() {
     const pegawai = ref(database.pegawai)
     const users = ref(database.users)

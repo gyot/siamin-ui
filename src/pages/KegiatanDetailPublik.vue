@@ -18,21 +18,15 @@
     </div>
 
     <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-      <!-- Loading -->
-      <div v-if="isLoading" class="bg-white rounded-2xl shadow-lg p-12 text-center">
-        <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p class="text-lg text-gray-600 font-medium">Memuat detail kegiatan...</p>
-      </div>
-
-      <!-- Error -->
-      <div v-else-if="errorMessage" class="bg-red-50 border-l-4 border-red-500 rounded-xl p-8 shadow-md">
-        <div class="flex items-center gap-3">
-          <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          <p class="text-lg text-red-700 font-semibold">{{ errorMessage }}</p>
-        </div>
-      </div>
-
-      <div v-else-if="kegiatan" class="space-y-6">
+      <!-- Loading / Error / Content -->
+      <LoadingState
+        :state="isLoading ? 'loading' : errorMessage ? 'error' : kegiatan ? 'ready' : 'empty'"
+        message="Memuat detail kegiatan..."
+        error-title="Gagal Memuat Data"
+        :error-message="errorMessage"
+        :on-retry="loadKegiatan"
+      >
+      <div class="space-y-6">
         <!-- Hero Header -->
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
           <div class="bg-indigo-600 p-8">
@@ -154,15 +148,45 @@
           </div>
         </div>
 
+        <!-- Survei Kepuasan Masyarakat -->
+        <div class="mb-6">
+          <a
+            href="https://docs.google.com/forms/d/e/1FAIpQLSd7b_3RXC58TlboIPTeVkmWGDDWysnjL-4WQIyG5kWaULlFFw/viewform"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-center gap-4 w-full px-8 py-6 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] group"
+          >
+            <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+              <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="text-left">
+              <h3 class="text-2xl font-bold text-white leading-tight">Survei Kepuasan Masyarakat</h3>
+              <p class="text-white/80 text-base mt-1">Beri penilaian Anda tentang kegiatan ini</p>
+            </div>
+            <svg class="w-8 h-8 text-white/70 flex-shrink-0 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+
         <!-- Jadwal -->
         <div v-if="jadwalPerKelas.length > 0" class="bg-white rounded-2xl shadow-lg overflow-hidden">
-          <div class="bg-amber-500 px-6 py-4">
+          <button
+            type="button"
+            class="w-full bg-amber-500 px-6 py-4 flex items-center justify-between hover:bg-amber-600 transition-colors"
+            @click="showJadwal = !showJadwal"
+          >
             <h2 class="text-lg font-bold text-white flex items-center gap-2">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
               Jadwal Kegiatan
             </h2>
-          </div>
-          <div class="p-6">
+            <svg class="w-5 h-5 text-white transition-transform duration-300" :class="showJadwal ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div v-show="showJadwal" class="p-6">
             <div v-for="kelas in jadwalPerKelas" :key="kelas.nama_kelas" class="mb-6 last:mb-0">
               <h3 v-if="jadwalPerKelas.length > 1" class="text-base font-bold text-indigo-600 mb-3 flex items-center gap-2">
                 <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
@@ -292,6 +316,7 @@
           </div>
         </div>
       </div>
+      </LoadingState>
     </div>
   </div>
 </template>
@@ -304,8 +329,10 @@ import { getJadwal } from '@/services/laporan'
 import database from '@/data/index.js'
 import { buildPublicUrl as buildAppUrl, buildStorageUrl } from '@/utils/url'
 import { getKegiatanKabupatenKotaLabel, getKegiatanLocationItems, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
+import LoadingState from '@/components/LoadingState.vue'
 
 export default {
+  components: { LoadingState },
   name: 'KegiatanDetailPublik',
   setup() {
     const route = useRoute()
@@ -515,6 +542,7 @@ export default {
     const tpkRows = computed(() => getKegiatanLocationItems(kegiatan.value))
 
     const jadwalData = ref({ jadwal_per_kelas: [], jadwal_harian: [] })
+    const showJadwal = ref(true)
 
     const jadwalPerKelas = computed(() => {
       if (jadwalData.value.jadwal_per_kelas?.length > 0) return jadwalData.value.jadwal_per_kelas
@@ -717,6 +745,7 @@ export default {
       kegiatan,
       isLoading,
       errorMessage,
+      loadKegiatan,
       isDescExpanded,
       flyerUrl,
       detailPageUrl,
@@ -726,6 +755,7 @@ export default {
       tpkRows,
       jadwalData,
       jadwalPerKelas,
+      showJadwal,
       isWithinKegiatanDateRange,
       isLastDayOfKegiatan,
       evaluasiLinks,

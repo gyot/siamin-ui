@@ -14,53 +14,147 @@
       </div>
     </div>
 
-    <div v-if="filteredActivities.length === 0" class="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-      Kegiatan tidak ditemukan.
-    </div>
+    <LoadingState
+      :state="loadState"
+      message="Memuat data kegiatan..."
+      error-title="Gagal memuat data kegiatan"
+      :error-message="errorMessage"
+      empty-title="Belum ada kegiatan"
+      empty-message="Anda belum memiliki kegiatan yang terdaftar."
+      :on-retry="loadData"
+    >
+      <div v-if="filteredActivities.length === 0" class="rounded-xl border border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
+        Kegiatan tidak ditemukan.
+      </div>
 
-    <div v-else class="grid grid-cols-1 gap-5 xl:grid-cols-2">
-      <article v-for="item in filteredActivities" :key="item.id_kegiatan" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div class="border-b border-slate-100 p-5">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">{{ item.peran }}</p>
-              <h3 class="mt-1 font-bold leading-snug text-slate-800">{{ item.nama_kegiatan }}</h3>
+      <div v-else class="grid grid-cols-1 gap-5 xl:grid-cols-2">
+        <article v-for="item in filteredActivities" :key="item.id_kegiatan" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div class="border-b border-slate-100 p-5">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-emerald-700">{{ item.peran }}</p>
+                <h3 class="mt-1 font-bold leading-snug text-slate-800">{{ item.nama_kegiatan }}</h3>
+              </div>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{{ item.durasi_jam }} JP</span>
             </div>
-            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">{{ item.durasi_jam }} JP</span>
+            <div class="mt-4 space-y-2 text-sm text-slate-600">
+              <p>{{ formatDateRange(item.tanggal_mulai, item.tanggal_selesai) }}</p>
+              <p>{{ item.lokasi }}<span v-if="item.kabupaten_kota">, {{ item.kabupaten_kota }}</span></p>
+              <p>{{ methodLabel(item.metode_pelaksanaan) }}</p>
+            </div>
           </div>
-          <div class="mt-4 space-y-2 text-sm text-slate-600">
-            <p>{{ formatDateRange(item.tanggal_mulai, item.tanggal_selesai) }}</p>
-            <p>{{ item.lokasi }}<span v-if="item.kabupaten_kota">, {{ item.kabupaten_kota }}</span></p>
-            <p>{{ methodLabel(item.metode_pelaksanaan) }}</p>
+          <div class="flex items-center justify-between gap-3 p-5">
+            <div>
+              <p class="text-xs text-slate-500">Sertifikat</p>
+              <p class="text-sm font-semibold" :class="item.sertifikat?.status === 'terbit' ? 'text-emerald-700' : 'text-amber-700'">
+                {{ certificateLabel(item.sertifikat?.status) }}
+              </p>
+            </div>
+            <span v-if="item.sertifikat?.nomor" class="max-w-[55%] truncate rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">{{ item.sertifikat.nomor }}</span>
           </div>
-        </div>
-        <div class="flex items-center justify-between gap-3 p-5">
-          <div>
-            <p class="text-xs text-slate-500">Sertifikat</p>
-            <p class="text-sm font-semibold" :class="item.sertifikat?.status === 'terbit' ? 'text-emerald-700' : 'text-amber-700'">
-              {{ certificateLabel(item.sertifikat?.status) }}
-            </p>
-          </div>
-          <span v-if="item.sertifikat?.nomor" class="max-w-[55%] truncate rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">{{ item.sertifikat.nomor }}</span>
-        </div>
-      </article>
-    </div>
+        </article>
+      </div>
+    </LoadingState>
   </div>
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { getDummyParticipant } from '@/services/pesertaPortal'
+import { fetchAPI } from '@/services/api'
+import LoadingState from '@/components/LoadingState.vue'
 
 const authStore = useAuthStore()
 const search = ref('')
-const peserta = computed(() => getDummyParticipant(authStore.currentUser?.participant_id))
-const activities = computed(() => peserta.value?.kegiatan || [])
+const activities = ref([])
+const isLoading = ref(true)
+const errorMessage = ref('')
+
+const loadState = computed(() => {
+  if (isLoading.value) return 'loading'
+  if (errorMessage.value) return 'error'
+  if (activities.value.length === 0) return 'empty'
+  return 'ready'
+})
+
 const filteredActivities = computed(() => {
   const keyword = search.value.trim().toLowerCase()
   if (!keyword) return activities.value
-  return activities.value.filter(item => item.nama_kegiatan.toLowerCase().includes(keyword))
+  return activities.value.filter(item => String(item.nama_kegiatan || '').toLowerCase().includes(keyword))
+})
+
+const extractRows = (response) => {
+  if (Array.isArray(response)) return response
+  if (Array.isArray(response?.data)) return response.data
+  return []
+}
+
+const matchesParticipant = (row, user) => {
+  const id = user?.participant_id ?? user?.id_peserta ?? null
+  if (id !== null && id !== undefined && id !== '') {
+    if (String(row?.id_peserta ?? '') === String(id)) return true
+  }
+  const email = String(user?.email || '').trim().toLowerCase()
+  if (email && String(row?.email || '').trim().toLowerCase() === email) return true
+  const nip = String(user?.nip || '').trim()
+  if (nip && String(row?.nip || '').trim() === nip) return true
+  return false
+}
+
+const buildActivities = (myRows, kegiatanRows, sertifikatRows) => {
+  return myRows.map(row => {
+    const kegiatan = kegiatanRows.find(k => String(k.id_kegiatan) === String(row.id_kegiatan)) || {}
+    const sertifikat = sertifikatRows.find(s =>
+      String(s.id_peserta ?? s.id ?? '') === String(row.id_peserta ?? '') &&
+      String(s.id_kegiatan ?? '') === String(row.id_kegiatan ?? '')
+    ) || null
+
+    return {
+      id_kegiatan: row.id_kegiatan ?? kegiatan.id_kegiatan,
+      nama_kegiatan: kegiatan.nama_kegiatan || row.nama_kegiatan || '-',
+      tanggal_mulai: kegiatan.tanggal_mulai || row.tanggal_mulai || null,
+      tanggal_selesai: kegiatan.tanggal_selesai || row.tanggal_selesai || null,
+      peran: row.peran || '-',
+      status: kegiatan.status || row.status || '-',
+      durasi_jam: Number(row.durasi_jam ?? kegiatan.durasi_jam ?? kegiatan.jp ?? 0),
+      lokasi: kegiatan.lokasi || row.lokasi || '-',
+      kabupaten_kota: kegiatan.kabupaten_kota ?? kegiatan.kab_kota ?? row.kab_kota ?? '',
+      metode_pelaksanaan: kegiatan.metode_pelaksanaan || row.metode_pelaksanaan || '',
+      sertifikat: sertifikat
+        ? { nomor: sertifikat.nomor_sertifikat || sertifikat.nomor || null, status: sertifikat.status || 'draft' }
+        : null
+    }
+  })
+}
+
+const loadData = async () => {
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    const [pesertaData, kegiatanData, sertifikatData] = await Promise.all([
+      fetchAPI('peserta'),
+      fetchAPI('kegiatan'),
+      fetchAPI('sertifikat')
+    ])
+
+    const pesertaRows = extractRows(pesertaData)
+    const kegiatanRows = extractRows(kegiatanData)
+    const sertifikatRows = extractRows(sertifikatData)
+    const user = authStore.currentUser || {}
+    const myRows = pesertaRows.filter(row => matchesParticipant(row, user))
+
+    activities.value = buildActivities(myRows, kegiatanRows, sertifikatRows)
+  } catch (error) {
+    console.error('[PesertaKegiatan] Gagal memuat data kegiatan:', error)
+    activities.value = []
+    errorMessage.value = error?.message || 'Gagal memuat data kegiatan.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadData()
 })
 
 const formatDate = value => new Date(value).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })

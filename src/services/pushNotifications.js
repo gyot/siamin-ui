@@ -53,7 +53,7 @@ export const initPushNotifications = async (userId) => {
       console.log('[Push] Notification action:', JSON.stringify(action))
       const data = action.notification?.data
       if (data?.type === 'penugasan' && data?.id_kegiatan) {
-        window.location.href = `/admin/kegiatan/${data.id_kegiatan}/peserta`
+        window.location.href = `/admin/kegiatan/${data.id_kegiatan}/detail`
       }
     })
 

@@ -6,14 +6,23 @@
           <h1 class="text-2xl font-bold text-slate-800">Laporan Kegiatan</h1>
           <p class="text-sm text-slate-500">Preview dan download laporan kegiatan</p>
         </div>
-        <button @click="downloadDocx" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-700">
+        <button @click="downloadDocx" :disabled="!data" class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400 disabled:shadow-none disabled:hover:bg-slate-400">
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           Download DOCX
         </button>
       </div>
 
       <div class="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 print:p-0 print:shadow-none print:ring-0">
-        <div class="space-y-10 text-slate-800 leading-relaxed" style="font-family: 'Times New Roman', serif; font-size: 12pt;">
+        <LoadingState
+          :state="state"
+          message="Memuat data laporan..."
+          error-title="Gagal memuat data laporan"
+          :error-message="errorMessage"
+          empty-title="Belum ada data laporan"
+          empty-message="Data laporan belum tersedia"
+          :on-retry="loadLaporan"
+        >
+        <div v-if="data" class="space-y-10 text-slate-800 leading-relaxed" style="font-family: 'Times New Roman', serif; font-size: 12pt;">
 
           <div class="text-center py-16">
             <h2 class="text-xl font-bold uppercase tracking-wide">Laporan</h2>
@@ -344,29 +353,38 @@
             <li>Link Sertifikat</li>
           </ul>
         </div>
+        </LoadingState>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import laporanData from '@/data/laporanDummy.json'
+import LoadingState from '@/components/LoadingState.vue'
 
 export default {
   name: 'LaporanKegiatan',
+  components: { LoadingState },
   data() {
-    return { data: laporanData }
+    return {
+      data: null,
+      state: 'loading',
+      errorMessage: ''
+    }
+  },
+  mounted() {
+    this.loadLaporan()
   },
   computed: {
     panitiaPendamping() {
-      return this.data.peserta.filter(p => p.peran === 'Panitia' || p.peran === 'Pendamping')
+      return (this.data?.peserta || []).filter(p => p.peran === 'Panitia' || p.peran === 'Pendamping')
     },
     fasilitator() {
-      return this.data.peserta.filter(p => p.peran === 'Fasilitator')
+      return (this.data?.peserta || []).filter(p => p.peran === 'Fasilitator')
     },
     programRows() {
-      const n = this.data.evaluasi.total_responden
-      const p = this.data.evaluasi.program
+      const n = this.data?.evaluasi?.total_responden || 0
+      const p = this.data?.evaluasi?.program || {}
       return [
         { label: 'Kesesuaian Program dengan Tujuan', ...this.calcPct(p.kesesuaian_program_tujuan, n) },
         { label: 'Kesesuaian Bahan Ajar dengan Struktur Program', ...this.calcPct(p.kesesuaian_bahan_ajar, n) },
@@ -374,8 +392,8 @@ export default {
       ]
     },
     fasilitatorEval() {
-      const n = this.data.evaluasi.total_responden
-      return this.data.evaluasi.fasilitator.map(f => ({
+      const n = this.data?.evaluasi?.total_responden || 0
+      return (this.data?.evaluasi?.fasilitator || []).map(f => ({
         nama: f.nama,
         rows: [
           { label: 'Penguasaan Materi', ...this.calcPct(f.penguasaan_materi, n) },
@@ -385,8 +403,8 @@ export default {
       }))
     },
     layananRows() {
-      const n = this.data.evaluasi.total_responden
-      const l = this.data.evaluasi.layanan
+      const n = this.data?.evaluasi?.total_responden || 0
+      const l = this.data?.evaluasi?.layanan || {}
       return [
         { label: 'Sikap dan Pelayanan Panitia', ...this.calcPct(l.sikap_pelayanan_panitia, n) },
         { label: 'Fasilitas dan Kebersihan', ...this.calcPct(l.fasilitas_kebersihan, n) },
@@ -395,12 +413,24 @@ export default {
     }
   },
   methods: {
+    async loadLaporan() {
+      this.state = 'loading'
+      this.errorMessage = ''
+      try {
+        this.data = null
+        this.state = 'empty'
+      } catch (e) {
+        console.error('Gagal memuat data laporan:', e)
+        this.errorMessage = e?.message || 'Gagal memuat data laporan.'
+        this.state = 'error'
+      }
+    },
     formatDate(value) {
       if (!value) return '-'
       return new Date(value).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
     },
     calcPct(dist, total) {
-      if (!total) return { pctSS: 0, pctS: 0, pctC: 0, pctK: 0 }
+      if (!total || !dist) return { pctSS: 0, pctS: 0, pctC: 0, pctK: 0 }
       return {
         pctSS: Math.round((dist.sangat_sesuai / total) * 100),
         pctS: Math.round((dist.sesuai / total) * 100),
@@ -415,6 +445,7 @@ export default {
       return 'text-slate-400'
     },
     async downloadDocx() {
+      if (!this.data) return
       try {
         const { generateLaporanDocx } = await import('@/utils/generateLaporanDocx')
         await generateLaporanDocx(this.data)

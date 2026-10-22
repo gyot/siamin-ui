@@ -95,16 +95,17 @@
                 </div>
               </div>
 
-              <div v-if="isLoadingKegiatan" class="text-blue-100 text-sm py-10 text-center lg:text-left">
-                Memuat daftar kegiatan...
-              </div>
-
-              <div v-else-if="paginatedKegiatan.length === 0"
-                class="text-blue-100 text-sm py-10 text-center lg:text-left">
-                {{ searchQuery && selectedTimker.isSemua ? 'Tidak ada kegiatan yang cocok dengan pencarian.' : 'Belum ada kegiatan.' }}
-              </div>
-
-              <div v-else class="space-y-4">
+              <LoadingState
+                :state="isLoadingKegiatan ? 'loading' : errorKegiatan ? 'error' : paginatedKegiatan.length === 0 ? 'empty' : 'ready'"
+                message="Memuat daftar kegiatan..."
+                error-title="Server Tidak Terhubung"
+                error-message="Periksa koneksi internet Anda dan coba lagi."
+                empty-title="Tidak Ada Kegiatan"
+                :empty-message="searchQuery && selectedTimker.isSemua ? 'Tidak ada kegiatan yang cocok dengan pencarian.' : 'Belum ada kegiatan.'"
+                :on-retry="() => loadKegiatan(selectedTimker)"
+                container-class="text-blue-100 text-sm"
+              >
+              <div class="space-y-4">
                 <article v-for="item in paginatedKegiatan" :key="item.id_kegiatan"
                   class="bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20">
                   <div class="flex items-start justify-between gap-3 mb-1">
@@ -135,6 +136,7 @@
                   </div>
                 </article>
               </div>
+              </LoadingState>
 
               <div v-if="totalPages > 1" class="mt-6 flex items-center justify-center lg:justify-start gap-2">
                 <button
@@ -680,15 +682,18 @@ import database from '@/data/index.js'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
 import { getKegiatanKabupatenKotaLabel, getKegiatanLocationItems, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
 import { generatePOSDocx } from '@/utils/generatePOS'
+import LoadingState from '@/components/LoadingState.vue'
 import jsQR from 'jsqr'
 
 export default {
   name: 'Landing',
+  components: { LoadingState },
   setup() {
     const router = useRouter()
     const authStore = useAuthStore()
     const kegiatan = ref([])
     const isLoadingKegiatan = ref(false)
+    const errorKegiatan = ref('')
     const selectedTimker = ref(null)
     const activeUnitCode = ref('')
     const kegiatanSectionRef = ref(null)
@@ -1320,6 +1325,7 @@ export default {
         }
       } catch (error) {
         console.error('Gagal memuat data kegiatan di landing page:', error)
+        errorKegiatan.value = error?.message || 'Terjadi kesalahan saat memuat data.'
         kegiatan.value = []
       } finally {
         isLoadingKegiatan.value = false
@@ -1605,6 +1611,8 @@ export default {
       timkerCards,
       kegiatan,
       isLoadingKegiatan,
+      errorKegiatan,
+      loadKegiatan,
       selectedTimker,
       kegiatanSectionRef,
       timkerCardsSectionRef,

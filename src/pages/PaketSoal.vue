@@ -22,6 +22,13 @@
         <input v-model="searchQuery" @input="debouncedSearch" type="text" placeholder="Cari paket soal..." class="w-full sm:w-80 px-4 py-2.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none text-sm" />
       </div>
       <div class="overflow-x-auto">
+        <LoadingState
+          :state="loading ? 'loading' : paketList.length === 0 ? 'empty' : 'ready'"
+          message="Memuat data..."
+          empty-title="Belum ada paket soal"
+          empty-message="Tambahkan paket soal baru untuk memulai."
+          :on-retry="loadPaket"
+        >
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-slate-200">
@@ -33,12 +40,6 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-if="loading">
-              <td colspan="5" class="py-8 text-center text-slate-400">Memuat data...</td>
-            </tr>
-            <tr v-else-if="paketList.length === 0">
-              <td colspan="5" class="py-8 text-center text-slate-400">Belum ada paket soal</td>
-            </tr>
             <tr v-for="p in paketList" :key="p.id_paket_soal" class="border-b border-[#E4E6E9] hover:bg-slate-50">
               <td class="py-3 px-4">
                 <button @click="openSoalEditor(p)" class="font-medium text-blue-600 hover:text-blue-800 hover:underline">{{ p.nama_paket }}</button>
@@ -59,6 +60,7 @@
             </tr>
           </tbody>
         </table>
+        </LoadingState>
       </div>
     </div>
 
@@ -96,9 +98,14 @@
         <div class="p-4 border-b border-[#E4E6E9]">
           <h3 class="font-semibold text-slate-700">Daftar Soal ({{ soalList.length }})</h3>
         </div>
-        <div v-if="loadingSoal" class="p-8 text-center text-slate-400">Memuat soal...</div>
-        <div v-else-if="soalList.length === 0" class="p-8 text-center text-slate-400">Belum ada soal. Tambahkan manual atau import dari Excel.</div>
-        <div v-else class="divide-y divide-slate-100">
+        <LoadingState
+          :state="loadingSoal ? 'loading' : soalList.length === 0 ? 'empty' : 'ready'"
+          message="Memuat soal..."
+          empty-title="Belum ada soal"
+          empty-message="Tambahkan manual atau import dari Excel."
+          :on-retry="() => loadSoal(selectedPaket?.id_paket_soal)"
+        >
+        <div class="divide-y divide-slate-100">
           <div v-for="(soal, index) in soalList" :key="soal.id_soal" class="p-4">
             <div class="flex items-start justify-between gap-4">
               <div class="flex-1">
@@ -141,6 +148,7 @@
             </div>
           </div>
         </div>
+        </LoadingState>
       </div>
     </div>
 
@@ -215,9 +223,11 @@
 <script>
 import { getAllPaket, createPaket, updatePaket, removePaket, getSoalList, createSoal, updateSoal, removeSoal, importSoal } from '@/services/test'
 import Swal from 'sweetalert2'
+import LoadingState from '@/components/LoadingState.vue'
 
 export default {
   name: 'PaketSoal',
+  components: { LoadingState },
   data() {
     return {
       loading: false,

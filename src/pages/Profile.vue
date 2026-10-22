@@ -415,18 +415,14 @@
           Riwayat Aktivitas
         </h3>
 
-        <div class="space-y-4">
-          <div v-if="isLoadingActivity" class="text-center py-8">
-            <div class="flex items-center justify-center gap-2">
-              <div class="w-5 h-5 border-4 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
-              <p class="text-slate-500">Memuat riwayat aktivitas...</p>
-            </div>
-          </div>
-
-          <div v-else-if="activityHistory.length === 0" class="text-center py-8">
-            <p class="text-slate-500">Tidak ada riwayat aktivitas</p>
-          </div>
-
+        <LoadingState
+          :state="isLoadingActivity ? 'loading' : activityHistory.length === 0 ? 'empty' : 'ready'"
+          message="Memuat riwayat aktivitas..."
+          empty-title="Tidak ada riwayat aktivitas"
+          empty-message="Belum ada aktivitas yang tercatat."
+          :on-retry="fetchActivityHistory"
+          container-class="space-y-4"
+        >
           <div v-for="(activity, index) in activityHistory" :key="index" class="border-l-4 border-blue-500 pl-4 py-2 hover:bg-slate-50 rounded-r px-3 transition cursor-pointer">
             <div class="flex items-start justify-between">
               <div class="flex-1">
@@ -439,7 +435,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </LoadingState>
 
         <!-- Pagination untuk activity -->
         <div v-if="activityHistory.length > 0" class="flex justify-center mt-6">
@@ -501,9 +497,11 @@ import Swal from 'sweetalert2'
 import { useAuthStore } from '@/stores/auth'
 import { apiClient, fetchAPI } from '@/services/api'
 import { storageGet, storageSet } from '@/utils/secureStorage'
+import LoadingState from '@/components/LoadingState.vue'
 
 export default {
   name: 'Profile',
+  components: { LoadingState },
   setup() {
     const authStore = useAuthStore()
     const editMode = ref(false)

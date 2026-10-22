@@ -55,19 +55,15 @@
             </div>
           </div>
 
-          <!-- Loading -->
-          <div v-if="isLoadingKegiatan" class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-8 text-center">
-            <div class="w-8 h-8 border-4 border-[#E4E6E9] border-t-[#1877F2] rounded-full animate-spin mx-auto"></div>
-            <p class="text-[#65676B] text-sm mt-3">Memuat kegiatan...</p>
-          </div>
-
-          <!-- Empty -->
-          <div v-else-if="filteredKegiatan.length === 0" class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-8 text-center">
-            <p class="text-[#65676B] text-[15px]">Tidak ada kegiatan yang sesuai</p>
-          </div>
-
           <!-- Feed Cards -->
-          <div v-else class="space-y-4">
+          <LoadingState
+            :state="isLoadingKegiatan ? 'loading' : filteredKegiatan.length === 0 ? 'empty' : 'ready'"
+            message="Memuat kegiatan..."
+            empty-title="Tidak ada kegiatan yang sesuai"
+            empty-message="Belum ada kegiatan yang sesuai dengan filter yang dipilih."
+            :on-retry="fetchKegiatanData"
+          >
+          <div class="space-y-4">
             <div v-for="k in filteredKegiatan" :key="k.id_kegiatan"
               class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] overflow-hidden">
               <!-- Card Header -->
@@ -170,6 +166,7 @@
               </div>
             </div>
           </div>
+          </LoadingState>
         </main>
 
         <!-- Right Sidebar - Profile & Info -->
@@ -434,9 +431,11 @@ import { getKegiatan } from '@/services/kegiatan'
 import database from '@/data/index.js'
 import { buildPublicUrl as buildAppUrl, buildStorageUrl } from '@/utils/url'
 import { getKegiatanKabupatenKotaLabel, getKegiatanLocationItems, getKegiatanLocationLabel } from '@/utils/kegiatanLocation'
+import LoadingState from '@/components/LoadingState.vue'
 
 export default {
   name: 'Dashboard',
+  components: { LoadingState },
   setup() {
     const authStore = useAuthStore()
 

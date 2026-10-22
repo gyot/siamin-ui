@@ -52,16 +52,14 @@
     </div>
 
     <!-- Card List -->
-    <div v-if="isLoadingKegiatan" class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-8 text-center">
-      <div class="w-8 h-8 border-4 border-[#E4E6E9] border-t-[#1877F2] rounded-full animate-spin mx-auto"></div>
-      <p class="text-[13px] text-[#65676B] mt-3">Memuat data kegiatan...</p>
-    </div>
-
-    <div v-else-if="filteredKegiatan.length === 0" class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] p-8 text-center">
-      <p class="text-[#65676B] text-[15px]">Tidak ada kegiatan yang sesuai</p>
-    </div>
-
-    <div v-else class="space-y-4">
+    <LoadingState
+      :state="isLoadingKegiatan ? 'loading' : filteredKegiatan.length === 0 ? 'empty' : 'ready'"
+      message="Memuat data kegiatan..."
+      empty-title="Tidak ada kegiatan yang sesuai"
+      empty-message="Belum ada kegiatan yang sesuai dengan filter yang dipilih."
+      :on-retry="loadKegiatan"
+    >
+    <div class="space-y-4">
       <div v-for="(k, index) in paginatedKegiatan" :key="k.id_kegiatan"
         class="bg-white rounded-xl shadow-sm border border-[#E4E6E9] overflow-hidden">
         <!-- Card Header -->
@@ -156,6 +154,7 @@
         </div>
       </div>
     </div>
+    </LoadingState>
   </div>
 
   <!-- Modal Tambah/Edit -->
@@ -1345,6 +1344,7 @@ import { saveJadwal } from '@/services/laporan'
 import { fetchAPI, postAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Spinner from '@/components/Spinner.vue'
+import LoadingState from '@/components/LoadingState.vue'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
 import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
 import { storageGet } from '@/utils/secureStorage'
@@ -1358,7 +1358,7 @@ import {
 
 export default {
   name: 'Kegiatan',
-  components: { Spinner },
+  components: { Spinner, LoadingState },
   setup() {
     const router = useRouter()
     const db = database

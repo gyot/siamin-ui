@@ -33,6 +33,7 @@ const PaketSoal = () => import('../pages/PaketSoal.vue')
 const Pengesahan = () => import('../pages/Pengesahan.vue')
 const LaporanKegiatan = () => import('../pages/LaporanKegiatan.vue')
 const BuatLaporan = () => import('../pages/BuatLaporan.vue')
+const KegiatanDetail = () => import('../pages/KegiatanDetail.vue')
 const PesertaLayout = () => import('../layouts/PesertaLayout.vue')
 const PesertaDashboard = () => import('../pages/PesertaDashboard.vue')
 const PesertaKegiatan = () => import('../pages/PesertaKegiatan.vue')
@@ -183,6 +184,7 @@ const router = createRouter({
     {path:'kegiatan/:id/peserta',name:'kegiatan-peserta',component:KegiatanPeserta,meta:{title:'Peserta Kegiatan',description:'Kelola peserta per kegiatan.'}},
     {path:'kegiatan/:id/test-laporan',name:'test-laporan',component:TestLaporan,meta:{title:'Laporan Test',description:'Laporan hasil test kegiatan.'}},
     {path:'kegiatan/:id/buat-laporan',name:'buat-laporan',component:BuatLaporan,meta:{title:'Buat Laporan',description:'Buat dan preview laporan kegiatan.'}},
+    {path:'kegiatan/:id/detail',name:'kegiatan-detail',component:KegiatanDetail,meta:{title:'Detail Kegiatan',description:'Detail informasi kegiatan.'}},
     {path:'paket-soal',name:'paket-soal',component:PaketSoal,meta:{title:'Paket Soal',description:'Kelola paket soal dan soal ujian.'}},
     {path:'peserta',name:'peserta',component:PesertaManagement,meta:{title:'Manajemen Peserta',description:'Kelola data peserta kegiatan.'}},
     {path:'sertifikat',name:'sertifikat',component:Sertifikat,meta:{title:'Sertifikat',description:'Kelola sertifikat peserta.'}},

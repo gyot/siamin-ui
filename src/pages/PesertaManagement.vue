@@ -118,18 +118,6 @@
         </div>
       </div>
 
-      <!-- Loading State -->
-      <div v-if="isLoadingPeserta" class="mb-6 p-4 flex items-center justify-center bg-white rounded-2xl shadow-2xl shadow-md">
-        <div class="flex items-center gap-3">
-          <div class="animate-spin">
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-          </div>
-          <p class="text-sm text-gray-600">Memuat data peserta...</p>
-        </div>
-      </div>
-
       <!-- Filter dan Search -->
       <div class="bg-white rounded-2xl shadow-2xl p-3 sm:p-4 mb-6">
         <div :class="kegiatanId ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4'">
@@ -268,6 +256,13 @@
       </div>
 
       <!-- Tabel Peserta - Desktop View -->
+      <LoadingState
+        :state="isLoadingPeserta ? 'loading' : filteredPeserta.length === 0 ? 'empty' : 'ready'"
+        message="Memuat data peserta..."
+        empty-title="Tidak ada data peserta"
+        empty-message="Belum ada peserta yang terdaftar pada kegiatan ini."
+        :on-retry="reloadApiData"
+      >
       <div class="bg-white rounded-2xl shadow-2xl shadow-lg overflow-hidden hidden md:block">
         
         <div class="overflow-x-auto">
@@ -293,11 +288,6 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-              <tr v-if="filteredPeserta.length === 0" class="hover:bg-gray-50">
-                <td colspan="12" class="px-4 py-8 text-center text-gray-500">
-                  <p class="text-sm sm:text-base">Tidak ada data peserta</p>
-                </td>
-              </tr>
               <tr
                 v-for="(p, index) in paginatedPeserta"
                 :key="p.id_peserta"
@@ -431,10 +421,7 @@
 
       <!-- Card View - Mobile -->
       <div class="md:hidden space-y-3">
-        <div v-if="filteredPeserta.length === 0" class="bg-white rounded-2xl shadow-2xl shadow-md p-6 text-center text-gray-500">
-          <p class="text-sm">Tidak ada data peserta</p>
-        </div>
-        <div v-else class="bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 flex flex-col gap-3">
+        <div class="bg-white rounded-2xl shadow-2xl border border-gray-100 p-3 flex flex-col gap-3">
           <p class="text-xs text-gray-600">
             Menampilkan <span class="font-semibold text-gray-900">{{ paginationStart }}</span>-<span class="font-semibold text-gray-900">{{ paginationEnd }}</span>
             dari <span class="font-semibold text-gray-900">{{ filteredPeserta.length }}</span> peserta
@@ -565,7 +552,7 @@
           </div>
         </div>
       </div>
-
+      </LoadingState>
 
       <!-- Modal Tambah/Edit Peserta -->
       <div v-if="showAddModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
@@ -1493,9 +1480,11 @@ import { getKetuaPanitia } from '@/services/penugasan'
 import { buildPublicUrl, buildStorageUrl, getApiHostBase } from '@/utils/url'
 import { getKegiatanLocationItems } from '@/utils/kegiatanLocation'
 import { getKelasByKegiatan, createKelas, showKelas, addAnggotaKelas, removeAnggotaKelas } from '@/services/kelas'
+import LoadingState from '@/components/LoadingState.vue'
 
 export default {
   name: 'Peserta',
+  components: { LoadingState },
   props: {
     kegiatanId: {
       type: [String, Number],

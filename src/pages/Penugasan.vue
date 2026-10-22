@@ -42,6 +42,13 @@
     </div>
 
     <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-auto">
+      <LoadingState
+        :state="isLoading ? 'loading' : rows.length === 0 ? 'empty' : 'ready'"
+        message="Memuat data penugasan..."
+        empty-title="Tidak ada data penugasan"
+        empty-message="Belum ada data penugasan pegawai yang tersedia."
+        :on-retry="loadData"
+      >
       <table class="w-full text-sm">
         <thead class="bg-slate-50 text-slate-600">
           <tr>
@@ -55,9 +62,6 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-if="isLoading">
-            <td colspan="7" class="p-4 text-center">Memuat...</td>
-          </tr>
           <tr v-for="(row, idx) in rows" :key="row.id || idx" class="border-t">
             <td class="px-4 py-2">{{ (pagination.current_page - 1) * pagination.per_page + idx + 1 }}</td>
             <td class="px-4 py-2">{{ row.nama_pegawai || row.pegawai?.nama || '-' }}</td>
@@ -69,6 +73,7 @@
           </tr>
         </tbody>
       </table>
+      </LoadingState>
 
       <div class="p-4 flex items-center justify-between">
         <div>
@@ -87,6 +92,7 @@
 <script>
 import { ref, onMounted } from 'vue'
 import Spinner from '@/components/Spinner.vue'
+import LoadingState from '@/components/LoadingState.vue'
 import { fetchAPI } from '@/services/api'
 
 function debounce(fn, wait = 300) {
@@ -99,7 +105,7 @@ function debounce(fn, wait = 300) {
 
 export default {
   name: 'Penugasan',
-  components: { Spinner },
+  components: { Spinner, LoadingState },
   setup() {
     const rows = ref([])
     const isLoading = ref(false)

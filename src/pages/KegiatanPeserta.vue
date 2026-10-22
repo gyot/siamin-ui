@@ -12,20 +12,16 @@
         </router-link>
       </div>
 
-      <!-- Loading State -->
-      <div v-if="isLoadingKegiatan" class="mb-6 p-4 flex items-center justify-center bg-white rounded-lg shadow-md">
-        <div class="flex items-center gap-3">
-          <div class="animate-spin">
-            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-          </div>
-          <p class="text-sm text-gray-600">Memuat data kegiatan...</p>
-        </div>
-      </div>
-
       <!-- Info Kegiatan Header -->
-      <div v-if="currentKegiatan" class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6 mb-4 sm:mb-6">
+      <LoadingState
+        :state="isLoadingKegiatan ? 'loading' : currentKegiatan ? 'ready' : 'error'"
+        message="Memuat data kegiatan..."
+        error-title="Kegiatan tidak ditemukan"
+        error-message="Data kegiatan tidak ditemukan atau tautan tidak valid."
+        :on-retry="loadKegiatanFromAPI"
+        container-class="mb-6"
+      >
+      <div class="bg-white rounded-lg shadow-md p-3 sm:p-4 md:p-6 mb-4 sm:mb-6">
         <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-3 sm:mb-4">{{ currentKegiatan.nama_kegiatan }}</h1>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div>
@@ -46,11 +42,7 @@
           </div> -->
         </div>
       </div>
-
-      <!-- Error State -->
-      <div v-else-if="!isLoadingKegiatan" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-        <p class="text-red-800 text-sm">Kegiatan tidak ditemukan</p>
-      </div>
+      </LoadingState>
 
       <!-- Embed Halaman Peserta Management -->
       <PesertaManagement
@@ -66,13 +58,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import PesertaManagement from './PesertaManagement.vue'
+import LoadingState from '@/components/LoadingState.vue'
 import database from '@/data/index.js'
 import { fetchAPI } from '@/services/api'
 
 export default {
   name: 'KegiatanPeserta',
   components: {
-    PesertaManagement
+    PesertaManagement,
+    LoadingState
   },
   setup() {
     const route = useRoute()
@@ -147,7 +141,8 @@ export default {
       currentKegiatan,
       getMetodeLabel,
       formatDate,
-      isLoadingKegiatan
+      isLoadingKegiatan,
+      loadKegiatanFromAPI
     }
   }
 }

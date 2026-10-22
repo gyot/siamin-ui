@@ -19,27 +19,16 @@
         </button>
       </div>
 
-      <div v-if="isLoading" class="rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-        <div class="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600"></div>
-        <p class="mt-4 text-sm text-slate-500">Memuat data pengesahan...</p>
-      </div>
-
-      <div v-else-if="errorMessage" class="rounded-xl border border-red-200 bg-red-50 p-5 text-red-800">
-        <p class="font-semibold">Data tidak dapat dimuat</p>
-        <p class="mt-1 text-sm">{{ errorMessage }}</p>
-      </div>
-
-      <div v-else-if="kegiatanMenunggu.length === 0" class="rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
-        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-          <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <h2 class="mt-4 font-semibold text-slate-800">Tidak ada pengesahan tertunda</h2>
-        <p class="mt-1 text-sm text-slate-500">Semua sertifikat kegiatan yang tersedia sudah berstatus terbit.</p>
-      </div>
-
-      <div v-else>
+      <LoadingState
+        :state="isLoading ? 'loading' : errorMessage ? 'error' : kegiatanMenunggu.length === 0 ? 'empty' : 'ready'"
+        message="Memuat data pengesahan..."
+        error-title="Data tidak dapat dimuat"
+        :error-message="errorMessage"
+        empty-title="Tidak ada pengesahan tertunda"
+        empty-message="Semua sertifikat kegiatan yang tersedia sudah berstatus terbit."
+        :on-retry="loadData"
+      >
+      <div>
         <div class="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4">
           <p class="text-sm text-amber-900">
             <span class="font-bold">{{ kegiatanMenunggu.length }} kegiatan</span>
@@ -98,6 +87,7 @@
           </article>
         </div>
       </div>
+      </LoadingState>
     </div>
   </div>
 </template>
@@ -106,9 +96,11 @@
 import { computed, onMounted, ref } from 'vue'
 import { fetchAPI } from '@/services/api'
 import { listKegiatan } from '@/services/kegiatan'
+import LoadingState from '@/components/LoadingState.vue'
 
 export default {
   name: 'Pengesahan',
+  components: { LoadingState },
   setup() {
     const isLoading = ref(false)
     const errorMessage = ref('')

@@ -18,17 +18,6 @@
       </div>
     </div>
 
-    <div v-if="isLoading" class="mb-6 p-4 flex items-center justify-center bg-white rounded-lg shadow-md">
-      <div class="flex items-center gap-3">
-        <div class="animate-spin">
-          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-          </svg>
-        </div>
-        <p class="text-sm text-gray-600">Memuat data sertifikat...</p>
-      </div>
-    </div>
-
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
       <div class="bg-white rounded-lg shadow-md p-4">
         <p class="text-sm text-gray-600 mb-1">Total</p>
@@ -95,6 +84,13 @@
       <button @click="selectedIds = []" class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-300">Batal Pilih</button>
     </div>
 
+    <LoadingState
+      :state="isLoading ? 'loading' : filteredList.length === 0 ? 'empty' : 'ready'"
+      message="Memuat data sertifikat..."
+      empty-title="Tidak ada data sertifikat"
+      empty-message="Belum ada data sertifikat yang tersedia."
+      :on-retry="reloadData"
+    >
     <div class="bg-white rounded-lg shadow-lg overflow-hidden hidden md:block">
       <div class="overflow-x-auto">
         <table class="min-w-[900px] w-full text-sm">
@@ -113,9 +109,6 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
-            <tr v-if="paginatedList.length === 0">
-              <td colspan="8" class="px-4 py-8 text-center text-gray-500">Tidak ada data sertifikat</td>
-            </tr>
             <tr v-for="(row, index) in paginatedList" :key="row.id_peserta" class="hover:bg-blue-50 transition-colors">
               <td class="px-4 py-3">
                 <input type="checkbox" v-model="selectedIds" :value="row.id_peserta" class="h-4 w-4 rounded border-gray-300" />
@@ -151,9 +144,6 @@
     </div>
 
     <div class="md:hidden space-y-3">
-      <div v-if="paginatedList.length === 0" class="bg-white rounded-lg shadow-md p-6 text-center text-gray-500">
-        Tidak ada data sertifikat
-      </div>
       <div v-for="(row, index) in paginatedList" :key="row.id_peserta"
         class="bg-white rounded-lg shadow-md p-4 space-y-2 border-l-4"
         :class="borderColor(row.status)">
@@ -187,6 +177,7 @@
         </div>
       </div>
     </div>
+    </LoadingState>
 
     <div class="mt-4 px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between bg-white rounded-lg shadow-sm">
       <p class="text-sm text-gray-600">
@@ -246,9 +237,11 @@ import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { fetchAPI, updateAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Swal from 'sweetalert2'
+import LoadingState from '@/components/LoadingState.vue'
 
 export default {
   name: 'Sertifikat',
+  components: { LoadingState },
   setup() {
     const isLoading = ref(false)
     const showApiError = ref(false)

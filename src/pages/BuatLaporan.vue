@@ -23,16 +23,13 @@
         </div>
       </div>
 
-      <div v-if="loading" class="rounded-2xl bg-white p-16 text-center shadow-sm">
-        <div class="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-blue-100 border-t-blue-600"></div>
-        <p class="mt-4 text-slate-500">Memuat data kegiatan...</p>
-      </div>
-
-      <div v-else-if="error" class="rounded-2xl bg-red-50 p-8 text-center">
-        <p class="text-red-700 font-semibold">{{ error }}</p>
-      </div>
-
-      <div v-else-if="mode === 'form'" class="space-y-6">
+      <LoadingState
+        :state="loading ? 'loading' : error ? 'error' : 'ready'"
+        message="Memuat data kegiatan..."
+        error-title="Gagal Memuat Data"
+        :error-message="error"
+      >
+      <div v-if="mode === 'form'" class="space-y-6">
         <div class="rounded-2xl bg-white p-6 shadow-sm">
           <h3 class="text-lg font-bold text-slate-800 mb-4">Informasi Otomatis dari Sistem</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -308,6 +305,7 @@
           </div>
         </div>
       </div>
+      </LoadingState>
     </div>
   </div>
 </template>
@@ -318,9 +316,11 @@ import { useRoute } from 'vue-router'
 import { fetchAPI } from '@/services/api'
 import { listKegiatan } from '@/services/kegiatan'
 import { getActivityReportDraft, getActivityReportDraftFromAPI, saveActivityReportDraftToAPI, getJadwalFromAPI } from '@/services/activityReportDraft'
+import LoadingState from '@/components/LoadingState.vue'
 
 export default {
   name: 'BuatLaporan',
+  components: { LoadingState },
   setup() {
     const route = useRoute()
     const kegiatanId = computed(() => route.params.id)

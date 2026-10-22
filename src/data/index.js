@@ -1,23 +1,22 @@
 // Use API FIRST, then fallback to local JSON if API fails
 import { fetchAPI } from '@/services/api'
-import dbJSON from './database.json'
 
 // API Base URL
 const API_BASE_URL = '/api/v1'
 
-// Create database object - Will be populated from API or fallback JSON
+// Create database object - starts empty and is populated by loadDataFromAPI/loadAllDataFromAPI
 const db = {
-  pegawai: dbJSON.pegawai || [],
-  users: dbJSON.users || [],
-  kegiatan: dbJSON.kegiatan || [],
-  peserta: dbJSON.peserta || [],
-  sertifikat: dbJSON.sertifikat || [],
-  akun_peserta: dbJSON.akun_peserta || [],
-  surat_tugas: dbJSON.surat_tugas || [],
-  surat_tugas_pegawai: dbJSON.surat_tugas_pegawai || [],
-  unit_kerja: dbJSON.unit_kerja || [],
-  sub_unit_kerja: dbJSON.sub_unit_kerja || [],
-  keanggotaan_tim: dbJSON.keanggotaan_tim || []
+  pegawai: [],
+  users: [],
+  kegiatan: [],
+  peserta: [],
+  sertifikat: [],
+  akun_peserta: [],
+  surat_tugas: [],
+  surat_tugas_pegawai: [],
+  unit_kerja: [],
+  sub_unit_kerja: [],
+  keanggotaan_tim: []
 }
 
 // Map untuk menghubungkan nama table dengan endpoint API
@@ -68,7 +67,7 @@ const groupPenugasanByKegiatanRecords = (records = []) => {
 }
 
 /**
- * Load data dari API dengan fallback ke local JSON
+ * Load data dari API (tanpa fallback dummy, array kosong jika gagal)
  */
 export const loadDataFromAPI = async (tableName) => {
   const endpoint = tableToEndpoint[tableName]
