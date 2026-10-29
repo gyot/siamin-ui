@@ -174,17 +174,17 @@ const handleLogin = async () => {
   }
 
   try {
-    // Call auth store login
-    await authStore.loginAdmin(formData.value.email, formData.value.password)
-    
+    // Login unified: satu tombol untuk admin & peserta
+    await authStore.loginUnified(formData.value.email, formData.value.password)
+
     if (authStore.isAuthenticated) {
       // Reset form
       formData.value.email = ''
       formData.value.password = ''
       formData.value.remember = false
-      
-      // Redirect ke dashboard
-      router.push('/admin/dashboard')
+
+      // Redirect sesuai jenis akun: peserta -> halaman peserta, selain itu -> dashboard admin
+      router.push(authStore.userType === 'peserta' ? '/peserta/dashboard' : '/admin/dashboard')
     }
   } catch (error) {
     console.error('Login error:', error)

@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { apiClient } from '@/services/api'
-import { getDummyParticipantAccount } from '@/services/pesertaPortal'
 import { storageSet, storageGet, storageRemoveAll, preloadNativeAuth } from '@/utils/secureStorage'
 import { initPushNotifications } from '@/services/pushNotifications'
 
@@ -153,10 +152,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   const fetchMe = async () => {
     if (!token.value) return null
-    if (String(token.value).startsWith('dummy-peserta-')) {
-      hasRevalidatedSession.value = true
-      return { user: currentUser.value }
-    }
     if (fetchMePromise) return fetchMePromise
 
     fetchMePromise = (async () => {
@@ -313,50 +308,8 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const loginPeserta = async (username, password) => {
-    isLoading.value = true
-    error.value = null
-
-    try {
-      const account = getDummyParticipantAccount(username, password)
-      if (!account) throw new Error('Username atau password salah')
-
-      const dummyToken = `dummy-peserta-${account.id}`
-      token.value = dummyToken
-      currentUser.value = {
-        id: account.id,
-        participant_id: account.participant_id,
-        name: account.name,
-        username: account.username,
-        nip: account.nip,
-        jabatan: account.jabatan,
-        instansi: account.instansi,
-        kabupaten_kota: account.kabupaten_kota,
-        email: account.email,
-        unit_kerja_id: [],
-        unit_kerja: [],
-        role: 'peserta'
-      }
-      userType.value = 'peserta'
-
-      storageSet('auth_token', dummyToken)
-      storageSet('user_data', JSON.stringify(currentUser.value))
-      storageSet('user_type', 'peserta')
-      hasRestoredSession.value = true
-      hasRevalidatedSession.value = true
-      fetchMePromise = null
-      applyUnitKerjaData([], [])
-
-      return true
-    } catch (err) {
-      const message = err?.message || 'Username atau password salah'
-      console.error('[Auth] Login peserta gagal:', message)
-      error.value = message
-      throw new Error(message)
-    } finally {
-      isLoading.value = false
-    }
-  }
+  // Login peserta kini memakai API asli lewat loginUnified
+  const loginPeserta = (username, password) => loginUnified(username, password)
 
   const loginUnified = async (username, password) => {
     isLoading.value = true
@@ -429,7 +382,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = async () => {
     try {
-      if (token.value && !String(token.value).startsWith('dummy-peserta-')) {
+      if (token.value) {
         await apiClient.post('logout', null, {
           headers: {
             Authorization: `Bearer ${token.value}`
