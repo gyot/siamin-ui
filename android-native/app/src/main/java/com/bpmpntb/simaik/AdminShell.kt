@@ -93,7 +93,7 @@ fun AdminShell(vm: MainViewModel, deepLinkId: Int, onLogout: () -> Unit) {
                 composable("kegiatan") { KegiatanListScreen(vm, onOpen = { id -> innerNav.navigate("kegiatan/$id") }) }
                 composable("kegiatan/{id}") { back ->
                     val id = back.arguments?.getString("id")?.toIntOrNull() ?: -1
-                    KegiatanDetailScreen(vm, id, onBack = { innerNav.popBackStack() })
+                    KegiatanDetailScreen(vm, id, onBack = { innerNav.popBackStack() }, onNavigate = { route -> innerNav.navigate(route) })
                 }
                 composable("pegawai") { PegawaiScreen(vm) }
                 composable("peserta") { PesertaScreen(vm) }

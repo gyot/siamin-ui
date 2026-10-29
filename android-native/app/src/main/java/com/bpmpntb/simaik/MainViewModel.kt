@@ -149,11 +149,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun saveKegiatan(payload: KegiatanPayload, editingId: Int?, onDone: (Boolean) -> Unit) {
+        val filled = payload.copy(id_pegawai = payload.id_pegawai ?: session.idPegawai.takeIf { it > 0 })
         state = state.copy(loading = true, error = null)
         viewModelScope.launch {
             try {
-                if (editingId == null) ApiClient.service.storeKegiatan(payload)
-                else ApiClient.service.updateKegiatan(editingId, payload)
+                if (editingId == null) ApiClient.service.storeKegiatan(filled)
+                else ApiClient.service.updateKegiatan(editingId, filled)
                 state = state.copy(loading = false, info = "Tersimpan.")
                 loadKegiatan()
                 onDone(true)

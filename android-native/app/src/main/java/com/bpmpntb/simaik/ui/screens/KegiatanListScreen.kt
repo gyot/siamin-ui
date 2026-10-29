@@ -133,7 +133,7 @@ private fun KegiatanManageCard(k: Kegiatan, onClick: () -> Unit, onEdit: () -> U
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload) -> Unit, onDismiss: () -> Unit) {
+fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload) -> Unit, onDismiss: () -> Unit) {
     var nama by remember { mutableStateOf(editing?.nama_kegiatan ?: "") }
     var deskripsi by remember { mutableStateOf(editing?.deskripsi ?: "") }
     var tglMulai by remember { mutableStateOf(editing?.tanggal_mulai ?: "") }
