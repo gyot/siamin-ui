@@ -27,6 +27,9 @@ import com.bpmpntb.simaik.MainViewModel
 import com.bpmpntb.simaik.api.Kegiatan
 import com.bpmpntb.simaik.api.KegiatanPayload
 import com.bpmpntb.simaik.api.TpkItem
+import com.bpmpntb.simaik.api.AtkItem
+import com.bpmpntb.simaik.api.JadwalDay
+import com.bpmpntb.simaik.api.JadwalItem
 import com.bpmpntb.simaik.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -80,8 +83,8 @@ fun KegiatanListScreen(vm: MainViewModel, onOpen: (Int) -> Unit) {
     if (showForm) {
         KegiatanFormDialog(
             editing = editing,
-            onSave = { payload ->
-                vm.saveKegiatan(payload.copy(id_pegawai = session.idPegawai.takeIf { it > 0 }), editing?.id_kegiatan) { ok ->
+            onSave = { payload, jadwal ->
+                vm.saveKegiatan(payload.copy(id_pegawai = session.idPegawai.takeIf { it > 0 }), editing?.id_kegiatan, jadwal) { ok ->
                     if (ok) showForm = false
                 }
             },
@@ -134,7 +137,7 @@ private fun KegiatanManageCard(k: Kegiatan, onClick: () -> Unit, onEdit: () -> U
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload) -> Unit, onDismiss: () -> Unit) {
+fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload, List<JadwalDay>) -> Unit, onDismiss: () -> Unit) {
     var nama by remember { mutableStateOf(editing?.nama_kegiatan ?: "") }
     var deskripsi by remember { mutableStateOf(editing?.deskripsi ?: "") }
     var tglMulai by remember { mutableStateOf(editing?.tanggal_mulai ?: "") }
@@ -158,6 +161,14 @@ fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload) -> Unit, on
             if (initial.isEmpty() || initial.all { it.lokasi.isBlank() }) add(TpkItem()) else addAll(initial)
         }
     }
+
+    // Daftar ATK
+    val atkList = remember {
+        mutableStateListOf<AtkItem>().apply { editing?.daftar_atk?.let { addAll(it) } }
+    }
+
+    // Jadwal harian (hari -> items)
+    val jadwalList = remember { mutableStateListOf<JadwalDay>() }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = RoundedCornerShape(16.dp), color = Color.White) {
@@ -198,6 +209,34 @@ fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload) -> Unit, on
                     )
                 }
 
+                // Daftar ATK
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Daftar ATK", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { atkList.add(AtkItem()) }) {
+                        Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Tambah ATK", fontSize = 12.sp)
+                    }
+                }
+                atkList.forEachIndexed { i, atk ->
+                    AtkRowEditor(atk = atk, onChange = { atkList[i] = it }, onRemove = { atkList.removeAt(i) })
+                }
+
+                // Jadwal Harian
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Jadwal Harian", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { jadwalList.add(JadwalDay(hari = "", tanggal = "", items = emptyList())) }) {
+                        Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Tambah Hari", fontSize = 12.sp)
+                    }
+                }
+                jadwalList.forEachIndexed { i, day ->
+                    JadwalDayEditor(day = day, onChange = { jadwalList[i] = it }, onRemove = { jadwalList.removeAt(i) })
+                }
+
                 // Link dokumen (opsional)
                 Spacer(Modifier.height(8.dp))
                 Text("Link Dokumen (opsional)", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
@@ -226,12 +265,14 @@ fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload) -> Unit, on
                                     total_peserta = totalPeserta.toIntOrNull(),
                                     metode_pembayaran = metodeBayar,
                                     daftar_tpk = tpkList.filter { it.lokasi.isNotBlank() },
+                                    daftar_atk = atkList.filter { it.nama_barang.isNotBlank() },
                                     dokumentasi_url = dokUrl.ifBlank { null },
                                     materi_url = materiUrl.ifBlank { null },
                                     panduan_url = panduanUrl.ifBlank { null },
                                     laporan_url = laporanUrl.ifBlank { null },
                                     surat_menyurat_url = suratUrl.ifBlank { null }
-                                )
+                                ),
+                                jadwalList.filter { it.hari.isNotBlank() || it.tanggal.isNotBlank() }
                             )
                         },
                         enabled = nama.isNotBlank() && tglMulai.isNotBlank() && tglSelesai.isNotBlank() && tpkList.any { it.lokasi.isNotBlank() },
@@ -257,6 +298,67 @@ private fun TpkRowEditor(tpk: TpkItem, canRemove: Boolean, onChange: (TpkItem) -
             }
             if (canRemove) {
                 IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, "Hapus TPK", tint = ErrorText) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AtkRowEditor(atk: AtkItem, onChange: (AtkItem) -> Unit, onRemove: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = ChipBg),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+    ) {
+        Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                FormField("Nama Barang *", atk.nama_barang) { onChange(atk.copy(nama_barang = it)) }
+                FormField("Spesifikasi", atk.spesifikasi ?: "") { onChange(atk.copy(spesifikasi = it.ifBlank { null })) }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(Modifier.weight(1f)) { FormField("Jumlah", atk.jumlah?.toString() ?: "") { onChange(atk.copy(jumlah = it.toIntOrNull())) } }
+                    Box(Modifier.weight(1f)) { FormField("Satuan", atk.satuan ?: "") { onChange(atk.copy(satuan = it.ifBlank { null })) } }
+                }
+                FormField("Keterangan", atk.keterangan ?: "") { onChange(atk.copy(keterangan = it.ifBlank { null })) }
+            }
+            IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, "Hapus ATK", tint = ErrorText) }
+        }
+    }
+}
+
+@Composable
+private fun JadwalDayEditor(day: JadwalDay, onChange: (JadwalDay) -> Unit, onRemove: () -> Unit) {
+    var hari by remember { mutableStateOf(day.hari) }
+    var tanggal by remember { mutableStateOf(day.tanggal) }
+    val items = remember { mutableStateListOf<JadwalItem>().apply { day.items?.let { addAll(it) } } }
+    fun sync() = onChange(JadwalDay(hari = hari, tanggal = tanggal, items = items.toList()))
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = ChipBg),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+    ) {
+        Column(Modifier.padding(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) {
+                    DropdownField("Hari", listOf("Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"), hari) { hari = it; sync() }
+                }
+                IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, "Hapus Hari", tint = ErrorText) }
+            }
+            FormField("Tanggal (YYYY-MM-DD)", tanggal) { tanggal = it; sync() }
+            items.forEachIndexed { i, item ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        FormField("Waktu (mis. 08:00 - 10:00)", item.waktu ?: "") { items[i] = item.copy(waktu = it); sync() }
+                        FormField("Kegiatan", item.kegiatan ?: "") { items[i] = item.copy(kegiatan = it); sync() }
+                        FormField("Penanggung Jawab", item.pj ?: "") { items[i] = item.copy(pj = it); sync() }
+                    }
+                    IconButton(onClick = { items.removeAt(i); sync() }) { Icon(Icons.Default.Delete, "Hapus Item", tint = ErrorText) }
+                }
+            }
+            TextButton(onClick = { items.add(JadwalItem()); sync() }) {
+                Icon(Icons.Default.Add, null, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Tambah Item", fontSize = 11.sp)
             }
         }
     }

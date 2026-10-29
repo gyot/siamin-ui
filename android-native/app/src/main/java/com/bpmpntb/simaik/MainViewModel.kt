@@ -16,6 +16,8 @@ import com.bpmpntb.simaik.api.PenugasanItem
 import com.bpmpntb.simaik.api.PenugasanPayload
 import com.bpmpntb.simaik.api.PesertaItem
 import com.bpmpntb.simaik.api.PesertaPayload
+import com.bpmpntb.simaik.api.JadwalSaveRequest
+import com.bpmpntb.simaik.api.JadwalDay
 import com.bpmpntb.simaik.api.PushRegisterRequest
 import com.bpmpntb.simaik.api.SertifikatBatchItem
 import com.bpmpntb.simaik.data.Session
@@ -158,13 +160,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun saveKegiatan(payload: KegiatanPayload, editingId: Int?, onDone: (Boolean) -> Unit) {
+    fun saveKegiatan(payload: KegiatanPayload, editingId: Int?, jadwalList: List<JadwalDay> = emptyList(), onDone: (Boolean) -> Unit) {
         val filled = payload.copy(id_pegawai = payload.id_pegawai ?: session.idPegawai.takeIf { it > 0 })
         state = state.copy(loading = true, error = null)
         viewModelScope.launch {
             try {
-                if (editingId == null) ApiClient.service.storeKegiatan(filled)
-                else ApiClient.service.updateKegiatan(editingId, filled)
+                val res = if (editingId == null) ApiClient.service.storeKegiatan(filled) else ApiClient.service.updateKegiatan(editingId, filled)
+                val kid = res.data?.id_kegiatan ?: editingId
+                if (jadwalList.isNotEmpty() && kid != null && kid > 0) {
+                    ApiClient.service.saveJadwal(kid, JadwalSaveRequest(jadwalList))
+                }
                 state = state.copy(loading = false, info = "Tersimpan.")
                 loadKegiatan()
                 onDone(true)

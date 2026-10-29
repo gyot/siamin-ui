@@ -36,6 +36,12 @@ interface ApiService {
     @GET("penugasan-pegawai-detailed")
     suspend fun penugasan(): PenugasanListResponse
 
+    @GET("laporan/{id_kegiatan}/jadwal")
+    suspend fun getJadwal(@Path("id_kegiatan") id: Int): JadwalResponse
+
+    @POST("laporan/{id_kegiatan}/jadwal")
+    suspend fun saveJadwal(@Path("id_kegiatan") id: Int, @Body req: JadwalSaveRequest): OkResponse
+
     @POST("penugasan-pegawai")
     suspend fun storePenugasan(@Body req: PenugasanPayload): OkResponse
 

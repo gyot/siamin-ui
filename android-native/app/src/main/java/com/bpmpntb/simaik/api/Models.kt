@@ -86,6 +86,7 @@ data class Kegiatan(
     @Serializable(with = LenientIntSerializer::class) val unit_kerja_id: Int? = null,
     val metode_pembayaran: String? = null,
     val daftar_tpk: List<TpkItem>? = null,
+    val daftar_atk: List<AtkItem>? = null,
 )
 
 @Serializable
@@ -179,6 +180,45 @@ data class TpkItem(
 )
 
 @Serializable
+data class AtkItem(
+    val nama_barang: String = "",
+    val spesifikasi: String? = null,
+    @Serializable(with = LenientIntSerializer::class) val jumlah: Int? = null,
+    val satuan: String? = null,
+    val keterangan: String? = null,
+)
+
+@Serializable
+data class JadwalItem(
+    val waktu: String? = null,
+    val kegiatan: String? = null,
+    val pj: String? = null,
+    val tipe: String? = null,
+)
+
+@Serializable
+data class JadwalDay(
+    val hari: String = "",
+    val tanggal: String = "",
+    val items: List<JadwalItem>? = null,
+    val urutan: Int? = null,
+)
+
+@Serializable
+data class JadwalSaveRequest(val jadwal: List<JadwalDay>)
+
+@Serializable
+data class JadwalResponse(
+    val success: Boolean? = null,
+    val data: JadwalData? = null,
+)
+
+@Serializable
+data class JadwalData(
+    val jadwal_harian: List<JadwalDay>? = null,
+)
+
+@Serializable
 data class KegiatanPayload(
     val nama_kegiatan: String,
     val deskripsi: String? = null,
@@ -192,6 +232,7 @@ data class KegiatanPayload(
     @Serializable(with = LenientIntSerializer::class) val total_peserta: Int? = null,
     val metode_pembayaran: String? = null,
     val daftar_tpk: List<TpkItem>? = null,
+    val daftar_atk: List<AtkItem>? = null,
     val dokumentasi_url: String? = null,
     val materi_url: String? = null,
     val panduan_url: String? = null,

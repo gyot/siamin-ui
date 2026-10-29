@@ -147,8 +147,8 @@ fun KegiatanDetailScreen(
     if (showEdit) {
         KegiatanFormDialog(
             editing = s.kegiatanDetail,
-            onSave = { payload ->
-                vm.saveKegiatan(payload, s.kegiatanDetail?.id_kegiatan) { ok -> if (ok) showEdit = false }
+            onSave = { payload, jadwal ->
+                vm.saveKegiatan(payload, s.kegiatanDetail?.id_kegiatan, jadwal) { ok -> if (ok) showEdit = false }
             },
             onDismiss = { showEdit = false }
         )
