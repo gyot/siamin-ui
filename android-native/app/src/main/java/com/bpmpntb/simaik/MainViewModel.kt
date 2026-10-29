@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.bpmpntb.simaik.api.ApiClient
 import com.bpmpntb.simaik.api.DashboardStats
 import com.bpmpntb.simaik.api.Kegiatan
+import com.bpmpntb.simaik.api.KegiatanPayload
 import com.bpmpntb.simaik.api.LoginRequest
 import com.bpmpntb.simaik.api.PegawaiItem
 import com.bpmpntb.simaik.api.PenugasanItem
@@ -140,6 +141,37 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 state = state.copy(loading = false, sertifikatList = res.data ?: emptyList())
             } catch (e: Exception) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal memuat sertifikat.")
+            }
+        }
+    }
+
+    fun saveKegiatan(payload: KegiatanPayload, editingId: Int?, onDone: (Boolean) -> Unit) {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                if (editingId == null) ApiClient.service.storeKegiatan(payload)
+                else ApiClient.service.updateKegiatan(editingId, payload)
+                state = state.copy(loading = false, info = "Tersimpan.")
+                loadKegiatan()
+                onDone(true)
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal menyimpan.")
+                onDone(false)
+            }
+        }
+    }
+
+    fun deleteKegiatan(id: Int, onDone: (Boolean) -> Unit) {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                ApiClient.service.deleteKegiatan(id)
+                state = state.copy(loading = false, info = "Terhapus.")
+                loadKegiatan()
+                onDone(true)
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal menghapus.")
+                onDone(false)
             }
         }
     }

@@ -147,3 +147,14 @@ data class SertifikatBatchItem(
 
 @Serializable
 data class SertifikatListResponse(val success: Boolean? = null, val data: List<SertifikatBatchItem>? = null)
+
+@Serializable
+data class KegiatanPayload(
+    val nama_kegiatan: String,
+    val deskripsi: String? = null,
+    val tanggal_mulai: String,
+    val tanggal_selesai: String,
+    val status: String? = null,
+    val metode_pelaksanaan: String? = null,
+    val id_pegawai: Int? = null,
+)
