@@ -6,6 +6,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @POST("auth/login")
@@ -37,6 +38,18 @@ interface ApiService {
 
     @GET("sertifikat-batch")
     suspend fun sertifikat(): SertifikatListResponse
+
+    @GET("peserta")
+    suspend fun peserta(@Query("per_page") perPage: Int = 500): PesertaListResponse
+
+    @POST("peserta")
+    suspend fun storePeserta(@Body req: PesertaPayload): OkResponse
+
+    @PUT("peserta/{id}")
+    suspend fun updatePeserta(@Path("id") id: Int, @Body req: PesertaPayload): OkResponse
+
+    @DELETE("peserta/{id}")
+    suspend fun deletePeserta(@Path("id") id: Int): OkResponse
 
     @POST("push/register")
     suspend fun registerPush(@Body req: PushRegisterRequest): OkResponse

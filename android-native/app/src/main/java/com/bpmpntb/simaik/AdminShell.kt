@@ -21,6 +21,7 @@ private data class Section(val route: String, val label: String, val icon: Image
 private val sections = listOf(
     Section("dashboard", "Dashboard", Icons.Default.Dashboard),
     Section("kegiatan", "Kegiatan", Icons.Default.Event),
+    Section("peserta", "Peserta", Icons.Default.Group),
     Section("pegawai", "Pegawai", Icons.Default.People),
     Section("penugasan", "Penugasan", Icons.Default.Assignment),
     Section("sertifikat", "Sertifikat", Icons.Default.CardMembership),
@@ -95,6 +96,7 @@ fun AdminShell(vm: MainViewModel, deepLinkId: Int, onLogout: () -> Unit) {
                     KegiatanDetailScreen(vm, id, onBack = { innerNav.popBackStack() })
                 }
                 composable("pegawai") { PegawaiScreen(vm) }
+                composable("peserta") { PesertaScreen(vm) }
                 composable("penugasan") { PenugasanScreen(vm) }
                 composable("sertifikat") { SertifikatScreen(vm) }
                 composable("profil") { ProfileScreen(vm, onLogout = onLogout) }

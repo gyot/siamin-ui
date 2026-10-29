@@ -158,3 +158,42 @@ data class KegiatanPayload(
     val metode_pelaksanaan: String? = null,
     val id_pegawai: Int? = null,
 )
+
+@Serializable
+data class PesertaKegiatanRef(
+    @Serializable(with = LenientIntSerializer::class) val id_kegiatan: Int? = null,
+    val nama_kegiatan: String? = null,
+)
+
+@Serializable
+data class PesertaItem(
+    @Serializable(with = LenientIntSerializer::class) val id_peserta: Int? = null,
+    @Serializable(with = LenientIntSerializer::class) val id_kegiatan: Int? = null,
+    val nama_lengkap: String? = null,
+    @Serializable(with = LenientStringSerializer::class) val nip: String? = null,
+    val jabatan: String? = null,
+    val peran: String? = null,
+    val no_hp: String? = null,
+    val email: String? = null,
+    val nama_instansi: String? = null,
+    val kab_kota: String? = null,
+    val jenis_kelamin: String? = null,
+    val kegiatan: PesertaKegiatanRef? = null,
+)
+
+@Serializable
+data class PesertaListResponse(val success: Boolean? = null, val data: List<PesertaItem>? = null)
+
+@Serializable
+data class PesertaPayload(
+    val id_kegiatan: Int,
+    val nama_lengkap: String,
+    val nip: String? = null,
+    val jabatan: String? = null,
+    val peran: String? = null,
+    val no_hp: String? = null,
+    val email: String? = null,
+    val nama_instansi: String? = null,
+    val kab_kota: String? = null,
+    val jenis_kelamin: String? = null,
+)

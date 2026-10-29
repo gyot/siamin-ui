@@ -13,6 +13,8 @@ import com.bpmpntb.simaik.api.KegiatanPayload
 import com.bpmpntb.simaik.api.LoginRequest
 import com.bpmpntb.simaik.api.PegawaiItem
 import com.bpmpntb.simaik.api.PenugasanItem
+import com.bpmpntb.simaik.api.PesertaItem
+import com.bpmpntb.simaik.api.PesertaPayload
 import com.bpmpntb.simaik.api.PushRegisterRequest
 import com.bpmpntb.simaik.api.SertifikatBatchItem
 import com.bpmpntb.simaik.data.Session
@@ -30,6 +32,7 @@ data class UiState(
     val pegawaiList: List<PegawaiItem> = emptyList(),
     val penugasanList: List<PenugasanItem> = emptyList(),
     val sertifikatList: List<SertifikatBatchItem> = emptyList(),
+    val pesertaList: List<PesertaItem> = emptyList(),
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -168,6 +171,49 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 ApiClient.service.deleteKegiatan(id)
                 state = state.copy(loading = false, info = "Terhapus.")
                 loadKegiatan()
+                onDone(true)
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal menghapus.")
+                onDone(false)
+            }
+        }
+    }
+
+    fun loadPeserta() {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                val res = ApiClient.service.peserta()
+                state = state.copy(loading = false, pesertaList = res.data ?: emptyList())
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal memuat peserta.")
+            }
+        }
+    }
+
+    fun savePeserta(payload: PesertaPayload, editingId: Int?, onDone: (Boolean) -> Unit) {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                if (editingId == null) ApiClient.service.storePeserta(payload)
+                else ApiClient.service.updatePeserta(editingId, payload)
+                state = state.copy(loading = false, info = "Tersimpan.")
+                loadPeserta()
+                onDone(true)
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal menyimpan.")
+                onDone(false)
+            }
+        }
+    }
+
+    fun deletePeserta(id: Int, onDone: (Boolean) -> Unit) {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                ApiClient.service.deletePeserta(id)
+                state = state.copy(loading = false, info = "Terhapus.")
+                loadPeserta()
                 onDone(true)
             } catch (e: Exception) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal menghapus.")

@@ -185,7 +185,7 @@ private fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload) -> 
 }
 
 @Composable
-private fun FormField(label: String, value: String, onChange: (String) -> Unit) {
+fun FormField(label: String, value: String, onChange: (String) -> Unit) {
     Column(Modifier.padding(vertical = 6.dp)) {
         Text(label, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = TextSecondary)
         Spacer(Modifier.height(6.dp))
@@ -201,7 +201,7 @@ private fun FormField(label: String, value: String, onChange: (String) -> Unit) 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DropdownField(label: String, options: List<String>, value: String, onChange: (String) -> Unit) {
+fun DropdownField(label: String, options: List<String>, value: String, onChange: (String) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Column(Modifier.padding(vertical = 6.dp)) {
         Text(label, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = TextSecondary)
