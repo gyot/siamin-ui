@@ -9,23 +9,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 private val LightColors = lightColorScheme(
-    primary = Navy,
+    primary = AccentBlue,
     onPrimary = Color.White,
-    primaryContainer = BrandBlue,
+    primaryContainer = AccentBlue,
     onPrimaryContainer = Color.White,
-    secondary = Gold,
-    onSecondary = Navy,
-    background = Surface,
-    onBackground = OnSurface,
-    surface = Color.White,
-    onSurface = OnSurface,
+    secondary = AccentBlue,
+    onSecondary = Color.White,
+    background = WebBg,
+    onBackground = TextPrimary,
+    surface = CardWhite,
+    onSurface = TextPrimary,
+    error = ErrorText,
 )
 
 private val AppShapes = Shapes(
-    small = RoundedCornerShape(12.dp),
+    small = RoundedCornerShape(10.dp),
     medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(24.dp),
-    extraLarge = RoundedCornerShape(28.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(16.dp),
 )
 
 @Composable
