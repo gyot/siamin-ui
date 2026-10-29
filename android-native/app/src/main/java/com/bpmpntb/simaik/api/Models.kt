@@ -138,6 +138,14 @@ data class PegawaiItem(
     val golongan: String? = null,
     val status: String? = null,
     val unit_kerja: String? = null,
+    val tempat_lahir: String? = null,
+    val tanggal_lahir: String? = null,
+    val pendidikan_terakhir: String? = null,
+    val jurusan: String? = null,
+    val tempat_pendidikan: String? = null,
+    val tahun_lulus: String? = null,
+    val status_kepegawaian: String? = null,
+    val pdm_detail: String? = null,
 )
 
 @Serializable
