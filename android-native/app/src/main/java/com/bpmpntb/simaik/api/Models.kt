@@ -83,6 +83,9 @@ data class Kegiatan(
     @Serializable(with = LenientIntSerializer::class) val total_peserta: Int? = null,
     @Serializable(with = LenientIntSerializer::class) val id_pegawai: Int? = null,
     @Serializable(with = LenientIntSerializer::class) val created_by: Int? = null,
+    @Serializable(with = LenientIntSerializer::class) val unit_kerja_id: Int? = null,
+    val metode_pembayaran: String? = null,
+    val daftar_tpk: List<TpkItem>? = null,
 )
 
 @Serializable
@@ -169,6 +172,13 @@ data class SertifikatBatchItem(
 data class SertifikatListResponse(val success: Boolean? = null, val data: List<SertifikatBatchItem>? = null)
 
 @Serializable
+data class TpkItem(
+    @Serializable(with = LenientIntSerializer::class) val id_tpk: Int? = null,
+    val lokasi: String = "",
+    val kabupaten_kota: String? = null,
+)
+
+@Serializable
 data class KegiatanPayload(
     val nama_kegiatan: String,
     val deskripsi: String? = null,
@@ -177,6 +187,16 @@ data class KegiatanPayload(
     val status: String? = null,
     val metode_pelaksanaan: String? = null,
     val id_pegawai: Int? = null,
+    val rincian_kegiatan: String? = null,
+    @Serializable(with = LenientIntSerializer::class) val unit_kerja_id: Int? = null,
+    @Serializable(with = LenientIntSerializer::class) val total_peserta: Int? = null,
+    val metode_pembayaran: String? = null,
+    val daftar_tpk: List<TpkItem>? = null,
+    val dokumentasi_url: String? = null,
+    val materi_url: String? = null,
+    val panduan_url: String? = null,
+    val laporan_url: String? = null,
+    val surat_menyurat_url: String? = null,
 )
 
 @Serializable

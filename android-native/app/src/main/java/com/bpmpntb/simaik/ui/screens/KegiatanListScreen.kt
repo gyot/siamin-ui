@@ -26,6 +26,7 @@ import androidx.compose.ui.window.Dialog
 import com.bpmpntb.simaik.MainViewModel
 import com.bpmpntb.simaik.api.Kegiatan
 import com.bpmpntb.simaik.api.KegiatanPayload
+import com.bpmpntb.simaik.api.TpkItem
 import com.bpmpntb.simaik.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -140,6 +141,23 @@ fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload) -> Unit, on
     var tglSelesai by remember { mutableStateOf(editing?.tanggal_selesai ?: "") }
     var status by remember { mutableStateOf(editing?.status ?: "draft") }
     var metode by remember { mutableStateOf(editing?.metode_pelaksanaan ?: "luring") }
+    var rincian by remember { mutableStateOf(editing?.rincian_kegiatan ?: "") }
+    var totalPeserta by remember { mutableStateOf(editing?.total_peserta?.toString() ?: "") }
+    var metodeBayar by remember { mutableStateOf(editing?.metode_pembayaran ?: "tidak_dibayar") }
+    var unitKerjaId by remember { mutableStateOf(editing?.unit_kerja_id?.toString() ?: "") }
+    var dokUrl by remember { mutableStateOf("") }
+    var materiUrl by remember { mutableStateOf("") }
+    var panduanUrl by remember { mutableStateOf("") }
+    var laporanUrl by remember { mutableStateOf("") }
+    var suratUrl by remember { mutableStateOf("") }
+
+    // Daftar TPK (wajib min 1)
+    val tpkList = remember {
+        val initial = editing?.daftar_tpk ?: listOf(TpkItem(lokasi = editing?.lokasi ?: "", kabupaten_kota = editing?.kabupaten_kota))
+        mutableStateListOf<TpkItem>().apply {
+            if (initial.isEmpty() || initial.all { it.lokasi.isBlank() }) add(TpkItem()) else addAll(initial)
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = RoundedCornerShape(16.dp), color = Color.White) {
@@ -154,9 +172,40 @@ fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload) -> Unit, on
                 FormField("Deskripsi", deskripsi) { deskripsi = it }
                 FormField("Tanggal Mulai (YYYY-MM-DD) *", tglMulai) { tglMulai = it }
                 FormField("Tanggal Selesai (YYYY-MM-DD) *", tglSelesai) { tglSelesai = it }
+                DropdownField("Metode Pelaksanaan", listOf("daring", "luring", "hybrid"), metode) { metode = it }
+                DropdownField("Status", listOf("draft", "berjalan", "selesai", "dibatalkan"), status) { status = it }
+                DropdownField("Metode Pembayaran", listOf("transfer", "pulsa", "transfer_dan_pulsa", "tunai", "tidak_dibayar"), metodeBayar) { metodeBayar = it }
+                FormField("Total Peserta", totalPeserta) { totalPeserta = it }
+                FormField("Rincian Kegiatan", rincian) { rincian = it }
+                FormField("Unit Kerja ID (opsional)", unitKerjaId) { unitKerjaId = it }
 
-                DropdownField("Status", listOf("draft", "berjalan", "selesai"), status) { status = it }
-                DropdownField("Metode", listOf("daring", "luring", "hybrid"), metode) { metode = it }
+                // Daftar TPK (wajib)
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Daftar TPK *", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { tpkList.add(TpkItem()) }) {
+                        Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Tambah TPK", fontSize = 12.sp)
+                    }
+                }
+                tpkList.forEachIndexed { i, tpk ->
+                    TpkRowEditor(
+                        tpk = tpk,
+                        canRemove = tpkList.size > 1,
+                        onChange = { tpkList[i] = it },
+                        onRemove = { tpkList.removeAt(i) }
+                    )
+                }
+
+                // Link dokumen (opsional)
+                Spacer(Modifier.height(8.dp))
+                Text("Link Dokumen (opsional)", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                FormField("URL Dokumentasi", dokUrl) { dokUrl = it }
+                FormField("URL Materi", materiUrl) { materiUrl = it }
+                FormField("URL Panduan", panduanUrl) { panduanUrl = it }
+                FormField("URL Laporan", laporanUrl) { laporanUrl = it }
+                FormField("URL Surat Menyurat", suratUrl) { suratUrl = it }
 
                 Spacer(Modifier.height(20.dp))
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -171,14 +220,43 @@ fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload) -> Unit, on
                                     tanggal_mulai = tglMulai,
                                     tanggal_selesai = tglSelesai,
                                     status = status,
-                                    metode_pelaksanaan = metode
+                                    metode_pelaksanaan = metode,
+                                    rincian_kegiatan = rincian.ifBlank { null },
+                                    unit_kerja_id = unitKerjaId.toIntOrNull(),
+                                    total_peserta = totalPeserta.toIntOrNull(),
+                                    metode_pembayaran = metodeBayar,
+                                    daftar_tpk = tpkList.filter { it.lokasi.isNotBlank() },
+                                    dokumentasi_url = dokUrl.ifBlank { null },
+                                    materi_url = materiUrl.ifBlank { null },
+                                    panduan_url = panduanUrl.ifBlank { null },
+                                    laporan_url = laporanUrl.ifBlank { null },
+                                    surat_menyurat_url = suratUrl.ifBlank { null }
                                 )
                             )
                         },
-                        enabled = nama.isNotBlank() && tglMulai.isNotBlank() && tglSelesai.isNotBlank(),
+                        enabled = nama.isNotBlank() && tglMulai.isNotBlank() && tglSelesai.isNotBlank() && tpkList.any { it.lokasi.isNotBlank() },
                         shape = RoundedCornerShape(10.dp)
                     ) { Text("Simpan") }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TpkRowEditor(tpk: TpkItem, canRemove: Boolean, onChange: (TpkItem) -> Unit, onRemove: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = ChipBg),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+    ) {
+        Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                FormField("Lokasi *", tpk.lokasi) { onChange(tpk.copy(lokasi = it)) }
+                FormField("Kabupaten/Kota", tpk.kabupaten_kota ?: "") { onChange(tpk.copy(kabupaten_kota = it.ifBlank { null })) }
+            }
+            if (canRemove) {
+                IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, "Hapus TPK", tint = ErrorText) }
             }
         }
     }
