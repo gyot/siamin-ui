@@ -13,6 +13,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -31,6 +35,18 @@ import com.bpmpntb.simaik.api.AtkItem
 import com.bpmpntb.simaik.api.JadwalDay
 import com.bpmpntb.simaik.api.JadwalItem
 import com.bpmpntb.simaik.ui.theme.*
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
+private val tglFmt = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale("id", "ID"))
+private fun fmtTgl(s: String?): String = try { s?.take(10)?.let { LocalDate.parse(it).format(tglFmt) } ?: "-" } catch (e: Exception) { s ?: "-" }
+private fun statusBadgeColor(st: String?) = when (st?.lowercase()) {
+    "selesai" -> Color(0xFF057642)
+    "berjalan" -> Color(0xFF1877F2)
+    "dibatalkan" -> Color(0xFFDC2626)
+    else -> Color(0xFFF59E0B)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,35 +59,56 @@ fun KegiatanListScreen(vm: MainViewModel, onOpen: (Int) -> Unit) {
     var editing by remember { mutableStateOf<Kegiatan?>(null) }
     var deleting by remember { mutableStateOf<Kegiatan?>(null) }
 
+    var filterTahun by remember { mutableStateOf("Semua Tahun") }
+    var filterStatus by remember { mutableStateOf("Semua Status") }
+    val tahunList = s.kegiatanList.mapNotNull { it.tanggal_mulai?.take(4) }.distinct().sortedDescending()
+    val filtered = s.kegiatanList.filter {
+        (filterTahun == "Semua Tahun" || (it.tanggal_mulai ?: "").startsWith(filterTahun)) &&
+            (filterStatus == "Semua Status" || (it.status ?: "").equals(filterStatus, true))
+    }
+
     Column(Modifier.fillMaxSize().background(WebBg)) {
-        Row(
-            Modifier.fillMaxWidth().background(Color.White).padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Kegiatan", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.weight(1f))
-            Button(
-                onClick = { editing = null; showForm = true },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
-            ) {
-                Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Tambah", fontSize = 14.sp)
+        Column(Modifier.background(Color.White).fillMaxWidth().padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Manajemen Kegiatan", fontSize = 21.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                    Text("Kelola semua kegiatan yang ada", fontSize = 13.sp, color = TextSecondary)
+                }
+                Button(
+                    onClick = { editing = null; showForm = true },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
+                ) {
+                    Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Tambah Kegiatan", fontSize = 14.sp)
+                }
             }
+            Spacer(Modifier.height(8.dp))
+            Text("Logged in pegawai ID: ${session.idPegawai}", fontSize = 12.sp, color = TextSecondary)
         }
         HorizontalDivider(color = Border)
+
+        // Filter Tahun + Status (dropdown seperti web)
+        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box(Modifier.weight(1f)) {
+                FilterDropdown("Semua Tahun", listOf("Semua Tahun") + tahunList, filterTahun) { filterTahun = it }
+            }
+            Box(Modifier.weight(1f)) {
+                FilterDropdown("Semua Status", listOf("Semua Status", "Berjalan", "Akan Datang", "Selesai"), filterStatus) { filterStatus = it }
+            }
+        }
 
         Box(Modifier.fillMaxSize()) {
             when {
                 s.loading && s.kegiatanList.isEmpty() -> CircularProgressIndicator(Modifier.align(Alignment.Center).padding(24.dp))
                 s.error != null && s.kegiatanList.isEmpty() -> Text(s.error ?: "", color = ErrorText, modifier = Modifier.align(Alignment.Center).padding(24.dp))
-                s.kegiatanList.isEmpty() -> Text("Belum ada kegiatan.", color = TextSecondary, modifier = Modifier.align(Alignment.Center))
+                filtered.isEmpty() -> Text("Belum ada kegiatan.", color = TextSecondary, modifier = Modifier.align(Alignment.Center))
                 else -> LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    items(s.kegiatanList, key = { it.id_kegiatan }) { k ->
+                    items(filtered, key = { it.id_kegiatan }) { k ->
                         KegiatanManageCard(
                             k,
-                            onClick = { onOpen(k.id_kegiatan) },
-                            onEdit = { editing = k; showForm = true },
+                            onOpen = { onOpen(k.id_kegiatan) },
                             onDelete = { deleting = k }
                         )
                     }
@@ -108,29 +145,87 @@ fun KegiatanListScreen(vm: MainViewModel, onOpen: (Int) -> Unit) {
 }
 
 @Composable
-private fun KegiatanManageCard(k: Kegiatan, onClick: () -> Unit, onEdit: () -> Unit, onDelete: () -> Unit) {
+private fun KegiatanManageCard(k: Kegiatan, onOpen: () -> Unit, onDelete: () -> Unit) {
+    val context = LocalContext.current
+    val shareUrl = "https://siamin.gdoank.my.id/kegiatan/${k.id_kegiatan}"
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(4.dp),
         border = BorderStroke(1.dp, Border),
-        onClick = onClick,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(k.nama_kegiatan ?: "-", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    k.status?.let { Chip(it.replaceFirstChar { c -> c.uppercase() }) }
-                    k.metode_pelaksanaan?.let { Chip(it) }
+        Column(Modifier.padding(14.dp)) {
+            Row(verticalAlignment = Alignment.Top) {
+                Box(Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF22C55E)), contentAlignment = Alignment.Center) {
+                    Text((k.nama_kegiatan ?: "?").take(1).uppercase(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 }
-                Text(
-                    listOfNotNull(k.tanggal_mulai, k.tanggal_selesai).joinToString(" s/d ").ifBlank { "-" },
-                    fontSize = 13.sp, color = TextSecondary
-                )
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(k.nama_kegiatan ?: "-", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("${fmtTgl(k.tanggal_mulai)} - ${fmtTgl(k.tanggal_selesai)}", fontSize = 12.sp, color = TextSecondary)
+                        Text("  ·  ", color = TextSecondary, fontSize = 12.sp)
+                        Box(Modifier.clip(RoundedCornerShape(50)).background(statusBadgeColor(k.status).copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 2.dp)) {
+                            Text(k.status?.replaceFirstChar { it.uppercase() } ?: "-", fontSize = 11.sp, color = statusBadgeColor(k.status), fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.LocationOn, null, tint = TextSecondary, modifier = Modifier.size(13.dp))
+                        Spacer(Modifier.width(3.dp))
+                        Text("${k.lokasi ?: "-"} (${k.kabupaten_kota ?: "-"})", fontSize = 12.sp, color = TextSecondary)
+                    }
+                    Text(k.unit_kerja ?: "-", fontSize = 12.sp, color = TextSecondary)
+                    k.metode_pelaksanaan?.let {
+                        Box(Modifier.clip(RoundedCornerShape(6.dp)).background(ChipBg).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                            Text(it.replaceFirstChar { c -> c.uppercase() }, fontSize = 11.sp, color = TextSecondary)
+                        }
+                    }
+                    k.peserta_ringkasan?.let { Text(it, fontSize = 11.sp, color = TextSecondary) }
+                }
+                IconButton(onClick = onOpen) { Icon(Icons.Default.Visibility, "Detail", tint = TextSecondary) }
+                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, "Hapus", tint = ErrorText) }
             }
-            IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "Edit", tint = AccentBlue) }
-            IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, "Hapus", tint = ErrorText) }
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(onClick = { shareUrl.let { share(context, it, "Share Link") } }, shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Default.Share, null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Share Link", fontSize = 11.sp)
+                }
+                OutlinedButton(onClick = { share(context, shareUrl, "Link Peserta") }, shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Default.Share, null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Link Peserta", fontSize = 11.sp)
+                }
+                Button(onClick = onOpen, shape = RoundedCornerShape(10.dp), colors = ButtonDefaults.buttonColors(containerColor = AccentBlue), modifier = Modifier.weight(1f)) {
+                    Icon(Icons.Default.Visibility, null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Detail", fontSize = 11.sp)
+                }
+            }
+        }
+    }
+}
+
+private fun share(context: android.content.Context, url: String, title: String) {
+    val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+        type = "text/plain"
+        putExtra(android.content.Intent.EXTRA_TEXT, url)
+    }
+    context.startActivity(android.content.Intent.createChooser(send, title))
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FilterDropdown(label: String, options: List<String>, value: String, onChange: (String) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+        OutlinedTextField(
+            value = value, onValueChange = {}, readOnly = true,
+            label = { Text(label, fontSize = 11.sp) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth().menuAnchor()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { opt ->
+                DropdownMenuItem(text = { Text(opt, fontSize = 13.sp) }, onClick = { onChange(opt); expanded = false })
+            }
         }
     }
 }

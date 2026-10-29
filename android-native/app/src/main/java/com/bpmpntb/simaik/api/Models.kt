@@ -87,6 +87,7 @@ data class Kegiatan(
     val metode_pembayaran: String? = null,
     val daftar_tpk: List<TpkItem>? = null,
     val daftar_atk: List<AtkItem>? = null,
+    val peserta_ringkasan: String? = null,
 )
 
 @Serializable
