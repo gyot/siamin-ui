@@ -79,6 +79,8 @@ data class Kegiatan(
     val kabupaten_kota: String? = null,
     val unit_kerja: String? = null,
     @Serializable(with = LenientIntSerializer::class) val total_peserta: Int? = null,
+    @Serializable(with = LenientIntSerializer::class) val id_pegawai: Int? = null,
+    @Serializable(with = LenientIntSerializer::class) val created_by: Int? = null,
 )
 
 @Serializable
@@ -145,6 +147,13 @@ data class PenugasanItem(
 
 @Serializable
 data class PenugasanListResponse(val success: Boolean? = null, val data: List<PenugasanItem>? = null)
+
+@Serializable
+data class PenugasanPayload(
+    val id_kegiatan: Int,
+    val id_pegawai: Int,
+    val peran: String,
+)
 
 @Serializable
 data class SertifikatBatchItem(

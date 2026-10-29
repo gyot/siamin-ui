@@ -104,7 +104,7 @@ private fun MiniStat(label: String, value: String, color: Color, modifier: Modif
     Card(
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
         border = BorderStroke(1.dp, Border),
         modifier = modifier
     ) {
@@ -121,7 +121,7 @@ private fun PegawaiCard(p: PegawaiItem) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
         border = BorderStroke(1.dp, Border),
         modifier = Modifier.fillMaxWidth()
     ) {

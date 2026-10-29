@@ -114,7 +114,7 @@ private fun PesertaCard(p: PesertaItem, onEdit: () -> Unit, onDelete: () -> Unit
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
         border = BorderStroke(1.dp, Border),
         modifier = Modifier.fillMaxWidth()
     ) {

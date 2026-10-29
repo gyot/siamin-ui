@@ -13,6 +13,7 @@ import com.bpmpntb.simaik.api.KegiatanPayload
 import com.bpmpntb.simaik.api.LoginRequest
 import com.bpmpntb.simaik.api.PegawaiItem
 import com.bpmpntb.simaik.api.PenugasanItem
+import com.bpmpntb.simaik.api.PenugasanPayload
 import com.bpmpntb.simaik.api.PesertaItem
 import com.bpmpntb.simaik.api.PesertaPayload
 import com.bpmpntb.simaik.api.PushRegisterRequest
@@ -37,6 +38,8 @@ data class UiState(
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val session = Session(app)
+    val currentPegawaiId: Int
+        get() = session.idPegawai
     var state by mutableStateOf(UiState(loggedIn = session.isLoggedIn))
         private set
 
@@ -218,6 +221,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 onDone(true)
             } catch (e: Exception) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal menghapus.")
+                onDone(false)
+            }
+        }
+    }
+
+    fun savePenugasan(payload: PenugasanPayload, onDone: (Boolean) -> Unit) {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                ApiClient.service.storePenugasan(payload)
+                state = state.copy(loading = false, info = "Petugas ditambahkan.")
+                loadPenugasan()
+                onDone(true)
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal menambah petugas.")
                 onDone(false)
             }
         }

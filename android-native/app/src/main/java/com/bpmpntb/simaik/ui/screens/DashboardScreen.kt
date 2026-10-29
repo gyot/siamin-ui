@@ -57,7 +57,7 @@ fun DashboardScreen(vm: MainViewModel, onOpen: (Int) -> Unit, onPeserta: (Int) -
         Card(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(0.dp),
+            elevation = CardDefaults.cardElevation(4.dp),
             border = BorderStroke(1.dp, Border),
             modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
         ) {
@@ -113,7 +113,7 @@ private fun KegiatanDashboardCard(k: Kegiatan, onDetail: () -> Unit, onPeserta: 
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
         border = BorderStroke(1.dp, Border),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -211,7 +211,7 @@ fun WebCard(content: @Composable ColumnScope.() -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(0.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
         border = BorderStroke(1.dp, Border),
         modifier = Modifier.fillMaxWidth()
     ) {

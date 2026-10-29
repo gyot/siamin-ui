@@ -36,6 +36,9 @@ interface ApiService {
     @GET("penugasan-pegawai-detailed")
     suspend fun penugasan(): PenugasanListResponse
 
+    @POST("penugasan-pegawai")
+    suspend fun storePenugasan(@Body req: PenugasanPayload): OkResponse
+
     @GET("sertifikat-batch")
     suspend fun sertifikat(): SertifikatListResponse
 
