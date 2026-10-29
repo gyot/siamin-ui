@@ -241,6 +241,36 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun editPenugasan(id: Int, payload: PenugasanPayload, onDone: (Boolean) -> Unit) {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                ApiClient.service.updatePenugasan(id, payload)
+                state = state.copy(loading = false, info = "Petugas diperbarui.")
+                loadPenugasan()
+                onDone(true)
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal memperbarui petugas.")
+                onDone(false)
+            }
+        }
+    }
+
+    fun deletePenugasan(id: Int, onDone: (Boolean) -> Unit) {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                ApiClient.service.deletePenugasan(id)
+                state = state.copy(loading = false, info = "Petugas dihapus.")
+                loadPenugasan()
+                onDone(true)
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal menghapus petugas.")
+                onDone(false)
+            }
+        }
+    }
+
     fun registerPush(fcmToken: String?) {
         if (fcmToken.isNullOrBlank() || session.idPegawai < 0) return
         viewModelScope.launch {

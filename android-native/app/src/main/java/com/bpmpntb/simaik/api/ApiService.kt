@@ -39,6 +39,12 @@ interface ApiService {
     @POST("penugasan-pegawai")
     suspend fun storePenugasan(@Body req: PenugasanPayload): OkResponse
 
+    @PUT("penugasan-pegawai/{id}")
+    suspend fun updatePenugasan(@Path("id") id: Int, @Body req: PenugasanPayload): OkResponse
+
+    @DELETE("penugasan-pegawai/{id}")
+    suspend fun deletePenugasan(@Path("id") id: Int): OkResponse
+
     @GET("sertifikat-batch")
     suspend fun sertifikat(): SertifikatListResponse
 

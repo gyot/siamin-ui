@@ -45,15 +45,6 @@ fun PesertaScreen(vm: MainViewModel, kegiatanId: Int? = null) {
     Column(Modifier.fillMaxSize().background(WebBg)) {
         Row(Modifier.fillMaxWidth().background(Color.White).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (kegiatanId != null) "Peserta Kegiatan" else "Peserta", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.weight(1f))
-            Button(
-                onClick = { editing = null; showForm = true },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = AccentBlue)
-            ) {
-                Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Tambah", fontSize = 14.sp)
-            }
         }
         HorizontalDivider(color = Border)
 

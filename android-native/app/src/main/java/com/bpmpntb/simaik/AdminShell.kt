@@ -1,11 +1,19 @@
 package com.bpmpntb.simaik
 
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import com.bpmpntb.simaik.ui.theme.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -48,11 +56,22 @@ fun AdminShell(vm: MainViewModel, deepLinkId: Int, onLogout: () -> Unit) {
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet {
-                Text(
-                    "SIMAIK",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(20.dp)
-                )
+                Row(
+                    Modifier.padding(20.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(R.mipmap.ic_launcher),
+                        contentDescription = "Logo SIMAIK",
+                        modifier = Modifier.size(52.dp).clip(RoundedCornerShape(14.dp))
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Column {
+                        Text("SIMAIK", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Text("BPMP NTB", fontSize = 12.sp, color = TextSecondary)
+                    }
+                }
+                HorizontalDivider(color = Border, modifier = Modifier.padding(horizontal = 12.dp))
                 sections.forEach { sec ->
                     NavigationDrawerItem(
                         label = { Text(sec.label) },
@@ -108,7 +127,15 @@ fun AdminShell(vm: MainViewModel, deepLinkId: Int, onLogout: () -> Unit) {
                     PesertaScreen(vm, kegiatanId = kid)
                 }
                 composable("penugasan") { PenugasanScreen(vm) }
+                composable("penugasan/{kegiatanId}") { back ->
+                    val kid = back.arguments?.getString("kegiatanId")?.toIntOrNull()
+                    PenugasanScreen(vm, kegiatanId = kid)
+                }
                 composable("sertifikat") { SertifikatScreen(vm) }
+                composable("sertifikat/{kegiatanId}") { back ->
+                    val kid = back.arguments?.getString("kegiatanId")?.toIntOrNull()
+                    SertifikatScreen(vm, kegiatanId = kid)
+                }
                 composable("profil") { ProfileScreen(vm, onLogout = onLogout) }
             }
         }
