@@ -142,7 +142,10 @@
                 <td class="px-4 py-3 text-gray-600">{{ p.nip }}</td>
                 <td class="px-4 py-3 text-gray-600">{{ p.nama_jabatan }}</td>
                 <td class="px-4 py-3 text-gray-600">{{ p.golongan }}</td>
-                <td class="px-4 py-3 text-gray-600">{{ p.unit_kerja }}</td>
+                <td class="px-4 py-3 text-gray-600">
+                  {{ p.tim_detail || p.unit_kerja || p.nama_tim || '-' }}
+                  <span v-if="p.pdm_detail" class="block text-xs text-gray-400">{{ p.pdm_detail }}</span>
+                </td>
                 <td class="px-4 py-3">
                   <span :class="[
                     'px-3 py-1 rounded-full text-xs font-semibold',
@@ -190,14 +193,9 @@
         </div>
       </div>
 
-      <!-- Tab: Data User Admin -->
-      <div v-if="activeTab === 'user'" class="mb-6">
-        <button
-          @click="showAddUserModal = true"
-          class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-sm sm:text-base"
-        >
-          + Tambah User Admin
-        </button>
+      <!-- Tab: Data User Admin (read-only — manajemen user ada di aplikasi KANDI) -->
+      <div v-if="activeTab === 'user'" class="mb-2">
+        <p class="text-sm text-gray-500">Data user ditampilkan dari aplikasi KANDI. Untuk menambah/mengubah/menghapus user, silakan melalui aplikasi KANDI.</p>
       </div>
       <div v-if="activeTab === 'user'" class="bg-white rounded-lg shadow-lg overflow-hidden">
         <div class="overflow-x-auto">
@@ -212,10 +210,10 @@
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">No</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Email</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Role</th>
+                <th class="px-4 py-3 text-left text-xs sm:text-sm">Tim</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Pegawai</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Status</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">Last Login</th>
-                <th class="px-4 py-3 text-center text-xs sm:text-sm">Aksi</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -231,9 +229,10 @@
                       ? 'bg-blue-100 text-blue-800'
                       : 'bg-gray-100 text-gray-800'
                   ]">
-                    {{ u.role }}
+                    {{ u.roles_detail || u.role }}
                   </span>
                 </td>
+                <td class="px-4 py-3 text-gray-600 text-xs">{{ u.tim_detail || '-' }}</td>
                 <td class="px-4 py-3 text-gray-600">{{ getNamaPegawai(u.id_pegawai) }}</td>
                 <td class="px-4 py-3">
                   <span :class="[
@@ -247,26 +246,6 @@
                 </td>
                 <td class="px-4 py-3 text-gray-600 text-xs">
                   {{ formatDate(u.last_login) }}
-                </td>
-                <td class="px-4 py-3 text-center">
-                  <button
-                    @click="editUser(u.id_user)"
-                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition mr-2"
-                    title="Edit"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                    </svg>
-                  </button>
-                  <button
-                    @click="deleteUser(u.id_user)"
-                    class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                    title="Hapus"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                  </button>
                 </td>
               </tr>
             </tbody>
