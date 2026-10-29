@@ -1,0 +1,6 @@
+# signing secrets
+keystore.properties
+simaik-release.jks
+local.properties
+build/
+.gradle/
