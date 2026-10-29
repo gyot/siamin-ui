@@ -24,7 +24,7 @@ object LenientIntSerializer : KSerializer<Int?> {
 }
 
 @Serializable
-data class LoginRequest(val identitas: String, val password: String)
+data class LoginRequest(val email: String, val password: String)
 
 @Serializable
 data class UserObj(
