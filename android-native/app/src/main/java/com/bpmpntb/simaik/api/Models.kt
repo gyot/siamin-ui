@@ -123,6 +123,7 @@ data class PegawaiItem(
     val pangkat: String? = null,
     val golongan: String? = null,
     val status: String? = null,
+    val unit_kerja: String? = null,
 )
 
 @Serializable
@@ -136,6 +137,10 @@ data class PenugasanItem(
     val peran: String? = null,
     val nama_kegiatan: String? = null,
     val nama_pegawai: String? = null,
+    val tanggal_mulai: String? = null,
+    val tanggal_selesai: String? = null,
+    val kab_kota: String? = null,
+    val lokasi: String? = null,
 )
 
 @Serializable
