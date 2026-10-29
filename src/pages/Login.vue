@@ -135,12 +135,7 @@
               <p class="text-sm text-red-600">{{ authStore.error }}</p>
             </div>
 
-            <!-- Demo Credentials -->
-            <!-- <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p class="text-xs font-medium text-blue-900 mb-2">Demo Credentials:</p>
-              <p class="text-xs text-blue-700">Email: admin@kemkominfo.go.id</p>
-              <p class="text-xs text-blue-700">Password: password123</p>
-            </div> -->
+            <!-- Demo Credentials (dihapus permanen demi keamanan) -->
           </form>
 
           <!-- Switch to Peserta Login -->
