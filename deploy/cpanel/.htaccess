@@ -1,0 +1,26 @@
+# ===========================================================================
+# SIMAIK frontend (SPA Vue) — .htaccess untuk Apache / cPanel
+# Taruh di root document tempat hasil build (dist/) di-serve.
+#
+# Setara dengan blok nginx:
+#   location ~ ^/(kegiatan|daftar-peserta|...)(/|$) { fastcgi ... }
+# ===========================================================================
+
+RewriteEngine On
+
+# --- Open Graph link preview -------------------------------------------------
+# Halaman publik shareable diteruskan ke front controller Laravel agar crawler
+# (WhatsApp/Telegram/Facebook) mendapat meta OG per halaman (routes/og.php).
+#
+# PENTING: sesuaikan path /index.php di bawah dengan lokasi front controller
+# Laravel di hosting ini (mis. /backend/public/index.php), atau konfigurasikan
+# Alias/ScriptAlias di vhost. REQUEST_URI tetap = URL asli, jadi routing
+# Laravel di routes/og.php langsung cocok.
+RewriteRule ^(kegiatan|daftar-peserta|unduh-sertifikat|evaluasi|formulir|laporan-evaluasi)(/|$) /index.php [L]
+
+# --- SPA fallback ------------------------------------------------------------
+# File yang ada dilayani langsung; selain itu kembalikan index.html (Vue Router
+# yang menangani routenya di client).
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
