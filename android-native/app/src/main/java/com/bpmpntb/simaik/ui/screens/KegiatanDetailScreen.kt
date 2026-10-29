@@ -160,6 +160,78 @@ fun KegiatanDetailScreen(
                                 }
                             }
                         }
+
+                        // TPK (Tempat Pelaksanaan Kegiatan)
+                        if (!k.daftar_tpk.isNullOrEmpty()) {
+                            Spacer(Modifier.height(10.dp))
+                            WebCard {
+                                Text("Tempat Pelaksanaan Kegiatan", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                                Spacer(Modifier.height(10.dp))
+                                k.daftar_tpk.forEachIndexed { i, tpk ->
+                                    Row(Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                                        Box(Modifier.size(24.dp).clip(RoundedCornerShape(6)).background(AccentBlue.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
+                                            Text("${i + 1}", fontSize = 12.sp, color = AccentBlue, fontWeight = FontWeight.Bold)
+                                        }
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("${tpk.lokasi}${tpk.kabupaten_kota?.let { " ($it)" } ?: ""}", fontSize = 13.sp, color = TextPrimary)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Daftar ATK
+                        if (!k.daftar_atk.isNullOrEmpty()) {
+                            Spacer(Modifier.height(10.dp))
+                            WebCard {
+                                Text("Daftar ATK", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                                Spacer(Modifier.height(10.dp))
+                                k.daftar_atk.forEach { atk ->
+                                    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                                        Text(atk.nama_barang, fontSize = 13.sp, color = TextPrimary, modifier = Modifier.weight(1f))
+                                        Text("${atk.jumlah ?: 0} ${atk.satuan ?: ""}", fontSize = 12.sp, color = TextSecondary)
+                                    }
+                                }
+                            }
+                        }
+
+                        // Link Biodata + Evaluasi/Laporan/Test + Resource
+                        val slug = slugifyJudul(k.nama_kegiatan)
+                        val idTpk = k.daftar_tpk?.firstOrNull()?.id_tpk ?: 0
+                        val base = "https://siamin.gdoank.my.id"
+
+                        Spacer(Modifier.height(10.dp))
+                        WebCard {
+                            Text("Link Biodata", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                            Spacer(Modifier.height(8.dp))
+                            listOf("Peserta", "Panitia", "Narasumber", "Pendamping").forEach { peran ->
+                                LinkRow(peran, "$base/formulir/${k.id_kegiatan}/$peran/$idTpk/$slug")
+                            }
+                        }
+
+                        Spacer(Modifier.height(10.dp))
+                        WebCard {
+                            Text("Link Evaluasi, Laporan & Test", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                            Spacer(Modifier.height(8.dp))
+                            LinkRow("Evaluasi", "$base/evaluasi/${k.id_kegiatan}/$idTpk/$slug")
+                            LinkRow("Laporan Evaluasi", "$base/laporan-evaluasi/${k.id_kegiatan}/$idTpk/$slug")
+                            LinkRow("Test", "$base/test/${k.id_kegiatan}/$idTpk/$slug")
+                        }
+
+                        val resDocs = listOfNotNull(
+                            k.dokumentasi_url?.let { "Dokumentasi" to it },
+                            k.materi_url?.let { "Materi" to it },
+                            k.panduan_url?.let { "Panduan" to it },
+                            k.laporan_url?.let { "Laporan" to it },
+                            k.surat_menyurat_url?.let { "Surat Menyurat" to it }
+                        )
+                        if (resDocs.isNotEmpty()) {
+                            Spacer(Modifier.height(10.dp))
+                            WebCard {
+                                Text("Resource", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                                Spacer(Modifier.height(8.dp))
+                                resDocs.forEach { (label, url) -> LinkRow(label, url) }
+                            }
+                        }
                     }
                 }
                 else -> Text("Data tidak ditemukan.", Modifier.align(Alignment.Center), color = TextSecondary)
@@ -244,5 +316,20 @@ private fun JadwalTableRow(item: JadwalItem) {
         Text(item.kegiatan ?: "-", fontSize = 11.sp, color = txtColor, fontStyle = fs, lineHeight = 15.sp, modifier = Modifier.weight(2.3f))
         Text(item.jp ?: "-", fontSize = 11.sp, color = txtColor, fontStyle = fs, modifier = Modifier.weight(0.6f))
         Text(item.pj ?: "-", fontSize = 11.sp, color = txtColor, fontStyle = fs, lineHeight = 15.sp, modifier = Modifier.weight(1.2f))
+    }
+}
+
+@Composable
+private fun LinkRow(label: String, url: String) {
+    val ctx = LocalContext.current
+    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Default.Link, null, tint = AccentBlue, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(8.dp))
+        Text(label, fontSize = 13.sp, color = TextPrimary, modifier = Modifier.weight(1f))
+        IconButton(onClick = { openUrl(ctx, url) }) { Icon(Icons.Default.Visibility, "Buka", tint = AccentBlue, modifier = Modifier.size(18.dp)) }
+        IconButton(onClick = {
+            val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, url) }
+            ctx.startActivity(android.content.Intent.createChooser(send, "Bagikan $label"))
+        }) { Icon(Icons.Default.Share, "Bagikan", tint = AccentBlue, modifier = Modifier.size(18.dp)) }
     }
 }
