@@ -37,7 +37,19 @@ fun PenugasanScreen(vm: MainViewModel, kegiatanId: Int? = null) {
     val canManage = isPer && ((k?.id_pegawai == myId || k?.created_by == myId) ||
         s.penugasanList.any { it.id_kegiatan == kegiatanId && it.id_pegawai == myId && (it.peran ?: "").equals("panitia", true) })
 
-    val rows = s.penugasanList.filter { !isPer || it.id_kegiatan == kegiatanId }
+    val rowsBase = s.penugasanList.filter { !isPer || it.id_kegiatan == kegiatanId }
+
+    // Filter ala web (global): search + kab/kota + tanggal
+    var search by remember { mutableStateOf("") }
+    var kabKota by remember { mutableStateOf("") }
+    var tglMulai by remember { mutableStateOf("") }
+    var tglSelesai by remember { mutableStateOf("") }
+    val rows = rowsBase.filter {
+        (search.isBlank() || (it.nama_pegawai ?: "").contains(search, true) || (it.nama_kegiatan ?: "").contains(search, true)) &&
+            (kabKota.isBlank() || (it.kab_kota ?: "").equals(kabKota, true)) &&
+            (tglMulai.isBlank() || (it.tanggal_mulai ?: "") >= tglMulai) &&
+            (tglSelesai.isBlank() || (it.tanggal_selesai ?: "") <= tglSelesai)
+    }
 
     var showTambah by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<PenugasanItem?>(null) }
@@ -68,6 +80,31 @@ fun PenugasanScreen(vm: MainViewModel, kegiatanId: Int? = null) {
                         Spacer(Modifier.width(6.dp))
                         Text("Tambah Petugas")
                     }
+                }
+            }
+        } else {
+            // Filter ala web (mode global)
+            Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = search, onValueChange = { search = it },
+                    placeholder = { Text("Cari pegawai / kegiatan...", fontSize = 13.sp) },
+                    singleLine = true, shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    KabKotaDropdown(kabKota) { kabKota = it }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(Modifier.weight(1f)) {
+                        OutlinedTextField(value = tglMulai, onValueChange = { tglMulai = it }, label = { Text("Dari tgl (YYYY-MM-DD)", fontSize = 11.sp) }, singleLine = true, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
+                    }
+                    Box(Modifier.weight(1f)) {
+                        OutlinedTextField(value = tglSelesai, onValueChange = { tglSelesai = it }, label = { Text("Sampai tgl", fontSize = 11.sp) }, singleLine = true, shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth())
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { /* filter langsung diterapkan */ }, shape = RoundedCornerShape(10.dp)) { Text("Terapkan", fontSize = 12.sp) }
+                    OutlinedButton(onClick = { search = ""; kabKota = ""; tglMulai = ""; tglSelesai = "" }, shape = RoundedCornerShape(10.dp)) { Text("Reset", fontSize = 12.sp) }
                 }
             }
         }
@@ -107,6 +144,27 @@ fun PenugasanScreen(vm: MainViewModel, kegiatanId: Int? = null) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun KabKotaDropdown(value: String, onChange: (String) -> Unit) {
+    val options = listOf("", "Kota Mataram", "Lombok Barat", "Lombok Tengah", "Lombok Timur", "Lombok Utara", "Sumbawa", "Sumbawa Barat", "Dompu", "Bima", "Kota Bima")
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = Modifier.fillMaxWidth()) {
+        OutlinedTextField(
+            value = value.ifBlank { "Semua Kab/Kota" }, onValueChange = {}, readOnly = true,
+            label = { Text("Kabupaten/Kota", fontSize = 11.sp) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.fillMaxWidth().menuAnchor()
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { opt ->
+                DropdownMenuItem(text = { Text(opt.ifBlank { "Semua Kab/Kota" }, fontSize = 13.sp) }, onClick = { onChange(opt); expanded = false })
+            }
+        }
+    }
+}
+
 @Composable
 private fun PetugasCard(p: PenugasanItem, showActions: Boolean, onEdit: () -> Unit, onDelete: () -> Unit) {
     Card(
@@ -123,7 +181,12 @@ private fun PetugasCard(p: PenugasanItem, showActions: Boolean, onEdit: () -> Un
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(p.nama_pegawai ?: "Pegawai #${p.id_pegawai ?: "-"}", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                p.peran?.let { Chip(it.replaceFirstChar { c -> c.uppercase() }) }
+                p.nama_kegiatan?.let { Text(it, fontSize = 12.sp, color = TextSecondary, maxLines = 2, lineHeight = 15.sp) }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    p.peran?.let { Chip(it.replaceFirstChar { c -> c.uppercase() }) }
+                    Text(listOfNotNull(p.tanggal_mulai, p.tanggal_selesai).joinToString(" - ").ifBlank { "" }, fontSize = 11.sp, color = TextSecondary)
+                }
+                Text(listOfNotNull(p.kab_kota, p.lokasi).joinToString(" • ").ifBlank { "" }, fontSize = 11.sp, color = TextSecondary)
             }
             if (showActions) {
                 IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "Edit", tint = AccentBlue) }
