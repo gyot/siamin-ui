@@ -15,6 +15,9 @@ interface ApiService {
     @GET("kegiatan/{id}")
     suspend fun kegiatanDetail(@Path("id") id: Int): KegiatanResponse
 
+    @GET("dashboard/stats")
+    suspend fun dashboardStats(): DashboardStats
+
     @POST("push/register")
     suspend fun registerPush(@Body req: PushRegisterRequest): OkResponse
 }

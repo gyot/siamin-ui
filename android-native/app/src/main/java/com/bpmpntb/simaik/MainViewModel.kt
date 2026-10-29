@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.bpmpntb.simaik.api.ApiClient
+import com.bpmpntb.simaik.api.DashboardStats
 import com.bpmpntb.simaik.api.Kegiatan
 import com.bpmpntb.simaik.api.LoginRequest
 import com.bpmpntb.simaik.api.PushRegisterRequest
@@ -21,6 +22,7 @@ data class UiState(
     val loginAs: String? = null,
     val kegiatanList: List<Kegiatan> = emptyList(),
     val kegiatanDetail: Kegiatan? = null,
+    val dashboard: DashboardStats? = null,
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -84,6 +86,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 state = state.copy(loading = false, kegiatanDetail = res.data)
             } catch (e: Exception) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal memuat detail.")
+            }
+        }
+    }
+
+    fun loadDashboard() {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                val res = ApiClient.service.dashboardStats()
+                state = state.copy(loading = false, dashboard = res)
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal memuat dashboard.")
             }
         }
     }

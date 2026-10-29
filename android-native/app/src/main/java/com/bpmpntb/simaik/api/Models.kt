@@ -86,3 +86,13 @@ data class PushRegisterRequest(
 
 @Serializable
 data class OkResponse(val success: Boolean? = null, val message: String? = null)
+
+@Serializable
+data class DashboardStats(
+    val total_kegiatan: Int? = null,
+    val kegiatan_berjalan: Int? = null,
+    val total_peserta: Int? = null,
+    val total_sertifikat_terbit: Int? = null,
+    val available_tahun: List<String>? = null,
+    val available_unit_kerja: List<String>? = null,
+)

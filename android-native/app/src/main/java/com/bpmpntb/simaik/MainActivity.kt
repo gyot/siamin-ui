@@ -79,7 +79,7 @@ fun AppRoot(vm: MainViewModel, deepLinkId: Int, onDeepLinkConsumed: () -> Unit) 
 
     LaunchedEffect(deepLinkId) {
         if (deepLinkId > 0) {
-            nav.navigate("kegiatan/$deepLinkId")
+            nav.navigate("admin") { popUpTo("landing") { inclusive = true } }
             onDeepLinkConsumed()
         }
     }
@@ -90,15 +90,15 @@ fun AppRoot(vm: MainViewModel, deepLinkId: Int, onDeepLinkConsumed: () -> Unit) 
         }
         composable("login") {
             LoginScreen(vm) {
-                nav.navigate("kegiatan") { popUpTo("login") { inclusive = true } }
+                nav.navigate("admin") { popUpTo("login") { inclusive = true } }
             }
         }
-        composable("kegiatan") {
-            KegiatanListScreen(vm, onOpen = { id -> nav.navigate("kegiatan/$id") })
-        }
-        composable("kegiatan/{id}") { back ->
-            val id = back.arguments?.getString("id")?.toIntOrNull() ?: -1
-            KegiatanDetailScreen(vm, id, onBack = { nav.popBackStack() })
+        composable("admin") {
+            AdminShell(
+                vm = vm,
+                deepLinkId = deepLinkId,
+                onLogout = { nav.navigate("landing") { popUpTo(0) { inclusive = true } } }
+            )
         }
     }
 }
