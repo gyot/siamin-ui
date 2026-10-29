@@ -10,7 +10,10 @@ import com.bpmpntb.simaik.api.ApiClient
 import com.bpmpntb.simaik.api.DashboardStats
 import com.bpmpntb.simaik.api.Kegiatan
 import com.bpmpntb.simaik.api.LoginRequest
+import com.bpmpntb.simaik.api.PegawaiItem
+import com.bpmpntb.simaik.api.PenugasanItem
 import com.bpmpntb.simaik.api.PushRegisterRequest
+import com.bpmpntb.simaik.api.SertifikatBatchItem
 import com.bpmpntb.simaik.data.Session
 import kotlinx.coroutines.launch
 
@@ -23,6 +26,9 @@ data class UiState(
     val kegiatanList: List<Kegiatan> = emptyList(),
     val kegiatanDetail: Kegiatan? = null,
     val dashboard: DashboardStats? = null,
+    val pegawaiList: List<PegawaiItem> = emptyList(),
+    val penugasanList: List<PenugasanItem> = emptyList(),
+    val sertifikatList: List<SertifikatBatchItem> = emptyList(),
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -98,6 +104,42 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 state = state.copy(loading = false, dashboard = res)
             } catch (e: Exception) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal memuat dashboard.")
+            }
+        }
+    }
+
+    fun loadPegawai() {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                val res = ApiClient.service.pegawai()
+                state = state.copy(loading = false, pegawaiList = res.data ?: emptyList())
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal memuat pegawai.")
+            }
+        }
+    }
+
+    fun loadPenugasan() {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                val res = ApiClient.service.penugasan()
+                state = state.copy(loading = false, penugasanList = res.data ?: emptyList())
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal memuat penugasan.")
+            }
+        }
+    }
+
+    fun loadSertifikat() {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                val res = ApiClient.service.sertifikat()
+                state = state.copy(loading = false, sertifikatList = res.data ?: emptyList())
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal memuat sertifikat.")
             }
         }
     }

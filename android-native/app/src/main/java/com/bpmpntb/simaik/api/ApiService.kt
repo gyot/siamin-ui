@@ -18,6 +18,15 @@ interface ApiService {
     @GET("dashboard/stats")
     suspend fun dashboardStats(): DashboardStats
 
+    @GET("pegawai")
+    suspend fun pegawai(): PegawaiListResponse
+
+    @GET("penugasan-pegawai-detailed")
+    suspend fun penugasan(): PenugasanListResponse
+
+    @GET("sertifikat-batch")
+    suspend fun sertifikat(): SertifikatListResponse
+
     @POST("push/register")
     suspend fun registerPush(@Body req: PushRegisterRequest): OkResponse
 }

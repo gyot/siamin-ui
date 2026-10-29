@@ -23,6 +23,19 @@ object LenientIntSerializer : KSerializer<Int?> {
     }
 }
 
+// Terima string ATAU number sebagai String (PHP sering ganti-ganti tipe).
+object LenientStringSerializer : KSerializer<String?> {
+    override val descriptor = PrimitiveSerialDescriptor("LenientString", PrimitiveKind.STRING)
+    override fun deserialize(decoder: Decoder): String? {
+        val input = decoder as? JsonDecoder ?: return decoder.decodeString()
+        val prim = input.decodeJsonElement() as? JsonPrimitive ?: return null
+        return prim.content
+    }
+    override fun serialize(encoder: Encoder, value: String?) {
+        if (value == null) encoder.encodeNull() else encoder.encodeString(value)
+    }
+}
+
 @Serializable
 data class LoginRequest(val email: String, val password: String)
 
@@ -96,3 +109,41 @@ data class DashboardStats(
     val available_tahun: List<String>? = null,
     val available_unit_kerja: List<String>? = null,
 )
+
+@Serializable
+data class PegawaiItem(
+    @Serializable(with = LenientIntSerializer::class) val id_pegawai: Int? = null,
+    @Serializable(with = LenientStringSerializer::class) val nip: String? = null,
+    val nama: String? = null,
+    val nama_jabatan: String? = null,
+    val pangkat: String? = null,
+    val golongan: String? = null,
+    val status: String? = null,
+)
+
+@Serializable
+data class PegawaiListResponse(val success: Boolean? = null, val data: List<PegawaiItem>? = null)
+
+@Serializable
+data class PenugasanItem(
+    @Serializable(with = LenientIntSerializer::class) val id: Int? = null,
+    @Serializable(with = LenientIntSerializer::class) val id_kegiatan: Int? = null,
+    @Serializable(with = LenientIntSerializer::class) val id_pegawai: Int? = null,
+    val peran: String? = null,
+    val nama_kegiatan: String? = null,
+    val nama_pegawai: String? = null,
+)
+
+@Serializable
+data class PenugasanListResponse(val success: Boolean? = null, val data: List<PenugasanItem>? = null)
+
+@Serializable
+data class SertifikatBatchItem(
+    @Serializable(with = LenientIntSerializer::class) val id_batch: Int? = null,
+    @Serializable(with = LenientIntSerializer::class) val id_kegiatan: Int? = null,
+    val nomor_sertifikat: String? = null,
+    val tanggal_ttd: String? = null,
+)
+
+@Serializable
+data class SertifikatListResponse(val success: Boolean? = null, val data: List<SertifikatBatchItem>? = null)
