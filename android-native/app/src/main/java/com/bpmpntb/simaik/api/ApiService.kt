@@ -12,7 +12,7 @@ interface ApiService {
     @POST("auth/login")
     suspend fun login(@Body req: LoginRequest): LoginResponse
 
-    @GET("kegiatan")
+    @GET("kegiatan/all")
     suspend fun kegiatan(): KegiatanListResponse
 
     @GET("kegiatan/{id}")
@@ -40,7 +40,7 @@ interface ApiService {
     suspend fun sertifikat(): SertifikatListResponse
 
     @GET("peserta")
-    suspend fun peserta(@Query("per_page") perPage: Int = 500): PesertaListResponse
+    suspend fun peserta(@Query("kegiatan_id") kegiatanId: Int? = null, @Query("per_page") perPage: Int = 500): PesertaListResponse
 
     @POST("peserta")
     suspend fun storePeserta(@Body req: PesertaPayload): OkResponse

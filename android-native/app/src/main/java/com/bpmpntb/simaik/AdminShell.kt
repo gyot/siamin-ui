@@ -89,7 +89,13 @@ fun AdminShell(vm: MainViewModel, deepLinkId: Int, onLogout: () -> Unit) {
                 startDestination = "dashboard",
                 modifier = Modifier.padding(pad)
             ) {
-                composable("dashboard") { DashboardScreen(vm, onOpen = { id -> innerNav.navigate("kegiatan/$id") }) }
+                composable("dashboard") {
+                    DashboardScreen(
+                        vm,
+                        onOpen = { id -> innerNav.navigate("kegiatan/$id") },
+                        onPeserta = { id -> innerNav.navigate("peserta/$id") }
+                    )
+                }
                 composable("kegiatan") { KegiatanListScreen(vm, onOpen = { id -> innerNav.navigate("kegiatan/$id") }) }
                 composable("kegiatan/{id}") { back ->
                     val id = back.arguments?.getString("id")?.toIntOrNull() ?: -1
@@ -97,6 +103,10 @@ fun AdminShell(vm: MainViewModel, deepLinkId: Int, onLogout: () -> Unit) {
                 }
                 composable("pegawai") { PegawaiScreen(vm) }
                 composable("peserta") { PesertaScreen(vm) }
+                composable("peserta/{kegiatanId}") { back ->
+                    val kid = back.arguments?.getString("kegiatanId")?.toIntOrNull()
+                    PesertaScreen(vm, kegiatanId = kid)
+                }
                 composable("penugasan") { PenugasanScreen(vm) }
                 composable("sertifikat") { SertifikatScreen(vm) }
                 composable("profil") { ProfileScreen(vm, onLogout = onLogout) }

@@ -75,6 +75,10 @@ data class Kegiatan(
     val status: String? = null,
     val flyer: String? = null,
     val metode_pelaksanaan: String? = null,
+    val lokasi: String? = null,
+    val kabupaten_kota: String? = null,
+    val unit_kerja: String? = null,
+    @Serializable(with = LenientIntSerializer::class) val total_peserta: Int? = null,
 )
 
 @Serializable

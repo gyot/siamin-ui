@@ -14,8 +14,8 @@ android {
         applicationId = "com.bpmpntb.simaik"
         minSdk = 24
         targetSdk = 35
-        versionCode = 10
-        versionName = "1.7.0"
+        versionCode = 11
+        versionName = "1.8.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -77,6 +77,7 @@ dependencies {
 
     implementation("com.google.firebase:firebase-messaging-ktx:24.1.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    implementation("com.google.zxing:core:3.5.3")
 
     testImplementation("junit:junit:4.13.2")
 }

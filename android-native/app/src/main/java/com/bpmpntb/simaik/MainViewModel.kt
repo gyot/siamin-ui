@@ -180,11 +180,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun loadPeserta() {
+    fun loadPeserta(kegiatanId: Int? = null) {
         state = state.copy(loading = true, error = null)
         viewModelScope.launch {
             try {
-                val res = ApiClient.service.peserta()
+                val res = ApiClient.service.peserta(kegiatanId = kegiatanId)
                 state = state.copy(loading = false, pesertaList = res.data ?: emptyList())
             } catch (e: Exception) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal memuat peserta.")

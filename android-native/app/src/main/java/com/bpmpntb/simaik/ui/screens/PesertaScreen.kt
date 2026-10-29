@@ -30,9 +30,9 @@ import com.bpmpntb.simaik.api.PesertaPayload
 import com.bpmpntb.simaik.ui.theme.*
 
 @Composable
-fun PesertaScreen(vm: MainViewModel) {
+fun PesertaScreen(vm: MainViewModel, kegiatanId: Int? = null) {
     val s = vm.state
-    LaunchedEffect(Unit) { vm.loadPeserta(); vm.loadKegiatan() }
+    LaunchedEffect(kegiatanId) { vm.loadPeserta(kegiatanId); vm.loadKegiatan() }
     var search by remember { mutableStateOf("") }
     var showForm by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<PesertaItem?>(null) }
@@ -44,7 +44,7 @@ fun PesertaScreen(vm: MainViewModel) {
 
     Column(Modifier.fillMaxSize().background(WebBg)) {
         Row(Modifier.fillMaxWidth().background(Color.White).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Peserta", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.weight(1f))
+            Text(if (kegiatanId != null) "Peserta Kegiatan" else "Peserta", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.weight(1f))
             Button(
                 onClick = { editing = null; showForm = true },
                 shape = RoundedCornerShape(12.dp),
