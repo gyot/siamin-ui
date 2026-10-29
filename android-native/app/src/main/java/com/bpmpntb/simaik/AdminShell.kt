@@ -61,7 +61,7 @@ fun AdminShell(vm: MainViewModel, deepLinkId: Int, onLogout: () -> Unit) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Image(
-                        painter = painterResource(R.mipmap.ic_launcher),
+                        painter = painterResource(R.drawable.simaik_logo),
                         contentDescription = "Logo SIMAIK",
                         modifier = Modifier.size(52.dp).clip(RoundedCornerShape(14.dp))
                     )

@@ -62,7 +62,7 @@ fun KegiatanDetailScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, "Kembali", tint = Color.White)
                 }
                 Image(
-                    painter = painterResource(R.mipmap.ic_launcher),
+                    painter = painterResource(R.drawable.simaik_logo),
                     contentDescription = "Logo SIMAIK",
                     modifier = Modifier.size(42.dp).shadow(8.dp, RoundedCornerShape(11.dp))
                 )
