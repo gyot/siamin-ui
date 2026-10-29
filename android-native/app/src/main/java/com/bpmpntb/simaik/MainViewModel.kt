@@ -36,6 +36,7 @@ data class UiState(
     val penugasanList: List<PenugasanItem> = emptyList(),
     val sertifikatList: List<SertifikatBatchItem> = emptyList(),
     val pesertaList: List<PesertaItem> = emptyList(),
+    val jadwalList: List<JadwalDay> = emptyList(),
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -177,6 +178,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal menyimpan.")
                 onDone(false)
             }
+        }
+    }
+
+    fun loadJadwal(id: Int) {
+        viewModelScope.launch {
+            try {
+                val res = ApiClient.service.getJadwal(id)
+                state = state.copy(jadwalList = res.data?.jadwal_harian ?: emptyList())
+            } catch (e: Exception) { state = state.copy(jadwalList = emptyList()) }
         }
     }
 

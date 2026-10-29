@@ -34,6 +34,11 @@ import com.bpmpntb.simaik.api.KegiatanPayload
 import com.bpmpntb.simaik.api.PenugasanItem
 import com.bpmpntb.simaik.api.PenugasanPayload
 import com.bpmpntb.simaik.api.SertifikatBatchItem
+import com.bpmpntb.simaik.api.JadwalItem
+import androidx.compose.ui.text.font.FontStyle
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import com.bpmpntb.simaik.ui.theme.*
 
 @Composable
@@ -46,7 +51,7 @@ fun KegiatanDetailScreen(
     val s = vm.state
     val context = LocalContext.current
     LaunchedEffect(id) {
-        if (id > 0) vm.loadDetail(id)
+        if (id > 0) { vm.loadDetail(id); vm.loadJadwal(id) }
     }
     var showEdit by remember { mutableStateOf(false) }
     var showDelete by remember { mutableStateOf(false) }
@@ -137,6 +142,24 @@ fun KegiatanDetailScreen(
                                 Text(it, fontSize = 14.sp, lineHeight = 22.sp, color = TextPrimary)
                             }
                         }
+
+                        // JADWAL HARIAN (seperti web)
+                        if (s.jadwalList.isNotEmpty()) {
+                            WebCard {
+                                Text("Jadwal Harian", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
+                                Spacer(Modifier.height(12.dp))
+                                s.jadwalList.forEachIndexed { idx, day ->
+                                    Text(
+                                        "Hari ${jadwalOrdinal(idx)} - ${fmtTglShort(day.tanggal)}",
+                                        fontSize = 13.sp, fontWeight = FontWeight.Bold, color = AccentBlue
+                                    )
+                                    Spacer(Modifier.height(6.dp))
+                                    JadwalTableHeader()
+                                    day.items?.forEach { item -> JadwalTableRow(item) }
+                                    Spacer(Modifier.height(14.dp))
+                                }
+                            }
+                        }
                     }
                 }
                 else -> Text("Data tidak ditemukan.", Modifier.align(Alignment.Center), color = TextSecondary)
@@ -190,5 +213,36 @@ fun InfoRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text(label, color = TextSecondary, fontSize = 14.sp)
         Text(value, fontWeight = FontWeight.Medium, fontSize = 14.sp, color = TextPrimary)
+    }
+}
+
+private fun jadwalOrdinal(i: Int): String =
+    listOf("Pertama", "Kedua", "Ketiga", "Keempat", "Kelima", "Keenam", "Ketujuh", "Kedelapan", "Kesembilan", "Kesepuluh")
+        .getOrElse(i) { "ke-${i + 1}" }
+
+private val tglShortFmt = DateTimeFormatter.ofPattern("d MMM yyyy", Locale("id", "ID"))
+private fun fmtTglShort(s: String?): String = try { s?.take(10)?.let { LocalDate.parse(it).format(tglShortFmt) } ?: "-" } catch (e: Exception) { s ?: "-" }
+
+@Composable
+private fun JadwalTableHeader() {
+    Row(Modifier.fillMaxWidth().background(ChipBg).padding(vertical = 6.dp, horizontal = 8.dp)) {
+        Text("Waktu", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary, modifier = Modifier.weight(1.1f))
+        Text("Kegiatan / Materi", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary, modifier = Modifier.weight(2.3f))
+        Text("JP", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary, modifier = Modifier.weight(0.6f))
+        Text("PJ", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = TextSecondary, modifier = Modifier.weight(1.2f))
+    }
+}
+
+@Composable
+private fun JadwalTableRow(item: JadwalItem) {
+    val isBreak = item.tipe == "istirahat" || item.kegiatan.equals("Istirahat", true) == true || (item.kegiatan?.contains("Registrasi", true) == true)
+    val bg = if (isBreak) Color(0xFFFFF7E0) else Color.White
+    val txtColor = if (isBreak) Color(0xFFB8860B) else TextPrimary
+    val fs = if (isBreak) FontStyle.Italic else FontStyle.Normal
+    Row(Modifier.fillMaxWidth().background(bg).padding(vertical = 8.dp, horizontal = 8.dp)) {
+        Text(item.waktu ?: "-", fontSize = 11.sp, color = txtColor, fontStyle = fs, lineHeight = 15.sp, modifier = Modifier.weight(1.1f))
+        Text(item.kegiatan ?: "-", fontSize = 11.sp, color = txtColor, fontStyle = fs, lineHeight = 15.sp, modifier = Modifier.weight(2.3f))
+        Text(item.jp ?: "-", fontSize = 11.sp, color = txtColor, fontStyle = fs, modifier = Modifier.weight(0.6f))
+        Text(item.pj ?: "-", fontSize = 11.sp, color = txtColor, fontStyle = fs, lineHeight = 15.sp, modifier = Modifier.weight(1.2f))
     }
 }

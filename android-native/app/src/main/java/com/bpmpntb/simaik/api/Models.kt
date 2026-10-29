@@ -195,6 +195,7 @@ data class JadwalItem(
     val kegiatan: String? = null,
     val pj: String? = null,
     val tipe: String? = null,
+    @Serializable(with = LenientStringSerializer::class) val jp: String? = null,
 )
 
 @Serializable
