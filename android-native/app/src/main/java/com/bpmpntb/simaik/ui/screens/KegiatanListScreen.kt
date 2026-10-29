@@ -48,12 +48,29 @@ private fun statusBadgeColor(st: String?) = when (st?.lowercase()) {
     else -> Color(0xFFF59E0B)
 }
 
+// Status kegiatan DIHITUNG dari tanggal (sesuai web), bukan field status
+private fun parseTgl(s: String?): LocalDate? = try { s?.take(10)?.let(LocalDate::parse) } catch (e: Exception) { null }
+fun hitungStatus(tanggalMulai: String?, tanggalSelesai: String?, statusField: String?): String {
+    val today = LocalDate.now()
+    val mulai = parseTgl(tanggalMulai); val selesai = parseTgl(tanggalSelesai)
+    return when {
+        mulai == null && selesai == null -> (statusField ?: "draft").replaceFirstChar { it.uppercase() }
+        mulai != null && today.isBefore(mulai) -> "Akan Datang"
+        selesai != null && today.isAfter(selesai) -> "Selesai"
+        else -> "Berjalan"
+    }
+}
+
+// Slug untuk link publik (sesuai web: lowercase, spasi -> -, buang non-word)
+fun slugifyJudul(s: String?): String =
+    (s ?: "").lowercase().replace(Regex("[^a-z0-9\\s-]"), "").replace(Regex("\\s+"), "-").trim('-')
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KegiatanListScreen(vm: MainViewModel, onOpen: (Int) -> Unit) {
     val s = vm.state
     val session = remember { com.bpmpntb.simaik.data.Session(vm.getApplication<android.app.Application>()) }
-    LaunchedEffect(Unit) { vm.loadKegiatan() }
+    LaunchedEffect(Unit) { vm.loadKegiatanTimSaya() }
 
     var showForm by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<Kegiatan?>(null) }
@@ -64,7 +81,7 @@ fun KegiatanListScreen(vm: MainViewModel, onOpen: (Int) -> Unit) {
     val tahunList = s.kegiatanList.mapNotNull { it.tanggal_mulai?.take(4) }.distinct().sortedDescending()
     val filtered = s.kegiatanList.filter {
         (filterTahun == "Semua Tahun" || (it.tanggal_mulai ?: "").startsWith(filterTahun)) &&
-            (filterStatus == "Semua Status" || (it.status ?: "").equals(filterStatus, true))
+            (filterStatus == "Semua Status" || hitungStatus(it.tanggal_mulai, it.tanggal_selesai, it.status).equals(filterStatus, true))
     }
 
     Column(Modifier.fillMaxSize().background(WebBg)) {
@@ -122,7 +139,7 @@ fun KegiatanListScreen(vm: MainViewModel, onOpen: (Int) -> Unit) {
             editing = editing,
             onSave = { payload, jadwal ->
                 vm.saveKegiatan(payload.copy(id_pegawai = session.idPegawai.takeIf { it > 0 }), editing?.id_kegiatan, jadwal) { ok ->
-                    if (ok) showForm = false
+                    if (ok) { showForm = false; vm.loadKegiatanTimSaya() }
                 }
             },
             onDismiss = { showForm = false }
@@ -136,7 +153,7 @@ fun KegiatanListScreen(vm: MainViewModel, onOpen: (Int) -> Unit) {
             text = { Text("Yakin ingin menghapus \"${k.nama_kegiatan}\"?") },
             confirmButton = {
                 TextButton(onClick = {
-                    vm.deleteKegiatan(k.id_kegiatan) { deleting = null }
+                    vm.deleteKegiatan(k.id_kegiatan) { ok -> deleting = null; if (ok) vm.loadKegiatanTimSaya() }
                 }) { Text("Hapus", color = ErrorText) }
             },
             dismissButton = { TextButton(onClick = { deleting = null }) { Text("Batal") } }
@@ -147,7 +164,10 @@ fun KegiatanListScreen(vm: MainViewModel, onOpen: (Int) -> Unit) {
 @Composable
 private fun KegiatanManageCard(k: Kegiatan, onOpen: () -> Unit, onDelete: () -> Unit) {
     val context = LocalContext.current
-    val shareUrl = "https://siamin.gdoank.my.id/kegiatan/${k.id_kegiatan}"
+    val slug = slugifyJudul(k.nama_kegiatan)
+    val shareUrl = "https://siamin.gdoank.my.id/kegiatan/${k.id_kegiatan}/$slug"
+    val pesertaUrl = "https://siamin.gdoank.my.id/daftar-peserta/${k.id_kegiatan}/$slug"
+    val st = hitungStatus(k.tanggal_mulai, k.tanggal_selesai, k.status)
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -166,8 +186,8 @@ private fun KegiatanManageCard(k: Kegiatan, onOpen: () -> Unit, onDelete: () -> 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("${fmtTgl(k.tanggal_mulai)} - ${fmtTgl(k.tanggal_selesai)}", fontSize = 12.sp, color = TextSecondary)
                         Text("  ·  ", color = TextSecondary, fontSize = 12.sp)
-                        Box(Modifier.clip(RoundedCornerShape(50)).background(statusBadgeColor(k.status).copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 2.dp)) {
-                            Text(k.status?.replaceFirstChar { it.uppercase() } ?: "-", fontSize = 11.sp, color = statusBadgeColor(k.status), fontWeight = FontWeight.SemiBold)
+                        Box(Modifier.clip(RoundedCornerShape(50)).background(statusBadgeColor(st).copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 2.dp)) {
+                            Text(st, fontSize = 11.sp, color = statusBadgeColor(st), fontWeight = FontWeight.SemiBold)
                         }
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -191,7 +211,7 @@ private fun KegiatanManageCard(k: Kegiatan, onOpen: () -> Unit, onDelete: () -> 
                 OutlinedButton(onClick = { shareUrl.let { share(context, it, "Share Link") } }, shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.Share, null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Share Link", fontSize = 11.sp)
                 }
-                OutlinedButton(onClick = { share(context, shareUrl, "Link Peserta") }, shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f)) {
+                OutlinedButton(onClick = { share(context, pesertaUrl, "Link Peserta") }, shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f)) {
                     Icon(Icons.Default.Share, null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Link Peserta", fontSize = 11.sp)
                 }
                 Button(onClick = onOpen, shape = RoundedCornerShape(10.dp), colors = ButtonDefaults.buttonColors(containerColor = AccentBlue), modifier = Modifier.weight(1f)) {

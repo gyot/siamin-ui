@@ -13,7 +13,10 @@ interface ApiService {
     suspend fun login(@Body req: LoginRequest): LoginResponse
 
     @GET("kegiatan/all")
-    suspend fun kegiatan(): KegiatanListResponse
+    suspend fun kegiatanAll(): KegiatanListResponse
+
+    @GET("kegiatan/tim-saya")
+    suspend fun kegiatanTimSaya(): KegiatanListResponse
 
     @GET("kegiatan/{id}")
     suspend fun kegiatanDetail(@Path("id") id: Int): KegiatanResponse

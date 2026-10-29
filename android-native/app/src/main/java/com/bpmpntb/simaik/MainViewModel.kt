@@ -93,7 +93,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         state = state.copy(loading = true, error = null)
         viewModelScope.launch {
             try {
-                val res = ApiClient.service.kegiatan()
+                val res = ApiClient.service.kegiatanAll()
                 state = state.copy(loading = false, kegiatanList = res.data ?: emptyList())
             } catch (e: Exception) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal memuat kegiatan.")
@@ -172,11 +172,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                     ApiClient.service.saveJadwal(kid, JadwalSaveRequest(jadwalList))
                 }
                 state = state.copy(loading = false, info = "Tersimpan.")
-                loadKegiatan()
                 onDone(true)
             } catch (e: Exception) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal menyimpan.")
                 onDone(false)
+            }
+        }
+    }
+
+    fun loadKegiatanTimSaya() {
+        state = state.copy(loading = true, error = null)
+        viewModelScope.launch {
+            try {
+                val res = ApiClient.service.kegiatanTimSaya()
+                state = state.copy(loading = false, kegiatanList = res.data ?: emptyList())
+            } catch (e: Exception) {
+                state = state.copy(loading = false, error = e.message ?: "Gagal memuat kegiatan.")
             }
         }
     }
@@ -196,7 +207,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 ApiClient.service.deleteKegiatan(id)
                 state = state.copy(loading = false, info = "Terhapus.")
-                loadKegiatan()
                 onDone(true)
             } catch (e: Exception) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal menghapus.")
