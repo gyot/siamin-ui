@@ -47,6 +47,8 @@ data class UserObj(
     val name: String? = null,
     val user: String? = null,
     val email: String? = null,
+    val role: String? = null,
+    val pegawai: PegawaiItem? = null,
 )
 
 @Serializable

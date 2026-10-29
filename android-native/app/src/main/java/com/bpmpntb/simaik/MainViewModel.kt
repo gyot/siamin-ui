@@ -63,8 +63,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val token = res.data?.token
                 if (res.success == true && token != null) {
                     session.token = token
-                    session.nama = res.data.user?.nama ?: res.data.user?.name ?: identitas
+                    session.nama = res.data.user?.nama ?: res.data.user?.pegawai?.nama ?: res.data.user?.name ?: identitas
                     session.idPegawai = res.data.user?.id_pegawai ?: res.data.user?.id_user ?: -1
+                    session.email = res.data.user?.email
+                    session.username = res.data.user?.user
+                    session.role = res.data.user?.role ?: res.data.login_as
+                    session.nip = res.data.user?.pegawai?.nip
+                    session.jabatan = res.data.user?.pegawai?.nama_jabatan
+                    session.golongan = res.data.user?.pegawai?.golongan
+                    session.unitKerja = res.data.user?.pegawai?.unit_kerja
                     ApiClient.setToken(token)
                     state = state.copy(loading = false, loggedIn = true, loginAs = res.data.login_as)
                     onDone(true)
