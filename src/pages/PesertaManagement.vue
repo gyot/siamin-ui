@@ -1597,22 +1597,20 @@ export default {
 
       isLoadingPeserta.value = true
       try {
-        // Always fetch from /peserta endpoint
-        // Filter by kegiatan will be done in frontend
-        const endpoint = 'peserta'
-        const data = await fetchAPI(endpoint)
-        
-        // Handle different response formats
-        if (Array.isArray(data)) {
-          peserta.value = data
-        } else if (data && Array.isArray(data.data)) {
-          peserta.value = data.data
-        } else if (data && data.peserta && Array.isArray(data.peserta)) {
-          peserta.value = data.peserta
-        } else {
-          peserta.value = []
-          console.warn('[PesertaManagement] Unexpected response format:', data)
-        }
+        // Ambil bertahap per halaman (500 baris) supaya tidak ada
+        // satu request raksasa yang membebani hosting saat ramai
+        const endpoint = 'peserta?per_page=500'
+        let all = []
+        let page = 1
+        let lastPage = 1
+        do {
+          const res = await fetchAPI(`${endpoint}&page=${page}`)
+          const rows = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : [])
+          all = all.concat(rows)
+          lastPage = (res && res.meta && res.meta.last_page) ? Number(res.meta.last_page) : 1
+          page += 1
+        } while (page <= lastPage && page <= 40)
+        peserta.value = all
 
         pesertaCache = peserta.value
         pesertaCacheUpdatedAt = Date.now()

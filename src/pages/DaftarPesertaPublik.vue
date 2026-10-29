@@ -175,7 +175,7 @@ export default {
 
       try {
         const [pesertaData, kegiatanData] = await Promise.all([
-          fetchAPI('peserta'),
+          fetchAPI('peserta?kegiatan_id=' + encodeURIComponent(kode || '')),
           fetchAPI('kegiatan/all')
         ])
 

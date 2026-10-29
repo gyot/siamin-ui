@@ -131,8 +131,13 @@ const loadData = async () => {
   isLoading.value = true
   errorMessage.value = ''
   try {
+    const user = authStore.currentUser || {}
+    const myId = user?.participant_id ?? user?.id_peserta ?? null
+    const pesertaQuery = myId
+      ? `peserta?id_peserta=${encodeURIComponent(myId)}`
+      : `peserta?search=${encodeURIComponent(user?.nama || user?.nama_lengkap || '')}`
     const [pesertaData, kegiatanData, sertifikatData] = await Promise.all([
-      fetchAPI('peserta'),
+      fetchAPI(pesertaQuery),
       fetchAPI('kegiatan'),
       fetchAPI('sertifikat')
     ])
@@ -140,7 +145,6 @@ const loadData = async () => {
     const pesertaRows = extractRows(pesertaData)
     const kegiatanRows = extractRows(kegiatanData)
     const sertifikatRows = extractRows(sertifikatData)
-    const user = authStore.currentUser || {}
     const myRows = pesertaRows.filter(row => matchesParticipant(row, user))
 
     activities.value = buildActivities(myRows, kegiatanRows, sertifikatRows)
