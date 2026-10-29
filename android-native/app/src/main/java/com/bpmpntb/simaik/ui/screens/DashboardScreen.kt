@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,6 +53,7 @@ fun DashboardScreen(vm: MainViewModel, onOpen: (Int) -> Unit, onPeserta: (Int) -
             StatColored("Kegiatan", "${s.dashboard?.total_kegiatan ?: 0}", Color(0xFF1877F2))
             StatColored("Peserta", "${s.dashboard?.total_peserta ?: 0}", Color(0xFF059669))
             StatColored("Sertifikat", "${s.dashboard?.total_sertifikat_terbit ?: 0}", Color(0xFFA855F7))
+            StatColored("Berjalan", "${s.dashboard?.kegiatan_berjalan ?: 0}", Color(0xFFF59E0B))
         }
 
         Card(
@@ -140,7 +142,7 @@ private fun KegiatanDashboardCard(k: Kegiatan, onDetail: () -> Unit, onPeserta: 
                         }
                     }
                     QrImage(
-                        "https://siamin.gdoank.my.id/kegiatan/${k.id_kegiatan}",
+                        "https://siamin.gdoank.my.id/kegiatan/${k.id_kegiatan}/${slugifyJudul(k.nama_kegiatan)}",
                         Modifier.size(58.dp)
                     )
                 }
@@ -162,6 +164,30 @@ private fun KegiatanDashboardCard(k: Kegiatan, onDetail: () -> Unit, onPeserta: 
                     Icon(Icons.Default.People, null, tint = TextSecondary, modifier = Modifier.size(15.dp))
                     Spacer(Modifier.width(5.dp))
                     Text("${k.total_peserta ?: 0} Peserta", fontSize = 13.sp, color = TextSecondary)
+                }
+
+                k.peserta_ringkasan?.let {
+                    Text("Sasaran: $it", fontSize = 12.sp, color = TextSecondary, lineHeight = 16.sp)
+                }
+
+                // Link dokumen (sesuai web)
+                val docs = listOfNotNull(
+                    k.dokumentasi_url?.let { "Dokumentasi" to it },
+                    k.materi_url?.let { "Materi" to it },
+                    k.panduan_url?.let { "Panduan" to it },
+                    k.laporan_url?.let { "Laporan" to it },
+                    k.surat_menyurat_url?.let { "Surat Menyurat" to it }
+                )
+                if (docs.isNotEmpty()) {
+                    val ctx = LocalContext.current
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        docs.forEach { (label, url) ->
+                            Box(
+                                Modifier.clip(RoundedCornerShape(6.dp)).background(ChipBg).clickable { openUrl(ctx, url) }
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) { Text(label, fontSize = 11.sp, color = AccentBlue, fontWeight = FontWeight.Medium) }
+                        }
+                    }
                 }
             }
 
@@ -246,4 +272,10 @@ private fun formatRange(a: String?, b: String?): String {
         f.format(SimpleDateFormat("yyyy-MM-dd").parse(s?.take(10) ?: "") ?: Date())
     } catch (e: Exception) { s ?: "-" }
     return "${fmt(a)} - ${fmt(b)}"
+}
+
+fun openUrl(context: android.content.Context, url: String) {
+    try {
+        context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)))
+    } catch (e: Exception) { /* no-op */ }
 }

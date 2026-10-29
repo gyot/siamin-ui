@@ -88,6 +88,11 @@ data class Kegiatan(
     val daftar_tpk: List<TpkItem>? = null,
     val daftar_atk: List<AtkItem>? = null,
     val peserta_ringkasan: String? = null,
+    val dokumentasi_url: String? = null,
+    val materi_url: String? = null,
+    val panduan_url: String? = null,
+    val laporan_url: String? = null,
+    val surat_menyurat_url: String? = null,
 )
 
 @Serializable
