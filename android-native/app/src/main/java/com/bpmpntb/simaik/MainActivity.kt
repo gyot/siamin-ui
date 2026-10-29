@@ -21,6 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.bpmpntb.simaik.ui.screens.KegiatanDetailScreen
 import com.bpmpntb.simaik.ui.screens.KegiatanListScreen
+import com.bpmpntb.simaik.ui.screens.LandingScreen
 import com.bpmpntb.simaik.ui.screens.LoginScreen
 import com.bpmpntb.simaik.ui.theme.SIMAIKTheme
 import com.google.firebase.messaging.FirebaseMessaging
@@ -74,7 +75,7 @@ class MainActivity : ComponentActivity() {
 @androidx.compose.runtime.Composable
 fun AppRoot(vm: MainViewModel, deepLinkId: Int, onDeepLinkConsumed: () -> Unit) {
     val nav = rememberNavController()
-    val start = if (vm.state.loggedIn) "kegiatan" else "login"
+    val start = "landing"
 
     LaunchedEffect(deepLinkId) {
         if (deepLinkId > 0) {
@@ -84,6 +85,9 @@ fun AppRoot(vm: MainViewModel, deepLinkId: Int, onDeepLinkConsumed: () -> Unit) 
     }
 
     NavHost(navController = nav, startDestination = start) {
+        composable("landing") {
+            LandingScreen(onLogin = { nav.navigate("login") })
+        }
         composable("login") {
             LoginScreen(vm) {
                 nav.navigate("kegiatan") { popUpTo("login") { inclusive = true } }

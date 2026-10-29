@@ -1,153 +1,125 @@
 package com.bpmpntb.simaik.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bpmpntb.simaik.MainViewModel
-import com.bpmpntb.simaik.R
-import com.bpmpntb.simaik.ui.theme.*
+
+// Palet LoginUnified.vue
+private val PageBg = Color(0xFFF0F2F5)
+private val Blue = Color(0xFF1877F2)
+private val TextDark = Color(0xFF050505)
+private val TextGray = Color(0xFF65676B)
+private val FieldBg = Color(0xFFF0F2F5)
 
 @Composable
 fun LoginScreen(vm: MainViewModel, onLoggedIn: () -> Unit) {
-    var identitas by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val s = vm.state
 
     LaunchedEffect(s.loggedIn) { if (s.loggedIn) onLoggedIn() }
 
-    Box(
-        modifier = Modifier
+    Column(
+        Modifier
             .fillMaxSize()
-            .background(
-                Brush.linearGradient(
-                    listOf(LoginNavy1, LoginNavy2, LoginNavy3)
-                )
-            )
+            .background(PageBg)
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 32.dp),
-        contentAlignment = Alignment.Center
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(12.dp),
-            modifier = Modifier.fillMaxWidth()
+        Spacer(Modifier.height(24.dp))
+
+        Box(
+            Modifier.size(64.dp).clip(RoundedCornerShape(16.dp)).background(Blue),
+            contentAlignment = Alignment.Center
+        ) { Text("S", color = Color.White, fontSize = 26.sp, fontWeight = FontWeight.Bold) }
+
+        Spacer(Modifier.height(16.dp))
+        Text("SIMAIK", color = TextDark, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(4.dp))
+        Text("Sistem Manajemen Informasi Kegiatan", color = TextGray, fontSize = 13.sp)
+
+        Spacer(Modifier.height(28.dp))
+
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(Color.White)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Column(
-                Modifier.padding(28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            Field(username, { username = it }, "Username atau Email", false)
+            Field(password, { password = it }, "Password", true)
+
+            s.error?.let {
+                Text(it, color = Color(0xFFEF4444), fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            }
+
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Blue)
+                    .clickable(enabled = !s.loading) { vm.login(username, password) { } }
+                    .padding(vertical = 14.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Image(
-                    painter = painterResource(R.drawable.logo),
-                    contentDescription = "Logo SIMAIK",
-                    modifier = Modifier.height(58.dp)
+                Text(
+                    if (s.loading) "Masuk..." else "Masuk",
+                    color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold
                 )
-                Text("Masuk dengan akun admin Anda", color = TextSecondary, fontSize = 14.sp)
+            }
 
-                Spacer(Modifier.height(2.dp))
-
-                WebTextField(identitas, { identitas = it }, "Username", "Masukkan username Anda")
-                WebTextField(password, { password = it }, "Password", "••••••••", isPassword = true)
-
-                s.error?.let {
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(ErrorBg)
-                            .border(1.dp, ErrorBorder, RoundedCornerShape(8.dp))
-                            .padding(14.dp)
-                    ) { Text(it, color = ErrorText, fontSize = 13.sp) }
-                }
-
-                Box(
-                    Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Brush.linearGradient(listOf(BtnBlue1, BtnBlue2)))
-                        .clickable(enabled = !s.loading) { vm.login(identitas, password) { } },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (s.loading) {
-                        CircularProgressIndicator(Modifier.size(22.dp), color = Color.White)
-                    } else {
-                        Text("Login", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                    }
-                }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                Text("Belum punya akun? ", color = TextGray, fontSize = 13.sp)
+                Text("Daftar", color = Blue, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             }
         }
+
+        Spacer(Modifier.height(24.dp))
+        Text("BPMP Provinsi NTB", color = TextGray, fontSize = 12.sp)
+        Spacer(Modifier.height(16.dp))
     }
 }
 
 @Composable
-private fun WebTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    label: String,
-    placeholder: String,
-    isPassword: Boolean = false
-) {
-    var show by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxWidth()) {
-        Text(label, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Color(0xFF334155))
-        Spacer(Modifier.height(6.dp))
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
-                .background(Color.White)
-                .padding(horizontal = 14.dp, vertical = 12.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.weight(1f)) {
-                    if (value.isEmpty()) {
-                        Text(placeholder, color = Color(0xFF94A3B8), fontSize = 15.sp)
-                    }
-                    BasicTextField(
-                        value = value,
-                        onValueChange = onValueChange,
-                        singleLine = true,
-                        textStyle = TextStyle(fontSize = 15.sp, color = TextPrimary),
-                        visualTransformation = if (isPassword && !show) PasswordVisualTransformation() else VisualTransformation.None,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-                if (isPassword) {
-                    IconButton(onClick = { show = !show }, Modifier.size(22.dp)) {
-                        Icon(
-                            if (show) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = null,
-                            tint = Color(0xFF64748B)
-                        )
-                    }
-                }
-            }
+private fun Field(value: String, onValueChange: (String) -> Unit, placeholder: String, isPassword: Boolean) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(FieldBg)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+    ) {
+        if (value.isEmpty()) {
+            Text(placeholder, color = TextGray, fontSize = 15.sp)
         }
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            textStyle = TextStyle(fontSize = 15.sp, color = TextDark),
+            visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
