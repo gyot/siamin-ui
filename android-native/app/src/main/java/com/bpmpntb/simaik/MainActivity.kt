@@ -23,6 +23,7 @@ import com.bpmpntb.simaik.ui.screens.KegiatanDetailScreen
 import com.bpmpntb.simaik.ui.screens.KegiatanListScreen
 import com.bpmpntb.simaik.ui.screens.LandingScreen
 import com.bpmpntb.simaik.ui.screens.LoginScreen
+import com.bpmpntb.simaik.ui.screens.DaftarScreen
 import com.bpmpntb.simaik.ui.theme.SIMAIKTheme
 import com.google.firebase.messaging.FirebaseMessaging
 
@@ -86,12 +87,19 @@ fun AppRoot(vm: MainViewModel, deepLinkId: Int, onDeepLinkConsumed: () -> Unit) 
 
     NavHost(navController = nav, startDestination = start) {
         composable("landing") {
-            LandingScreen(vm, onLogin = { nav.navigate(if (vm.isLoggedIn) "admin" else "login") })
+            LandingScreen(vm, onLogin = { nav.navigate(if (vm.isLoggedIn) "admin" else "login") }, onDaftar = { nav.navigate("register") })
         }
         composable("login") {
             LoginScreen(vm) {
                 nav.navigate("admin") { popUpTo("login") { inclusive = true } }
             }
+        }
+        composable("register") {
+            DaftarScreen(
+                vm,
+                onBack = { nav.popBackStack() },
+                onRegistered = { nav.navigate("login") { popUpTo("register") { inclusive = true } } }
+            )
         }
         composable("admin") {
             AdminShell(

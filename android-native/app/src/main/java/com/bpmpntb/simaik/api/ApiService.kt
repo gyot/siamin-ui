@@ -15,6 +15,9 @@ interface ApiService {
     @POST("auth/login")
     suspend fun login(@Body req: LoginRequest): LoginResponse
 
+    @POST("register")
+    suspend fun register(@Body req: RegisterRequest): RegisterResponse
+
     @GET("kegiatan/all")
     suspend fun kegiatanAll(@Query("page") page: Int = 1, @Query("per_page") per_page: Int = 100): KegiatanListResponse
 

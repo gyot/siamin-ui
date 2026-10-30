@@ -40,6 +40,32 @@ object LenientStringSerializer : KSerializer<String?> {
 data class LoginRequest(val email: String, val password: String)
 
 @Serializable
+data class RegisterRequest(
+    val nama_lengkap: String,
+    val username: String,
+    val password: String,
+    val password_confirmation: String,
+    val nip: String? = null,
+    val email: String? = null,
+    val no_hp: String? = null,
+    val jenis_kelamin: String? = null,
+    val tempat_lahir: String? = null,
+    val tanggal_lahir: String? = null,
+    val npwp_nik: String? = null,
+    val pangkat: String? = null,
+    val jabatan: String? = null,
+    val nama_instansi: String? = null,
+    val npsn: String? = null,
+    val kab_kota: String? = null,
+)
+
+@Serializable
+data class RegisterResponse(
+    val success: Boolean? = null,
+    val message: String? = null,
+)
+
+@Serializable
 data class UserObj(
     @Serializable(with = LenientIntSerializer::class) val id_pegawai: Int? = null,
     @Serializable(with = LenientIntSerializer::class) val id_user: Int? = null,

@@ -11,6 +11,7 @@ import com.bpmpntb.simaik.api.DashboardStats
 import com.bpmpntb.simaik.api.Kegiatan
 import com.bpmpntb.simaik.api.KegiatanPayload
 import com.bpmpntb.simaik.api.LoginRequest
+import com.bpmpntb.simaik.api.RegisterRequest
 import com.bpmpntb.simaik.api.PegawaiItem
 import com.bpmpntb.simaik.api.PenugasanItem
 import com.bpmpntb.simaik.api.PenugasanPayload
@@ -216,6 +217,19 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 sb.appendLine("Tgl TTD: ${g(batch, "tanggal_ttd")}")
                 onDone(sb.toString())
             } catch (e: Exception) { onDone("Gagal verifikasi: ${e.message}") }
+        }
+    }
+
+    /** Registrasi akun peserta baru (POST /register). */
+    fun register(req: RegisterRequest, onDone: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val res = ApiClient.service.register(req)
+                onDone(res.success == true, res.message ?: if (res.success == true) "Registrasi berhasil. Silakan login." else "Gagal registrasi.")
+            } catch (e: Exception) {
+                val msg = e.message ?: ""
+                onDone(false, if (msg.contains("422")) "Data tidak valid. Periksa kembali isian Anda." else "Gagal registrasi: $msg")
+            }
         }
     }
 

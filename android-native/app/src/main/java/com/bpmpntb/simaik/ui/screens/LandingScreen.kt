@@ -53,7 +53,7 @@ private val timkers = listOf(
 )
 
 @Composable
-fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit) {
+fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit, onDaftar: () -> Unit) {
     val s = vm.state
     var selected by remember { mutableStateOf(timkers.firstOrNull { it.id == "semua" }) }
     var search by remember { mutableStateOf("") }
@@ -85,9 +85,15 @@ fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit) {
                         Button(onClick = onLogin, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))) {
                             Icon(if (vm.isLoggedIn) Icons.Default.Dashboard else Icons.Default.Person, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(if (vm.isLoggedIn) "Dashboard" else "Login")
                         }
-                        OutlinedButton(onClick = { showCekSertifikat = true }, shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFF34D399)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF34D399))) {
-                            Icon(Icons.Default.Verified, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Cek Sertifikat")
+                        if (!vm.isLoggedIn) {
+                            OutlinedButton(onClick = onDaftar, shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFFFACC15)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFACC15))) {
+                                Icon(Icons.Default.PersonAdd, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Daftar")
+                            }
                         }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedButton(onClick = { showCekSertifikat = true }, shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFF34D399)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF34D399)), modifier = Modifier.fillMaxWidth()) {
+                        Icon(Icons.Default.Verified, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Cek Sertifikat")
                     }
                 }
             }
