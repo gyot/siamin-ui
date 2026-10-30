@@ -44,11 +44,11 @@ private fun fmtTglLanding(s: String?): String = try { s?.take(10)?.let { LocalDa
 private data class Timker(val id: String, val name: String, val desc: String, val color: Color, val icon: ImageVector)
 
 private val timkers = listOf(
-    Timker("001", "Timker PAUD", "Pengembangan pendidikan anak usia dini.", Color(0xFFEC4899), Icons.Default.Face),
-    Timker("002", "Timker Sekolah Dasar", "Pelaksanaan & inovasi pendidikan SD.", Color(0xFF10B981), Icons.Default.School),
-    Timker("003", "Timker SMP", "Program pendidikan jenjang menengah pertama.", Color(0xFF0EA5E9), Icons.Default.School),
-    Timker("004", "Timker SMA/SMK", "Pengembangan & pengawasan pendidikan menengah.", Color(0xFFF59E0B), Icons.Default.School),
-    Timker("005", "Timker Subbag Umum", "Operasional & administrasi umum.", Color(0xFF8B5CF6), Icons.Default.Business),
+    Timker("001", "Timker Subbag Umum", "Operasional & administrasi umum.", Color(0xFF8B5CF6), Icons.Default.Business),
+    Timker("002", "Timker PAUD", "Pendidikan Anak Usia Dini.", Color(0xFFEC4899), Icons.Default.Face),
+    Timker("003", "Timker Sekolah Dasar", "Pendidikan jenjang sekolah dasar.", Color(0xFF10B981), Icons.Default.School),
+    Timker("004", "Timker SMP", "Pendidikan jenjang menengah pertama.", Color(0xFF0EA5E9), Icons.Default.School),
+    Timker("005", "Timker SMA/SMK", "Pendidikan jenjang menengah atas.", Color(0xFFF59E0B), Icons.Default.School),
     Timker("semua", "Semua Kegiatan", "Seluruh kegiatan dari semua tim kerja.", Color(0xFF06B6D4), Icons.Default.Apps),
 )
 
@@ -63,7 +63,7 @@ fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit) {
     LaunchedEffect(selected) { vm.loadKegiatan(); page = 1 }
 
     val perPage = 4
-    val all = s.kegiatanList.filter { selected == null || selected!!.id == "semua" || (it.unit_kerja_id?.toString() ?: "") == selected!!.id }
+    val all = s.kegiatanList.filter { selected == null || selected!!.id == "semua" || (it.unit_kerja_id?.toString()?.padStart(3, '0') ?: "") == selected!!.id }
     val q = search.trim()
     val filtered = if (q.isEmpty()) all else all.filter { (it.nama_kegiatan ?: "").contains(q, true) }
     val totalPages = maxOf(1, (filtered.size + perPage - 1) / perPage)
@@ -83,7 +83,7 @@ fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit) {
                     Spacer(Modifier.height(16.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Button(onClick = onLogin, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))) {
-                            Icon(Icons.Default.Person, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Login")
+                            Icon(if (vm.isLoggedIn) Icons.Default.Dashboard else Icons.Default.Person, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(if (vm.isLoggedIn) "Dashboard" else "Login")
                         }
                         OutlinedButton(onClick = { showCekSertifikat = true }, shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFF34D399)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF34D399))) {
                             Icon(Icons.Default.Verified, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Cek Sertifikat")

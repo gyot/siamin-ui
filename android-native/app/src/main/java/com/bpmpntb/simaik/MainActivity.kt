@@ -86,7 +86,7 @@ fun AppRoot(vm: MainViewModel, deepLinkId: Int, onDeepLinkConsumed: () -> Unit) 
 
     NavHost(navController = nav, startDestination = start) {
         composable("landing") {
-            LandingScreen(vm, onLogin = { nav.navigate("login") })
+            LandingScreen(vm, onLogin = { nav.navigate(if (vm.isLoggedIn) "admin" else "login") })
         }
         composable("login") {
             LoginScreen(vm) {
