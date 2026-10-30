@@ -19,6 +19,8 @@ import com.bpmpntb.simaik.api.PesertaPayload
 import com.bpmpntb.simaik.api.JadwalSaveRequest
 import com.bpmpntb.simaik.api.JadwalDay
 import com.bpmpntb.simaik.api.SertifikatStatusItem
+import com.bpmpntb.simaik.api.KelasItem
+import com.bpmpntb.simaik.api.KelasPayload
 import com.bpmpntb.simaik.api.PushRegisterRequest
 import com.bpmpntb.simaik.api.SertifikatBatchItem
 import com.bpmpntb.simaik.data.Session
@@ -39,6 +41,8 @@ data class UiState(
     val pesertaList: List<PesertaItem> = emptyList(),
     val jadwalList: List<JadwalDay> = emptyList(),
     val sertifikatStatusList: List<SertifikatStatusItem> = emptyList(),
+    val sertifikatGlobalList: List<SertifikatStatusItem> = emptyList(),
+    val kelasList: List<KelasItem> = emptyList(),
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -209,6 +213,40 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val res = ApiClient.service.pesertaSertifikat(kegiatanId)
                 state = state.copy(sertifikatStatusList = res.data ?: emptyList())
             } catch (e: Exception) { state = state.copy(sertifikatStatusList = emptyList()) }
+        }
+    }
+
+    fun loadSertifikatSemua() {
+        viewModelScope.launch {
+            try {
+                val res = ApiClient.service.sertifikatRecords()
+                state = state.copy(sertifikatGlobalList = res.data ?: emptyList())
+            } catch (e: Exception) { state = state.copy(sertifikatGlobalList = emptyList()) }
+        }
+    }
+
+    fun loadKelas(kegiatanId: Int) {
+        viewModelScope.launch {
+            try {
+                val res = ApiClient.service.kelas(kegiatanId)
+                state = state.copy(kelasList = res.data ?: emptyList())
+            } catch (e: Exception) { state = state.copy(kelasList = emptyList()) }
+        }
+    }
+
+    fun storeKelas(payload: KelasPayload, onDone: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                ApiClient.service.storeKelas(payload); loadKelas(payload.id_kegiatan); onDone(true)
+            } catch (e: Exception) { onDone(false) }
+        }
+    }
+
+    fun addKelasAnggota(idKelas: Int, idPeserta: Int, idKegiatan: Int, onDone: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                ApiClient.service.addKelasAnggota(idKelas, idPeserta); loadKelas(idKegiatan); onDone(true)
+            } catch (e: Exception) { onDone(false) }
         }
     }
 

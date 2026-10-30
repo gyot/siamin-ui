@@ -32,6 +32,7 @@ private val sections = listOf(
     Section("peserta", "Peserta", Icons.Default.Group),
     Section("pegawai", "Pegawai", Icons.Default.People),
     Section("penugasan", "Penugasan", Icons.Default.Assignment),
+    Section("pengesahan", "Pengesahan", Icons.Default.Verified),
     Section("sertifikat", "Sertifikat", Icons.Default.CardMembership),
     Section("profil", "Profil", Icons.Default.Person),
 )
@@ -72,7 +73,9 @@ fun AdminShell(vm: MainViewModel, deepLinkId: Int, onLogout: () -> Unit) {
                     }
                 }
                 HorizontalDivider(color = Border, modifier = Modifier.padding(horizontal = 12.dp))
-                sections.forEach { sec ->
+                val session = remember { com.bpmpntb.simaik.data.Session(vm.getApplication<android.app.Application>()) }
+                val isKepala = (session.jabatan ?: "").contains("kepala", true)
+                sections.filter { it.route != "pengesahan" || isKepala }.forEach { sec ->
                     NavigationDrawerItem(
                         label = { Text(sec.label) },
                         icon = { Icon(sec.icon, contentDescription = sec.label) },
@@ -130,6 +133,9 @@ fun AdminShell(vm: MainViewModel, deepLinkId: Int, onLogout: () -> Unit) {
                 composable("penugasan/{kegiatanId}") { back ->
                     val kid = back.arguments?.getString("kegiatanId")?.toIntOrNull()
                     PenugasanScreen(vm, kegiatanId = kid)
+                }
+                composable("pengesahan") {
+                    PengesahanScreen(vm, onLihatPeserta = { id -> innerNav.navigate("peserta/$id") })
                 }
                 composable("sertifikat") { SertifikatScreen(vm) }
                 composable("sertifikat/{kegiatanId}") { back ->

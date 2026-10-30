@@ -292,6 +292,24 @@ data class SertifikatStatusItem(
 data class SertifikatStatusListResponse(val success: Boolean? = null, val data: List<SertifikatStatusItem>? = null)
 
 @Serializable
+data class KelasItem(
+    @Serializable(with = LenientIntSerializer::class) val id_kelas: Int? = null,
+    @Serializable(with = LenientIntSerializer::class) val id_kegiatan: Int? = null,
+    val nama_kelas: String? = null,
+    val deskripsi: String? = null,
+)
+
+@Serializable
+data class KelasListResponse(val success: Boolean? = null, val data: List<KelasItem>? = null)
+
+@Serializable
+data class KelasPayload(
+    val id_kegiatan: Int,
+    val nama_kelas: String,
+    val deskripsi: String? = null,
+)
+
+@Serializable
 data class PesertaPayload(
     val id_kegiatan: Int,
     val nama_lengkap: String,

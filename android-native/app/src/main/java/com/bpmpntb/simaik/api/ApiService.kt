@@ -66,6 +66,19 @@ interface ApiService {
     @GET("kegiatan/{id}/peserta-sertifikat")
     suspend fun pesertaSertifikat(@Path("id") id: Int): SertifikatStatusListResponse
 
+    @GET("kelas/{id_kegiatan}")
+    suspend fun kelas(@Path("id_kegiatan") id: Int): KelasListResponse
+
+    @POST("kelas")
+    suspend fun storeKelas(@Body req: KelasPayload): OkResponse
+
+    @FormUrlEncoded
+    @POST("kelas/{id_kelas}/anggota")
+    suspend fun addKelasAnggota(@Path("id_kelas") id: Int, @Field("id_peserta") idPeserta: Int): OkResponse
+
+    @GET("sertifikat")
+    suspend fun sertifikatRecords(): SertifikatStatusListResponse
+
     @FormUrlEncoded
     @PATCH("sertifikat/update-status")
     suspend fun updateSertifikatStatus(
