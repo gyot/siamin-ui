@@ -10,12 +10,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,6 +29,7 @@ import com.bpmpntb.simaik.ui.theme.*
 @Composable
 fun PenugasanScreen(vm: MainViewModel, kegiatanId: Int? = null) {
     val s = vm.state
+    val ctx = LocalContext.current
     LaunchedEffect(kegiatanId) {
         vm.loadPenugasan(); vm.loadPegawai()
         if (kegiatanId != null && kegiatanId > 0) vm.loadDetail(kegiatanId)
@@ -69,12 +72,24 @@ fun PenugasanScreen(vm: MainViewModel, kegiatanId: Int? = null) {
         HorizontalDivider(color = Border)
 
         if (isPer) {
-            Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
                     if (canManage) "Kelola petugas kegiatan ini" else "Hanya pembuat/panitia yang dapat mengelola",
                     fontSize = 12.sp, color = TextSecondary, modifier = Modifier.weight(1f)
                 )
                 if (canManage) {
+                    OutlinedButton(onClick = {
+                        val text = buildString {
+                            append("No\tNama\tPeran\n")
+                            rows.forEachIndexed { i, p -> append("${i + 1}\t${p.nama_pegawai ?: "-"}\t${p.peran ?: "-"}\n") }
+                        }
+                        val cm = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        cm.setPrimaryClip(android.content.ClipData.newPlainText("Anggota", text))
+                    }, shape = RoundedCornerShape(50)) {
+                        Icon(Icons.Default.Share, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Salin Tabel", fontSize = 12.sp)
+                    }
                     Button(onClick = { showTambah = true }, shape = RoundedCornerShape(50)) {
                         Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
