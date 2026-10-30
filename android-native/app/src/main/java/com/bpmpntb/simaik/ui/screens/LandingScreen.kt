@@ -3,11 +3,14 @@ package com.bpmpntb.simaik.ui.screens
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -20,207 +23,249 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bpmpntb.simaik.MainViewModel
 import com.bpmpntb.simaik.R
+import com.bpmpntb.simaik.api.Kegiatan
+import com.bpmpntb.simaik.ui.theme.*
+import com.bpmpntb.simaik.util.QrImage
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-// Palet landing (dari Landing.vue)
-private val Bg1 = Color(0xFF1E3A8A) // blue-900
-private val Bg2 = Color(0xFF1E40AF) // blue-800
-private val Bg3 = Color(0xFF0F172A) // slate-900
-private val Gold = Color(0xFFFACC15) // yellow-400
-private val Blue100 = Color(0xFFDBEAFE)
-private val Blue200 = Color(0xFFBFDBFE)
-private val Blue300 = Color(0xFF93C5FD)
-private val Cyan300 = Color(0xFF67E8F9)
-private val BlueBtn = Color(0xFF3B82F6) // blue-500
-private val Emerald200 = Color(0xFFA7F3D0)
-private val Emerald400 = Color(0xFF34D399)
-private val Green400 = Color(0xFF4ADE80)
-private val White10 = Color(0x1AFFFFFF)
-private val White20 = Color(0x33FFFFFF)
+private val tglLanding = DateTimeFormatter.ofPattern("d MMM yyyy", Locale("id", "ID"))
+private fun fmtTglLanding(s: String?): String = try { s?.take(10)?.let { LocalDate.parse(it).format(tglLanding) } ?: "-" } catch (e: Exception) { s ?: "-" }
 
-private data class TimkerCard(
-    val name: String,
-    val desc: String,
-    val icon: ImageVector,
-    val c1: Color,
-    val c2: Color,
-    val fullWidth: Boolean
+private data class Timker(val id: String, val name: String, val desc: String, val color: Color, val icon: ImageVector)
+
+private val timkers = listOf(
+    Timker("001", "Timker PAUD", "Pengembangan pendidikan anak usia dini.", Color(0xFFEC4899), Icons.Default.Face),
+    Timker("002", "Timker Sekolah Dasar", "Pelaksanaan & inovasi pendidikan SD.", Color(0xFF10B981), Icons.Default.School),
+    Timker("003", "Timker SMP", "Program pendidikan jenjang menengah pertama.", Color(0xFF0EA5E9), Icons.Default.School),
+    Timker("004", "Timker SMA/SMK", "Pengembangan & pengawasan pendidikan menengah.", Color(0xFFF59E0B), Icons.Default.School),
+    Timker("005", "Timker Subbag Umum", "Operasional & administrasi umum.", Color(0xFF8B5CF6), Icons.Default.Business),
+    Timker("semua", "Semua Kegiatan", "Seluruh kegiatan dari semua tim kerja.", Color(0xFF06B6D4), Icons.Default.Apps),
 )
 
 @Composable
-fun LandingScreen(onLogin: () -> Unit) {
-    val cards = listOf(
-        TimkerCard("Subbag Umum", "Unit kerja Subbag Umum tahun 2026", Icons.Default.Settings, Color(0xFF22C55E), Color(0xFF16A34A), true),
-        TimkerCard("Tim Kerja\nPendidikan\nAnak Usia Dini", "Unit kerja Tim Kerja Pendidikan Anak Usia Dini tahun 2026", Icons.Default.Share, Color(0xFF3B82F6), Color(0xFF2563EB), false),
-        TimkerCard("Tim Kerja\nSekolah Dasar", "Unit kerja Tim Kerja Sekolah Dasar tahun 2026", Icons.Default.School, Color(0xFFF59E0B), Color(0xFFF97316), false),
-        TimkerCard("Tim Kerja\nSekolah\nMenengah Pertama", "Unit kerja Tim Kerja Sekolah Menengah Pertama tahun 2026", Icons.Default.Settings, Color(0xFFA855F7), Color(0xFF9333EA), false),
-        TimkerCard("Tim Kerja\nSekolah\nMenengah", "Unit kerja Tim Kerja Sekolah Menengah tahun 2026", Icons.Default.Person, Color(0xFFEC4899), Color(0xFFDB2777), false),
-        TimkerCard("Semua", "Menampilkan seluruh kegiatan dari semua tim kerja.", Icons.Default.List, Color(0xFF22D3EE), Color(0xFF14B8A6), true),
-    )
+fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit) {
+    val s = vm.state
+    var selected by remember { mutableStateOf<Timker?>(null) }
+    var search by remember { mutableStateOf("") }
+    var page by remember { mutableStateOf(1) }
+    var detail by remember { mutableStateOf<Kegiatan?>(null) }
+    var showCekSertifikat by remember { mutableStateOf(false) }
+    LaunchedEffect(selected) { vm.loadKegiatan(); page = 1 }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(Brush.linearGradient(listOf(Bg1, Bg2, Bg3)))
-            .verticalScroll(rememberScrollState())
-    ) {
-        // Header: logo
-        Image(
-            painter = painterResource(R.drawable.logo),
-            contentDescription = "Logo",
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp).height(56.dp)
-        )
+    val perPage = 4
+    val all = s.kegiatanList.filter { selected == null || selected!!.id == "semua" || (it.unit_kerja_id?.toString() ?: "") == selected!!.id }
+    val q = search.trim()
+    val filtered = if (q.isEmpty()) all else all.filter { (it.nama_kegiatan ?: "").contains(q, true) }
+    val totalPages = maxOf(1, (filtered.size + perPage - 1) / perPage)
+    val pageItems = filtered.drop((page - 1) * perPage).take(perPage)
 
-        // Hero
-        Column(Modifier.padding(horizontal = 20.dp, vertical = 24.dp)) {
-            // Badge
-            Row(
-                Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(White10)
-                    .border(1.dp, White20, RoundedCornerShape(50))
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(Modifier.size(8.dp).clip(CircleShape).background(Green400))
-                Spacer(Modifier.width(8.dp))
-                Text("Sistem Terintegrasi", color = Blue200, fontSize = 13.sp)
-            }
-
-            Spacer(Modifier.height(20.dp))
-            Text("SIMAIK", color = Gold, fontSize = 44.sp, fontWeight = FontWeight.Bold)
-
-            Spacer(Modifier.height(8.dp))
-            Text(
-                buildAnnotatedString {
-                    withStyle(SpanStyle(color = Color.White)) { append("(") }
-                    withStyle(SpanStyle(color = Gold)) { append("Si") }
-                    withStyle(SpanStyle(color = Color.White)) { append("stem ") }
-                    withStyle(SpanStyle(color = Gold)) { append("Ma") }
-                    withStyle(SpanStyle(color = Color.White)) { append("najemen") }
-                    append("\n")
-                    withStyle(SpanStyle(color = Gold)) { append("I") }
-                    withStyle(SpanStyle(brush = Brush.horizontalGradient(listOf(Blue300, Cyan300)))) { append("nformasi ") }
-                    withStyle(SpanStyle(color = Gold)) { append("K") }
-                    withStyle(SpanStyle(brush = Brush.horizontalGradient(listOf(Blue300, Cyan300)))) { append("egiatan") }
-                    withStyle(SpanStyle(color = Color.White)) { append(")") }
-                },
-                fontSize = 34.sp, fontWeight = FontWeight.Bold, lineHeight = 40.sp
-            )
-
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "Platform terintegrasi untuk mengelola kegiatan, peserta, penugasan, dan sertifikat digital secara efisien dan transparan.",
-                color = Blue100, fontSize = 16.sp, lineHeight = 24.sp
-            )
-
-            Spacer(Modifier.height(24.dp))
-            // Tombol Login
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(BlueBtn)
-                    .clickable { onLogin() }
-                    .padding(vertical = 14.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Person, null, tint = Color.White, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Login", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            }
-
-            Spacer(Modifier.height(12.dp))
-            // Tombol Cek Sertifikat
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0x3310B981))
-                    .border(1.dp, Color(0x4D34D399), RoundedCornerShape(12.dp))
-                    .padding(vertical = 14.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Verified, null, tint = Emerald200, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Cek Sertifikat", color = Emerald200, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-            }
-        }
-
-        // Kartu tim (grid 2 kolom)
-        Column(Modifier.padding(horizontal = 16.dp)) {
-            CardFull(cards[0])
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 12.dp)) {
-                CardHalf(cards[1]); CardHalf(cards[2])
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.padding(top = 12.dp)) {
-                CardHalf(cards[3]); CardHalf(cards[4])
-            }
-            Box(Modifier.padding(top = 12.dp)) { CardFull(cards[5]) }
-        }
-
-        Spacer(Modifier.height(32.dp))
-
-        // Footer
-        Column {
-            HorizontalDivider(color = White10)
-            Column(Modifier.padding(20.dp)) {
-                Text(
-                    "© 2025 SIMAIK - Kementerian Pendidikan Dasar dan Menengah BPMP Nusa Tenggara Barat",
-                    color = Blue200, fontSize = 12.sp, lineHeight = 18.sp
-                )
-                Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    Text("Verifikasi Sertifikat", color = Blue200, fontSize = 12.sp)
-                    Text("Unduh POS", color = Blue200, fontSize = 12.sp)
-                    Text("Bantuan", color = Blue200, fontSize = 12.sp)
-                    Text("Kontak", color = Blue200, fontSize = 12.sp)
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(LoginNavy1, LoginNavy2, LoginNavy3)))) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            item {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    Spacer(Modifier.height(8.dp))
+                    Image(painterResource(R.drawable.simaik_logo), "Logo SIMAIK", modifier = Modifier.size(72.dp).clip(RoundedCornerShape(18.dp)))
+                    Spacer(Modifier.height(12.dp))
+                    Text("SIMAIK", color = Color(0xFFFACC15), fontSize = 34.sp, fontWeight = FontWeight.Bold)
+                    Text("(Si Manajemen Informasi Kegiatan)", color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Spacer(Modifier.height(10.dp))
+                    Text("Platform terintegrasi untuk mengelola kegiatan, peserta, penugasan, dan sertifikat digital.", color = Color(0xFFBFDBFE), fontSize = 13.sp, lineHeight = 19.sp)
+                    Spacer(Modifier.height(16.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Button(onClick = onLogin, shape = RoundedCornerShape(12.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF3B82F6))) {
+                            Icon(Icons.Default.Person, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Login")
+                        }
+                        OutlinedButton(onClick = { showCekSertifikat = true }, shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFF34D399)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF34D399))) {
+                            Icon(Icons.Default.Verified, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Cek Sertifikat")
+                        }
+                    }
                 }
             }
+
+            item {
+                if (selected == null) {
+                    Text("Pilih Tim Kerja", color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(4.dp))
+                    Text("Klik kartu untuk melihat kegiatan.", color = Color(0xFFBFDBFE), fontSize = 12.sp)
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(selected!!.name, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text("Menampilkan ${filtered.size} kegiatan", color = Color(0xFFBFDBFE), fontSize = 12.sp)
+                        }
+                        OutlinedButton(onClick = { selected = null; search = "" }, shape = RoundedCornerShape(10.dp), border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)) {
+                            Text("Kembali", fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+
+            if (selected == null) {
+                item {
+                    LazyVerticalGrid(columns = GridCells.Fixed(2), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.heightIn(max = 700.dp)) {
+                        items(timkers) { t -> TimkerCard(t) { selected = t } }
+                    }
+                }
+            } else {
+                item {
+                    OutlinedTextField(
+                        value = search, onValueChange = { search = it; page = 1 },
+                        placeholder = { Text("Cari kegiatan...", color = Color(0xFF93C5FD), fontSize = 14.sp) },
+                        leadingIcon = { Icon(Icons.Default.Search, null, tint = Color(0xFF93C5FD)) },
+                        singleLine = true,
+                        colors = OutlinedTextFieldDefaults.colors(focusedBorderColor = Color(0xFF22D3EE), unfocusedBorderColor = Color.White.copy(alpha = 0.2f), focusedTextColor = Color.White, unfocusedTextColor = Color.White),
+                        shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()
+                    )
+                }
+                items(pageItems) { k -> LandingKegiatanCard(k) { detail = k } }
+                if (totalPages > 1) {
+                    item {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                            OutlinedButton(onClick = { if (page > 1) page-- }, enabled = page > 1, border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)) { Text("Prev") }
+                            Spacer(Modifier.width(12.dp))
+                            Text("Halaman $page / $totalPages", color = Color.White, fontSize = 13.sp)
+                            Spacer(Modifier.width(12.dp))
+                            OutlinedButton(onClick = { if (page < totalPages) page++ }, enabled = page < totalPages, border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)) { Text("Next") }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Spacer(Modifier.height(8.dp))
+                HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                Spacer(Modifier.height(12.dp))
+                Text("© 2025 SIMAIK - Kementerian Pendidikan Dasar dan Menengah BPMP Nusa Tenggara Barat", color = Color(0xFF93C5FD), fontSize = 11.sp)
+            }
+        }
+    }
+
+    detail?.let { keg -> LandingDetailModal(keg) { detail = null } }
+    if (showCekSertifikat) CekSertifikatModal { showCekSertifikat = false }
+}
+
+@Composable
+private fun TimkerCard(t: Timker, onClick: () -> Unit) {
+    Card(shape = RoundedCornerShape(18.dp), colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.10f)), border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth().clickable { onClick() }) {
+        Column(Modifier.padding(16.dp)) {
+            Box(Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(t.color), contentAlignment = Alignment.Center) {
+                Icon(t.icon, null, tint = Color.White, modifier = Modifier.size(24.dp))
+            }
+            Spacer(Modifier.height(12.dp))
+            Text(t.name, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Spacer(Modifier.height(4.dp))
+            Text(t.desc, color = Color(0xFFBFDBFE), fontSize = 11.sp, lineHeight = 15.sp, maxLines = 3, overflow = TextOverflow.Ellipsis)
         }
     }
 }
 
 @Composable
-private fun CardFull(c: TimkerCard) {
-    CardTile(c, Modifier.fillMaxWidth())
-}
-
-@Composable
-private fun RowScope.CardHalf(c: TimkerCard) {
-    CardTile(c, Modifier.weight(1f))
-}
-
-@Composable
-private fun CardTile(c: TimkerCard, modifier: Modifier) {
-    Column(
-        modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(White10)
-            .border(1.dp, White20, RoundedCornerShape(16.dp))
-            .padding(20.dp)
-    ) {
-        Box(
-            Modifier
-                .size(48.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Brush.linearGradient(listOf(c.c1, c.c2))),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(c.icon, null, tint = Color.White, modifier = Modifier.size(26.dp))
+private fun LandingKegiatanCard(k: Kegiatan, onDetail: () -> Unit) {
+    val st = hitungStatus(k.tanggal_mulai, k.tanggal_selesai, k.status)
+    Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.10f)), border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)), modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(verticalAlignment = Alignment.Top) {
+                Text(k.nama_kegiatan ?: "-", color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
+                OutlinedButton(onClick = onDetail, shape = RoundedCornerShape(8.dp), border = BorderStroke(1.dp, Color(0xFF22D3EE).copy(alpha = 0.5f)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFA5F3FC)), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 2.dp)) {
+                    Text("Detail", fontSize = 11.sp)
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Pill("${fmtTglLanding(k.tanggal_mulai)} - ${fmtTglLanding(k.tanggal_selesai)}")
+                Pill(st)
+            }
         }
-        Spacer(Modifier.height(14.dp))
-        Text(c.name, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp)
-        Spacer(Modifier.height(6.dp))
-        Text(c.desc, color = Blue200, fontSize = 13.sp, lineHeight = 18.sp)
     }
+}
+
+@Composable
+private fun Pill(text: String) {
+    Box(Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
+        Text(text, color = Color(0xFFBFDBFE), fontSize = 10.sp)
+    }
+}
+
+@Composable
+private fun LandingDetailModal(k: Kegiatan, onClose: () -> Unit) {
+    val ctx = LocalContext.current
+    AlertDialog(
+        onDismissRequest = onClose, containerColor = Color(0xFF0B1B33),
+        title = { Text("Detail Kegiatan", color = Color.White, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(Modifier.fillMaxWidth().heightIn(max = 480.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(k.nama_kegiatan ?: "-", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                InfoGelap("Tanggal", "${fmtTglLanding(k.tanggal_mulai)} - ${fmtTglLanding(k.tanggal_selesai)}")
+                InfoGelap("Metode", k.metode_pelaksanaan?.replaceFirstChar { it.uppercase() } ?: "-")
+                if (!k.daftar_tpk.isNullOrEmpty()) {
+                    Text("Tempat Pelaksanaan Kegiatan (TPK)", color = Color(0xFF22D3EE), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    k.daftar_tpk.forEachIndexed { i, tpk -> Text("${i + 1}. ${tpk.lokasi}${tpk.kabupaten_kota?.let { " ($it)" } ?: ""}", color = Color.White, fontSize = 12.sp) }
+                }
+                InfoGelap("Total Peserta", "${k.total_peserta ?: 0}")
+                val slug = slugifyJudul(k.nama_kegiatan)
+                val url = "https://siamin.gdoank.my.id/kegiatan/${k.id_kegiatan}/$slug"
+                Text("Link Halaman Detail", color = Color(0xFF22D3EE), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    QrImage(url, Modifier.size(80.dp))
+                    Spacer(Modifier.width(12.dp))
+                    Text(url, color = Color(0xFFA5F3FC), fontSize = 11.sp, modifier = Modifier.weight(1f), overflow = TextOverflow.Ellipsis, maxLines = 3)
+                }
+                Text("Deskripsi", color = Color(0xFF22D3EE), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text(k.deskripsi ?: "-", color = Color(0xFFBFDBFE), fontSize = 12.sp, lineHeight = 17.sp)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val slug = slugifyJudul(k.nama_kegiatan)
+                val url = "https://siamin.gdoank.my.id/kegiatan/${k.id_kegiatan}/$slug"
+                val send = android.content.Intent(android.content.Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(android.content.Intent.EXTRA_TEXT, "${k.nama_kegiatan}\n$url") }
+                ctx.startActivity(android.content.Intent.createChooser(send, "Share Halaman"))
+            }) { Text("Share Halaman", color = Color(0xFF22D3EE)) }
+        },
+        dismissButton = { TextButton(onClick = onClose) { Text("Tutup", color = Color(0xFF93C5FD)) } }
+    )
+}
+
+@Composable
+private fun InfoGelap(label: String, value: String) {
+    Column {
+        Text(label, color = Color(0xFF93C5FD), fontSize = 11.sp)
+        Text(value, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+    }
+}
+
+@Composable
+private fun CekSertifikatModal(onClose: () -> Unit) {
+    var kode by remember { mutableStateOf("") }
+    var result by remember { mutableStateOf<String?>(null) }
+    AlertDialog(
+        onDismissRequest = onClose, containerColor = Color(0xFF0B1B33),
+        title = { Text("Cek Keaslian Sertifikat", color = Color.White, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Masukkan kode QR / nomor sertifikat untuk memverifikasi keaslian.", color = Color(0xFFBFDBFE), fontSize = 12.sp)
+                OutlinedTextField(
+                    value = kode, onValueChange = { kode = it }, label = { Text("Kode Sertifikat") }, singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = Color(0xFF34D399), unfocusedBorderColor = Color.White.copy(alpha = 0.2f)),
+                    shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth()
+                )
+                Button(
+                    onClick = { result = "Memverifikasi sertifikat..." },
+                    enabled = kode.isNotBlank(), shape = RoundedCornerShape(10.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
+                ) { Text("Cek Keaslian") }
+                result?.let { Text(it, color = Color(0xFFA5F3FC), fontSize = 12.sp) }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onClose) { Text("Tutup", color = Color(0xFF93C5FD)) } }
+    )
 }
