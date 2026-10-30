@@ -55,12 +55,12 @@ private val timkers = listOf(
 @Composable
 fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit) {
     val s = vm.state
-    var selected by remember { mutableStateOf<Timker?>(null) }
+    var selected by remember { mutableStateOf(timkers.firstOrNull { it.id == "semua" }) }
     var search by remember { mutableStateOf("") }
     var page by remember { mutableStateOf(1) }
     var detail by remember { mutableStateOf<Kegiatan?>(null) }
     var showCekSertifikat by remember { mutableStateOf(false) }
-    LaunchedEffect(selected) { vm.loadKegiatan(); page = 1 }
+    LaunchedEffect(Unit) { vm.loadKegiatan() }
 
     val perPage = 4
     val all = s.kegiatanList.filter { selected == null || selected!!.id == "semua" || (it.unit_kerja_id?.toString()?.padStart(3, '0') ?: "") == selected!!.id }
@@ -113,7 +113,7 @@ fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit) {
             if (selected == null) {
                 item {
                     LazyVerticalGrid(columns = GridCells.Fixed(2), verticalArrangement = Arrangement.spacedBy(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.heightIn(max = 700.dp)) {
-                        items(timkers) { t -> TimkerCard(t) { selected = t } }
+                        items(timkers) { t -> TimkerCard(t) { selected = t; page = 1; search = "" } }
                     }
                 }
             } else {
@@ -127,15 +127,45 @@ fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit) {
                         shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()
                     )
                 }
-                items(pageItems) { k -> LandingKegiatanCard(k) { detail = k } }
-                if (totalPages > 1) {
+                // Loading / Error / Empty state
+                if (s.loading) {
                     item {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                            OutlinedButton(onClick = { if (page > 1) page-- }, enabled = page > 1, border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)) { Text("Prev") }
-                            Spacer(Modifier.width(12.dp))
-                            Text("Halaman $page / $totalPages", color = Color.White, fontSize = 13.sp)
-                            Spacer(Modifier.width(12.dp))
-                            OutlinedButton(onClick = { if (page < totalPages) page++ }, enabled = page < totalPages, border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)) { Text("Next") }
+                        Column(Modifier.fillMaxWidth().padding(vertical = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator(color = Color(0xFF22D3EE))
+                            Spacer(Modifier.height(12.dp))
+                            Text("Memuat kegiatan...", color = Color(0xFFBFDBFE), fontSize = 13.sp)
+                        }
+                    }
+                } else if (s.error != null) {
+                    item {
+                        Column(Modifier.fillMaxWidth().padding(vertical = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.CloudOff, null, tint = Color(0xFFF87171), modifier = Modifier.size(36.dp))
+                            Spacer(Modifier.height(8.dp))
+                            Text("Gagal memuat data", color = Color.White, fontWeight = FontWeight.SemiBold)
+                            Text(s.error ?: "", color = Color(0xFFBFDBFE), fontSize = 12.sp)
+                            Spacer(Modifier.height(12.dp))
+                            Button(onClick = { vm.loadKegiatan() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)), shape = RoundedCornerShape(10.dp)) { Text("Coba Lagi") }
+                        }
+                    }
+                } else if (filtered.isEmpty()) {
+                    item {
+                        Column(Modifier.fillMaxWidth().padding(vertical = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.SearchOff, null, tint = Color(0xFF94A3B8), modifier = Modifier.size(36.dp))
+                            Spacer(Modifier.height(8.dp))
+                            Text(if (q.isNotEmpty()) "Tidak ada kegiatan yang cocok" else "Belum ada kegiatan", color = Color(0xFFBFDBFE), fontSize = 13.sp)
+                        }
+                    }
+                } else {
+                    items(pageItems) { k -> LandingKegiatanCard(k) { detail = k } }
+                    if (totalPages > 1) {
+                        item {
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                                OutlinedButton(onClick = { if (page > 1) page-- }, enabled = page > 1, border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)) { Text("Prev") }
+                                Spacer(Modifier.width(12.dp))
+                                Text("Halaman $page / $totalPages", color = Color.White, fontSize = 13.sp)
+                                Spacer(Modifier.width(12.dp))
+                                OutlinedButton(onClick = { if (page < totalPages) page++ }, enabled = page < totalPages, border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)) { Text("Next") }
+                            }
                         }
                     }
                 }
