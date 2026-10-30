@@ -34,10 +34,11 @@ fun PesertaScreen(vm: MainViewModel, kegiatanId: Int? = null) {
     val s = vm.state
     LaunchedEffect(kegiatanId) {
         vm.loadPeserta(kegiatanId); vm.loadKegiatan()
-        if (kegiatanId != null && kegiatanId > 0) vm.loadSertifikatStatus(kegiatanId)
+        if (kegiatanId != null && kegiatanId > 0) { vm.loadSertifikatStatus(kegiatanId); vm.loadKelas(kegiatanId) }
     }
     var search by remember { mutableStateOf("") }
     var showForm by remember { mutableStateOf(false) }
+    var showKelas by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<PesertaItem?>(null) }
     var deleting by remember { mutableStateOf<PesertaItem?>(null) }
 
@@ -48,6 +49,13 @@ fun PesertaScreen(vm: MainViewModel, kegiatanId: Int? = null) {
     Column(Modifier.fillMaxSize().background(WebBg)) {
         Row(Modifier.fillMaxWidth().background(Color.White).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(if (kegiatanId != null) "Peserta Kegiatan" else "Peserta", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = TextPrimary, modifier = Modifier.weight(1f))
+            if (kegiatanId != null) {
+                OutlinedButton(onClick = { showKelas = true }, shape = RoundedCornerShape(12.dp)) {
+                    Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text("Kelas (${s.kelasList.size})", fontSize = 13.sp)
+                }
+            }
         }
         HorizontalDivider(color = Border)
 
@@ -87,6 +95,10 @@ fun PesertaScreen(vm: MainViewModel, kegiatanId: Int? = null) {
         }
     }
 
+    if (showKelas && kegiatanId != null) {
+        KelasDialog(vm = vm, kegiatanId = kegiatanId, onDismiss = { showKelas = false })
+    }
+
     if (showForm) {
         PesertaFormDialog(
             editing = editing,
@@ -105,6 +117,40 @@ fun PesertaScreen(vm: MainViewModel, kegiatanId: Int? = null) {
             dismissButton = { TextButton(onClick = { deleting = null }) { Text("Batal") } }
         )
     }
+}
+
+@Composable
+private fun KelasDialog(vm: MainViewModel, kegiatanId: Int, onDismiss: () -> Unit) {
+    val s = vm.state
+    var nama by remember { mutableStateOf("") }
+    var deskripsi by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Kelas Kegiatan", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (s.kelasList.isEmpty()) {
+                    Text("Belum ada kelas.", fontSize = 13.sp, color = TextSecondary)
+                } else {
+                    s.kelasList.forEach { k ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                            Text(k.nama_kelas ?: "-", fontSize = 14.sp, fontWeight = FontWeight.Medium, color = TextPrimary, modifier = Modifier.weight(1f))
+                            Text(k.deskripsi ?: "", fontSize = 12.sp, color = TextSecondary)
+                        }
+                    }
+                }
+                HorizontalDivider(color = Border)
+                OutlinedTextField(value = nama, onValueChange = { nama = it }, label = { Text("Nama Kelas *") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = deskripsi, onValueChange = { deskripsi = it }, label = { Text("Deskripsi") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            }
+        },
+        confirmButton = {
+            Button(enabled = nama.isNotBlank(), onClick = {
+                vm.storeKelas(com.bpmpntb.simaik.api.KelasPayload(id_kegiatan = kegiatanId, nama_kelas = nama, deskripsi = deskripsi.ifBlank { null })) { ok -> if (ok) { nama = ""; deskripsi = "" } }
+            }) { Text("Buat Kelas") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Tutup") } }
+    )
 }
 
 @Composable
