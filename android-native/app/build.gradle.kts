@@ -14,8 +14,8 @@ android {
         applicationId = "com.bpmpntb.simaik"
         minSdk = 24
         targetSdk = 35
-        versionCode = 41
-        versionName = "1.37.0"
+        versionCode = 42
+        versionName = "1.38.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -48,6 +48,7 @@ android {
     }
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -59,6 +60,7 @@ dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.09.03")
     implementation(composeBom)
     implementation("androidx.core:core-ktx:1.13.1")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("androidx.activity:activity-compose:1.9.2")
     implementation("androidx.fragment:fragment-ktx:1.8.4")
