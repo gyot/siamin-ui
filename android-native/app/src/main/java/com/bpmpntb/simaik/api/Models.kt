@@ -235,9 +235,12 @@ data class AtkItem(
 @Serializable
 data class JadwalItem(
     val waktu: String? = null,
+    val jam_mulai: String? = null,
+    val jam_selesai: String? = null,
     val kegiatan: String? = null,
     val pj: String? = null,
     val tipe: String? = null,
+    val kategori: String? = null,
     @Serializable(with = LenientStringSerializer::class) val jp: String? = null,
 )
 

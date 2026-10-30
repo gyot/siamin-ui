@@ -228,7 +228,7 @@ fun LandingDetailScreen(vm: MainViewModel, onBack: () -> Unit) {
                                                     val istirahat = row.tipe == "istirahat"
                                                     val warna = if (istirahat) Orange500 else TextPrimary
                                                     Row(Modifier.fillMaxWidth().background(if (istirahat) Color(0xFFFEF3C7) else Color.White).padding(vertical = 8.dp, horizontal = 10.dp)) {
-                                                        Text(row.waktu ?: "-", fontSize = 11.sp, color = warna, fontStyle = if (istirahat) FontStyle.Italic else null, modifier = Modifier.width(78.dp))
+                                                        Text(row.waktu ?: "${row.jam_mulai ?: ""} - ${row.jam_selesai ?: ""}", fontSize = 11.sp, color = warna, fontStyle = if (istirahat) FontStyle.Italic else null, modifier = Modifier.width(78.dp))
                                                         Text(row.kegiatan ?: "-", fontSize = 11.sp, color = warna, fontStyle = if (istirahat) FontStyle.Italic else null, modifier = Modifier.weight(1f))
                                                         Text(if (istirahat) "-" else (row.jp ?: "-"), fontSize = 11.sp, color = warna, modifier = Modifier.width(28.dp))
                                                         Text(if (istirahat) "-" else (row.pj ?: "-"), fontSize = 11.sp, color = warna, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.width(90.dp))
@@ -251,32 +251,43 @@ fun LandingDetailScreen(vm: MainViewModel, onBack: () -> Unit) {
 
             Spacer(Modifier.height(14.dp))
 
-            // ===== Link Pendaftaran =====
+            // ===== Link Publik (sesuai web) =====
             Column(Modifier.padding(horizontal = 16.dp)) {
                 Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(3.dp)) {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text("Link Pendaftaran", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
-                        Text("Daftarkan diri Anda untuk mengikuti kegiatan ini", fontSize = 12.sp, color = TextSecondary)
-                        Button(
-                            onClick = { openUrl(ctx, urlPeserta) }, shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Orange500), modifier = Modifier.fillMaxWidth()
-                        ) { Icon(Icons.Default.PersonAdd, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Daftar Peserta", fontWeight = FontWeight.SemiBold) }
+                    Column {
+                        Row(Modifier.fillMaxWidth().background(Color(0xFF22C55E)).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Link, null, tint = Color.White, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                            Text("Link Publik", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                            OutlinedButton(
+                                onClick = {
+                                    val send = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, "${k.nama_kegiatan}\n$urlDetail") }
+                                    ctx.startActivity(Intent.createChooser(send, "Share Link"))
+                                },
+                                shape = RoundedCornerShape(50), border = BorderStroke(1.dp, Color.White.copy(alpha = 0.6f)),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 2.dp)
+                            ) { Icon(Icons.Default.Share, null, modifier = Modifier.size(12.dp)); Spacer(Modifier.width(4.dp)); Text("Share Link", fontSize = 11.sp) }
+                        }
+                        Row(Modifier.fillMaxWidth().background(Color(0xFFFEF3C7)).padding(12.dp), verticalAlignment = Alignment.Top) {
+                            Icon(Icons.Default.WarningAmber, null, tint = Color(0xFFD97706), modifier = Modifier.size(16.dp)); Spacer(Modifier.width(8.dp))
+                            Text("Link tetap ditampilkan. Pengisian biodata hanya tersedia pada tanggal kegiatan.", color = Color(0xFFB45309), fontSize = 12.sp, lineHeight = 17.sp)
+                        }
+                        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            DtlLinkCard(Color(0xFF22C55E), "Daftar Peserta", "Lihat Daftar Peserta") { openUrl(ctx, urlPeserta) }
+                            DtlLinkCard(Orange500, "Unduh Sertifikat", "Unduh Sertifikat") { openUrl(ctx, "https://siamin.gdoank.my.id/unduh-sertifikat/${k.id_kegiatan}/$slug") }
+                        }
                     }
                 }
             }
 
             Spacer(Modifier.height(14.dp))
 
-            // ===== Halaman Terkait =====
+            // ===== Formulir Biodata & Evaluasi =====
             Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("HALAMAN TERKAIT", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                DetailBuka(ctx, "Buka Halaman Detail (Web)", urlDetail)
-                Text("Formulir Biodata", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                Text("FORMULIR BIODATA & EVALUASI", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 listOf("Peserta", "Panitia", "Narasumber", "Pendamping").forEach { role ->
-                    DetailBuka(ctx, "Formulir Biodata $role", "https://siamin.gdoank.my.id/formulir/${k.id_kegiatan}/$role/$slug")
+                    DetailBuka(ctx, "Isi Formulir Biodata $role", "https://siamin.gdoank.my.id/formulir/${k.id_kegiatan}/$role/$slug")
                 }
                 if (!k.daftar_tpk.isNullOrEmpty()) {
-                    Text("Evaluasi", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
                     k.daftar_tpk.forEach { tpk ->
                         val namaTpk = tpk.kabupaten_kota?.let { "${tpk.lokasi} ($it)" } ?: (tpk.lokasi ?: "TPK")
                         DetailBuka(ctx, "Evaluasi: $namaTpk", "https://siamin.gdoank.my.id/evaluasi/${k.id_kegiatan}/${tpk.id_tpk}/$slug")
@@ -284,6 +295,24 @@ fun LandingDetailScreen(vm: MainViewModel, onBack: () -> Unit) {
                 }
             }
             Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun DtlLinkCard(headerColor: Color, title: String, actionLabel: String, onClick: () -> Unit) {
+    Card(shape = RoundedCornerShape(14.dp), elevation = CardDefaults.cardElevation(2.dp), colors = CardDefaults.cardColors(containerColor = Color.White), modifier = Modifier.fillMaxWidth()) {
+        Column {
+            Row(Modifier.fillMaxWidth().background(headerColor).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Link, null, tint = Color.White, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
+                Text(title, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            }
+            Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(actionLabel, fontSize = 13.sp, color = TextPrimary, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                Box(Modifier.size(30.dp).clip(RoundedCornerShape(50)).background(headerColor), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.ArrowForward, null, tint = Color.White, modifier = Modifier.size(16.dp))
+                }
+            }
         }
     }
 }

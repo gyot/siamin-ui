@@ -185,8 +185,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             try {
                 val body = ApiClient.service.jadwalKegiatan(id)
                 val root = kotlinx.serialization.json.Json.parseToJsonElement(body.string())
-                val jo = (root as? kotlinx.serialization.json.JsonObject)
-                    ?: ((root as? kotlinx.serialization.json.JsonObject)?.get("data") as? kotlinx.serialization.json.JsonObject)
+                val rootObj = root as? kotlinx.serialization.json.JsonObject
+                val jo = (rootObj?.get("data") as? kotlinx.serialization.json.JsonObject) ?: rootObj
                 val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true; coerceInputValues = true }
                 fun decodeDays(el: kotlinx.serialization.json.JsonElement?): List<JadwalDay> =
                     (el as? kotlinx.serialization.json.JsonArray)?.mapNotNull {
