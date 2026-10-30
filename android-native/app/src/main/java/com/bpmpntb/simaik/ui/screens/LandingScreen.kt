@@ -151,7 +151,7 @@ fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit) {
     }
 
     detail?.let { keg -> LandingDetailModal(keg) { detail = null } }
-    if (showCekSertifikat) CekSertifikatModal { showCekSertifikat = false }
+    if (showCekSertifikat) CekSertifikatModal(vm) { showCekSertifikat = false }
 }
 
 @Composable
@@ -212,12 +212,20 @@ private fun LandingDetailModal(k: Kegiatan, onClose: () -> Unit) {
                 }
                 InfoGelap("Total Peserta", "${k.total_peserta ?: 0}")
                 val slug = slugifyJudul(k.nama_kegiatan)
-                val url = "https://siamin.gdoank.my.id/kegiatan/${k.id_kegiatan}/$slug"
-                Text("Link Halaman Detail", color = Color(0xFF22D3EE), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    QrImage(url, Modifier.size(80.dp))
-                    Spacer(Modifier.width(12.dp))
-                    Text(url, color = Color(0xFFA5F3FC), fontSize = 11.sp, modifier = Modifier.weight(1f), overflow = TextOverflow.Ellipsis, maxLines = 3)
+                val urlDetail = "https://siamin.gdoank.my.id/kegiatan/${k.id_kegiatan}/$slug"
+                // Tombol buka halaman (tanpa QR, sesuai permintaan)
+                Text("Halaman Terkait", color = Color(0xFF22D3EE), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                val ctxBtn = LocalContext.current
+                @Composable fun TombolBuka(label: String, url: String) {
+                    OutlinedButton(
+                        onClick = { runCatching { ctxBtn.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))) } },
+                        shape = RoundedCornerShape(10.dp), border = BorderStroke(1.dp, Color(0xFF22D3EE).copy(alpha = 0.6f)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFA5F3FC)), modifier = Modifier.fillMaxWidth()
+                    ) { Icon(Icons.Default.OpenInNew, null, modifier = Modifier.size(16.dp)); Spacer(Modifier.width(8.dp)); Text(label, fontSize = 13.sp) }
+                }
+                TombolBuka("Buka Detail Kegiatan", urlDetail)
+                TombolBuka("Buka Formulir Biodata", "https://siamin.gdoank.my.id/formulir/${k.id_kegiatan}/Peserta/$slug")
+                (k.daftar_tpk?.firstOrNull()?.id_tpk)?.let { tpkId ->
+                    TombolBuka("Buka Evaluasi", "https://siamin.gdoank.my.id/evaluasi/${k.id_kegiatan}/$tpkId/$slug")
                 }
                 Text("Deskripsi", color = Color(0xFF22D3EE), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                 Text(k.deskripsi ?: "-", color = Color(0xFFBFDBFE), fontSize = 12.sp, lineHeight = 17.sp)
@@ -244,28 +252,76 @@ private fun InfoGelap(label: String, value: String) {
 }
 
 @Composable
-private fun CekSertifikatModal(onClose: () -> Unit) {
+private fun CekSertifikatModal(vm: MainViewModel, onClose: () -> Unit) {
+    val ctx = LocalContext.current
     var kode by remember { mutableStateOf("") }
     var result by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    fun verify(k: String) { busy = true; result = "Memverifikasi..."; vm.cekSertifikat(k) { result = it; busy = false } }
+
+    val pdfPicker = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let { decodeQrFromPdf(ctx, it) { found -> if (found != null) verify(found) else { result = "QR tidak ditemukan dalam file PDF."; busy = false } } }
+    }
+    val scanLauncher = androidx.activity.compose.rememberLauncherForActivityResult(com.journeyapps.barcodescanner.ScanContract()) { r ->
+        if (r.contents != null) verify(r.contents) else result = "Scan dibatalkan."
+    }
+
     AlertDialog(
         onDismissRequest = onClose, containerColor = Color(0xFF0B1B33),
         title = { Text("Cek Keaslian Sertifikat", color = Color.White, fontWeight = FontWeight.Bold) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("Masukkan kode QR / nomor sertifikat untuk memverifikasi keaslian.", color = Color(0xFFBFDBFE), fontSize = 12.sp)
+            Column(Modifier.heightIn(max = 440.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Verifikasi keaslian sertifikat dengan scan QR (PDF / kamera) atau input kode manual.", color = Color(0xFFBFDBFE), fontSize = 12.sp)
+                // Scan dari PDF
+                OutlinedButton(onClick = { busy = true; result = "Pilih file PDF sertifikat..."; pdfPicker.launch(arrayOf("application/pdf")) }, shape = RoundedCornerShape(10.dp), border = BorderStroke(1.dp, Color(0xFF60A5FA)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF93C5FD)), modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.PictureAsPdf, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Scan dari PDF")
+                }
+                // Scan dengan Kamera
+                Button(onClick = { busy = true; scanLauncher.launch(com.journeyapps.barcodescanner.ScanOptions().setDesiredBarcodeFormats(com.journeyapps.barcodescanner.ScanOptions.QR_CODE).setPrompt("Arahkan kamera ke QR sertifikat")) }, shape = RoundedCornerShape(10.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2563EB)), modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Default.CameraAlt, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp)); Text("Scan dengan Kamera")
+                }
+                HorizontalDivider(color = Color.White.copy(alpha = 0.1f))
+                Text("atau input kode manual", color = Color(0xFF94A3B8), fontSize = 11.sp)
                 OutlinedTextField(
                     value = kode, onValueChange = { kode = it }, label = { Text("Kode Sertifikat") }, singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(focusedTextColor = Color.White, unfocusedTextColor = Color.White, focusedBorderColor = Color(0xFF34D399), unfocusedBorderColor = Color.White.copy(alpha = 0.2f)),
                     shape = RoundedCornerShape(10.dp), modifier = Modifier.fillMaxWidth()
                 )
-                Button(
-                    onClick = { result = "Memverifikasi sertifikat..." },
-                    enabled = kode.isNotBlank(), shape = RoundedCornerShape(10.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
-                ) { Text("Cek Keaslian") }
-                result?.let { Text(it, color = Color(0xFFA5F3FC), fontSize = 12.sp) }
+                Button(onClick = { verify(kode) }, enabled = kode.isNotBlank() && !busy, shape = RoundedCornerShape(10.dp), colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669)), modifier = Modifier.fillMaxWidth()) {
+                    Text("Cek Keaslian")
+                }
+                result?.let {
+                    Text(it, color = if (it.contains("TERVERIFIKASI")) Color(0xFF34D399) else Color(0xFFA5F3FC), fontSize = 12.sp, lineHeight = 18.sp)
+                }
             }
         },
         confirmButton = {},
         dismissButton = { TextButton(onClick = onClose) { Text("Tutup", color = Color(0xFF93C5FD)) } }
     )
+}
+
+/** Render halaman PDF → decode QR (ZXing) → kembalikan kode QR atau null. */
+private fun decodeQrFromPdf(context: android.content.Context, uri: android.net.Uri, onResult: (String?) -> Unit) {
+    Thread {
+        var kode: String? = null
+        try {
+            val file = java.io.File.createTempFile("cert", ".pdf", context.cacheDir)
+            context.contentResolver.openInputStream(uri)?.use { input -> file.outputStream().use { input.copyTo(it) } }
+            val pfd = android.os.ParcelFileDescriptor.open(file, android.os.ParcelFileDescriptor.MODE_READ_ONLY)
+            val renderer = android.graphics.pdf.PdfRenderer(pfd)
+            for (i in 0 until renderer.pageCount) {
+                val page = renderer.openPage(i)
+                val bmp = android.graphics.Bitmap.createBitmap((page.width * 2), (page.height * 2), android.graphics.Bitmap.Config.ARGB_8888)
+                page.render(bmp, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                page.close()
+                val pixels = IntArray(bmp.width * bmp.height); bmp.getPixels(pixels, 0, bmp.width, 0, 0, bmp.width, bmp.height)
+                val source = com.google.zxing.RGBLuminanceSource(bmp.width, bmp.height, pixels)
+                val binary = com.google.zxing.BinaryBitmap(com.google.zxing.common.HybridBinarizer(source))
+                try { kode = com.google.zxing.MultiFormatReader().decode(binary).text } catch (_: Exception) {}
+                if (kode != null) break
+            }
+            renderer.close(); pfd.close(); file.delete()
+        } catch (_: Exception) { kode = null }
+        android.os.Handler(android.os.Looper.getMainLooper()).post { onResult(kode) }
+    }.start()
 }

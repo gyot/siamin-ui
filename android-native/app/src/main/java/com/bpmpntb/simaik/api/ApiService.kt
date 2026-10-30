@@ -96,6 +96,9 @@ interface ApiService {
     @DELETE("peserta/{id}")
     suspend fun deletePeserta(@Path("id") id: Int): OkResponse
 
+    @GET("sertifikat/cek/{kode}")
+    suspend fun cekSertifikat(@Path("kode") kode: String): okhttp3.ResponseBody
+
     @POST("push/register")
     suspend fun registerPush(@Body req: PushRegisterRequest): OkResponse
 }

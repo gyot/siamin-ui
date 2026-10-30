@@ -167,6 +167,49 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Verifikasi keaslian sertifikat via kode QR -> format hasil tampil. */
+    fun cekSertifikat(kode: String, onDone: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val body = ApiClient.service.cekSertifikat(kode)
+                val root = kotlinx.serialization.json.Json.parseToJsonElement(body.string())
+                val arr = root as? kotlinx.serialization.json.JsonArray
+                val item = arr?.firstOrNull() as? kotlinx.serialization.json.JsonObject
+                if (item == null) { onDone("Sertifikat tidak ditemukan dalam sistem."); return@launch }
+                fun g(o: kotlinx.serialization.json.JsonObject?, f: String): String =
+                    o?.get(f)?.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content }?.takeIf { it.isNotBlank() } ?: "-"
+                val p = item["peserta"] as? kotlinx.serialization.json.JsonObject
+                val k = item["kegiatan"] as? kotlinx.serialization.json.JsonObject
+                val ttd = item["penandatangan"] as? kotlinx.serialization.json.JsonObject
+                val batch = item["batch"] as? kotlinx.serialization.json.JsonObject
+                val lok = item["lokasi"] as? kotlinx.serialization.json.JsonObject
+                val sb = StringBuilder()
+                sb.appendLine("SERTIFIKAT TERVERIFIKASI")
+                sb.appendLine("(Dokumen ini tercatat dalam sistem & dinyatakan asli.)")
+                sb.appendLine()
+                sb.appendLine("— Data Peserta —")
+                sb.appendLine("Nama: ${g(p, "nama_lengkap")}")
+                sb.appendLine("NIP: ${g(p, "nip")}")
+                sb.appendLine("Pangkat: ${g(p, "pangkat")}")
+                sb.appendLine("Jabatan: ${g(p, "jabatan")}")
+                sb.appendLine("Instansi: ${g(p, "nama_instansi")}")
+                sb.appendLine("Peran: ${g(p, "peran")}")
+                sb.appendLine()
+                sb.appendLine("— Mengikuti Kegiatan —")
+                sb.appendLine("Nama: ${g(k, "nama_kegiatan")}")
+                sb.appendLine("Tanggal: ${g(k, "tanggal_mulai")} s.d. ${g(k, "tanggal_selesai")}")
+                sb.appendLine("Metode: ${g(k, "metode_pelaksanaan")}")
+                sb.appendLine("Lokasi: ${g(lok, "lokasi")}")
+                sb.appendLine()
+                sb.appendLine("— Disahkan oleh —")
+                sb.appendLine("Nama: ${g(ttd, "nama")}")
+                sb.appendLine("Jabatan: ${g(ttd, "nama_jabatan")}")
+                sb.appendLine("Tgl TTD: ${g(batch, "tanggal_ttd")}")
+                onDone(sb.toString())
+            } catch (e: Exception) { onDone("Gagal verifikasi: ${e.message}") }
+        }
+    }
+
     fun saveKegiatan(payload: KegiatanPayload, editingId: Int?, jadwalList: List<JadwalDay> = emptyList(), onDone: (Boolean) -> Unit) {
         val filled = payload.copy(id_pegawai = payload.id_pegawai ?: session.idPegawai.takeIf { it > 0 })
         state = state.copy(loading = true, error = null)

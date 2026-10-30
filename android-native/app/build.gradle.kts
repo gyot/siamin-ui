@@ -14,8 +14,8 @@ android {
         applicationId = "com.bpmpntb.simaik"
         minSdk = 24
         targetSdk = 35
-        versionCode = 34
-        versionName = "1.30.0"
+        versionCode = 35
+        versionName = "1.31.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -59,6 +59,7 @@ dependencies {
     val composeBom = platform("androidx.compose:compose-bom:2024.09.03")
     implementation(composeBom)
     implementation("androidx.core:core-ktx:1.13.1")
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("androidx.activity:activity-compose:1.9.2")
     implementation("androidx.fragment:fragment-ktx:1.8.4")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
