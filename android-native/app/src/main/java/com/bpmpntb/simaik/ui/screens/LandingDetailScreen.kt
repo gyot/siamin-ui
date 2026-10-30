@@ -86,6 +86,7 @@ fun LandingDetailScreen(vm: MainViewModel, onBack: () -> Unit) {
         val urlDetail = "https://siamin.gdoank.my.id/kegiatan/${k.id_kegiatan}/$slug"
         val urlPeserta = "https://siamin.gdoank.my.id/daftar-peserta/${k.id_kegiatan}/$slug"
         var expanded by remember { mutableStateOf(false) }
+        var jadwalExpanded by remember { mutableStateOf(false) }
 
         Column(Modifier.fillMaxSize().padding(pad).background(WebBg).verticalScroll(rememberScrollState())) {
             // ===== Banner ungu: badge + judul + deskripsi =====
@@ -199,11 +200,12 @@ fun LandingDetailScreen(vm: MainViewModel, onBack: () -> Unit) {
                 Column(Modifier.padding(horizontal = 16.dp)) {
                     Card(shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(3.dp)) {
                         Column {
-                            Row(Modifier.fillMaxWidth().background(Orange500).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Row(Modifier.fillMaxWidth().background(Orange500).clickable { jadwalExpanded = !jadwalExpanded }.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(Icons.Default.Schedule, null, tint = Color.White, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(8.dp))
-                                Text("Jadwal Kegiatan", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                                Text("Jadwal Kegiatan", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                                Icon(if (jadwalExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown, null, tint = Color.White)
                             }
-                            Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                            if (jadwalExpanded) Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                                 jadwal.forEach { kelas ->
                                     if (kelas.nama != null && jadwal.size > 1) {
                                         Text(kelas.nama, color = Indigo, fontWeight = FontWeight.Bold, fontSize = 14.sp)
