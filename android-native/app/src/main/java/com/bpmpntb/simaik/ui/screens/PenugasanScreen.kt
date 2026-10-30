@@ -205,6 +205,24 @@ private fun PetugasFormDialog(vm: MainViewModel, kegiatanId: Int, editing: Penug
     var peran by remember { mutableStateOf(editing?.peran ?: "panitia") }
     var pegawaiOpen by remember { mutableStateOf(false) }
     var peranOpen by remember { mutableStateOf(false) }
+    var err by remember { mutableStateOf<String?>(null) }
+
+    // Cek bentrok jadwal: pegawai sama tidak boleh di kegiatan lain dengan tanggal tumpang tindih
+    fun cekBentrok(pid: Int?): String? {
+        if (pid == null) return null
+        val k = s.kegiatanDetail ?: return null
+        if (k.id_kegiatan != kegiatanId) return null
+        val kStart = k.tanggal_mulai?.take(10) ?: return null
+        val kEnd = k.tanggal_selesai?.take(10) ?: kStart
+        val bentrok = s.penugasanList.find { p ->
+            p.id_pegawai == pid && p.id_kegiatan != kegiatanId &&
+                p.tanggal_mulai != null && p.tanggal_selesai != null &&
+                kStart <= (p.tanggal_selesai ?: "").take(10) && kEnd >= (p.tanggal_mulai ?: "").take(10)
+        }
+        return bentrok?.let {
+            "Pegawai sudah ditugaskan pada kegiatan \"${it.nama_kegiatan}\" (${it.lokasi ?: "-"}) tanggal ${it.tanggal_mulai?.take(10)} - ${it.tanggal_selesai?.take(10)}. Tidak boleh bentrok jadwal."
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -242,6 +260,7 @@ private fun PetugasFormDialog(vm: MainViewModel, kegiatanId: Int, editing: Penug
                     }
                 }
                 s.error?.let { Text(it, color = ErrorText, fontSize = 12.sp) }
+                err?.let { Text(it, color = ErrorText, fontSize = 12.sp, lineHeight = 16.sp) }
             }
         },
         confirmButton = {
@@ -249,9 +268,14 @@ private fun PetugasFormDialog(vm: MainViewModel, kegiatanId: Int, editing: Penug
                 enabled = pegawaiId != null && !s.loading,
                 onClick = {
                     pegawaiId?.let { pid ->
-                        val payload = PenugasanPayload(id_kegiatan = kegiatanId, id_pegawai = pid, peran = peran)
-                        if (editing != null) vm.editPenugasan(editing.id ?: -1, payload) { ok -> if (ok) onDismiss() }
-                        else vm.savePenugasan(payload) { ok -> if (ok) onDismiss() }
+                        val bentrok = cekBentrok(pid)
+                        if (bentrok != null) { err = bentrok }
+                        else {
+                            err = null
+                            val payload = PenugasanPayload(id_kegiatan = kegiatanId, id_pegawai = pid, peran = peran)
+                            if (editing != null) vm.editPenugasan(editing.id ?: -1, payload) { ok -> if (ok) onDismiss() }
+                            else vm.savePenugasan(payload) { ok -> if (ok) onDismiss() }
+                        }
                     }
                 }
             ) { Text(if (s.loading) "Menyimpan..." else "Simpan") }
