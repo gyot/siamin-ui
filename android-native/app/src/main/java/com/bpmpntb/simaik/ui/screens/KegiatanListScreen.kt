@@ -252,17 +252,18 @@ fun FilterDropdown(label: String, options: List<String>, value: String, onChange
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload, List<JadwalDay>) -> Unit, onDismiss: () -> Unit) {
-    var nama by remember { mutableStateOf(editing?.nama_kegiatan ?: "") }
-    var deskripsi by remember { mutableStateOf(editing?.deskripsi ?: "") }
-    var tglMulai by remember { mutableStateOf(editing?.tanggal_mulai ?: "") }
-    var tglSelesai by remember { mutableStateOf(editing?.tanggal_selesai ?: "") }
-    var status by remember { mutableStateOf(editing?.status ?: "draft") }
-    var metode by remember { mutableStateOf(editing?.metode_pelaksanaan ?: "luring") }
-    var rincian by remember { mutableStateOf(editing?.rincian_kegiatan ?: "") }
-    var totalPeserta by remember { mutableStateOf(editing?.total_peserta?.toString() ?: "") }
-    var metodeBayar by remember { mutableStateOf(editing?.metode_pembayaran ?: "tidak_dibayar") }
-    var unitKerjaId by remember { mutableStateOf(editing?.unit_kerja_id?.toString() ?: "") }
+fun KegiatanFormDialog(editing: Kegiatan?, prefill: Kegiatan? = null, onSave: (KegiatanPayload, List<JadwalDay>) -> Unit, onDismiss: () -> Unit) {
+    val src = editing ?: prefill
+    var nama by remember { mutableStateOf(src?.nama_kegiatan ?: "") }
+    var deskripsi by remember { mutableStateOf(src?.deskripsi ?: "") }
+    var tglMulai by remember { mutableStateOf(src?.tanggal_mulai ?: "") }
+    var tglSelesai by remember { mutableStateOf(src?.tanggal_selesai ?: "") }
+    var status by remember { mutableStateOf(src?.status ?: "draft") }
+    var metode by remember { mutableStateOf(src?.metode_pelaksanaan ?: "luring") }
+    var rincian by remember { mutableStateOf(src?.rincian_kegiatan ?: "") }
+    var totalPeserta by remember { mutableStateOf(src?.total_peserta?.toString() ?: "") }
+    var metodeBayar by remember { mutableStateOf(src?.metode_pembayaran ?: "tidak_dibayar") }
+    var unitKerjaId by remember { mutableStateOf(src?.unit_kerja_id?.toString() ?: "") }
     var dokUrl by remember { mutableStateOf("") }
     var materiUrl by remember { mutableStateOf("") }
     var panduanUrl by remember { mutableStateOf("") }
@@ -271,7 +272,7 @@ fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload, List<Jadwal
 
     // Daftar TPK (wajib min 1)
     val tpkList = remember {
-        val initial = editing?.daftar_tpk ?: listOf(TpkItem(lokasi = editing?.lokasi ?: "", kabupaten_kota = editing?.kabupaten_kota))
+        val initial = src?.daftar_tpk ?: listOf(TpkItem(lokasi = src?.lokasi ?: "", kabupaten_kota = src?.kabupaten_kota))
         mutableStateListOf<TpkItem>().apply {
             if (initial.isEmpty() || initial.all { it.lokasi.isBlank() }) add(TpkItem()) else addAll(initial)
         }
@@ -279,7 +280,7 @@ fun KegiatanFormDialog(editing: Kegiatan?, onSave: (KegiatanPayload, List<Jadwal
 
     // Daftar ATK
     val atkList = remember {
-        mutableStateListOf<AtkItem>().apply { editing?.daftar_atk?.let { addAll(it) } }
+        mutableStateListOf<AtkItem>().apply { src?.daftar_atk?.let { addAll(it) } }
     }
 
     // Jadwal harian (hari -> items)

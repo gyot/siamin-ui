@@ -55,6 +55,7 @@ fun KegiatanDetailScreen(
     }
     var showEdit by remember { mutableStateOf(false) }
     var showDelete by remember { mutableStateOf(false) }
+    var showDuplikat by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize().background(WebBg)) {
         Box(
@@ -109,6 +110,7 @@ fun KegiatanDetailScreen(
                                     }
                                     context.startActivity(Intent.createChooser(send, "Bagikan Kegiatan"))
                                 }
+                                ActionTile("Duplikat", Icons.Default.ContentCopy, Color(0xFF14B8A6), Modifier.weight(1f)) { showDuplikat = true }
                                 ActionTile("Hapus", Icons.Default.Delete, Color(0xFFEF4444), Modifier.weight(1f)) { showDelete = true }
                             }
                         }
@@ -237,6 +239,16 @@ fun KegiatanDetailScreen(
                 else -> Text("Data tidak ditemukan.", Modifier.align(Alignment.Center), color = TextSecondary)
             }
         }
+    }
+
+    if (showDuplikat) {
+        KegiatanFormDialog(
+            editing = null, prefill = s.kegiatanDetail,
+            onSave = { payload, jadwal ->
+                vm.saveKegiatan(payload, null, jadwal) { ok -> if (ok) { showDuplikat = false; onBack() } }
+            },
+            onDismiss = { showDuplikat = false }
+        )
     }
 
     if (showEdit) {
