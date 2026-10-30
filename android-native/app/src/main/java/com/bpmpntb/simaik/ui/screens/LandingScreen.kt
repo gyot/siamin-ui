@@ -86,9 +86,7 @@ fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit, onDaftar: () -> Unit) 
                             Icon(if (vm.isLoggedIn) Icons.Default.Dashboard else Icons.Default.Person, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(if (vm.isLoggedIn) "Dashboard" else "Login")
                         }
                         if (!vm.isLoggedIn) {
-                            OutlinedButton(onClick = onDaftar, shape = RoundedCornerShape(12.dp), border = BorderStroke(1.dp, Color(0xFFFACC15)), colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFACC15))) {
-                                Icon(Icons.Default.PersonAdd, null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text("Daftar")
-                            }
+                            // tombol Daftar dihilangkan dari landing (sesuai permintaan)
                         }
                     }
                     Spacer(Modifier.height(12.dp))

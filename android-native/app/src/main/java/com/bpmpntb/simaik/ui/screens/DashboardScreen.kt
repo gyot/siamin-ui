@@ -97,7 +97,8 @@ fun DashboardScreen(vm: MainViewModel, onOpen: (Int) -> Unit, onPeserta: (Int) -
                 contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                items(kegiatan, key = { it.id_kegiatan }) { k ->
+                item { PagingBar("dash", kegiatan.size) }
+                items(paged("dash", kegiatan), key = { it.id_kegiatan }) { k ->
                     KegiatanDashboardCard(
                         k,
                         onDetail = { onOpen(k.id_kegiatan) },

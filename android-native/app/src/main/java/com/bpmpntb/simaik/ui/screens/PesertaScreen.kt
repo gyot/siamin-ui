@@ -79,7 +79,8 @@ fun PesertaScreen(vm: MainViewModel, kegiatanId: Int? = null) {
                 s.error != null && s.pesertaList.isEmpty() -> Text(s.error ?: "", color = ErrorText, modifier = Modifier.align(Alignment.Center).padding(24.dp))
                 peserta.isEmpty() -> Text("Tidak ada peserta.", color = TextSecondary, modifier = Modifier.align(Alignment.Center))
                 else -> LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    items(peserta, key = { it.id_peserta ?: 0 }) { p ->
+                    item { PagingBar("peserta", peserta.size) }
+                    items(paged("peserta", peserta), key = { it.id_peserta ?: 0 }) { p ->
                         val st = s.sertifikatStatusList.find { it.id_peserta == p.id_peserta }?.status
                         PesertaCard(
                             p, sertifikatStatus = st,

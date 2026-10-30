@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Business
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Visibility
@@ -53,6 +54,17 @@ private fun statusBadgeColor(st: String?) = when (st?.lowercase()) {
 
 // Status kegiatan DIHITUNG dari tanggal (sesuai web), bukan field status
 private fun parseTgl(s: String?): LocalDate? = try { s?.take(10)?.let(LocalDate::parse) } catch (e: Exception) { null }
+
+// Label unit kerja: "001 - Subbag Umum" (KegiatanResource tidak kirim nama unit -> fallback mapping)
+fun unitKerjaLabel(id: Int?, nama: String?): String {
+    val kode = id?.toString()?.padStart(3, '0')
+    val n = nama ?: when (id) {
+        0 -> "Kepala BPMP"; 1 -> "Subbag Umum"; 2 -> "Tim Kerja Pendidikan Anak Usia Dini"
+        3 -> "Tim Kerja Sekolah Dasar"; 4 -> "Tim Kerja Sekolah Menengah Pertama"
+        5 -> "Tim Kerja Sekolah Menengah"; else -> null
+    }
+    return when { kode != null && n != null -> "$kode - $n"; n != null -> n; kode != null -> kode; else -> "-" }
+}
 fun hitungStatus(tanggalMulai: String?, tanggalSelesai: String?, statusField: String?): String {
     val today = LocalDate.now()
     val mulai = parseTgl(tanggalMulai); val selesai = parseTgl(tanggalSelesai)
@@ -142,7 +154,8 @@ fun KegiatanListScreen(vm: MainViewModel, onOpen: (Int) -> Unit) {
                 s.error != null && s.kegiatanList.isEmpty() -> Text(s.error ?: "", color = ErrorText, modifier = Modifier.align(Alignment.Center).padding(24.dp))
                 filtered.isEmpty() -> Text("Belum ada kegiatan.", color = TextSecondary, modifier = Modifier.align(Alignment.Center))
                 else -> LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    items(filtered, key = { it.id_kegiatan }) { k ->
+                    item { PagingBar("keg", filtered.size) }
+                    items(paged("keg", filtered), key = { it.id_kegiatan }) { k ->
                         KegiatanManageCard(
                             k,
                             onOpen = { onOpen(k.id_kegiatan) },
@@ -195,53 +208,56 @@ private fun KegiatanManageCard(k: Kegiatan, onOpen: () -> Unit, onDelete: () -> 
         border = BorderStroke(1.dp, Border),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(Modifier.padding(14.dp)) {
-            Row(verticalAlignment = Alignment.Top) {
-                Box(Modifier.size(40.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF22C55E)), contentAlignment = Alignment.Center) {
-                    Text((k.nama_kegiatan ?: "?").take(1).uppercase(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF22C55E)), contentAlignment = Alignment.Center) {
+                    Text((k.nama_kegiatan ?: "?").take(1).uppercase(), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                 }
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Text(k.nama_kegiatan ?: "-", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("${fmtTgl(k.tanggal_mulai)} - ${fmtTgl(k.tanggal_selesai)}", fontSize = 11.sp, color = TextSecondary, maxLines = 1)
-                        Text("  ·  ", color = TextSecondary, fontSize = 11.sp)
-                        Box(Modifier.clip(RoundedCornerShape(50)).background(statusBadgeColor(st).copy(alpha = 0.12f)).padding(horizontal = 6.dp, vertical = 1.dp)) {
-                            Text(st, fontSize = 10.sp, color = statusBadgeColor(st), fontWeight = FontWeight.SemiBold)
-                        }
-                    }
-                    val lokasi = k.lokasi ?: k.daftar_tpk?.firstOrNull()?.lokasi
-                    val kab = k.kabupaten_kota ?: k.daftar_tpk?.firstOrNull()?.kabupaten_kota
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.LocationOn, null, tint = TextSecondary, modifier = Modifier.size(12.dp))
-                        Spacer(Modifier.width(2.dp))
-                        Text("${lokasi ?: "-"}${kab?.let { " ($it)" } ?: ""}", fontSize = 11.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Business, null, tint = TextSecondary, modifier = Modifier.size(12.dp))
-                        Spacer(Modifier.width(2.dp))
-                        Text("${k.unit_kerja_id ?: ""}${if (k.unit_kerja_id != null && k.unit_kerja != null) " - " else ""}${k.unit_kerja ?: "-"}", fontSize = 11.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                    k.metode_pelaksanaan?.let {
-                        Box(Modifier.clip(RoundedCornerShape(6.dp)).background(ChipBg).padding(horizontal = 8.dp, vertical = 2.dp)) {
-                            Text(it.replaceFirstChar { c -> c.uppercase() }, fontSize = 10.sp, color = TextSecondary)
-                        }
-                    }
+                Spacer(Modifier.width(10.dp))
+                Text(k.nama_kegiatan ?: "-", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(6.dp))
+                Box(Modifier.clip(RoundedCornerShape(50)).background(statusBadgeColor(st).copy(alpha = 0.15f)).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                    Text(st, fontSize = 11.sp, color = statusBadgeColor(st), fontWeight = FontWeight.Bold, maxLines = 1)
                 }
-                IconButton(onClick = onOpen) { Icon(Icons.Default.Visibility, "Detail", tint = TextSecondary) }
-                IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, "Hapus", tint = ErrorText) }
             }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = { shareUrl.let { share(context, it, "Share Link") } }, shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.DateRange, null, tint = TextSecondary, modifier = Modifier.size(13.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("${fmtTgl(k.tanggal_mulai)} – ${fmtTgl(k.tanggal_selesai)}", fontSize = 12.sp, color = TextSecondary, maxLines = 1)
+            }
+            val lokasi = k.lokasi ?: k.daftar_tpk?.firstOrNull()?.lokasi
+            val kab = k.kabupaten_kota ?: k.daftar_tpk?.firstOrNull()?.kabupaten_kota
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.LocationOn, null, tint = TextSecondary, modifier = Modifier.size(13.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("${lokasi ?: "-"}${kab?.let { " ($it)" } ?: ""}", fontSize = 12.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Business, null, tint = TextSecondary, modifier = Modifier.size(13.dp))
+                Spacer(Modifier.width(4.dp))
+                Text(unitKerjaLabel(k.unit_kerja_id, k.unit_kerja), fontSize = 12.sp, color = TextSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                k.metode_pelaksanaan?.let {
+                    Box(Modifier.clip(RoundedCornerShape(6.dp)).background(ChipBg).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                        Text(it.replaceFirstChar { c -> c.uppercase() }, fontSize = 11.sp, color = TextSecondary)
+                    }
+                }
+                Box(Modifier.clip(RoundedCornerShape(6.dp)).background(ChipBg).padding(horizontal = 8.dp, vertical = 3.dp)) {
+                    Text("${k.total_peserta ?: 0} peserta", fontSize = 11.sp, color = TextSecondary)
+                }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedButton(onClick = { share(context, shareUrl, "Share Link") }, shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)) {
                     Icon(Icons.Default.Share, null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Share Link", fontSize = 11.sp)
                 }
-                OutlinedButton(onClick = { share(context, pesertaUrl, "Link Peserta") }, shape = RoundedCornerShape(10.dp), modifier = Modifier.weight(1f)) {
+                OutlinedButton(onClick = { share(context, pesertaUrl, "Link Peserta") }, shape = RoundedCornerShape(10.dp), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)) {
                     Icon(Icons.Default.Share, null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Link Peserta", fontSize = 11.sp)
                 }
-                Button(onClick = onOpen, shape = RoundedCornerShape(10.dp), colors = ButtonDefaults.buttonColors(containerColor = AccentBlue), modifier = Modifier.weight(1f)) {
+                Button(onClick = onOpen, shape = RoundedCornerShape(10.dp), colors = ButtonDefaults.buttonColors(containerColor = AccentBlue), contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)) {
                     Icon(Icons.Default.Visibility, null, modifier = Modifier.size(14.dp)); Spacer(Modifier.width(4.dp)); Text("Detail", fontSize = 11.sp)
                 }
+                IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) { Icon(Icons.Default.Delete, "Hapus", tint = ErrorText, modifier = Modifier.size(18.dp)) }
             }
         }
     }
