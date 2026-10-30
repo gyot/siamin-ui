@@ -90,7 +90,7 @@ fun AppRoot(vm: MainViewModel, deepLinkId: Int, onDeepLinkConsumed: () -> Unit) 
             LandingScreen(vm, onLogin = { nav.navigate(if (vm.isLoggedIn) "admin" else "login") }, onDaftar = { nav.navigate("register") })
         }
         composable("login") {
-            LoginScreen(vm) {
+            LoginScreen(vm, onDaftar = { nav.navigate("register") }) {
                 nav.navigate("admin") { popUpTo("login") { inclusive = true } }
             }
         }

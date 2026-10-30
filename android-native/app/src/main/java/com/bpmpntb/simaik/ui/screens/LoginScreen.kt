@@ -30,7 +30,7 @@ private val TextGray = Color(0xFF65676B)
 private val FieldBg = Color(0xFFF0F2F5)
 
 @Composable
-fun LoginScreen(vm: MainViewModel, onLoggedIn: () -> Unit) {
+fun LoginScreen(vm: MainViewModel, onDaftar: () -> Unit, onLoggedIn: () -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val s = vm.state
@@ -91,7 +91,7 @@ fun LoginScreen(vm: MainViewModel, onLoggedIn: () -> Unit) {
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 Text("Belum punya akun? ", color = TextGray, fontSize = 13.sp)
-                Text("Daftar", color = Blue, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                Text("Daftar", color = Blue, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.clickable { onDaftar() })
             }
         }
 
