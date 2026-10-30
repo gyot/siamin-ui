@@ -49,6 +49,7 @@ data class UiState(
 class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val session = Session(app)
     val isLoggedIn: Boolean get() = session.isLoggedIn
+    var landingDetail: Kegiatan? by mutableStateOf(null)
     val currentPegawaiId: Int
         get() = session.idPegawai
     var state by mutableStateOf(UiState(loggedIn = session.isLoggedIn))

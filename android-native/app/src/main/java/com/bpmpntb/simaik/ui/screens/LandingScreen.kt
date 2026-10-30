@@ -53,12 +53,11 @@ private val timkers = listOf(
 )
 
 @Composable
-fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit, onDaftar: () -> Unit) {
+fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit, onOpenDetail: () -> Unit) {
     val s = vm.state
     var selected by remember { mutableStateOf(timkers.firstOrNull { it.id == "semua" }) }
     var search by remember { mutableStateOf("") }
     var page by remember { mutableStateOf(1) }
-    var detail by remember { mutableStateOf<Kegiatan?>(null) }
     var showCekSertifikat by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { vm.loadKegiatan() }
 
@@ -160,7 +159,7 @@ fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit, onDaftar: () -> Unit) 
                         }
                     }
                 } else {
-                    items(pageItems) { k -> LandingKegiatanCard(k) { detail = k } }
+                    items(pageItems) { k -> LandingKegiatanCard(k) { vm.landingDetail = k; onOpenDetail() } }
                     if (totalPages > 1) {
                         item {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
@@ -184,7 +183,6 @@ fun LandingScreen(vm: MainViewModel, onLogin: () -> Unit, onDaftar: () -> Unit) 
         }
     }
 
-    detail?.let { keg -> LandingDetailModal(keg) { detail = null } }
     if (showCekSertifikat) CekSertifikatModal(vm) { showCekSertifikat = false }
 }
 
