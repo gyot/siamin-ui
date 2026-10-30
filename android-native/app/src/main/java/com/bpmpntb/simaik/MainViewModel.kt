@@ -100,8 +100,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         state = state.copy(loading = true, error = null)
         viewModelScope.launch {
             try {
-                val res = ApiClient.service.kegiatanAll()
-                state = state.copy(loading = false, kegiatanList = res.data ?: emptyList())
+                val all = mutableListOf<Kegiatan>()
+                var page = 1
+                var lastPage = 1
+                do {
+                    val res = ApiClient.service.kegiatanAll(page = page, per_page = 100)
+                    all.addAll(res.data ?: emptyList())
+                    lastPage = res.last_page ?: 1
+                    page++
+                } while (page <= lastPage && page <= 100)
+                state = state.copy(loading = false, kegiatanList = all.distinctBy { it.id_kegiatan })
             } catch (e: Exception) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal memuat kegiatan.")
             }

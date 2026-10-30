@@ -99,6 +99,10 @@ data class Kegiatan(
 data class KegiatanListResponse(
     val success: Boolean? = null,
     val data: List<Kegiatan>? = null,
+    val total: Int? = null,
+    val current_page: Int? = null,
+    val per_page: Int? = null,
+    val last_page: Int? = null,
 )
 
 @Serializable

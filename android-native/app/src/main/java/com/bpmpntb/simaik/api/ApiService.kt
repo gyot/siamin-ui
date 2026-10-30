@@ -16,7 +16,7 @@ interface ApiService {
     suspend fun login(@Body req: LoginRequest): LoginResponse
 
     @GET("kegiatan/all")
-    suspend fun kegiatanAll(@Query("per_page") per_page: Int = 200): KegiatanListResponse
+    suspend fun kegiatanAll(@Query("page") page: Int = 1, @Query("per_page") per_page: Int = 100): KegiatanListResponse
 
     @GET("kegiatan/tim-saya")
     suspend fun kegiatanTimSaya(): KegiatanListResponse
