@@ -2,7 +2,10 @@ package com.bpmpntb.simaik.api
 
 import retrofit2.http.Body
 import retrofit2.http.DELETE
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -59,6 +62,17 @@ interface ApiService {
 
     @GET("peserta")
     suspend fun peserta(@Query("kegiatan_id") kegiatanId: Int? = null, @Query("per_page") perPage: Int = 500): PesertaListResponse
+
+    @GET("kegiatan/{id}/peserta-sertifikat")
+    suspend fun pesertaSertifikat(@Path("id") id: Int): SertifikatStatusListResponse
+
+    @FormUrlEncoded
+    @PATCH("sertifikat/update-status")
+    suspend fun updateSertifikatStatus(
+        @Field("id_peserta") idPeserta: Int,
+        @Field("id_kegiatan") idKegiatan: Int,
+        @Field("status") status: String,
+    ): OkResponse
 
     @POST("peserta")
     suspend fun storePeserta(@Body req: PesertaPayload): OkResponse

@@ -32,7 +32,10 @@ import com.bpmpntb.simaik.ui.theme.*
 @Composable
 fun PesertaScreen(vm: MainViewModel, kegiatanId: Int? = null) {
     val s = vm.state
-    LaunchedEffect(kegiatanId) { vm.loadPeserta(kegiatanId); vm.loadKegiatan() }
+    LaunchedEffect(kegiatanId) {
+        vm.loadPeserta(kegiatanId); vm.loadKegiatan()
+        if (kegiatanId != null && kegiatanId > 0) vm.loadSertifikatStatus(kegiatanId)
+    }
     var search by remember { mutableStateOf("") }
     var showForm by remember { mutableStateOf(false) }
     var editing by remember { mutableStateOf<PesertaItem?>(null) }
@@ -69,10 +72,14 @@ fun PesertaScreen(vm: MainViewModel, kegiatanId: Int? = null) {
                 peserta.isEmpty() -> Text("Tidak ada peserta.", color = TextSecondary, modifier = Modifier.align(Alignment.Center))
                 else -> LazyColumn(contentPadding = PaddingValues(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     items(peserta, key = { it.id_peserta ?: 0 }) { p ->
+                        val st = s.sertifikatStatusList.find { it.id_peserta == p.id_peserta }?.status
                         PesertaCard(
-                            p,
+                            p, sertifikatStatus = st,
                             onEdit = { editing = p; showForm = true },
-                            onDelete = { deleting = p }
+                            onDelete = { deleting = p },
+                            onStatusChange = { newStatus ->
+                                if (kegiatanId != null) vm.updateSertifikatStatus(p.id_peserta ?: 0, kegiatanId, newStatus) { }
+                            }
                         )
                     }
                 }
@@ -101,7 +108,13 @@ fun PesertaScreen(vm: MainViewModel, kegiatanId: Int? = null) {
 }
 
 @Composable
-private fun PesertaCard(p: PesertaItem, onEdit: () -> Unit, onDelete: () -> Unit) {
+private fun PesertaCard(p: PesertaItem, sertifikatStatus: String? = null, onEdit: () -> Unit, onDelete: () -> Unit, onStatusChange: (String) -> Unit = {}) {
+    val stColor = when (sertifikatStatus?.lowercase()) {
+        "terbit" -> Color(0xFF059669)
+        "draft" -> Color(0xFFF59E0B)
+        "dicabut" -> Color(0xFFDC2626)
+        else -> Color(0xFF94A3B8)
+    }
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -111,13 +124,24 @@ private fun PesertaCard(p: PesertaItem, onEdit: () -> Unit, onDelete: () -> Unit
     ) {
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(p.nama_lengkap ?: "-", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(p.nama_lengkap ?: "-", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary, modifier = Modifier.weight(1f))
+                    Box(Modifier.clip(RoundedCornerShape(50)).background(stColor.copy(alpha = 0.15f)).padding(horizontal = 8.dp, vertical = 2.dp)) {
+                        Text(sertifikatStatus?.replaceFirstChar { it.uppercase() } ?: "Belum Ada", fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = stColor)
+                    }
+                }
                 Text("NIP: ${p.nip ?: "-"}", fontSize = 12.sp, color = TextSecondary)
                 Text(p.jabatan ?: "-", fontSize = 12.sp, color = TextSecondary)
                 Text(p.nama_instansi ?: "-", fontSize = 12.sp, color = TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     p.peran?.let { Chip(it) }
                     p.kab_kota?.let { Chip(it) }
+                }
+                // Aksi ubah status sertifikat
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (sertifikatStatus?.lowercase() != "terbit") TextButton(onClick = { onStatusChange("terbit") }) { Text("Terbitkan", fontSize = 11.sp, color = Color(0xFF059669)) }
+                    if (sertifikatStatus?.lowercase() != "draft") TextButton(onClick = { onStatusChange("draft") }) { Text("Draft", fontSize = 11.sp, color = Color(0xFFF59E0B)) }
+                    if (sertifikatStatus?.lowercase() != "dicabut") TextButton(onClick = { onStatusChange("dicabut") }) { Text("Cabut", fontSize = 11.sp, color = Color(0xFFDC2626)) }
                 }
             }
             IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "Edit", tint = AccentBlue) }

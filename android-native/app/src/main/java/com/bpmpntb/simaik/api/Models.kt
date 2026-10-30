@@ -281,6 +281,17 @@ data class PesertaItem(
 data class PesertaListResponse(val success: Boolean? = null, val data: List<PesertaItem>? = null)
 
 @Serializable
+data class SertifikatStatusItem(
+    @Serializable(with = LenientIntSerializer::class) val id_peserta: Int? = null,
+    @Serializable(with = LenientIntSerializer::class) val id_kegiatan: Int? = null,
+    @Serializable(with = LenientIntSerializer::class) val id_sertifikat: Int? = null,
+    val status: String? = null,
+)
+
+@Serializable
+data class SertifikatStatusListResponse(val success: Boolean? = null, val data: List<SertifikatStatusItem>? = null)
+
+@Serializable
 data class PesertaPayload(
     val id_kegiatan: Int,
     val nama_lengkap: String,

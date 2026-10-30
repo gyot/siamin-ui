@@ -18,6 +18,7 @@ import com.bpmpntb.simaik.api.PesertaItem
 import com.bpmpntb.simaik.api.PesertaPayload
 import com.bpmpntb.simaik.api.JadwalSaveRequest
 import com.bpmpntb.simaik.api.JadwalDay
+import com.bpmpntb.simaik.api.SertifikatStatusItem
 import com.bpmpntb.simaik.api.PushRegisterRequest
 import com.bpmpntb.simaik.api.SertifikatBatchItem
 import com.bpmpntb.simaik.data.Session
@@ -37,6 +38,7 @@ data class UiState(
     val sertifikatList: List<SertifikatBatchItem> = emptyList(),
     val pesertaList: List<PesertaItem> = emptyList(),
     val jadwalList: List<JadwalDay> = emptyList(),
+    val sertifikatStatusList: List<SertifikatStatusItem> = emptyList(),
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -198,6 +200,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 val res = ApiClient.service.getJadwal(id)
                 state = state.copy(jadwalList = res.data?.jadwal_harian ?: emptyList())
             } catch (e: Exception) { state = state.copy(jadwalList = emptyList()) }
+        }
+    }
+
+    fun loadSertifikatStatus(kegiatanId: Int) {
+        viewModelScope.launch {
+            try {
+                val res = ApiClient.service.pesertaSertifikat(kegiatanId)
+                state = state.copy(sertifikatStatusList = res.data ?: emptyList())
+            } catch (e: Exception) { state = state.copy(sertifikatStatusList = emptyList()) }
+        }
+    }
+
+    fun updateSertifikatStatus(idPeserta: Int, idKegiatan: Int, status: String, onDone: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                ApiClient.service.updateSertifikatStatus(idPeserta, idKegiatan, status)
+                loadSertifikatStatus(idKegiatan)
+                onDone(true)
+            } catch (e: Exception) { onDone(false) }
         }
     }
 
