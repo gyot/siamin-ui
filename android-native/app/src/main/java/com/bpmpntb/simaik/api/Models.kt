@@ -252,6 +252,8 @@ data class JadwalDay(
 @Serializable
 data class JadwalSaveRequest(val jadwal: List<JadwalDay>)
 
+data class JadwalKelas(val nama: String? = null, val hari: List<JadwalDay> = emptyList())
+
 @Serializable
 data class JadwalResponse(
     val success: Boolean? = null,

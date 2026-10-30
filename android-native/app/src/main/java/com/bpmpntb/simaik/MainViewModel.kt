@@ -12,6 +12,7 @@ import com.bpmpntb.simaik.api.Kegiatan
 import com.bpmpntb.simaik.api.KegiatanPayload
 import com.bpmpntb.simaik.api.LoginRequest
 import com.bpmpntb.simaik.api.RegisterRequest
+import com.bpmpntb.simaik.api.JadwalKelas
 import com.bpmpntb.simaik.api.PegawaiItem
 import com.bpmpntb.simaik.api.PenugasanItem
 import com.bpmpntb.simaik.api.PenugasanPayload
@@ -175,6 +176,32 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: Exception) {
                 state = state.copy(loading = false, error = e.message ?: "Gagal memuat sertifikat.")
             }
+        }
+    }
+
+    /** Muat jadwal kegiatan publik (GET laporan/{id}/jadwal) -> per kelas. */
+    fun loadJadwalPublik(id: Int, onDone: (List<JadwalKelas>) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val body = ApiClient.service.jadwalKegiatan(id)
+                val root = kotlinx.serialization.json.Json.parseToJsonElement(body.string())
+                val jo = (root as? kotlinx.serialization.json.JsonObject)
+                    ?: ((root as? kotlinx.serialization.json.JsonObject)?.get("data") as? kotlinx.serialization.json.JsonObject)
+                val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true; coerceInputValues = true }
+                fun decodeDays(el: kotlinx.serialization.json.JsonElement?): List<JadwalDay> =
+                    (el as? kotlinx.serialization.json.JsonArray)?.mapNotNull {
+                        runCatching { json.decodeFromJsonElement(JadwalDay.serializer(), it) }.getOrNull()
+                    } ?: emptyList()
+                val result = mutableListOf<JadwalKelas>()
+                (jo?.get("jadwal_per_kelas") as? kotlinx.serialization.json.JsonArray)?.forEach { kp ->
+                    val o = kp as? kotlinx.serialization.json.JsonObject ?: return@forEach
+                    val nama = (o.get("nama_kelas") as? kotlinx.serialization.json.JsonPrimitive)?.content
+                    result.add(JadwalKelas(nama, decodeDays(o.get("jadwal"))))
+                }
+                val harian = decodeDays(jo?.get("jadwal_harian"))
+                if (result.isEmpty() && harian.isNotEmpty()) result.add(JadwalKelas(null, harian))
+                onDone(result)
+            } catch (e: Exception) { onDone(emptyList()) }
         }
     }
 

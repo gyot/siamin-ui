@@ -102,6 +102,9 @@ interface ApiService {
     @GET("sertifikat/cek/{kode}")
     suspend fun cekSertifikat(@Path("kode") kode: String): okhttp3.ResponseBody
 
+    @GET("laporan/{id}/jadwal")
+    suspend fun jadwalKegiatan(@Path("id") id: Int): okhttp3.ResponseBody
+
     @POST("push/register")
     suspend fun registerPush(@Body req: PushRegisterRequest): OkResponse
 }
