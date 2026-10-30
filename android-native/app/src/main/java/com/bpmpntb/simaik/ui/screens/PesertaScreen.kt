@@ -112,9 +112,13 @@ private fun PesertaCard(p: PesertaItem, onEdit: () -> Unit, onDelete: () -> Unit
         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(p.nama_lengkap ?: "-", fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                Text("NIP: ${p.nip ?: "-"}  •  ${p.jabatan ?: "-"}", fontSize = 12.sp, color = TextSecondary)
-                Text(p.kegiatan?.nama_kegiatan ?: "Kegiatan #${p.id_kegiatan ?: "-"}", fontSize = 12.sp, color = TextSecondary)
-                p.peran?.let { Chip(it) }
+                Text("NIP: ${p.nip ?: "-"}", fontSize = 12.sp, color = TextSecondary)
+                Text(p.jabatan ?: "-", fontSize = 12.sp, color = TextSecondary)
+                Text(p.nama_instansi ?: "-", fontSize = 12.sp, color = TextSecondary)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    p.peran?.let { Chip(it) }
+                    p.kab_kota?.let { Chip(it) }
+                }
             }
             IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "Edit", tint = AccentBlue) }
             IconButton(onClick = onDelete) { Icon(Icons.Default.Delete, "Hapus", tint = ErrorText) }
