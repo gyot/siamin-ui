@@ -1051,6 +1051,20 @@
                   >
                     + Tambah Materi
                   </button>
+                  <label class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors cursor-pointer">
+                    📥 Import Excel (materi, JP)
+                    <input type="file" accept=".xlsx,.xls,.csv" class="hidden" @change="importStrukturExcel" />
+                  </label>
+                  <select
+                    v-if="kegiatanPunyaKelas"
+                    v-model="strukturImportKelas"
+                    title="Kelas tujuan hasil import"
+                    class="px-2 py-2 border border-gray-300 rounded-lg text-sm text-gray-700"
+                  >
+                    <option value="">Import ke: Kelas Umum</option>
+                    <option v-for="k in strukturKelasOptions" :key="k.id_kelas" :value="k.id_kelas">Import ke: {{ k.nama_kelas }}</option>
+                  </select>
+                  <span v-if="strukturImportInfo" class="text-xs font-medium text-teal-700">{{ strukturImportInfo }}</span>
                   <p class="text-xs text-gray-500">
                     {{ strukturSumber === 'jadwal'
                       ? 'Materi diambil dari jadwal kegiatan (kecuali istirahat) sesuai kelas, lalu bisa diedit.'
@@ -1970,6 +1984,74 @@ export default {
     const strukturSumber = ref('manual') // 'jadwal' | 'manual'
     const strukturRows = ref([]) // [{ id_kelas, materi, jumlah_jam }]
     const strukturKelasExtra = ref([])
+    const strukturImportKelas = ref('')
+    const strukturImportInfo = ref('')
+
+    const importStrukturExcel = async (event) => {
+      const file = event?.target?.files?.[0]
+      if (event?.target) event.target.value = '' // reset agar bisa memilih file yang sama lagi
+      if (!file) return
+      strukturImportInfo.value = ''
+      try {
+        const XLSX = (await import('xlsx')).default || await import('xlsx')
+        const buf = await file.arrayBuffer()
+        const wb = XLSX.read(buf, { type: 'array' })
+        const sheet = wb.Sheets[wb.SheetNames[0]]
+        if (!sheet) {
+          formErrors.value = [`File "${file.name}" tidak punya sheet.`]
+          return
+        }
+        const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
+        const normHeader = (v) => String(v ?? '').toLowerCase().replace(/[_\s-]+/g, ' ').trim()
+
+        // Cari baris header dengan kolom "materi" dan "jp" (varian: jumlah jam / jml jp)
+        let headerRow = -1, colMateri = -1, colJp = -1
+        for (let r = 0; r < Math.min(matrix.length, 10); r++) {
+          const row = matrix[r] || []
+          for (let c = 0; c < row.length; c++) {
+            const h = normHeader(row[c])
+            if (colMateri === -1 && h === 'materi') { colMateri = c; headerRow = r }
+            if (colJp === -1 && (h === 'jp' || h === 'jumlah jam' || h === 'jumlah jp' || h === 'jml jp')) { colJp = c; headerRow = r }
+          }
+          if (colMateri !== -1 && colJp !== -1) break
+        }
+
+        let startRow
+        if (colMateri !== -1 && colJp !== -1) {
+          startRow = headerRow + 1
+        } else {
+          // Fallback: asumsi kolom 0 = materi, kolom 1 = JP
+          colMateri = 0
+          colJp = 1
+          const first = (matrix[0] || []).map(normHeader)
+          startRow = first.includes('materi') || first.includes('jp') ? 1 : 0
+        }
+
+        const idKelasTujuan = kegiatanPunyaKelas.value ? (strukturImportKelas.value ?? '') : ''
+        const rows = []
+        for (let r = startRow; r < matrix.length; r++) {
+          const line = matrix[r] || []
+          const materi = String(line[colMateri] ?? '').trim()
+          if (!materi) continue
+          const jp = Number(String(line[colJp] ?? '').replace(',', '.'))
+          rows.push({ id_kelas: idKelasTujuan, materi, jumlah_jam: Number.isFinite(jp) ? jp : 0 })
+        }
+
+        if (rows.length === 0) {
+          formErrors.value = [`Tidak ada baris materi di "${file.name}". Format: kolom "materi" dan "JP".`]
+          return
+        }
+        formErrors.value = []
+        strukturRows.value = [...strukturRows.value, ...rows]
+        const tujuan = kegiatanPunyaKelas.value
+          ? (strukturKelasOptions.value.find((k) => String(k.id_kelas) === String(idKelasTujuan))?.nama_kelas || 'Kelas Umum')
+          : 'Kelas Umum'
+        strukturImportInfo.value = `Berhasil import ${rows.length} materi ke ${tujuan}.`
+      } catch (e) {
+        console.error('[StrukturProgram] gagal import excel:', e)
+        formErrors.value = ['Gagal membaca file Excel. Pastikan format .xlsx/.csv dengan header "materi, JP".']
+      }
+    }
     const isLoadingStrukturJadwal = ref(false)
 
     const handleTemplateFileSelect = (event) => {
@@ -2052,6 +2134,8 @@ export default {
       currentSertifikatBatch.value = null
       strukturSumber.value = 'manual'
       strukturRows.value = []
+      strukturImportKelas.value = ''
+      strukturImportInfo.value = ''
       strukturKelasExtra.value = []
       isLoadingStrukturJadwal.value = false
       formErrors.value = []
@@ -4927,6 +5011,9 @@ export default {
       ambilStrukturDariJadwal,
       tambahStrukturRow,
       hapusStrukturRow,
+      strukturImportKelas,
+      strukturImportInfo,
+      importStrukturExcel,
       strukturTotalJam,
       strukturTotalPerKelas,
     }
