@@ -587,6 +587,55 @@
           </div>
         </div>
 
+        <!-- Daftar Kelas -->
+        <div class="border-b border-slate-100 pb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-lg font-semibold text-slate-800">Daftar Kelas</h4>
+          </div>
+
+          <div v-if="kelasItems.length > 0" class="mb-4 border border-slate-200 rounded-lg overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                  <th class="text-left px-4 py-2 w-12">No</th>
+                  <th class="text-left px-4 py-2">Nama Kelas *</th>
+                  <th class="text-left px-4 py-2">Deskripsi</th>
+                  <th class="text-right px-4 py-2 w-20">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr v-for="(row, index) in kelasItems" :key="`${row.id_kelas || 'new'}-${index}`">
+                  <td class="px-4 py-2">{{ index + 1 }}</td>
+                  <td class="px-4 py-2">
+                    <input v-model="row.nama_kelas" type="text" placeholder="Contoh: Kelas A"
+                      class="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+                  </td>
+                  <td class="px-4 py-2">
+                    <input v-model="row.deskripsi" type="text" placeholder="Deskripsi (opsional)"
+                      class="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+                  </td>
+                  <td class="px-4 py-2 text-right">
+                    <button type="button" @click="removeKelasRow(index)" class="text-xs text-red-600 hover:text-red-700">
+                      Hapus
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="mb-4 text-sm text-slate-600">
+            Belum ada kelas. Klik "Tambah Kelas" untuk menambahkan (kosongkan jika hanya memerlukan Kelas Umum).
+          </div>
+
+          <div class="mt-3 flex items-center gap-3">
+            <p v-if="kelasError" class="text-xs text-red-600">{{ kelasError }}</p>
+            <button type="button" @click="addKelasRow"
+              class="ml-auto px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+              Tambah Kelas
+            </button>
+          </div>
+        </div>
+
         <!-- URL Resources -->
         <div class="border-b border-slate-100 pb-6">
           <h4 class="text-lg font-semibold text-slate-800 mb-4">Resource URL</h4>
@@ -802,6 +851,29 @@
             </table>
           </div>
           <div v-else class="text-sm text-slate-600">Tidak ada daftar ATK.</div>
+        </div>
+
+        <div class="border-b border-slate-100 pb-6">
+          <h4 class="text-lg font-semibold text-slate-800 mb-4">Daftar Kelas</h4>
+          <div v-if="kelasItems.length > 0" class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                  <th class="px-4 py-2 text-left">No</th>
+                  <th class="px-4 py-2 text-left">Nama Kelas</th>
+                  <th class="px-4 py-2 text-left">Deskripsi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(row, idx) in kelasItems" :key="idx" class="border-t">
+                  <td class="px-4 py-2">{{ idx + 1 }}</td>
+                  <td class="px-4 py-2">{{ row.nama_kelas || '-' }}</td>
+                  <td class="px-4 py-2">{{ row.deskripsi || '-' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="text-sm text-slate-600">Tidak ada daftar kelas.</div>
         </div>
 
         <div class="border-b border-slate-100 pb-6">
@@ -1833,6 +1905,13 @@ export default {
     const atkForm = ref(createEmptyAtkForm())
     const atkItems = ref([])
     const atkError = ref('')
+    const createEmptyKelasRow = () => ({
+      id_kelas: null,
+      nama_kelas: '',
+      deskripsi: ''
+    })
+    const kelasItems = ref([])
+    const kelasError = ref('')
     const createEmptyTpkForm = () => ({
       id_tpk: null,
       lokasi: '',
@@ -2115,6 +2194,8 @@ export default {
       atkForm.value = createEmptyAtkForm()
       atkItems.value = []
       atkError.value = ''
+      kelasItems.value = []
+      kelasError.value = ''
       tpkForm.value = createEmptyTpkForm()
       tpkItems.value = []
       tpkError.value = ''
@@ -2350,6 +2431,7 @@ export default {
         // Prefill the add-modal form but in read-only mode
         formData.value = normalizeKegiatanFormData(selectedKegiatan.value)
         loadKegiatanAtkItems(selectedKegiatan.value)
+        loadKegiatanKelasItems(selectedKegiatan.value)
         loadKegiatanTpkItems(selectedKegiatan.value)
         loadKegiatanPaketSoal(selectedKegiatan.value)
         loadKelasForJadwal(selectedKegiatan.value.id_kegiatan)
@@ -2374,6 +2456,7 @@ export default {
         isViewing.value = false
         showAddModal.value = true
         loadKegiatanAtkItems(selectedKegiatan.value)
+        loadKegiatanKelasItems(selectedKegiatan.value)
         loadKegiatanTpkItems(selectedKegiatan.value)
         loadKegiatanPaketSoal(selectedKegiatan.value)
         loadAllPaketSoal()
@@ -2576,6 +2659,47 @@ export default {
       atkItems.value = rows.map(normalizeAtkItem)
     }
 
+    const normalizeKelasItem = (item) => ({
+      id_kelas: item?.id_kelas ?? item?.id ?? null,
+      nama_kelas: String(item?.nama_kelas ?? '').trim(),
+      deskripsi: String(item?.deskripsi ?? '').trim()
+    })
+
+    const loadKegiatanKelasItems = (item) => {
+      kelasError.value = ''
+      if (!item) {
+        kelasItems.value = []
+        return
+      }
+
+      let rows = []
+      const candidates = [
+        item?.daftar_kelas,
+        item?.daftarKelas,
+        item?.data?.daftar_kelas,
+        item?.data?.daftarKelas
+      ]
+      for (const candidate of candidates) {
+        if (Array.isArray(candidate)) {
+          rows = candidate
+          break
+        }
+        if (typeof candidate === 'string') {
+          try {
+            const parsed = JSON.parse(candidate)
+            if (Array.isArray(parsed)) {
+              rows = parsed
+              break
+            }
+          } catch {
+            rows = []
+          }
+        }
+      }
+
+      kelasItems.value = rows.map(normalizeKelasItem)
+    }
+
     const showAllData = ref(false)
     const prettySelectedKegiatan = computed(() => {
       try {
@@ -2615,6 +2739,15 @@ export default {
 
     const removeAtkItem = (index) => {
       atkItems.value.splice(index, 1)
+    }
+
+    const addKelasRow = () => {
+      kelasItems.value.push(createEmptyKelasRow())
+      kelasError.value = ''
+    }
+
+    const removeKelasRow = (index) => {
+      kelasItems.value.splice(index, 1)
     }
 
     const normalizeTpkItem = (item) => ({
@@ -2987,6 +3120,16 @@ export default {
           keterangan: item.keterangan || null
         }))
 
+    const buildKelasPayloadItems = () =>
+      kelasItems.value
+        .map(normalizeKelasItem)
+        .filter(item => item.nama_kelas)
+        .map(item => ({
+          id_kelas: item.id_kelas || null,
+          nama_kelas: item.nama_kelas,
+          deskripsi: item.deskripsi || null
+        }))
+
     const buildKegiatanPayloadObject = (data, { isUpdate = false } = {}) => {
       // Kirim hanya field yang memang diperlukan backend untuk create/update.
       // Hindari mengirim field turunan seperti link_formulir atau metadata lain.
@@ -3050,6 +3193,7 @@ export default {
           editingId.value = id
           showAddModal.value = true
           loadKegiatanAtkItems(item)
+          loadKegiatanKelasItems(item)
           loadKegiatanTpkItems(item)
           loadKegiatanPaketSoal(item)
           loadAllPaketSoal()
@@ -3089,6 +3233,7 @@ export default {
           editingId.value = id
           showAddModal.value = true
           loadKegiatanAtkItems(item)
+          loadKegiatanKelasItems(item)
           loadKegiatanTpkItems(item)
           loadKegiatanPaketSoal(item)
           loadAllPaketSoal()
@@ -3128,6 +3273,9 @@ export default {
         // Load ATK items from source
         loadKegiatanAtkItems(source)
         loadKegiatanTpkItems(source)
+        // Load kelas rows from source, but strip id_kelas so the duplicate creates new kelas
+        loadKegiatanKelasItems(source)
+        kelasItems.value = kelasItems.value.map(row => ({ ...row, id_kelas: null }))
         // Open add modal for creating (pre-filled)
         showAddModal.value = true
       } catch (err) {
@@ -3186,6 +3334,17 @@ export default {
         const payloadObject = buildKegiatanPayloadObject(normalizedData, { isUpdate: Boolean(editingId.value) })
         const daftarAtkPayload = buildAtkPayloadItems()
         const daftarTpkPayload = buildTpkPayloadItems()
+        const daftarKelasPayload = buildKelasPayloadItems()
+        const kelasRowInvalid = kelasItems.value.some(row => String(row?.nama_kelas ?? '').trim() === '')
+        if (kelasRowInvalid) {
+          formError.value = 'Setiap baris Daftar Kelas wajib memiliki Nama Kelas. Isi atau hapus baris yang kosong.'
+          showSubmitStatus({
+            type: 'error',
+            title: 'Simpan gagal',
+            message: formError.value
+          })
+          return
+        }
         let payload
         const hasFilePayload = Boolean(flyerFile.value || templateBiodataFile.value || isTemplateBiodataCleared.value)
         const useMultipart = hasFilePayload || daftarAtkPayload.length > 0
@@ -3219,6 +3378,15 @@ export default {
             payload.append(`daftar_tpk[${index}][lokasi]`, item.lokasi)
             payload.append(`daftar_tpk[${index}][kabupaten_kota]`, item.kabupaten_kota || '')
           })
+          daftarKelasPayload.forEach((item, index) => {
+            if (item.id_kelas) {
+              payload.append(`daftar_kelas[${index}][id_kelas]`, item.id_kelas)
+            }
+            payload.append(`daftar_kelas[${index}][nama_kelas]`, item.nama_kelas)
+            if (item.deskripsi) {
+              payload.append(`daftar_kelas[${index}][deskripsi]`, item.deskripsi)
+            }
+          })
           paketSoalItems.value.forEach((paket, index) => {
             payload.append(`daftar_paket_soal[${index}]`, paket.id_paket_soal)
           })
@@ -3234,6 +3402,7 @@ export default {
           payload = { ...payloadObject }
           payload.daftar_atk = daftarAtkPayload
           payload.daftar_tpk = daftarTpkPayload
+          payload.daftar_kelas = daftarKelasPayload
           payload.daftar_paket_soal = paketSoalItems.value.map(p => p.id_paket_soal)
         }
 
@@ -4036,6 +4205,10 @@ export default {
       atkError,
       addAtkItem,
       removeAtkItem,
+      kelasItems,
+      kelasError,
+      addKelasRow,
+      removeKelasRow,
       tpkForm,
       tpkItems,
       tpkError,
