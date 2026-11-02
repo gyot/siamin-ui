@@ -1723,7 +1723,7 @@ export default {
         let page = 1
         let lastPage = 1
         do {
-          const res = await fetchAPI(`${endpoint}&page=${page}`)
+          const res = await fetchAPI(`${endpoint}&page=${page}`, { raw: true })
           const rows = Array.isArray(res) ? res : (res && Array.isArray(res.data) ? res.data : [])
           all = all.concat(rows)
           lastPage = (res && res.meta && res.meta.last_page) ? Number(res.meta.last_page) : 1
