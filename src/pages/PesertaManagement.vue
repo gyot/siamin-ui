@@ -913,7 +913,7 @@
 
       <!-- Modal Batch Sertifikat -->
       <div v-if="showSertifikatModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
           <div class="bg-white border-b border-[#E4E6E9] text-[#050505] px-6 py-4 flex justify-between items-center sticky top-0">
             <div>
               <h2 class="text-xl font-bold">{{ currentSertifikatBatch ? 'Edit Batch Sertifikat' : 'Batch Sertifikat' }}</h2>
@@ -1011,6 +1011,124 @@
                     disabled
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
                   />
+                </div>
+              </div>
+
+              <!-- Struktur Program -->
+              <div class="border border-gray-200 rounded-lg p-4">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+                  <div>
+                    <h3 class="text-sm font-semibold text-gray-800">Struktur Program</h3>
+                    <p class="text-xs text-gray-500">Susunan materi dan jumlah jam yang disimpan pada batch sertifikat.</p>
+                  </div>
+                  <div class="flex items-center gap-4">
+                    <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                      <input v-model="strukturSumber" type="radio" value="jadwal" class="text-blue-600 focus:ring-blue-500" />
+                      Generate dari Jadwal
+                    </label>
+                    <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                      <input v-model="strukturSumber" type="radio" value="manual" class="text-blue-600 focus:ring-blue-500" />
+                      Input Manual
+                    </label>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                  <button
+                    v-if="strukturSumber === 'jadwal'"
+                    type="button"
+                    @click="ambilStrukturDariJadwal"
+                    :disabled="isLoadingStrukturJadwal"
+                    :class="['px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors', isLoadingStrukturJadwal ? 'bg-indigo-300 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700']"
+                  >
+                    {{ isLoadingStrukturJadwal ? 'Memuat jadwal...' : 'Ambil dari Jadwal' }}
+                  </button>
+                  <button
+                    v-else
+                    type="button"
+                    @click="tambahStrukturRow"
+                    class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 transition-colors"
+                  >
+                    + Tambah Materi
+                  </button>
+                  <p class="text-xs text-gray-500">
+                    {{ strukturSumber === 'jadwal'
+                      ? 'Materi diambil dari jadwal kegiatan (kecuali istirahat) sesuai kelas, lalu bisa diedit.'
+                      : 'Isi materi dan jumlah jam secara manual per baris.' }}
+                  </p>
+                </div>
+
+                <div v-if="strukturRows.length === 0" class="text-sm text-gray-400 border border-dashed border-gray-200 rounded-lg py-4 text-center">
+                  Belum ada materi struktur program.
+                </div>
+                <div v-else class="overflow-x-auto">
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase">
+                        <th class="px-2 py-2 rounded-l-lg">No</th>
+                        <th v-if="kegiatanPunyaKelas" class="px-2 py-2">Kelas</th>
+                        <th class="px-2 py-2">Materi</th>
+                        <th class="px-2 py-2 w-28">Jumlah Jam</th>
+                        <th class="px-2 py-2 rounded-r-lg w-12"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(row, i) in strukturRows" :key="i" class="border-b border-gray-100">
+                        <td class="px-2 py-1.5 text-gray-500">{{ i + 1 }}</td>
+                        <td v-if="kegiatanPunyaKelas" class="px-2 py-1.5">
+                          <select
+                            v-model="row.id_kelas"
+                            class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          >
+                            <option value="">Pilih Kelas</option>
+                            <option v-for="k in strukturKelasOptions" :key="k.id_kelas" :value="k.id_kelas">{{ k.nama_kelas }}</option>
+                          </select>
+                        </td>
+                        <td class="px-2 py-1.5">
+                          <input
+                            v-model="row.materi"
+                            type="text"
+                            placeholder="Nama materi"
+                            class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </td>
+                        <td class="px-2 py-1.5">
+                          <input
+                            v-model.number="row.jumlah_jam"
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </td>
+                        <td class="px-2 py-1.5 text-center">
+                          <button
+                            type="button"
+                            @click="hapusStrukturRow(i)"
+                            title="Hapus baris"
+                            class="text-red-500 hover:text-red-700 text-lg leading-none"
+                          >
+                            &times;
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div v-if="strukturRows.length > 0" class="mt-3 flex flex-wrap items-center gap-2">
+                  <template v-if="kegiatanPunyaKelas">
+                    <span
+                      v-for="t in strukturTotalPerKelas"
+                      :key="t.id_kelas"
+                      class="px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-medium"
+                    >
+                      {{ t.nama_kelas }}: {{ t.total }} jam
+                    </span>
+                  </template>
+                  <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">
+                    TOTAL JAM: {{ strukturTotalJam }}
+                  </span>
                 </div>
               </div>
 
@@ -1475,6 +1593,7 @@ const CACHE_TTL_MS = 1000 * 60 * 10 // 10 minutes
 
 import { parseDocxPreservingFormat, replacePlaceholdersInXml, generateDocxFromXml, processDocxTemplate, generateDaftarHadirTableXml } from '@/utils/docxUtils.js'
 import { getKegiatan } from '@/services/kegiatan'
+import { getJadwal } from '@/services/laporan'
 import { listPenugasanPegawai } from '@/services/penugasan'
 import { getKetuaPanitia } from '@/services/penugasan'
 import { buildPublicUrl, buildStorageUrl, getApiHostBase } from '@/utils/url'
@@ -1847,6 +1966,12 @@ export default {
       status: 'draft'
     })
 
+    // ===== STRUKTUR PROGRAM (Batch Sertifikat) =====
+    const strukturSumber = ref('manual') // 'jadwal' | 'manual'
+    const strukturRows = ref([]) // [{ id_kelas, materi, jumlah_jam }]
+    const strukturKelasExtra = ref([])
+    const isLoadingStrukturJadwal = ref(false)
+
     const handleTemplateFileSelect = (event) => {
       const file = event.target.files?.[0] || null
       selectedTemplateFile.value = file
@@ -1871,6 +1996,7 @@ export default {
           formSertifikat.value.template_file = batch.template_file || ''
           formSertifikat.value.status = batch.status || batch.status_sertifikat || 'draft'
           selectedTemplateFile.value = null
+          await prefillStrukturProgram(batch)
         }
       } catch (error) {
         currentSertifikatBatch.value = null
@@ -1924,6 +2050,10 @@ export default {
       }
       selectedTemplateFile.value = null
       currentSertifikatBatch.value = null
+      strukturSumber.value = 'manual'
+      strukturRows.value = []
+      strukturKelasExtra.value = []
+      isLoadingStrukturJadwal.value = false
       formErrors.value = []
     }
 
@@ -2047,11 +2177,177 @@ export default {
       return new File([u8arr], filename, { type: mime })
     }
 
+    // ===== STRUKTUR PROGRAM (Batch Sertifikat) — logic =====
+    const strukturKelasOptions = computed(() => {
+      const map = new Map()
+      const addRows = (rows) => {
+        if (!Array.isArray(rows)) return
+        rows.forEach((k) => {
+          const id = k?.id_kelas ?? k?.id ?? null
+          if (id === null || id === undefined || id === '') return
+          const key = String(id)
+          if (!map.has(key)) {
+            map.set(key, { id_kelas: key, nama_kelas: k?.nama_kelas || k?.nama || `Kelas ${key}` })
+          }
+        })
+      }
+      const idKegiatan = getActiveKegiatanId()
+      const keg = idKegiatan ? getKegiatanById(idKegiatan) : null
+      let daftar = keg?.daftar_kelas ?? keg?.daftarKelas ?? keg?.data?.daftar_kelas ?? null
+      if (typeof daftar === 'string') {
+        try { daftar = JSON.parse(daftar) } catch { daftar = null }
+      }
+      addRows(daftar)
+      addRows(strukturKelasExtra.value)
+      addRows(kelasList.value)
+      return Array.from(map.values())
+    })
+
+    const kegiatanPunyaKelas = computed(() => strukturKelasOptions.value.length > 0)
+
+    const strukturTotalJam = computed(() =>
+      strukturRows.value.reduce((total, row) => total + (Number(row?.jumlah_jam) || 0), 0)
+    )
+
+    const strukturTotalPerKelas = computed(() => {
+      const totals = new Map()
+      strukturRows.value.forEach((row) => {
+        const key = String(row?.id_kelas ?? '')
+        totals.set(key, (totals.get(key) || 0) + (Number(row?.jumlah_jam) || 0))
+      })
+      return Array.from(totals.entries()).map(([key, total]) => ({
+        id_kelas: key,
+        nama_kelas: strukturKelasOptions.value.find((k) => String(k.id_kelas) === key)?.nama_kelas || 'Kelas Umum',
+        total
+      }))
+    })
+
+    const ensureStrukturKelasLoaded = async () => {
+      if (strukturKelasOptions.value.length > 0) return
+      const idKegiatan = getActiveKegiatanId()
+      if (!idKegiatan) return
+      try {
+        const response = await fetchAPI(`kegiatan/${idKegiatan}`)
+        const detail = response?.data || response || {}
+        let daftar = detail.daftar_kelas ?? detail.daftarKelas ?? detail.kelas ?? detail.data?.daftar_kelas ?? null
+        if (typeof daftar === 'string') {
+          try { daftar = JSON.parse(daftar) } catch { daftar = null }
+        }
+        if (Array.isArray(daftar)) strukturKelasExtra.value = daftar
+      } catch { /* kegiatan tanpa kelas: biarkan kosong */ }
+    }
+
+    const resolveKelasIdForGroup = (group, punyaKelas) => {
+      if (!punyaKelas) return ''
+      const rawId = group?.id_kelas ?? group?.id ?? null
+      const hasRawId = rawId !== null && rawId !== undefined && rawId !== ''
+      const match = hasRawId
+        ? strukturKelasOptions.value.find((k) => String(k.id_kelas) === String(rawId))
+        : strukturKelasOptions.value.find((k) =>
+            String(k.nama_kelas || '').trim().toLowerCase() === String(group?.nama_kelas || '').trim().toLowerCase()
+          )
+      if (match) return String(match.id_kelas)
+      return hasRawId ? String(rawId) : ''
+    }
+
+    const ambilStrukturDariJadwal = async () => {
+      formErrors.value = []
+      const idKegiatan = getActiveKegiatanId()
+      if (!idKegiatan) {
+        formErrors.value = ['Pilih kegiatan terlebih dahulu sebelum mengambil jadwal.']
+        return
+      }
+      isLoadingStrukturJadwal.value = true
+      try {
+        const data = await getJadwal(idKegiatan)
+        if (Array.isArray(data?.kelas) && data.kelas.length > 0) {
+          strukturKelasExtra.value = [...strukturKelasExtra.value, ...data.kelas]
+        }
+        await ensureStrukturKelasLoaded()
+        const punyaKelas = kegiatanPunyaKelas.value
+
+        const groups = []
+        if (Array.isArray(data?.jadwal_per_kelas) && data.jadwal_per_kelas.length > 0) {
+          data.jadwal_per_kelas.forEach((g) => groups.push(g))
+        } else if (Array.isArray(data?.jadwal_harian) && data.jadwal_harian.length > 0) {
+          groups.push({ id_kelas: null, nama_kelas: null, jadwal: data.jadwal_harian })
+        }
+
+        const rows = []
+        groups.forEach((group) => {
+          const idKelas = resolveKelasIdForGroup(group, punyaKelas)
+          ;(group?.jadwal || []).forEach((day) => {
+            ;(day?.items || []).forEach((item) => {
+              if (item?.tipe === 'istirahat') return
+              const materi = String(item?.kegiatan || '').trim()
+              if (!materi) return
+              rows.push({ id_kelas: idKelas, materi, jumlah_jam: Number(item?.jp) || 0 })
+            })
+          })
+        })
+
+        if (rows.length === 0) {
+          formErrors.value = ['Tidak ada materi pada jadwal kegiatan. Tambahkan jadwal terlebih dahulu atau gunakan Input Manual.']
+          return
+        }
+        strukturRows.value = rows
+      } catch (error) {
+        formErrors.value = [error?.message || 'Gagal memuat jadwal kegiatan.']
+      } finally {
+        isLoadingStrukturJadwal.value = false
+      }
+    }
+
+    const tambahStrukturRow = () => {
+      strukturRows.value.push({ id_kelas: '', materi: '', jumlah_jam: 0 })
+    }
+
+    const hapusStrukturRow = (index) => {
+      strukturRows.value.splice(index, 1)
+    }
+
+    const buildStrukturProgramPayload = () => {
+      return strukturRows.value
+        .filter((row) => String(row?.materi || '').trim())
+        .map((row, index) => ({
+          id_kelas: row.id_kelas === null || row.id_kelas === undefined ? '' : String(row.id_kelas),
+          materi: String(row.materi).trim(),
+          jumlah_jam: Number(row.jumlah_jam) || 0,
+          urutan: index
+        }))
+    }
+
+    const prefillStrukturProgram = async (batch) => {
+      let raw = batch?.struktur_program ?? batch?.strukturProgram ?? []
+      if (raw && !Array.isArray(raw) && Array.isArray(raw?.data)) raw = raw.data
+      const rows = (Array.isArray(raw) ? raw : [])
+        .map((s, i) => ({
+          id_kelas: String(s?.id_kelas ?? ''),
+          materi: String(s?.materi ?? ''),
+          jumlah_jam: Number(s?.jumlah_jam) || 0,
+          urutan: Number.isFinite(Number(s?.urutan)) ? Number(s.urutan) : i
+        }))
+        .sort((a, b) => a.urutan - b.urutan)
+        .map(({ id_kelas, materi, jumlah_jam }) => ({ id_kelas, materi, jumlah_jam }))
+      strukturRows.value = rows
+      if (rows.length > 0) strukturSumber.value = 'manual'
+      await ensureStrukturKelasLoaded()
+    }
+
     const validateFormSertifikat = () => {
       formErrors.value = []
       if (!formSertifikat.value.nomor_sertifikat) formErrors.value.push('Nomor sertifikat wajib diisi')
       if (!formSertifikat.value.tanggal_ttd) formErrors.value.push('Tanggal tandatangan wajib diisi')
       if (!formSertifikat.value.id_penandatangan) formErrors.value.push('Penandatangan wajib dipilih')
+      strukturRows.value.forEach((row, index) => {
+        const label = `Struktur program baris ${index + 1}`
+        if (!String(row?.materi || '').trim()) formErrors.value.push(`${label}: materi wajib diisi`)
+        const jam = Number(row?.jumlah_jam)
+        if (!Number.isFinite(jam) || jam <= 0) formErrors.value.push(`${label}: jumlah jam harus lebih dari 0`)
+        if (kegiatanPunyaKelas.value && (row?.id_kelas === '' || row?.id_kelas === null || row?.id_kelas === undefined)) {
+          formErrors.value.push(`${label}: kelas wajib dipilih`)
+        }
+      })
       return formErrors.value.length === 0
     }
 
@@ -3836,6 +4132,7 @@ export default {
         const existingBatchId = currentSertifikatBatch.value?.id_batch || null
         const batchReference = pendingSertifikatPeserta.value || currentSertifikatBatch.value
         const idKegiatan = ensureKegiatanSelected(batchReference)
+        const strukturPayload = buildStrukturProgramPayload()
 
         if (selectedTemplateFile.value) {
           payload = new FormData()
@@ -3846,6 +4143,12 @@ export default {
           payload.append('tanggal_ttd', formSertifikat.value.tanggal_ttd || '')
           payload.append('template_file', selectedTemplateFile.value)
           payload.append('status', formSertifikat.value.status || 'draft')
+          strukturPayload.forEach((row, index) => {
+            payload.append(`struktur_program[${index}][id_kelas]`, row.id_kelas ?? '')
+            payload.append(`struktur_program[${index}][materi]`, row.materi)
+            payload.append(`struktur_program[${index}][jumlah_jam]`, String(row.jumlah_jam))
+            payload.append(`struktur_program[${index}][urutan]`, String(row.urutan))
+          })
         } else {
           payload = {
             id_kegiatan: idKegiatan,
@@ -3853,7 +4156,8 @@ export default {
             nomor_sertifikat: formSertifikat.value.nomor_sertifikat,
             id_penandatangan: formSertifikat.value.id_penandatangan || null,
             tanggal_ttd: formSertifikat.value.tanggal_ttd || null,
-            status: formSertifikat.value.status || 'draft'
+            status: formSertifikat.value.status || 'draft',
+            struktur_program: strukturPayload
           }
         }
 
@@ -4606,6 +4910,17 @@ export default {
       buildStorageUrl,
       pesertaKelasMap,
       getPesertaKelasNames,
+      // Struktur Program (Batch Sertifikat)
+      strukturSumber,
+      strukturRows,
+      strukturKelasOptions,
+      kegiatanPunyaKelas,
+      isLoadingStrukturJadwal,
+      ambilStrukturDariJadwal,
+      tambahStrukturRow,
+      hapusStrukturRow,
+      strukturTotalJam,
+      strukturTotalPerKelas,
     }
   }
 }
