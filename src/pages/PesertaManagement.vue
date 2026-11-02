@@ -2273,7 +2273,8 @@ export default {
           groups.push({ id_kelas: null, nama_kelas: null, jadwal: data.jadwal_harian })
         }
 
-        const rows = []
+        // Agregasi: materi yang sama (dalam kelas yang sama) digabung, jam dijumlahkan
+        const agregat = new Map()
         groups.forEach((group) => {
           const idKelas = resolveKelasIdForGroup(group, punyaKelas)
           ;(group?.jadwal || []).forEach((day) => {
@@ -2281,10 +2282,17 @@ export default {
               if (item?.tipe === 'istirahat') return
               const materi = String(item?.kegiatan || '').trim()
               if (!materi) return
-              rows.push({ id_kelas: idKelas, materi, jumlah_jam: Number(item?.jp) || 0 })
+              const jam = Number(item?.jp) || 0
+              const key = `${idKelas ?? ''}||${materi.toLowerCase()}`
+              if (agregat.has(key)) {
+                agregat.get(key).jumlah_jam += jam
+              } else {
+                agregat.set(key, { id_kelas: idKelas, materi, jumlah_jam: jam })
+              }
             })
           })
         })
+        const rows = [...agregat.values()]
 
         if (rows.length === 0) {
           formErrors.value = ['Tidak ada materi pada jadwal kegiatan. Tambahkan jadwal terlebih dahulu atau gunakan Input Manual.']
