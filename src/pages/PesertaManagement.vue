@@ -1065,11 +1065,13 @@
                   <select
                     v-if="kegiatanPunyaKelas"
                     v-model="strukturImportKelas"
-                    title="Kelas tujuan hasil import"
+                    @change="strukturImportInfo = ''"
+                    title="Pilih kelas untuk melihat daftar materinya; juga menjadi tujuan import Excel"
                     class="px-2 py-2 border border-gray-300 rounded-lg text-sm text-gray-700"
                   >
-                    <option value="">Import ke: Kelas Umum</option>
-                    <option v-for="k in strukturKelasOptions" :key="k.id_kelas" :value="k.id_kelas">Import ke: {{ k.nama_kelas }}</option>
+                    <option value="__semua">Kelas: Semua Kelas</option>
+                    <option value="">Kelas: Kelas Umum</option>
+                    <option v-for="k in strukturKelasOptions" :key="k.id_kelas" :value="k.id_kelas">Kelas: {{ k.nama_kelas }}</option>
                   </select>
                   <span v-if="strukturImportInfo" class="text-xs font-medium text-teal-700">{{ strukturImportInfo }}</span>
                   <p class="text-xs text-gray-500">
@@ -1079,8 +1081,8 @@
                   </p>
                 </div>
 
-                <div v-if="strukturRows.length === 0" class="text-sm text-gray-400 border border-dashed border-gray-200 rounded-lg py-4 text-center">
-                  Belum ada materi struktur program.
+                <div v-if="strukturRowsTampil.length === 0" class="text-sm text-gray-400 border border-dashed border-gray-200 rounded-lg py-4 text-center">
+                  {{ strukturImportKelas === '__semua' ? 'Belum ada materi struktur program.' : 'Belum ada materi untuk kelas ini.' }}
                 </div>
                 <div v-else class="overflow-x-auto">
                   <table class="w-full text-sm">
@@ -1094,7 +1096,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr v-for="(row, i) in strukturRows" :key="i" class="border-b border-gray-100">
+                      <tr v-for="(row, i) in strukturRowsTampil" :key="row" class="border-b border-gray-100">
                         <td class="px-2 py-1.5 text-gray-500">{{ i + 1 }}</td>
                         <td v-if="kegiatanPunyaKelas" class="px-2 py-1.5">
                           <select
@@ -1125,7 +1127,7 @@
                         <td class="px-2 py-1.5 text-center">
                           <button
                             type="button"
-                            @click="hapusStrukturRow(i)"
+                            @click="hapusStrukturRow(strukturRows.indexOf(row))"
                             title="Hapus baris"
                             class="text-red-500 hover:text-red-700 text-lg leading-none"
                           >
@@ -1148,7 +1150,7 @@
                     </span>
                   </template>
                   <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">
-                    TOTAL JAM: {{ strukturTotalJam }}
+                    TOTAL JAM: {{ strukturTotalJamTampil }}
                   </span>
                 </div>
               </div>
@@ -1991,7 +1993,7 @@ export default {
     const strukturSumber = ref('manual') // 'jadwal' | 'manual'
     const strukturRows = ref([]) // [{ id_kelas, materi, jumlah_jam }]
     const strukturKelasExtra = ref([])
-    const strukturImportKelas = ref('')
+    const strukturImportKelas = ref('__semua') // '__semua' | '' (Kelas Umum) | id_kelas
     const strukturImportInfo = ref('')
 
     const downloadTemplateStruktur = async () => {
@@ -2047,7 +2049,9 @@ export default {
           startRow = first.includes('materi') || first.includes('jp') ? 1 : 0
         }
 
-        const idKelasTujuan = kegiatanPunyaKelas.value ? (strukturImportKelas.value ?? '') : ''
+        const idKelasTujuan = kegiatanPunyaKelas.value
+          ? (strukturImportKelas.value === '__semua' ? '' : (strukturImportKelas.value ?? ''))
+          : ''
         const rows = []
         for (let r = startRow; r < matrix.length; r++) {
           const line = matrix[r] || []
@@ -2154,7 +2158,7 @@ export default {
       currentSertifikatBatch.value = null
       strukturSumber.value = 'manual'
       strukturRows.value = []
-      strukturImportKelas.value = ''
+      strukturImportKelas.value = '__semua'
       strukturImportInfo.value = ''
       strukturKelasExtra.value = []
       isLoadingStrukturJadwal.value = false
@@ -2311,6 +2315,16 @@ export default {
 
     const strukturTotalJam = computed(() =>
       strukturRows.value.reduce((total, row) => total + (Number(row?.jumlah_jam) || 0), 0)
+    )
+
+    const strukturRowsTampil = computed(() => {
+      const v = strukturImportKelas.value
+      if (!kegiatanPunyaKelas.value || v === '__semua') return strukturRows.value
+      return strukturRows.value.filter((r) => String(r.id_kelas ?? '') === String(v ?? ''))
+    })
+
+    const strukturTotalJamTampil = computed(() =>
+      strukturRowsTampil.value.reduce((total, row) => total + (Number(row?.jumlah_jam) || 0), 0)
     )
 
     const strukturTotalPerKelas = computed(() => {
@@ -5036,6 +5050,8 @@ export default {
       importStrukturExcel,
       downloadTemplateStruktur,
       strukturTotalJam,
+      strukturTotalJamTampil,
+      strukturRowsTampil,
       strukturTotalPerKelas,
     }
   }
