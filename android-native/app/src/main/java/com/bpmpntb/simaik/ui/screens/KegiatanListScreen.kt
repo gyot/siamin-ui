@@ -36,6 +36,7 @@ import com.bpmpntb.simaik.api.Kegiatan
 import com.bpmpntb.simaik.api.KegiatanPayload
 import com.bpmpntb.simaik.api.TpkItem
 import com.bpmpntb.simaik.api.AtkItem
+import com.bpmpntb.simaik.api.KelasItem
 import com.bpmpntb.simaik.api.JadwalDay
 import com.bpmpntb.simaik.api.JadwalItem
 import com.bpmpntb.simaik.ui.theme.*
@@ -324,6 +325,11 @@ fun KegiatanFormDialog(editing: Kegiatan?, prefill: Kegiatan? = null, onSave: (K
         mutableStateListOf<AtkItem>().apply { src?.daftar_atk?.let { addAll(it) } }
     }
 
+    // Daftar Kelas
+    val kelasList = remember {
+        mutableStateListOf<KelasItem>().apply { src?.daftar_kelas?.let { addAll(it) } }
+    }
+
     // Jadwal harian (hari -> items)
     val jadwalList = remember { mutableStateListOf<JadwalDay>() }
 
@@ -380,6 +386,20 @@ fun KegiatanFormDialog(editing: Kegiatan?, prefill: Kegiatan? = null, onSave: (K
                     AtkRowEditor(atk = atk, onChange = { atkList[i] = it }, onRemove = { atkList.removeAt(i) })
                 }
 
+                // Daftar Kelas
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Daftar Kelas", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { kelasList.add(KelasItem()) }) {
+                        Icon(Icons.Default.Add, null, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Tambah Kelas", fontSize = 12.sp)
+                    }
+                }
+                kelasList.forEachIndexed { i, kelas ->
+                    KelasRowEditor(kelas = kelas, onChange = { kelasList[i] = it }, onRemove = { kelasList.removeAt(i) })
+                }
+
                 // Jadwal Harian
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -423,6 +443,7 @@ fun KegiatanFormDialog(editing: Kegiatan?, prefill: Kegiatan? = null, onSave: (K
                                     metode_pembayaran = metodeBayar,
                                     daftar_tpk = tpkList.filter { it.lokasi.isNotBlank() },
                                     daftar_atk = atkList.filter { it.nama_barang.isNotBlank() },
+                                    daftar_kelas = kelasList.filter { !it.nama_kelas.isNullOrBlank() },
                                     dokumentasi_url = dokUrl.ifBlank { null },
                                     materi_url = materiUrl.ifBlank { null },
                                     panduan_url = panduanUrl.ifBlank { null },
@@ -478,6 +499,23 @@ private fun AtkRowEditor(atk: AtkItem, onChange: (AtkItem) -> Unit, onRemove: ()
                 FormField("Keterangan", atk.keterangan ?: "") { onChange(atk.copy(keterangan = it.ifBlank { null })) }
             }
             IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, "Hapus ATK", tint = ErrorText) }
+        }
+    }
+}
+
+@Composable
+private fun KelasRowEditor(kelas: KelasItem, onChange: (KelasItem) -> Unit, onRemove: () -> Unit) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = ChipBg),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+    ) {
+        Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                FormField("Nama Kelas *", kelas.nama_kelas ?: "") { onChange(kelas.copy(nama_kelas = it)) }
+                FormField("Deskripsi", kelas.deskripsi ?: "") { onChange(kelas.copy(deskripsi = it.ifBlank { null })) }
+            }
+            IconButton(onClick = onRemove) { Icon(Icons.Default.Delete, "Hapus Kelas", tint = ErrorText) }
         }
     }
 }
