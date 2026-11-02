@@ -1051,6 +1051,13 @@
                   >
                     + Tambah Materi
                   </button>
+                  <button
+                    type="button"
+                    @click="downloadTemplateStruktur"
+                    class="px-4 py-2 rounded-lg text-sm font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 transition-colors"
+                  >
+                    ⬇ Template Excel
+                  </button>
                   <label class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors cursor-pointer">
                     📥 Import Excel (materi, JP)
                     <input type="file" accept=".xlsx,.xls,.csv" class="hidden" @change="importStrukturExcel" />
@@ -1986,6 +1993,19 @@ export default {
     const strukturKelasExtra = ref([])
     const strukturImportKelas = ref('')
     const strukturImportInfo = ref('')
+
+    const downloadTemplateStruktur = async () => {
+      const XLSX = (await import('xlsx')).default || await import('xlsx')
+      const ws = XLSX.utils.aoa_to_sheet([
+        ['materi', 'JP'],
+        ['Contoh Materi (hapus atau edit baris ini)', 2],
+        ['Contoh Materi Kedua', 1]
+      ])
+      ws['!cols'] = [{ wch: 42 }, { wch: 8 }]
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Struktur Program')
+      XLSX.writeFile(wb, 'template_struktur_program.xlsx')
+    }
 
     const importStrukturExcel = async (event) => {
       const file = event?.target?.files?.[0]
@@ -5014,6 +5034,7 @@ export default {
       strukturImportKelas,
       strukturImportInfo,
       importStrukturExcel,
+      downloadTemplateStruktur,
       strukturTotalJam,
       strukturTotalPerKelas,
     }
