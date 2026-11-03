@@ -1143,6 +1143,15 @@
                         </td>
                       </tr>
                     </tbody>
+                    <tfoot>
+                      <tr class="bg-emerald-50 font-semibold text-gray-800">
+                        <td class="px-2 py-2 text-gray-500">&Sigma;</td>
+                        <td v-if="kegiatanPunyaKelas" class="px-2 py-2"></td>
+                        <td class="px-2 py-2">TOTAL</td>
+                        <td class="px-2 py-2">{{ strukturTotalJamTampil }} JP</td>
+                        <td class="px-2 py-2"></td>
+                      </tr>
+                    </tfoot>
                   </table>
                 </div>
 
