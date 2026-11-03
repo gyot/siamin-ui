@@ -312,6 +312,7 @@ export default {
           nama_kegiatan: keg?.nama_kegiatan || p.nama_kegiatan || '-',
           nomor_sertifikat: record?.nomor_sertifikat || '',
           id_sertifikat: record?.id_sertifikat || record?.id || null,
+          id_sertifikat_peserta: record?.id || null,
           status: getRawStatus(p.id_peserta)
         }
       })
@@ -462,8 +463,11 @@ export default {
       if (!result.isConfirmed) return
 
       try {
-        if (row.id_sertifikat) {
-          await updateAPI('sertifikat', row.id_sertifikat, { status: newStatus })
+        if (row.id_sertifikat_peserta) {
+          await fetchAPI(`sertifikat-peserta/${row.id_sertifikat_peserta}/status`, {
+            method: 'PATCH',
+            body: { status: newStatus }
+          })
         } else {
           await fetchAPI('sertifikat/update-status', {
             method: 'PATCH',
@@ -523,8 +527,11 @@ export default {
           errors.push(`ID peserta ${idPeserta} tidak ditemukan`)
         } else {
           try {
-            if (row.id_sertifikat) {
-              await updateAPI('sertifikat', row.id_sertifikat, { status: newStatus })
+            if (row.id_sertifikat_peserta) {
+              await fetchAPI(`sertifikat-peserta/${row.id_sertifikat_peserta}/status`, {
+                method: 'PATCH',
+                body: { status: newStatus }
+              })
             } else {
               await fetchAPI('sertifikat/update-status', {
                 method: 'PATCH',
