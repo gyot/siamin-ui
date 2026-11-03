@@ -421,7 +421,20 @@ export default {
     const loadSertifikat = async () => {
       try {
         const data = await fetchAPI('sertifikat')
-        sertifikatList.value = Array.isArray(data) ? data : (data?.data || [])
+        const batches = Array.isArray(data) ? data : (data?.data || [])
+        // Data berupa daftar batch dengan relasi 'peserta' (baris sertifikat_peserta) — flatten agar per peserta
+        const flat = []
+        batches.forEach((batch) => {
+          const rows = Array.isArray(batch?.peserta) ? batch.peserta : []
+          rows.forEach((sp) => {
+            flat.push({
+              ...sp,
+              nomor_sertifikat: sp?.nomor_sertifikat || batch?.nomor_sertifikat || '',
+              id_kegiatan: sp?.id_kegiatan ?? batch?.id_kegiatan ?? null
+            })
+          })
+        })
+        sertifikatList.value = flat
       } catch {
         sertifikatList.value = []
       }
