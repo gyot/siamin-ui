@@ -1000,8 +1000,15 @@
                   </p>
                   <p v-if="selectedTemplateFile"
                     class="mt-2 text-sm text-slate-500">File terpilih: {{ selectedTemplateFile.name }}</p>
-                  <p v-else-if="formSertifikat.template_file"
-                    class="mt-2 text-sm text-slate-500">File saat ini: {{ formSertifikat.template_file }}</p>
+                  <a
+                    v-else-if="formSertifikat.template_file"
+                    :href="formSertifikat.template_file_url || buildStorageUrl(String(formSertifikat.template_file).replace(/^storage\//, ''))"
+                    target="_blank"
+                    download
+                    class="mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    📄 File saat ini: {{ formSertifikat.template_file }} — klik untuk mengunduh
+                  </a>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -1986,6 +1993,7 @@ export default {
       tanggal_ttd: '',
       id_penandatangan: '',
       template_file: '',
+      template_file_url: '',
       status: 'draft'
     })
 
@@ -2100,6 +2108,7 @@ export default {
           formSertifikat.value.tanggal_ttd = batch.tanggal_ttd || ''
           formSertifikat.value.id_penandatangan = batch.id_penandatangan || ''
           formSertifikat.value.template_file = batch.template_file || ''
+          formSertifikat.value.template_file_url = batch.template_file_url || buildStorageUrl(String(batch.template_file || '').replace(/^storage\//, ''))
           formSertifikat.value.status = batch.status || batch.status_sertifikat || 'draft'
           selectedTemplateFile.value = null
           await prefillStrukturProgram(batch)
@@ -2152,6 +2161,7 @@ export default {
         tanggal_ttd: '',
         id_penandatangan: '',
         template_file: '',
+        template_file_url: '',
         status: 'draft'
       }
       selectedTemplateFile.value = null
