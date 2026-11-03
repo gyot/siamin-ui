@@ -2811,8 +2811,9 @@ export default {
 
       try {
         const record = getSertifikatRecord(pesertaItem.id_peserta)
-        if (record?.id) {
-          await fetchAPI(`sertifikat-peserta/${record.id}/status`, {
+        const idSp = record?.id_sertifikat_peserta ?? record?.id
+        if (idSp) {
+          await fetchAPI(`sertifikat-peserta/${idSp}/status`, {
             method: 'PATCH',
             body: { status: newStatus }
           })
@@ -2877,8 +2878,9 @@ export default {
         } else {
           try {
             const record = getSertifikatRecord(idPeserta)
-            if (record?.id) {
-              await fetchAPI(`sertifikat-peserta/${record.id}/status`, {
+            const idSp = record?.id_sertifikat_peserta ?? record?.id
+            if (idSp) {
+              await fetchAPI(`sertifikat-peserta/${idSp}/status`, {
                 method: 'PATCH',
                 body: { status: newStatus }
               })
