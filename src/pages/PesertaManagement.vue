@@ -288,6 +288,12 @@
             <label class="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer">
               <input type="checkbox" v-model="visibleCols.peran" class="h-4 w-4 rounded border-gray-300" /> Peran
             </label>
+            <label class="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer">
+              <input type="checkbox" v-model="visibleCols.dibuat" class="h-4 w-4 rounded border-gray-300" /> Waktu Dibuat
+            </label>
+            <label class="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer">
+              <input type="checkbox" v-model="visibleCols.diubah" class="h-4 w-4 rounded border-gray-300" /> Waktu Diubah
+            </label>
           </div>
         </div>
       </div>
@@ -311,6 +317,8 @@
                 <th v-if="visibleCols.kabkota" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('kab_kota')">Kabupaten/Kota{{ sortIndicator('kab_kota') }}</th>
                 <th v-if="visibleCols.tpk" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('tpk')">TPK{{ sortIndicator('tpk') }}</th>
                 <th v-if="visibleCols.peran" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('peran')">Peran{{ sortIndicator('peran') }}</th>
+                <th v-if="visibleCols.dibuat" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('created_at')">Dibuat{{ sortIndicator('created_at') }}</th>
+                <th v-if="visibleCols.diubah" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('updated_at')">Diubah{{ sortIndicator('updated_at') }}</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('sertifikat')">Sertifikat{{ sortIndicator('sertifikat') }}</th>
                 <th class="px-4 py-3 text-center text-xs sm:text-sm">Aksi</th>
               </tr>
@@ -350,6 +358,8 @@
                     {{ p.peran || 'Peserta' }}
                   </span>
                 </td>
+                <td v-if="visibleCols.dibuat" class="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">{{ formatTimestamp(p.created_at) }}</td>
+                <td v-if="visibleCols.diubah" class="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap">{{ formatTimestamp(p.updated_at) }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm">
                   <div class="relative" @click.stop>
                     <button
@@ -1760,7 +1770,7 @@ export default {
     let isDrawing = false
 
     const searchNama = ref('')
-    const visibleCols = ref({ nip: true, instansi: false, kabkota: false, tpk: false, peran: false })
+    const visibleCols = ref({ nip: true, instansi: false, kabkota: false, tpk: false, peran: false, dibuat: false, diubah: false })
     const showColMenu = ref(false)
     const filterKegiatan = ref(props.kegiatanId || '')
     const filterStatus = ref('')
@@ -2967,6 +2977,13 @@ export default {
     const formatDate = (date) => {
       if (!date) return '-'
       return new Date(date).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
+    }
+
+    const formatTimestamp = (value) => {
+      if (!value) return '-'
+      const d = new Date(value)
+      if (isNaN(d.getTime())) return String(value)
+      return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     }
 
     const getKegiatanById = (idKegiatan) => {
@@ -4967,6 +4984,7 @@ export default {
       searchNama,
       visibleCols,
       showColMenu,
+      formatTimestamp,
       filterKegiatan,
       filterStatus,
       filterKabKota,
