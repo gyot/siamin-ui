@@ -263,6 +263,34 @@
         empty-message="Belum ada peserta yang terdaftar pada kegiatan ini."
         :on-retry="reloadApiData"
       >
+      <div class="hidden md:flex items-center justify-end mb-3">
+        <div class="relative">
+          <button
+            type="button"
+            @click="showColMenu = !showColMenu"
+            class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50"
+          >
+            &#9881; Kelola Kolom
+          </button>
+          <div v-if="showColMenu" class="absolute right-0 mt-1 w-56 bg-white rounded-xl shadow-2xl border border-gray-200 z-40 p-2 space-y-1">
+            <label class="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer">
+              <input type="checkbox" v-model="visibleCols.nip" class="h-4 w-4 rounded border-gray-300" /> NIP
+            </label>
+            <label class="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer">
+              <input type="checkbox" v-model="visibleCols.instansi" class="h-4 w-4 rounded border-gray-300" /> Instansi
+            </label>
+            <label class="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer">
+              <input type="checkbox" v-model="visibleCols.kabkota" class="h-4 w-4 rounded border-gray-300" /> Kabupaten/Kota
+            </label>
+            <label class="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer">
+              <input type="checkbox" v-model="visibleCols.tpk" class="h-4 w-4 rounded border-gray-300" /> TPK
+            </label>
+            <label class="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer">
+              <input type="checkbox" v-model="visibleCols.peran" class="h-4 w-4 rounded border-gray-300" /> Peran
+            </label>
+          </div>
+        </div>
+      </div>
       <div class="bg-white rounded-2xl shadow-2xl shadow-lg overflow-hidden hidden md:block">
         
         <div class="overflow-x-auto">
@@ -278,11 +306,11 @@
                 </th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">No</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nama_lengkap')">Nama{{ sortIndicator('nama_lengkap') }}</th>
-                <th class="hidden lg:table-cell px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nip')">NIP{{ sortIndicator('nip') }}</th>
-                <th class="hidden xl:table-cell px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nama_instansi')">Instansi{{ sortIndicator('nama_instansi') }}</th>
-                <th class="hidden xl:table-cell px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('kab_kota')">Kabupaten/Kota{{ sortIndicator('kab_kota') }}</th>
-                <th class="hidden xl:table-cell px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('tpk')">TPK{{ sortIndicator('tpk') }}</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('peran')">Peran{{ sortIndicator('peran') }}</th>
+                <th v-if="visibleCols.nip" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nip')">NIP{{ sortIndicator('nip') }}</th>
+                <th v-if="visibleCols.instansi" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nama_instansi')">Instansi{{ sortIndicator('nama_instansi') }}</th>
+                <th v-if="visibleCols.kabkota" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('kab_kota')">Kabupaten/Kota{{ sortIndicator('kab_kota') }}</th>
+                <th v-if="visibleCols.tpk" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('tpk')">TPK{{ sortIndicator('tpk') }}</th>
+                <th v-if="visibleCols.peran" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('peran')">Peran{{ sortIndicator('peran') }}</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('sertifikat')">Sertifikat{{ sortIndicator('sertifikat') }}</th>
                 <th class="px-4 py-3 text-center text-xs sm:text-sm">Aksi</th>
               </tr>
@@ -303,11 +331,11 @@
                 </td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-900">{{ paginationStart + index }}</td>
                 <td class="px-2 sm:px-4 py-3 text-xs sm:text-sm font-medium text-gray-900 break-words">{{ p.nama_lengkap }}</td>
-                <td class="hidden lg:table-cell px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 break-all">{{ p.nip || '-' }}</td>
+                <td v-if="visibleCols.nip" class="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 break-all">{{ p.nip || '-' }}</td>
                 <!-- <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 truncate">{{ p.email }}</td> -->
-                <td class="hidden xl:table-cell px-4 py-3 text-xs sm:text-sm text-gray-600 max-w-xs truncate">{{ p.nama_instansi }}</td>
-                <td class="hidden xl:table-cell px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.kab_kota || p.tpk?.kabupaten_kota || '-' }}</td>
-                <td class="hidden xl:table-cell px-4 py-3 text-xs sm:text-sm text-gray-600">
+                <td v-if="visibleCols.instansi" class="px-4 py-3 text-xs sm:text-sm text-gray-600 max-w-xs truncate">{{ p.nama_instansi }}</td>
+                <td v-if="visibleCols.kabkota" class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.kab_kota || p.tpk?.kabupaten_kota || '-' }}</td>
+                <td v-if="visibleCols.tpk" class="px-4 py-3 text-xs sm:text-sm text-gray-600">
                   <span v-if="p.tpk">{{ p.tpk.lokasi }}{{ (p.tpk.kabupaten_kota || p.kab_kota) ? ` (${p.tpk.kabupaten_kota || p.kab_kota})` : '' }}</span>
                   <span v-else class="text-gray-400">-</span>
                   <div v-if="getPesertaKelasNames(p).length" class="text-xs text-indigo-600 mt-0.5">
@@ -317,7 +345,7 @@
                 <!-- <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">
                   {{ getNamaKegiatan(p.id_kegiatan) }}
                 </td> -->
-                <td class="px-4 py-3 text-xs sm:text-sm">
+                <td v-if="visibleCols.peran" class="px-4 py-3 text-xs sm:text-sm">
                   <span class="inline-block px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
                     {{ p.peran || 'Peserta' }}
                   </span>
@@ -364,13 +392,13 @@
                     </button>
                     <button
                       @click="openMasukKelasModal(p)"
-                      class="hidden lg:inline-flex px-2 py-1 bg-violet-500 text-white rounded hover:bg-violet-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                      class="inline-flex px-2 py-1 bg-violet-500 text-white rounded hover:bg-violet-600 transition-colors text-xs font-semibold whitespace-nowrap"
                     >
                       Kelas
                     </button>
                     <button
                       @click="downloadPesertaDocx(p)"
-                      class="hidden lg:inline-flex px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                      class="inline-flex px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-xs font-semibold whitespace-nowrap"
                     >
                       DOCX
                     </button>
@@ -1732,6 +1760,8 @@ export default {
     let isDrawing = false
 
     const searchNama = ref('')
+    const visibleCols = ref({ nip: true, instansi: false, kabkota: false, tpk: false, peran: false })
+    const showColMenu = ref(false)
     const filterKegiatan = ref(props.kegiatanId || '')
     const filterStatus = ref('')
     const filterKabKota = ref('')
@@ -4935,6 +4965,8 @@ export default {
       administrasiDocs,
       formErrors,
       searchNama,
+      visibleCols,
+      showColMenu,
       filterKegiatan,
       filterStatus,
       filterKabKota,
