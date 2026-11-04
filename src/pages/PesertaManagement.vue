@@ -266,7 +266,7 @@
       <div class="bg-white rounded-2xl shadow-2xl shadow-lg overflow-hidden hidden md:block">
         
         <div class="overflow-x-auto">
-          <table class="min-w-[1200px] w-full text-sm">
+          <table class="w-full table-fixed text-sm">
             <thead class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white sticky top-0">
               <tr>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">
@@ -302,8 +302,8 @@
                   >
                 </td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-900">{{ paginationStart + index }}</td>
-                <td class="px-4 py-3 text-xs sm:text-sm font-medium text-gray-900">{{ p.nama_lengkap }}</td>
-                <td class="hidden lg:table-cell px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.nip || '-' }}</td>
+                <td class="px-2 sm:px-4 py-3 text-xs sm:text-sm font-medium text-gray-900 break-words">{{ p.nama_lengkap }}</td>
+                <td class="hidden lg:table-cell px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 break-all">{{ p.nip || '-' }}</td>
                 <!-- <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 truncate">{{ p.email }}</td> -->
                 <td class="hidden xl:table-cell px-4 py-3 text-xs sm:text-sm text-gray-600 max-w-xs truncate">{{ p.nama_instansi }}</td>
                 <td class="hidden xl:table-cell px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.kab_kota || p.tpk?.kabupaten_kota || '-' }}</td>
@@ -339,7 +339,7 @@
                     </div>
                   </div>
                 </td>
-                <td class="px-4 py-3 text-xs sm:text-sm">
+                <td class="px-1 sm:px-2 py-3 text-xs sm:text-sm overflow-hidden">
                   <div class="flex gap-1 justify-center flex-wrap">
                     <button
                       @click="openBiodataModal(p)"
@@ -364,13 +364,13 @@
                     </button>
                     <button
                       @click="openMasukKelasModal(p)"
-                      class="px-2 py-1 bg-violet-500 text-white rounded hover:bg-violet-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                      class="hidden lg:inline-flex px-2 py-1 bg-violet-500 text-white rounded hover:bg-violet-600 transition-colors text-xs font-semibold whitespace-nowrap"
                     >
                       Kelas
                     </button>
                     <button
                       @click="downloadPesertaDocx(p)"
-                      class="px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-xs font-semibold whitespace-nowrap"
+                      class="hidden lg:inline-flex px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-xs font-semibold whitespace-nowrap"
                     >
                       DOCX
                     </button>
