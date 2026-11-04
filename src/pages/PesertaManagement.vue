@@ -278,10 +278,10 @@
                 </th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm">No</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nama_lengkap')">Nama{{ sortIndicator('nama_lengkap') }}</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nip')">NIP{{ sortIndicator('nip') }}</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nama_instansi')">Instansi{{ sortIndicator('nama_instansi') }}</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('kab_kota')">Kabupaten/Kota{{ sortIndicator('kab_kota') }}</th>
-                <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('tpk')">TPK{{ sortIndicator('tpk') }}</th>
+                <th class="hidden lg:table-cell px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nip')">NIP{{ sortIndicator('nip') }}</th>
+                <th class="hidden xl:table-cell px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nama_instansi')">Instansi{{ sortIndicator('nama_instansi') }}</th>
+                <th class="hidden xl:table-cell px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('kab_kota')">Kabupaten/Kota{{ sortIndicator('kab_kota') }}</th>
+                <th class="hidden xl:table-cell px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('tpk')">TPK{{ sortIndicator('tpk') }}</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('peran')">Peran{{ sortIndicator('peran') }}</th>
                 <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('sertifikat')">Sertifikat{{ sortIndicator('sertifikat') }}</th>
                 <th class="px-4 py-3 text-center text-xs sm:text-sm">Aksi</th>
@@ -303,11 +303,11 @@
                 </td>
                 <td class="px-4 py-3 text-xs sm:text-sm text-gray-900">{{ paginationStart + index }}</td>
                 <td class="px-4 py-3 text-xs sm:text-sm font-medium text-gray-900">{{ p.nama_lengkap }}</td>
-                <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.nip || '-' }}</td>
+                <td class="hidden lg:table-cell px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.nip || '-' }}</td>
                 <!-- <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 truncate">{{ p.email }}</td> -->
-                <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 max-w-xs truncate">{{ p.nama_instansi }}</td>
-                <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.kab_kota || p.tpk?.kabupaten_kota || '-' }}</td>
-                <td class="px-4 py-3 text-xs sm:text-sm text-gray-600">
+                <td class="hidden xl:table-cell px-4 py-3 text-xs sm:text-sm text-gray-600 max-w-xs truncate">{{ p.nama_instansi }}</td>
+                <td class="hidden xl:table-cell px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.kab_kota || p.tpk?.kabupaten_kota || '-' }}</td>
+                <td class="hidden xl:table-cell px-4 py-3 text-xs sm:text-sm text-gray-600">
                   <span v-if="p.tpk">{{ p.tpk.lokasi }}{{ (p.tpk.kabupaten_kota || p.kab_kota) ? ` (${p.tpk.kabupaten_kota || p.kab_kota})` : '' }}</span>
                   <span v-else class="text-gray-400">-</span>
                   <div v-if="getPesertaKelasNames(p).length" class="text-xs text-indigo-600 mt-0.5">
