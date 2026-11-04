@@ -1,6 +1,46 @@
 <template>
   <div class="min-h-screen bg-white p-3 sm:p-4 md:p-6">
     <div class="max-w-7xl mx-auto">
+      <!-- Statistik -->
+      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
+          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Total Peserta</p>
+          <p class="text-2xl sm:text-3xl font-bold text-blue-600">{{ sertifikatStats.total }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
+          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Sudah Terbit</p>
+          <p class="text-2xl sm:text-3xl font-bold text-green-600">{{ sertifikatStats.terbit }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
+          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Draft</p>
+          <p class="text-2xl sm:text-3xl font-bold text-yellow-600">{{ sertifikatStats.draft }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
+          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Dicabut</p>
+          <p class="text-2xl sm:text-3xl font-bold text-red-600">{{ sertifikatStats.dicabut }}</p>
+        </div>
+        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
+          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Belum Ada</p>
+          <p class="text-2xl sm:text-3xl font-bold text-gray-600">{{ sertifikatStats.belum_ada }}</p>
+        </div>
+      </div>
+
+      <!-- Daftar Kelas -->
+      <div v-if="kelasList.length > 0" class="mb-4 sm:mb-6">
+        <p class="text-sm font-semibold text-slate-700 mb-2">Kelas:</p>
+        <div class="flex flex-wrap gap-2">
+          <button
+            v-for="k in kelasList" :key="k.id_kelas"
+            @click="openKelasDetail(k)"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-violet-200 text-violet-700 rounded-lg hover:bg-violet-50 text-sm transition"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            {{ k.nama_kelas }}
+            <span class="text-xs bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded-full">{{ k.anggotas_count ?? 0 }}</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Header -->
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 sm:mb-8">
         <!-- <div>
@@ -212,46 +252,6 @@
               <option :value="100">100</option>
             </select>
           </div>
-        </div>
-      </div>
-
-      <!-- Statistik -->
-      <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
-        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
-          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Total Peserta</p>
-          <p class="text-2xl sm:text-3xl font-bold text-blue-600">{{ sertifikatStats.total }}</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
-          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Sudah Terbit</p>
-          <p class="text-2xl sm:text-3xl font-bold text-green-600">{{ sertifikatStats.terbit }}</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
-          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Draft</p>
-          <p class="text-2xl sm:text-3xl font-bold text-yellow-600">{{ sertifikatStats.draft }}</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
-          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Dicabut</p>
-          <p class="text-2xl sm:text-3xl font-bold text-red-600">{{ sertifikatStats.dicabut }}</p>
-        </div>
-        <div class="bg-white rounded-2xl shadow-2xl shadow-md p-3 sm:p-4">
-          <p class="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">Belum Ada</p>
-          <p class="text-2xl sm:text-3xl font-bold text-gray-600">{{ sertifikatStats.belum_ada }}</p>
-        </div>
-      </div>
-
-      <!-- Daftar Kelas -->
-      <div v-if="kelasList.length > 0" class="mb-4 sm:mb-6">
-        <p class="text-sm font-semibold text-slate-700 mb-2">Kelas:</p>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="k in kelasList" :key="k.id_kelas"
-            @click="openKelasDetail(k)"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-violet-200 text-violet-700 rounded-lg hover:bg-violet-50 text-sm transition"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-            {{ k.nama_kelas }}
-            <span class="text-xs bg-violet-100 text-violet-600 px-1.5 py-0.5 rounded-full">{{ k.anggotas_count ?? 0 }}</span>
-          </button>
         </div>
       </div>
 
