@@ -280,6 +280,9 @@
               <input type="checkbox" v-model="visibleCols.instansi" class="h-4 w-4 rounded border-gray-300" /> Instansi
             </label>
             <label class="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer">
+              <input type="checkbox" v-model="visibleCols.npsn" class="h-4 w-4 rounded border-gray-300" /> NPSN
+            </label>
+            <label class="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer">
               <input type="checkbox" v-model="visibleCols.kabkota" class="h-4 w-4 rounded border-gray-300" /> Kabupaten/Kota
             </label>
             <label class="flex items-center gap-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer">
@@ -314,6 +317,7 @@
                 <th class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nama_lengkap')">Nama{{ sortIndicator('nama_lengkap') }}</th>
                 <th v-if="visibleCols.nip" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nip')">NIP{{ sortIndicator('nip') }}</th>
                 <th v-if="visibleCols.instansi" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('nama_instansi')">Instansi{{ sortIndicator('nama_instansi') }}</th>
+                <th v-if="visibleCols.npsn" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('npsn')">NPSN{{ sortIndicator('npsn') }}</th>
                 <th v-if="visibleCols.kabkota" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('kab_kota')">Kabupaten/Kota{{ sortIndicator('kab_kota') }}</th>
                 <th v-if="visibleCols.tpk" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('tpk')">TPK{{ sortIndicator('tpk') }}</th>
                 <th v-if="visibleCols.peran" class="px-4 py-3 text-left text-xs sm:text-sm cursor-pointer select-none hover:bg-blue-700/30" @click="setSort('peran')">Peran{{ sortIndicator('peran') }}</th>
@@ -342,6 +346,7 @@
                 <td v-if="visibleCols.nip" class="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-600 break-all">{{ p.nip || '-' }}</td>
                 <!-- <td class="px-4 py-3 text-xs sm:text-sm text-gray-600 truncate">{{ p.email }}</td> -->
                 <td v-if="visibleCols.instansi" class="px-4 py-3 text-xs sm:text-sm text-gray-600 max-w-xs truncate">{{ p.nama_instansi }}</td>
+                <td v-if="visibleCols.npsn" class="px-2 sm:px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.npsn || '-' }}</td>
                 <td v-if="visibleCols.kabkota" class="px-4 py-3 text-xs sm:text-sm text-gray-600">{{ p.kab_kota || p.tpk?.kabupaten_kota || '-' }}</td>
                 <td v-if="visibleCols.tpk" class="px-4 py-3 text-xs sm:text-sm text-gray-600">
                   <span v-if="p.tpk">{{ p.tpk.lokasi }}{{ (p.tpk.kabupaten_kota || p.kab_kota) ? ` (${p.tpk.kabupaten_kota || p.kab_kota})` : '' }}</span>
@@ -1770,7 +1775,7 @@ export default {
     let isDrawing = false
 
     const searchNama = ref('')
-    const visibleCols = ref({ nip: true, instansi: false, kabkota: false, tpk: false, peran: false, dibuat: false, diubah: false })
+    const visibleCols = ref({ nip: true, instansi: false, npsn: false, kabkota: false, tpk: false, peran: false, dibuat: false, diubah: false })
     const showColMenu = ref(false)
     const filterKegiatan = ref(props.kegiatanId || '')
     const filterStatus = ref('')
