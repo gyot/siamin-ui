@@ -132,6 +132,23 @@
       </nav>
     </template>
 
+    <!-- Pengaturan Sistem (admin only) -->
+    <template v-if="userRole && String(userRole).toLowerCase() === 'admin'">
+      <div class="px-3 pt-2 pb-1">
+        <p class="text-[12px] font-semibold text-[#65676B] uppercase tracking-wider">Pengaturan Sistem</p>
+      </div>
+      <nav class="px-3 space-y-0.5">
+        <RouterLink to="/admin/api-token" class="sidebar-item" @click="handleClick">
+          <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+            </svg>
+          </div>
+          <span class="text-[15px] font-medium text-[#050505]">API Token</span>
+        </RouterLink>
+      </nav>
+    </template>
+
     <!-- Footer -->
     <div class="p-3 border-t border-[#E4E6E9] flex-shrink-0">
       <button @click="handleLogout" class="sidebar-item w-full">

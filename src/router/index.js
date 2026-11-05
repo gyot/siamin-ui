@@ -31,6 +31,7 @@ const TestUjian = () => import('../pages/TestUjian.vue')
 const TestLaporan = () => import('../pages/TestLaporan.vue')
 const PaketSoal = () => import('../pages/PaketSoal.vue')
 const Pengesahan = () => import('../pages/Pengesahan.vue')
+const ApiToken = () => import('../pages/ApiToken.vue')
 const LaporanKegiatan = () => import('../pages/LaporanKegiatan.vue')
 const BuatLaporan = () => import('../pages/BuatLaporan.vue')
 const KegiatanDetail = () => import('../pages/KegiatanDetail.vue')
@@ -193,6 +194,7 @@ const router = createRouter({
     {path:'anggota',name:'anggota',component:AnggotaManagement,meta:{title:'Keanggotaan Tim',description:'Kelola anggota tim kerja.'}},
     {path:'penugasan',name:'penugasan',component:Penugasan,meta:{title:'Penugasan Pegawai',description:'Lihat dan filter penugasan pegawai.'}},
     {path:'pengesahan',name:'pengesahan',component:Pengesahan,meta:{title:'Pengesahan',description:'Halaman pengesahan dokumen.',requiresKepala:true}},
+    {path:'api-token',name:'api-token',component:ApiToken,meta:{title:'API Token',description:'Kelola token API untuk integrasi aplikasi lain.',requiresAdmin:true}},
     {path:'laporan-kegiatan',name:'laporan-kegiatan',component:LaporanKegiatan,meta:{title:'Laporan Kegiatan',description:'Preview dan download laporan kegiatan.'}},
     {path:'profile',name:'profile',component:Profile,meta:{title:'Profil',description:'Kelola profil pengguna.'}}
   ]},
