@@ -203,6 +203,15 @@
                 </div>
               </div>
               <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-sky-100 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3L1 8l11 5 9-4.09V17"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5"/></svg>
+                </div>
+                <div>
+                  <p class="text-[15px] font-semibold text-[#050505]">{{ totalSekolah }}</p>
+                  <p class="text-[12px] text-[#65676B]">Total Sekolah</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
                   <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 </div>
@@ -547,6 +556,7 @@ export default {
 
     const dashboardStats = ref(getLocalDashboardStats())
     const totalKegiatan = computed(() => dashboardStats.value.total_kegiatan)
+    const totalSekolah = computed(() => dashboardStats.value.total_sekolah)
     const totalPeserta = computed(() => dashboardStats.value.total_peserta)
     const totalSertifikat = computed(() => dashboardStats.value.total_sertifikat)
     const kegiatanBerjalan = computed(() => dashboardStats.value.total_kegiatan_berjalan)
@@ -555,6 +565,7 @@ export default {
 
     const statsCards = computed(() => [
       { value: totalKegiatan.value, label: 'Kegiatan', bg: 'bg-gradient-to-br from-blue-500 to-blue-700', iconBg: 'bg-white/20', icon: '📅' },
+      { value: totalSekolah.value, label: 'Sekolah', bg: 'bg-gradient-to-br from-sky-500 to-sky-700', iconBg: 'bg-white/20', icon: '🏫' },
       { value: totalPeserta.value, label: 'Peserta', bg: 'bg-gradient-to-br from-emerald-500 to-emerald-700', iconBg: 'bg-white/20', icon: '👥' },
       { value: totalSertifikat.value, label: 'Sertifikat', bg: 'bg-gradient-to-br from-purple-500 to-purple-700', iconBg: 'bg-white/20', icon: '✅' },
       { value: kegiatanBerjalan.value, label: 'Berjalan', bg: 'bg-gradient-to-br from-amber-500 to-amber-700', iconBg: 'bg-white/20', icon: '⚡' }
