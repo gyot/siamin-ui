@@ -7,6 +7,8 @@ const Dashboard = () => import('../pages/Dashboard.vue')
 const Kegiatan = () => import('../pages/Kegiatan.vue')
 const Peserta = () => import('../pages/Peserta.vue')
 const PesertaManagement = () => import('../pages/PesertaManagement.vue')
+const DaftarSekolah = () => import('../pages/DaftarSekolah.vue')
+const DaftarPeserta = () => import('../pages/DaftarPeserta.vue')
 const KegiatanPeserta = () => import('../pages/KegiatanPeserta.vue')
 const Sertifikat = () => import('../pages/Sertifikat.vue')
 const PegawaiManagement = () => import('../pages/PegawaiManagement.vue')
@@ -188,6 +190,8 @@ const router = createRouter({
     {path:'kegiatan/:id/detail',name:'kegiatan-detail',component:KegiatanDetail,meta:{title:'Detail Kegiatan',description:'Detail informasi kegiatan.'}},
     {path:'paket-soal',name:'paket-soal',component:PaketSoal,meta:{title:'Paket Soal',description:'Kelola paket soal dan soal ujian.'}},
     {path:'peserta',name:'peserta',component:PesertaManagement,meta:{title:'Manajemen Peserta',description:'Kelola data peserta kegiatan.'}},
+    {path:'sekolah',name:'daftar-sekolah',component:DaftarSekolah,meta:{title:'Daftar Sekolah',description:'Daftar sekolah unik berdasarkan NPSN.'}},
+    {path:'daftar-peserta',name:'daftar-peserta-all',component:DaftarPeserta,meta:{title:'Daftar Peserta',description:'Daftar peserta keseluruhan seluruh kegiatan.'}},
     {path:'sertifikat',name:'sertifikat',component:Sertifikat,meta:{title:'Sertifikat',description:'Kelola sertifikat peserta.'}},
     {path:'pegawai',name:'pegawai',component:PegawaiManagement,meta:{title:'Pegawai',description:'Kelola data pegawai.'}},
     {path:'unit-kerja',name:'unit-kerja',component:UnitKerjaManagement,meta:{title:'Unit Kerja',description:'Kelola unit kerja.'}},

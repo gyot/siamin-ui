@@ -70,6 +70,30 @@
         <span class="text-[15px] font-medium text-[#050505]">Pegawai & User</span>
       </RouterLink>
       <RouterLink 
+        to="/admin/sekolah" 
+        class="sidebar-item"
+        @click="handleClick"
+      >
+        <div class="w-9 h-9 rounded-full bg-sky-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3L1 8l11 5 9-4.09V17"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12v5c0 1.66 3.13 3 7 3s7-1.34 7-3v-5"/>
+          </svg>
+        </div>
+        <span class="text-[15px] font-medium text-[#050505]">Daftar Sekolah</span>
+      </RouterLink>
+      <RouterLink 
+        to="/admin/daftar-peserta" 
+        class="sidebar-item"
+        @click="handleClick"
+      >
+        <div class="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM16 11h6M3 20h10v-2a3 3 0 00-10 0v2z"/>
+          </svg>
+        </div>
+        <span class="text-[15px] font-medium text-[#050505]">Daftar Peserta</span>
+      </RouterLink>
+      <RouterLink 
         to="/admin/penugasan" 
         class="sidebar-item"
         @click="handleClick"

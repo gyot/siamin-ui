@@ -93,7 +93,9 @@ export default {
         'peserta': 'Manajemen Peserta',
         'sertifikat': 'Manajemen Sertifikat',
         'pengesahan': 'Pengesahan',
-        'pegawai': 'Manajemen Pegawai & User'
+        'pegawai': 'Manajemen Pegawai & User',
+        'daftar-sekolah': 'Daftar Sekolah',
+        'daftar-peserta-all': 'Daftar Peserta'
       }
       this.pageTitle = titleMap[this.$route.name] || 'Dashboard'
       this.sidebarOpen = false
