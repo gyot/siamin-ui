@@ -34,16 +34,16 @@
               <th class="px-3 py-3 text-left text-xs font-semibold cursor-pointer select-none hover:bg-blue-700/40" @click="setSort('nama_lengkap')">
                 Nama {{ sortIndicator('nama_lengkap') }}
               </th>
-              <th v-if="visibleCols.nip" class="px-3 py-3 text-left text-xs font-semibold cursor-pointer select-none hover:bg-blue-700/40" @click="setSort('nip')">
+              <th v-if="visibleCols.nip" class="hidden md:table-cell px-3 py-3 text-left text-xs font-semibold cursor-pointer select-none hover:bg-blue-700/40" @click="setSort('nip')">
                 NIP {{ sortIndicator('nip') }}
               </th>
-              <th class="px-3 py-3 text-left text-xs font-semibold cursor-pointer select-none hover:bg-blue-700/40" @click="setSort('nama_instansi')">
+              <th class="hidden sm:table-cell px-3 py-3 text-left text-xs font-semibold cursor-pointer select-none hover:bg-blue-700/40" @click="setSort('nama_instansi')">
                 Instansi {{ sortIndicator('nama_instansi') }}
               </th>
               <th class="px-3 py-3 text-left text-xs font-semibold cursor-pointer select-none hover:bg-blue-700/40" @click="setSort('npsn')">
                 NPSN {{ sortIndicator('npsn') }}
               </th>
-              <th v-if="visibleCols.kab_kota" class="px-3 py-3 text-left text-xs font-semibold cursor-pointer select-none hover:bg-blue-700/40" @click="setSort('kab_kota')">
+              <th v-if="visibleCols.kab_kota" class="hidden lg:table-cell px-3 py-3 text-left text-xs font-semibold cursor-pointer select-none hover:bg-blue-700/40" @click="setSort('kab_kota')">
                 Kab/Kota {{ sortIndicator('kab_kota') }}
               </th>
               <th class="px-3 py-3 text-left text-xs font-semibold cursor-pointer select-none hover:bg-blue-700/40" @click="setSort('nama_kegiatan')">
@@ -65,10 +65,10 @@
             <template v-else>
               <tr v-for="(p, i) in rows" :key="p.id_peserta" class="border-t border-gray-100 hover:bg-blue-50/40">
                 <td class="px-3 py-2.5 text-gray-800 font-medium">{{ p.nama_lengkap }}</td>
-                <td v-if="visibleCols.nip" class="px-3 py-2.5 text-gray-600 text-xs">{{ p.nip || '-' }}</td>
-                <td class="px-3 py-2.5 text-gray-600">{{ p.nama_instansi || '-' }}</td>
+                <td v-if="visibleCols.nip" class="hidden md:table-cell px-3 py-2.5 text-gray-600 text-xs">{{ p.nip || '-' }}</td>
+                <td class="hidden sm:table-cell px-3 py-2.5 text-gray-600">{{ p.nama_instansi || '-' }}</td>
                 <td class="px-3 py-2.5 text-gray-700 font-mono text-xs">{{ p.npsn || '-' }}</td>
-                <td v-if="visibleCols.kab_kota" class="px-3 py-2.5 text-gray-600">{{ p.kab_kota || '-' }}</td>
+                <td v-if="visibleCols.kab_kota" class="hidden lg:table-cell px-3 py-2.5 text-gray-600">{{ p.kab_kota || '-' }}</td>
                 <td class="px-3 py-2.5 text-gray-600">{{ p.nama_kegiatan || '-' }}</td>
                 <td v-for="(vis, key) in extraCols" :key="key" v-show="vis" class="hidden xl:table-cell px-3 py-2.5 text-gray-600">
                   {{ formatCell(p[key]) }}
