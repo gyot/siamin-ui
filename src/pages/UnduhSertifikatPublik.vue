@@ -194,7 +194,7 @@ export default {
 
       try {
         const [pesertaData, kegiatanData] = await Promise.all([
-          fetchAPI('peserta'),
+          fetchAPI(`peserta?kegiatan_id=${kode}`),
           fetchAPI('kegiatan/all')
         ])
 
@@ -263,7 +263,7 @@ export default {
           const sertifikat = sertifikatByPeserta.value[idPeserta] || null
           const statusSertifikat = sertifikat?.status_sertifikat || sertifikat?.status || ''
           const isTerbit = ['terbit', 'published', 'active', 'diterbitkan'].includes(normalize(statusSertifikat))
-          const hasId = !!(sertifikat?.id_sertifikat || sertifikat?.id)
+          const hasId = !!(sertifikat?.id_sertifikat || sertifikat?.id_batch)
           return {
             ...item,
             _sertifikat: (isTerbit || hasId) ? sertifikat : null
@@ -351,7 +351,8 @@ export default {
       console.log(sertifikat);
       
 
-      const idSertifikat = sertifikat.id_peserta || sertifikat.id || 0
+      // GET sertifikat/{id} di backend mencari by id_peserta — kirim id_peserta
+      const idSertifikat = pesertaItem.id_peserta || sertifikat.id_peserta || 0
       console.log(idSertifikat);
       
       if (!idSertifikat) {
@@ -365,7 +366,7 @@ export default {
         const response = await fetch(`${SERTIFIKAT_API_URL}/generate-certificate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id_sertifikat: Number(idSertifikat) })
+          body: JSON.stringify({ id_sertifikat: Number(idSertifikat), api_base_url: window.location.origin })
         })
 
         if (!response.ok) {
