@@ -1457,6 +1457,7 @@ export default {
       currentUser,
       profilePegawai,
       totalKegiatan,
+      totalSekolah,
       totalPeserta,
       totalSertifikat,
       kegiatanBerjalan,
