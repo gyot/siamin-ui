@@ -550,6 +550,7 @@ export default {
     const getLocalDashboardStats = () => ({
       total_peserta: peserta.value.length,
       total_kegiatan: kegiatan.value.length,
+      total_sekolah: new Set(peserta.value.map(p => p.nama_instansi).filter(Boolean)).size,
       total_sertifikat: sertifikat.value.filter(s => s.status === 'terbit').length,
       total_kegiatan_berjalan: getLocalKegiatanBerjalanCount()
     })
@@ -1281,6 +1282,7 @@ export default {
         dashboardStats.value = {
           total_peserta: toDashboardNumber(statistik.total_peserta),
           total_kegiatan: toDashboardNumber(statistik.total_kegiatan),
+          total_sekolah: toDashboardNumber(statistik.total_sekolah),
           total_sertifikat: toDashboardNumber(statistik.total_sertifikat),
           total_kegiatan_berjalan: toDashboardNumber(statistik.total_kegiatan_berjalan)
         }
