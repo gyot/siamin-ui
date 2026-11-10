@@ -3406,6 +3406,7 @@ export default {
           payload.daftar_paket_soal = paketSoalItems.value.map(p => p.id_paket_soal)
         }
 
+        let created = null
         if (editingId.value) {
           const updated = useMultipart
             ? await postAPI(`kegiatan/${editingId.value}`, (() => {
@@ -3433,7 +3434,7 @@ export default {
             message: `Kegiatan "${formData.value.nama_kegiatan}" berhasil diperbarui.`
           })
         } else {
-          const created = await createKegiatan(payload)
+          created = await createKegiatan(payload)
           enrichWithLink(created)
           kegiatan.value.push(created)
           // Log creation
