@@ -19,8 +19,19 @@
               Pilih peserta untuk mengunduh sertifikat dalam format PDF.
             </p>
           </div>
-          <div class="text-sm text-slate-600">
-            Total peserta: <span class="font-semibold text-slate-800">{{ filteredPeserta.length }}</span>
+          <div class="flex items-center gap-3">
+            <div class="text-sm text-slate-600">
+              Total peserta: <span class="font-semibold text-slate-800">{{ filteredPeserta.length }}</span>
+            </div>
+            <button
+              type="button"
+              @click="sharePage"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+              Share Page
+            </button>
+            <span v-if="shareInfo" class="text-xs text-emerald-600 font-medium whitespace-nowrap">{{ shareInfo }}</span>
           </div>
         </div>
       </div>
@@ -406,6 +417,28 @@ export default {
       if (currentPage.value > newTotal) currentPage.value = newTotal
     })
 
+    const shareInfo = ref('')
+    const sharePage = async () => {
+      const url = window.location.href
+      const title = document.title
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, url })
+          return
+        } catch (e) {
+          if (e && e.name === 'AbortError') return
+        }
+      }
+      try {
+        await navigator.clipboard.writeText(url)
+      } catch (_) {
+        window.prompt('Salin link halaman ini:', url)
+        return
+      }
+      shareInfo.value = 'Link tersalin!'
+      setTimeout(() => { shareInfo.value = '' }, 2500)
+    }
+
     onMounted(loadData)
 
     return {
@@ -427,7 +460,9 @@ export default {
       sortIndicator,
       prevPage,
       nextPage,
-      downloadSertifikat
+      downloadSertifikat,
+      shareInfo,
+      sharePage
     }
   }
 }

@@ -1043,15 +1043,16 @@
                   </p>
                   <p v-if="selectedTemplateFile"
                     class="mt-2 text-sm text-slate-500">File terpilih: {{ selectedTemplateFile.name }}</p>
-                  <a
+                  <button
                     v-else-if="formSertifikat.template_file"
-                    :href="formSertifikat.template_file_url || buildStorageUrl(String(formSertifikat.template_file).replace(/^storage\//, ''))"
-                    target="_blank"
-                    download
-                    class="mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                    type="button"
+                    :disabled="isDownloadingTemplate"
+                    @click="unduhTemplateSaatIni"
+                    class="mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    📄 File saat ini: {{ formSertifikat.template_file }} — klik untuk mengunduh
-                  </a>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    {{ isDownloadingTemplate ? 'Menyiapkan template...' : 'Lihat Template Saat Ini' }}
+                  </button>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
@@ -1661,7 +1662,7 @@
 import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import database from '@/data/index.js'
-import { fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
+import { apiClient, fetchAPI, postAPI, updateAPI, deleteAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
 import Swal from 'sweetalert2'
 let pesertaCache = null
@@ -2535,6 +2536,41 @@ export default {
       strukturRows.value = rows
       if (rows.length > 0) strukturSumber.value = 'manual'
       await ensureStrukturKelasLoaded()
+    }
+
+    const isDownloadingTemplate = ref(false)
+    const unduhTemplateSaatIni = async () => {
+      const rawPath = String(formSertifikat.value.template_file || '').replace(/^storage\//, '')
+      if (!rawPath) return
+      isDownloadingTemplate.value = true
+      try {
+        const response = await apiClient.post('sertifikat-batch/template-file', { template_file: rawPath }, { responseType: 'blob' })
+        const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = rawPath.split('/').pop() || 'template_sertifikat.docx'
+        document.body.appendChild(a)
+        a.click()
+        a.remove()
+        URL.revokeObjectURL(url)
+      } catch (e) {
+        let msg = 'Gagal mengunduh template. Silakan coba lagi.'
+        try {
+          const data = e?.response?.data
+          if (data instanceof Blob) {
+            const parsed = JSON.parse(await data.text())
+            msg = parsed?.message || msg
+          } else if (data?.message) {
+            msg = data.message
+          } else if (e?.message) {
+            msg = e.message
+          }
+        } catch (_) { /* pakai pesan default */ }
+        formErrors.value = [msg]
+      } finally {
+        isDownloadingTemplate.value = false
+      }
     }
 
     const validateFormSertifikat = () => {
@@ -5150,6 +5186,8 @@ export default {
       ambilStrukturDariJadwal,
       tambahStrukturRow,
       hapusStrukturRow,
+      isDownloadingTemplate,
+      unduhTemplateSaatIni,
       strukturImportKelas,
       strukturImportInfo,
       importStrukturExcel,
