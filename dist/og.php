@@ -128,6 +128,7 @@ if ($pageLabel !== null && $nama !== '') {
 
 $ogImage = $base . '/og-default.png';
 $ogUrl   = $base . $uri;
+$htmlTitle = ($title === $defaultTitle) ? $title : $title . ' - SIMAIK';
 
 // ---- Suntikkan ke shell SPA ----
 $shellFile = __DIR__ . '/index.html';
@@ -154,7 +155,7 @@ $meta = '<meta property="og:site_name" content="SIMAIK">' . "\n"
       . '<meta name="twitter:image" content="' . $h($ogImage) . '">';
 
 // Ganti <title> (pertama yang cocok) dan deskripsi; sisipkan blok meta sebelum </head>.
-$shell = (string) preg_replace('/<title>.*?<\/title>/is', '<title>' . $h($title) . '</title>', $shell, 1);
+$shell = (string) preg_replace('/<title>.*?<\/title>/is', '<title>' . $h($htmlTitle) . '</title>', $shell, 1);
 if (stripos($shell, 'name="description"') !== false) {
     $shell = (string) preg_replace('/<meta[^>]*name="description"[^>]*>/i', '<meta name="description" content="' . $h($description) . '">', $shell, 1);
 } else {
