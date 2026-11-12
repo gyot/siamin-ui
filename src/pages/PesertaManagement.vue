@@ -1120,7 +1120,6 @@
                     class="px-2 py-2 border border-gray-300 rounded-lg text-sm text-gray-700"
                   >
                     <option value="__semua">Kelas: Semua Kelas</option>
-                    <option value="">Kelas: Kelas Umum</option>
                     <option v-for="k in strukturKelasOptions" :key="k.id_kelas" :value="k.id_kelas">Kelas: {{ k.nama_kelas }}</option>
                   </select>
                   <span v-if="strukturImportInfo" class="text-xs font-medium text-teal-700">{{ strukturImportInfo }}</span>
@@ -2112,7 +2111,7 @@ export default {
         }
 
         const idKelasTujuan = kegiatanPunyaKelas.value
-          ? (strukturImportKelas.value === '__semua' ? '' : (strukturImportKelas.value ?? ''))
+          ? normalizeRowKelasId(strukturImportKelas.value === '__semua' ? '' : strukturImportKelas.value)
           : ''
         const rows = []
         for (let r = startRow; r < matrix.length; r++) {
@@ -2377,6 +2376,20 @@ export default {
 
     const kegiatanPunyaKelas = computed(() => strukturKelasOptions.value.length > 0)
 
+    // Id kelas default ("Kelas Umum"): prioritas kelas bernama "Kelas Umum", fallback kelas pertama.
+    const defaultKelasId = computed(() => {
+      const opts = strukturKelasOptions.value
+      if (!opts.length) return ''
+      const umum = opts.find((k) => String(k?.nama_kelas || '').trim().toLowerCase() === 'kelas umum')
+      return String((umum || opts[0]).id_kelas)
+    })
+
+    // Normalisasi id kelas baris: ''/null/undefined (sentinel "Kelas Umum" lama) -> id kelas default asli.
+    const normalizeRowKelasId = (id) => {
+      const s = id === null || id === undefined ? '' : String(id).trim()
+      return s === '' ? defaultKelasId.value : s
+    }
+
     const strukturTotalJam = computed(() =>
       strukturRows.value.reduce((total, row) => total + (Number(row?.jumlah_jam) || 0), 0)
     )
@@ -2384,7 +2397,7 @@ export default {
     const strukturRowsTampil = computed(() => {
       const v = strukturImportKelas.value
       if (!kegiatanPunyaKelas.value || v === '__semua') return strukturRows.value
-      return strukturRows.value.filter((r) => String(r.id_kelas ?? '') === String(v ?? ''))
+      return strukturRows.value.filter((r) => normalizeRowKelasId(r.id_kelas) === String(v ?? ''))
     })
 
     const strukturTotalJamTampil = computed(() =>
@@ -2429,7 +2442,7 @@ export default {
             String(k.nama_kelas || '').trim().toLowerCase() === String(group?.nama_kelas || '').trim().toLowerCase()
           )
       if (match) return String(match.id_kelas)
-      return hasRawId ? String(rawId) : ''
+      return hasRawId ? String(rawId) : defaultKelasId.value
     }
 
     const ambilStrukturDariJadwal = async () => {
@@ -2489,7 +2502,7 @@ export default {
     }
 
     const tambahStrukturRow = () => {
-      strukturRows.value.push({ id_kelas: '', materi: '', jumlah_jam: 0 })
+      strukturRows.value.push({ id_kelas: defaultKelasId.value, materi: '', jumlah_jam: 0 })
     }
 
     const hapusStrukturRow = (index) => {
@@ -2500,7 +2513,7 @@ export default {
       return strukturRows.value
         .filter((row) => String(row?.materi || '').trim())
         .map((row, index) => ({
-          id_kelas: row.id_kelas === null || row.id_kelas === undefined ? '' : String(row.id_kelas),
+          id_kelas: normalizeRowKelasId(row.id_kelas),
           materi: String(row.materi).trim(),
           jumlah_jam: Number(row.jumlah_jam) || 0,
           urutan: index
@@ -2512,7 +2525,7 @@ export default {
       if (raw && !Array.isArray(raw) && Array.isArray(raw?.data)) raw = raw.data
       const rows = (Array.isArray(raw) ? raw : [])
         .map((s, i) => ({
-          id_kelas: String(s?.id_kelas ?? ''),
+          id_kelas: normalizeRowKelasId(s?.id_kelas),
           materi: String(s?.materi ?? ''),
           jumlah_jam: Number(s?.jumlah_jam) || 0,
           urutan: Number.isFinite(Number(s?.urutan)) ? Number(s.urutan) : i
@@ -2529,15 +2542,25 @@ export default {
       if (!formSertifikat.value.nomor_sertifikat) formErrors.value.push('Nomor sertifikat wajib diisi')
       if (!formSertifikat.value.tanggal_ttd) formErrors.value.push('Tanggal tandatangan wajib diisi')
       if (!formSertifikat.value.id_penandatangan) formErrors.value.push('Penandatangan wajib dipilih')
+      let adaErrorStruktur = false
       strukturRows.value.forEach((row, index) => {
         const label = `Struktur program baris ${index + 1}`
-        if (!String(row?.materi || '').trim()) formErrors.value.push(`${label}: materi wajib diisi`)
+        if (!String(row?.materi || '').trim()) {
+          formErrors.value.push(`${label}: materi wajib diisi`)
+          adaErrorStruktur = true
+        }
         const jam = Number(row?.jumlah_jam)
-        if (!Number.isFinite(jam) || jam <= 0) formErrors.value.push(`${label}: jumlah jam harus lebih dari 0`)
+        if (!Number.isFinite(jam) || jam <= 0) {
+          formErrors.value.push(`${label}: jumlah jam harus lebih dari 0`)
+          adaErrorStruktur = true
+        }
         if (kegiatanPunyaKelas.value && (row?.id_kelas === '' || row?.id_kelas === null || row?.id_kelas === undefined)) {
           formErrors.value.push(`${label}: kelas wajib dipilih`)
+          adaErrorStruktur = true
         }
       })
+      // Baris bermasalah bisa tersembunyi oleh filter kelas — tampilkan semua agar terlihat.
+      if (adaErrorStruktur && strukturImportKelas.value !== '__semua') strukturImportKelas.value = '__semua'
       return formErrors.value.length === 0
     }
 
