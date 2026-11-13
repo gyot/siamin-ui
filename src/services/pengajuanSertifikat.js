@@ -1,4 +1,4 @@
-import { fetchAPI } from '@/services/api'
+import { fetchAPI, apiClient } from '@/services/api'
 
 /**
  * Layanan API untuk alur pengajuan penerbitan sertifikat (meja reviewer).
@@ -74,3 +74,65 @@ export const tolakPengajuanSertifikat = (idBatch, alasanPenolakan) =>
     method: 'POST',
     body: { alasan_penolakan: alasanPenolakan }
   })
+
+/**
+ * Daftar batch untuk meja persuratan (status disetujui + terbit).
+ * GET /api/v1/sertifikat-batch/proses
+ *
+ * @returns {Promise<Array>} daftar batch (urut tanggal_persetujuan terbaru)
+ */
+export const listProsesSertifikat = async () => {
+  const response = await fetchAPI('sertifikat-batch/proses', { raw: true })
+
+  return Array.isArray(response?.data)
+    ? response.data
+    : (Array.isArray(response) ? response : [])
+}
+
+/**
+ * Terbitkan nomor resmi batch oleh persuratan.
+ * POST /api/v1/sertifikat-batch/{id}/proses — body: { nomor_sertifikat }
+ *
+ * @param {number|string} idBatch
+ * @param {string} nomorSertifikat
+ * @returns {Promise<any>}
+ */
+export const prosesSertifikatBatch = (idBatch, nomorSertifikat) =>
+  fetchAPI(`sertifikat-batch/${idBatch}/proses`, {
+    method: 'POST',
+    body: { nomor_sertifikat: nomorSertifikat }
+  })
+
+/**
+ * Daftar kelas milik satu kegiatan.
+ * GET /api/v1/kelas/{id_kegiatan}
+ *
+ * @param {number|string} idKegiatan
+ * @returns {Promise<Array>} daftar kelas
+ */
+export const listKelasKegiatan = async (idKegiatan) => {
+  const response = await fetchAPI(`kelas/${idKegiatan}`, { raw: true })
+
+  return Array.isArray(response?.data)
+    ? response.data
+    : (Array.isArray(response) ? response : [])
+}
+
+/**
+ * Unduh PDF contoh (draft) dari template batch — respons berupa berkas PDF.
+ * POST /api/v1/sertifikat-batch/{id}/draft-pdf — body: { id_kelas }
+ * Untuk "Semua Kelas", kirim idKelas = null (dikosongkan).
+ *
+ * @param {number|string} idBatch
+ * @param {number|string|null} idKelas
+ * @returns {Promise<Blob>} berkas PDF
+ */
+export const unduhDraftPdf = async (idBatch, idKelas = null) => {
+  const response = await apiClient.post(
+    `sertifikat-batch/${idBatch}/draft-pdf`,
+    { id_kelas: idKelas },
+    { responseType: 'blob' }
+  )
+
+  return new Blob([response.data], { type: 'application/pdf' })
+}

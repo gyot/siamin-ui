@@ -108,8 +108,18 @@
               </div>
             </div>
 
-            <!-- Card Actions (hanya untuk status diajukan) -->
-            <div v-if="batch.status === 'diajukan'" class="border-t border-[#E4E6E9] px-2 py-1 flex">
+            <!-- Card Actions: Unduh Draft (semua kartu) + aksi review (status diajukan) -->
+            <div class="border-t border-[#E4E6E9] px-2 py-1 flex">
+              <button
+                class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-blue-50 transition text-[14px] font-semibold text-blue-600 disabled:opacity-50"
+                :disabled="draftLoadingId === batch.id_batch"
+                @click="openUnduhDraft(batch)"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                {{ draftLoadingId === batch.id_batch ? 'Mengunduh...' : 'Unduh Draft' }}
+              </button>
+              <template v-if="batch.status === 'diajukan'">
+              <div class="w-px bg-[#E4E6E9] my-1"></div>
               <button
                 class="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg hover:bg-green-50 transition text-[14px] font-semibold text-green-600 disabled:opacity-50"
                 :disabled="actionLoadingId === batch.id_batch"
@@ -136,6 +146,7 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Tolak
               </button>
+              </template>
             </div>
           </div>
         </div>
@@ -259,6 +270,60 @@
       </div>
     </div>
 
+    <!-- Modal Unduh Draft: Pilih Kelas -->
+    <div v-if="showKelasModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+        <div class="flex items-center justify-between p-6 pb-3">
+          <h3 class="text-[17px] font-bold text-[#050505]">Unduh Draft</h3>
+          <button class="w-8 h-8 rounded-full hover:bg-[#F0F2F5] flex items-center justify-center text-[#65676B]" @click="closeKelasModal">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="px-6 pb-4">
+          <p class="text-[13px] text-[#65676B] mb-2">
+            Kegiatan: <strong class="text-[#050505]">{{ draftBatch ? namaKegiatan(draftBatch) : '' }}</strong>
+          </p>
+          <p class="text-[13px] text-[#65676B] mb-3">Pilih kelas untuk draft PDF contoh:</p>
+
+          <div v-if="isLoadingKelas" class="py-6 text-center text-[13px] text-[#65676B]">
+            Memuat daftar kelas...
+          </div>
+          <div v-else-if="kelasError" class="py-4 text-center">
+            <p class="text-[13px] text-red-600">{{ kelasError }}</p>
+            <button
+              class="mt-2 px-4 py-2 rounded-lg text-[13px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 transition"
+              @click="loadKelas"
+            >
+              Coba Lagi
+            </button>
+          </div>
+          <div v-else class="space-y-2 max-h-[50vh] overflow-y-auto">
+            <button
+              class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-[#E4E6E9] hover:bg-blue-50 hover:border-blue-200 transition text-left disabled:opacity-50"
+              :disabled="isDownloadingDraft"
+              @click="downloadDraft(null)"
+            >
+              <span class="text-[14px] font-semibold text-[#050505]">Semua Kelas</span>
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            </button>
+            <button
+              v-for="kelas in kelasOptions"
+              :key="kelas.id_kelas"
+              class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg border border-[#E4E6E9] hover:bg-blue-50 hover:border-blue-200 transition text-left disabled:opacity-50"
+              :disabled="isDownloadingDraft"
+              @click="downloadDraft(kelas)"
+            >
+              <span class="text-[14px] font-semibold text-[#050505]">{{ kelas.nama_kelas || 'Kelas tanpa nama' }}</span>
+              <span class="flex items-center gap-2">
+                <span class="text-[12px] text-[#65676B]">{{ kelas.anggotas_count ?? 0 }} peserta</span>
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Notifikasi -->
     <transition
       enter-active-class="transition duration-200 ease-out"
@@ -269,7 +334,7 @@
       <div
         v-if="toastMessage"
         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[60] px-5 py-3 rounded-xl shadow-2xl text-[14px] font-semibold text-white"
-        :class="toastType === 'success' ? 'bg-green-600' : 'bg-red-600'"
+        :class="toastType === 'success' ? 'bg-green-600' : toastType === 'info' ? 'bg-blue-600' : 'bg-red-600'"
       >
         {{ toastMessage }}
       </div>
@@ -284,7 +349,9 @@ import {
   listPengajuanSertifikat,
   setujuiPengajuanSertifikat,
   revisiPengajuanSertifikat,
-  tolakPengajuanSertifikat
+  tolakPengajuanSertifikat,
+  listKelasKegiatan,
+  unduhDraftPdf
 } from '@/services/pengajuanSertifikat'
 
 const isLoading = ref(true)
@@ -312,6 +379,15 @@ const revisiError = ref('')
 const tolakError = ref('')
 const isSubmitting = ref(false)
 const actionLoadingId = ref(null)
+
+// Unduh Draft state
+const draftBatch = ref(null)
+const showKelasModal = ref(false)
+const kelasOptions = ref([])
+const isLoadingKelas = ref(false)
+const kelasError = ref('')
+const isDownloadingDraft = ref(false)
+const draftLoadingId = ref(null)
 
 const toastMessage = ref('')
 const toastType = ref('success')
@@ -458,6 +534,89 @@ const openTolakModal = (batch) => {
   tolakAlasan.value = ''
   tolakError.value = ''
   showTolakModal.value = true
+}
+
+// ===== Unduh Draft (PDF contoh per kelas / semua kelas) =====
+
+const openUnduhDraft = async (batch) => {
+  // Tanpa template_file: cukup tampilkan informasi, tanpa panggil API.
+  if (!batch?.template_file) {
+    showToast('Template belum diunggah', 'info')
+    return
+  }
+  draftBatch.value = batch
+  kelasOptions.value = []
+  kelasError.value = ''
+  showKelasModal.value = true
+  await loadKelas()
+}
+
+const closeKelasModal = () => {
+  if (isDownloadingDraft.value) return
+  showKelasModal.value = false
+  draftBatch.value = null
+}
+
+const loadKelas = async () => {
+  if (!draftBatch.value) return
+  const idKegiatan = draftBatch.value.id_kegiatan || draftBatch.value.kegiatan?.id_kegiatan
+  if (!idKegiatan) {
+    kelasOptions.value = []
+    return
+  }
+  isLoadingKelas.value = true
+  kelasError.value = ''
+  try {
+    kelasOptions.value = await listKelasKegiatan(idKegiatan)
+  } catch (error) {
+    kelasError.value = String(error?.message || 'Gagal memuat daftar kelas.')
+  } finally {
+    isLoadingKelas.value = false
+  }
+}
+
+const sanitizeFilename = (value) =>
+  String(value || '')
+    .replace(/[\\/:*?"<>|]+/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+const downloadDraft = async (kelas) => {
+  if (!draftBatch.value || isDownloadingDraft.value) return
+  isDownloadingDraft.value = true
+  draftLoadingId.value = draftBatch.value.id_batch
+  try {
+    const blob = await unduhDraftPdf(draftBatch.value.id_batch, kelas ? kelas.id_kelas : null)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const namaKelas = kelas ? ` - ${sanitizeFilename(kelas.nama_kelas)}` : ''
+    a.download = `Draft Sertifikat - ${sanitizeFilename(namaKegiatan(draftBatch.value))}${namaKelas}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+    showKelasModal.value = false
+    draftBatch.value = null
+    showToast('Draft PDF berhasil diunduh.', 'success')
+  } catch (error) {
+    let msg = 'Gagal mengunduh draft PDF. Silakan coba lagi.'
+    try {
+      const data = error?.response?.data
+      if (data instanceof Blob) {
+        const parsed = JSON.parse(await data.text())
+        msg = parsed?.message || msg
+      } else if (data?.message) {
+        msg = data.message
+      } else if (error?.message) {
+        msg = error.message
+      }
+    } catch (_) { /* pakai pesan default */ }
+    showToast(msg, 'error')
+  } finally {
+    isDownloadingDraft.value = false
+    draftLoadingId.value = null
+  }
 }
 
 const afterSuccess = async (message) => {

@@ -70,6 +70,18 @@
           class="ml-auto min-w-[22px] h-[22px] px-1.5 rounded-full bg-[#1877F2] text-white text-[11px] font-bold flex items-center justify-center"
         >{{ pengajuanDiajukanCount }}</span>
       </RouterLink>
+      <RouterLink
+        to="/admin/proses-sertifikat"
+        class="sidebar-item"
+        @click="handleClick"
+      >
+        <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+        </div>
+        <span class="text-[15px] font-medium text-[#050505]">Proses Sertifikat</span>
+      </RouterLink>
 
       <p class="px-3 pt-3 pb-1 text-[12px] font-semibold text-[#65676B] uppercase tracking-wider">Admin</p>
       <RouterLink 

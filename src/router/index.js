@@ -34,6 +34,7 @@ const TestLaporan = () => import('../pages/TestLaporan.vue')
 const PaketSoal = () => import('../pages/PaketSoal.vue')
 const Pengesahan = () => import('../pages/Pengesahan.vue')
 const PengajuanSertifikat = () => import('../pages/PengajuanSertifikat.vue')
+const ProsesSertifikat = () => import('../pages/ProsesSertifikat.vue')
 const ApiToken = () => import('../pages/ApiToken.vue')
 const LaporanKegiatan = () => import('../pages/LaporanKegiatan.vue')
 const BuatLaporan = () => import('../pages/BuatLaporan.vue')
@@ -200,6 +201,7 @@ const router = createRouter({
     {path:'penugasan',name:'penugasan',component:Penugasan,meta:{title:'Penugasan Pegawai',description:'Lihat dan filter penugasan pegawai.'}},
     {path:'pengesahan',name:'pengesahan',component:Pengesahan,meta:{title:'Pengesahan',description:'Halaman pengesahan dokumen.',requiresKepala:true}},
     {path:'pengajuan-sertifikat',name:'pengajuan-sertifikat',component:PengajuanSertifikat,meta:{title:'Pengajuan Sertifikat',description:'Meja reviewer pengajuan penerbitan sertifikat.'}},
+    {path:'proses-sertifikat',name:'proses-sertifikat',component:ProsesSertifikat,meta:{title:'Proses Sertifikat',description:'Meja persuratan penerbitan nomor resmi sertifikat.'}},
     {path:'api-token',name:'api-token',component:ApiToken,meta:{title:'API Token',description:'Kelola token API untuk integrasi aplikasi lain.',requiresAdmin:true}},
     {path:'laporan-kegiatan',name:'laporan-kegiatan',component:LaporanKegiatan,meta:{title:'Laporan Kegiatan',description:'Preview dan download laporan kegiatan.'}},
     {path:'profile',name:'profile',component:Profile,meta:{title:'Profil',description:'Kelola profil pengguna.'}}
