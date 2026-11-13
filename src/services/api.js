@@ -63,7 +63,10 @@ const buildHttpError = (status, statusText, endpoint, errorData, rawText = '') =
   const raw = String(rawText || '').trim()
   const looksLikeHtml = /<!doctype html|<html[\s>]/i.test(raw)
   const snippet = raw && !looksLikeHtml ? ` | ${raw.slice(0, 180)}` : ''
-  return new Error(`${parsedMessage}${snippet}`)
+  const error = new Error(`${parsedMessage}${snippet}`)
+  error.status = status
+  error.data = errorData
+  return error
 }
 
 const buildNetworkError = (error, endpoint) => {

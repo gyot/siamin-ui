@@ -293,7 +293,7 @@
               Kembali
             </button>
             <button type="submit"
-              
+              :disabled="isSubmitting"
               class="flex-1 btn-primary px-6 py-3.5 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               <svg v-if="isSubmitting" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -629,7 +629,11 @@ export default {
           alert('Validasi gagal:\n' + messages)
         } else if (err.status === 429) {
           // Rate limit
-          alert('Anda sudah terlalu sering mengirim evaluasi. Silakan coba lagi nanti.')
+          const retrySeconds = err.data?.retry_after_seconds
+          const menitTunggu = retrySeconds ? Math.max(1, Math.ceil(Number(retrySeconds) / 60)) : null
+          alert(menitTunggu
+            ? `Anda sudah terlalu sering mengirim evaluasi. Silakan coba lagi dalam ± ${menitTunggu} menit.`
+            : 'Anda sudah terlalu sering mengirim evaluasi. Silakan coba lagi nanti.')
         } else if (err.status === 409) {
           // Duplicate submission
           alert('Anda sudah mengirim evaluasi untuk kegiatan ini.')
