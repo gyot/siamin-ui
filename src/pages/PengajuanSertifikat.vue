@@ -600,19 +600,7 @@ const downloadDraft = async (kelas) => {
     draftBatch.value = null
     showToast('Draft PDF berhasil diunduh.', 'success')
   } catch (error) {
-    let msg = 'Gagal mengunduh draft PDF. Silakan coba lagi.'
-    try {
-      const data = error?.response?.data
-      if (data instanceof Blob) {
-        const parsed = JSON.parse(await data.text())
-        msg = parsed?.message || msg
-      } else if (data?.message) {
-        msg = data.message
-      } else if (error?.message) {
-        msg = error.message
-      }
-    } catch (_) { /* pakai pesan default */ }
-    showToast(msg, 'error')
+    showToast(String(error?.message || 'Gagal mengunduh draft PDF. Silakan coba lagi.'), 'error')
   } finally {
     isDownloadingDraft.value = false
     draftLoadingId.value = null

@@ -1,4 +1,4 @@
-import { fetchAPI, apiClient } from '@/services/api'
+import { fetchAPI } from '@/services/api'
 
 /**
  * Layanan API untuk alur pengajuan penerbitan sertifikat (meja reviewer).
@@ -192,8 +192,13 @@ export const terbitkanSertifikatPeserta = (idBatch, idPeserta) =>
   })
 
 /**
- * Unduh PDF contoh (draft) dari template batch — respons berupa berkas PDF.
- * POST /api/v1/sertifikat-batch/{id}/draft-pdf — body: { id_kelas }
+ * Unduh PDF contoh (draft) dari template batch lewat layanan generator Node —
+ * mekanisme yang sama dengan unduh sertifikat peserta.
+ * POST {VITE_SERTIFIKAT_API_URL}/generate-certificate/draft
+ * body: { id_batch, id_kelas?, api_base_url: window.location.origin }
+ * Generator mengambil data draft dari GET /api/v1/sertifikat-batch/{id}/draft-data
+ * (template_file, struktur_program terfilter, penandatangan, data contoh CONTOH/DRAFT)
+ * lalu merender docx -> PDF (docxtemplater + LibreOffice).
  * Untuk "Semua Kelas", kirim idKelas = null (dikosongkan).
  *
  * @param {number|string} idBatch
@@ -201,11 +206,27 @@ export const terbitkanSertifikatPeserta = (idBatch, idPeserta) =>
  * @returns {Promise<Blob>} berkas PDF
  */
 export const unduhDraftPdf = async (idBatch, idKelas = null) => {
-  const response = await apiClient.post(
-    `sertifikat-batch/${idBatch}/draft-pdf`,
-    { id_kelas: idKelas },
-    { responseType: 'blob' }
-  )
+  const SERTIFIKAT_API_URL = import.meta.env.VITE_SERTIFIKAT_API_URL || 'http://localhost:4000'
+  const body = {
+    id_batch: Number(idBatch),
+    api_base_url: window.location.origin
+  }
+  if (idKelas != null) body.id_kelas = Number(idKelas)
 
-  return new Blob([response.data], { type: 'application/pdf' })
+  const response = await fetch(`${SERTIFIKAT_API_URL}/generate-certificate/draft`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+
+  if (!response.ok) {
+    let msg = 'Gagal membuat PDF contoh'
+    try {
+      const err = await response.json()
+      msg = err?.message || msg
+    } catch (_) { /* respons bukan JSON */ }
+    throw new Error(msg)
+  }
+
+  return response.blob()
 }
