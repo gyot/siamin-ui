@@ -210,6 +210,55 @@
           </div>
         </div>
 
+        <!-- Daftar Kelas -->
+        <div class="border-b border-slate-100 pb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-lg font-semibold text-slate-800">Daftar Kelas</h4>
+          </div>
+
+          <div v-if="kelasItems.length > 0" class="mb-4 border border-slate-200 rounded-lg overflow-hidden">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-600">
+                <tr>
+                  <th class="text-left px-4 py-2 w-12">No</th>
+                  <th class="text-left px-4 py-2">Nama Kelas *</th>
+                  <th class="text-left px-4 py-2">Deskripsi</th>
+                  <th class="text-right px-4 py-2 w-20">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr v-for="(row, index) in kelasItems" :key="`${row.id_kelas || 'new'}-${index}`">
+                  <td class="px-4 py-2">{{ index + 1 }}</td>
+                  <td class="px-4 py-2">
+                    <input v-model="row.nama_kelas" type="text" placeholder="Contoh: Kelas A"
+                      class="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+                  </td>
+                  <td class="px-4 py-2">
+                    <input v-model="row.deskripsi" type="text" placeholder="Deskripsi (opsional)"
+                      class="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
+                  </td>
+                  <td class="px-4 py-2 text-right">
+                    <button type="button" @click="removeKelasRow(index)" class="text-xs text-red-600 hover:text-red-700">
+                      Hapus
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="mb-4 text-sm text-slate-600">
+            Belum ada kelas. Klik "Tambah Kelas" untuk menambahkan (kosongkan jika hanya memerlukan Kelas Umum).
+          </div>
+
+          <div class="mt-3 flex items-center gap-3">
+            <p v-if="kelasError" class="text-xs text-red-600">{{ kelasError }}</p>
+            <button type="button" @click="addKelasRow"
+              class="ml-auto px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
+              Tambah Kelas
+            </button>
+          </div>
+        </div>
+
         <!-- Jadwal & Lokasi -->
         <div class="border-b border-slate-100 pb-6">
           <h4 class="text-lg font-semibold text-slate-800 mb-4">Jadwal & Lokasi</h4>
@@ -583,55 +632,6 @@
             <button type="button" @click="addAtkItem"
               class="ml-auto px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
               Tambah ATK
-            </button>
-          </div>
-        </div>
-
-        <!-- Daftar Kelas -->
-        <div class="border-b border-slate-100 pb-6">
-          <div class="flex items-center justify-between mb-4">
-            <h4 class="text-lg font-semibold text-slate-800">Daftar Kelas</h4>
-          </div>
-
-          <div v-if="kelasItems.length > 0" class="mb-4 border border-slate-200 rounded-lg overflow-hidden">
-            <table class="w-full text-sm">
-              <thead class="bg-slate-50 text-slate-600">
-                <tr>
-                  <th class="text-left px-4 py-2 w-12">No</th>
-                  <th class="text-left px-4 py-2">Nama Kelas *</th>
-                  <th class="text-left px-4 py-2">Deskripsi</th>
-                  <th class="text-right px-4 py-2 w-20">Aksi</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-                <tr v-for="(row, index) in kelasItems" :key="`${row.id_kelas || 'new'}-${index}`">
-                  <td class="px-4 py-2">{{ index + 1 }}</td>
-                  <td class="px-4 py-2">
-                    <input v-model="row.nama_kelas" type="text" placeholder="Contoh: Kelas A"
-                      class="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
-                  </td>
-                  <td class="px-4 py-2">
-                    <input v-model="row.deskripsi" type="text" placeholder="Deskripsi (opsional)"
-                      class="w-full px-3 py-1.5 rounded-lg border border-slate-200 focus:border-blue-500 focus:outline-none" />
-                  </td>
-                  <td class="px-4 py-2 text-right">
-                    <button type="button" @click="removeKelasRow(index)" class="text-xs text-red-600 hover:text-red-700">
-                      Hapus
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div v-else class="mb-4 text-sm text-slate-600">
-            Belum ada kelas. Klik "Tambah Kelas" untuk menambahkan (kosongkan jika hanya memerlukan Kelas Umum).
-          </div>
-
-          <div class="mt-3 flex items-center gap-3">
-            <p v-if="kelasError" class="text-xs text-red-600">{{ kelasError }}</p>
-            <button type="button" @click="addKelasRow"
-              class="ml-auto px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">
-              Tambah Kelas
             </button>
           </div>
         </div>
