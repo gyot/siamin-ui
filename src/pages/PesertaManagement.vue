@@ -2558,8 +2558,8 @@ export default {
 
     const validateFormSertifikat = () => {
       formErrors.value = []
-      if (!formSertifikat.value.nomor_sertifikat) formErrors.value.push('Nomor sertifikat wajib diisi')
-      if (!formSertifikat.value.tanggal_ttd) formErrors.value.push('Tanggal tandatangan wajib diisi')
+      // Nomor sertifikat & tanggal ttd diisi otomatis oleh sistem (alur pengajuan):
+      // nomor "draft" saat diajukan, tanggal ttd = tanggal proses oleh persuratan.
       if (!formSertifikat.value.id_penandatangan) formErrors.value.push('Penandatangan wajib dipilih')
       let adaErrorStruktur = false
       strukturRows.value.forEach((row, index) => {
