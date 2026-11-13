@@ -998,23 +998,6 @@
             <form @submit.prevent="saveSertifikat" class="space-y-4">
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Nomor Sertifikat *</label>
-                  <input
-                    v-model="formSertifikat.nomor_sertifikat"
-                    type="text"
-                    placeholder="421/BPMP/2026"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Tandatangan *</label>
-                  <input
-                    v-model="formSertifikat.tanggal_ttd"
-                    type="date"
-                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
                   <label class="block text-sm font-medium text-gray-700 mb-2">Penandatangan *</label>
                   <select
                     v-model="formSertifikat.id_penandatangan"
@@ -1234,7 +1217,7 @@
                   :disabled="isSavingSertifikatBatch"
                   class="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {{ isSavingSertifikatBatch ? 'Menyimpan...' : (currentSertifikatBatch ? 'Perbarui Data' : (pendingSertifikatMode ? 'Simpan & Generate' : 'Simpan')) }}
+                  {{ isSavingSertifikatBatch ? 'Menyimpan...' : (currentSertifikatBatch ? 'Simpan & Ajukan Ulang' : 'Simpan & Ajukan') }}
                 </button>
               </div>
             </form>
