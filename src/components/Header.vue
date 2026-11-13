@@ -6,6 +6,10 @@
       {{ title }}
     </h2>
 
+    <!-- NOTIFIKASI + USER MENU -->
+    <div class="flex items-center gap-1">
+      <NotifikasiBell />
+
     <!-- USER MENU -->
     <div class="relative" v-if="user">
       <button
@@ -117,6 +121,7 @@
         </div>
       </transition>
     </div>
+    </div>
   </header>
 
   <!-- Overlay -->
@@ -132,9 +137,13 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import Swal from 'sweetalert2'
 import { useAuthStore } from '@/stores/auth'
+import NotifikasiBell from '@/components/NotifikasiBell.vue'
 
 export default {
   name: 'Header',
+  components: {
+    NotifikasiBell
+  },
   props: {
     title: String
   },

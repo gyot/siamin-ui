@@ -4,14 +4,17 @@
     <!-- Mobile Header -->
     <div class="md:hidden bg-white border-b border-[#E4E6E9] px-4 py-3 flex items-center justify-between sticky top-0 z-40">
       <h1 class="font-bold text-[#050505]">SIMAIK</h1>
-      <button @click="sidebarOpen = !sidebarOpen" class="p-2 hover:bg-[#E4E6E9] rounded-lg transition">
+      <div class="flex items-center gap-1">
+        <NotifikasiBell />
+        <button @click="sidebarOpen = !sidebarOpen" class="p-2 hover:bg-[#E4E6E9] rounded-lg transition">
         <svg v-if="!sidebarOpen" class="w-6 h-6 text-[#65676B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
         <svg v-else class="w-6 h-6 text-[#65676B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
-      </button>
+        </button>
+      </div>
     </div>
 
     <!-- Desktop: Facebook-style 3-column centered layout -->
@@ -47,12 +50,14 @@
 <script>
 import Sidebar from '@/components/Sidebar.vue'
 import Header from '@/components/Header.vue'
+import NotifikasiBell from '@/components/NotifikasiBell.vue'
 import { useAuthStore } from '@/stores/auth'
 
 export default {
   components: {
     Sidebar,
-    Header
+    Header,
+    NotifikasiBell
   },
   data() {
     return {
