@@ -113,7 +113,7 @@
                   </td>
                   <td class="px-4 py-3 text-center">
                     <button
-                      v-if="pesertaItem._sertifikat"
+                      v-if="pesertaItem._statusSertifikat === 'terbit'"
                       @click="downloadSertifikat(pesertaItem)"
                       :disabled="downloadingId === pesertaItem.id_peserta"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 text-xs font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
@@ -126,8 +126,11 @@
                       </svg>
                       {{ downloadingId === pesertaItem.id_peserta ? 'Mengunduh...' : 'Unduh PDF' }}
                     </button>
+                    <span v-else-if="pesertaItem._statusSertifikat === 'dicabut'" class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                      Sertifikat telah dicabut
+                    </span>
                     <span v-else class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">
-                      Belum Terbit
+                      Sertifikat belum tersedia
                     </span>
                   </td>
                 </tr>
@@ -272,12 +275,19 @@ export default {
         .map((item) => {
           const idPeserta = String(item.id_peserta ?? '')
           const sertifikat = sertifikatByPeserta.value[idPeserta] || null
-          const statusSertifikat = sertifikat?.status_sertifikat || sertifikat?.status || ''
-          const isTerbit = ['terbit', 'published', 'active', 'diterbitkan'].includes(normalize(statusSertifikat))
-          const hasId = !!(sertifikat?.id_sertifikat || sertifikat?.id_batch)
+          const statusSertifikat = normalize(sertifikat?.status_sertifikat || sertifikat?.status || '')
+          // Samakan dengan aturan API unduh publik: hanya 'terbit' yang boleh diunduh;
+          // draft / belum ada baris → "Sertifikat belum tersedia"; dicabut → "Sertifikat telah dicabut".
+          let status = 'belum'
+          if (['terbit', 'published', 'active', 'diterbitkan'].includes(statusSertifikat)) {
+            status = 'terbit'
+          } else if (statusSertifikat === 'dicabut') {
+            status = 'dicabut'
+          }
           return {
             ...item,
-            _sertifikat: (isTerbit || hasId) ? sertifikat : null
+            _statusSertifikat: status,
+            _sertifikat: status === 'terbit' ? sertifikat : null
           }
         })
     })
@@ -353,19 +363,22 @@ export default {
 
     const downloadSertifikat = async (pesertaItem) => {
       const sertifikat = pesertaItem._sertifikat
-      console.log(sertifikat);
+
       
-      if (!sertifikat) {
-        alert('Sertifikat belum tersedia untuk peserta ini.')
+      if (pesertaItem._statusSertifikat === 'dicabut') {
+        alert('Sertifikat telah dicabut')
         return
       }
-      console.log(sertifikat);
+      if (!sertifikat || pesertaItem._statusSertifikat !== 'terbit') {
+        alert('Sertifikat belum tersedia')
+        return
+      }
+
       
 
       // GET sertifikat/{id} di backend mencari by id_peserta — kirim id_peserta
       const idSertifikat = pesertaItem.id_peserta || sertifikat.id_peserta || 0
-      console.log(idSertifikat);
-      
+
       if (!idSertifikat) {
         alert('ID sertifikat tidak ditemukan.')
         return
@@ -381,12 +394,19 @@ export default {
         })
 
         if (!response.ok) {
-          let errorMsg = 'Gagal mengunduh sertifikat.'
-          try {
-            const errorData = await response.json()
-            errorMsg = errorData.message || errorMsg
-          } catch {
-            // response bukan JSON
+          // Samakan pesan dengan respons API unduh publik (404/410).
+          const pesanStatus = {
+            404: 'Sertifikat belum tersedia',
+            410: 'Sertifikat telah dicabut'
+          }[response.status] || ''
+          let errorMsg = pesanStatus || 'Gagal mengunduh sertifikat.'
+          if (!pesanStatus) {
+            try {
+              const errorData = await response.json()
+              errorMsg = errorData.message || errorMsg
+            } catch {
+              // response bukan JSON
+            }
           }
           throw new Error(errorMsg)
         }
