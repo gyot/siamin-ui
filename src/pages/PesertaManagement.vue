@@ -974,7 +974,7 @@
             </div>
             <div v-else class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg text-sm text-emerald-900">
               <p class="font-semibold">Batch sertifikat sudah dibuat.</p>
-              <p class="mt-1">Edit data batch di bawah, lalu klik Perbarui Data untuk menyimpan perubahan.</p>
+              <p class="mt-1">Edit data batch di bawah, lalu klik Simpan &amp; Ajukan Ulang untuk menyimpan perubahan dan mengajukan ulang.</p>
               <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div>
                   <p class="text-slate-600">Batch ID</p>
@@ -992,6 +992,14 @@
                   <p class="text-slate-600">Tanggal TTD</p>
                   <p class="font-medium">{{ currentSertifikatBatch.tanggal_ttd || '-' }}</p>
                 </div>
+              </div>
+              <div v-if="currentSertifikatBatch.pesan_revisi" class="mt-4 p-3 bg-amber-50 border border-amber-300 rounded-lg text-sm">
+                <p class="font-semibold text-amber-800">Pesan Revisi</p>
+                <p class="text-amber-900 mt-1">{{ currentSertifikatBatch.pesan_revisi }}</p>
+              </div>
+              <div v-if="currentSertifikatBatch.alasan_penolakan" class="mt-4 p-3 bg-red-50 border border-red-300 rounded-lg text-sm">
+                <p class="font-semibold text-red-800">Alasan Penolakan</p>
+                <p class="text-red-900 mt-1">{{ currentSertifikatBatch.alasan_penolakan }}</p>
               </div>
             </div>
 
