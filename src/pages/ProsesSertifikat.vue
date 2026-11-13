@@ -88,6 +88,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import LoadingState from '@/components/LoadingState.vue'
+import { usePolling } from '@/composables/usePolling'
 import { listProsesSertifikat } from '@/services/pengajuanSertifikat'
 
 const router = useRouter()
@@ -136,15 +137,20 @@ const formatDate = (value) => {
   })
 }
 
-const fetchData = async () => {
-  isLoading.value = true
-  errorMessage.value = ''
+const fetchData = async (options = {}) => {
+  // silent: refresh otomatis (polling) — tanpa spinner/error state agar
+  // tampilan tidak berkedip dan data lama tetap tampil bila refresh gagal.
+  const silent = options?.silent === true
+  if (!silent) {
+    isLoading.value = true
+    errorMessage.value = ''
+  }
   try {
     batches.value = await listProsesSertifikat()
   } catch (error) {
-    errorMessage.value = String(error?.message || 'Gagal memuat daftar proses sertifikat.')
+    if (!silent) errorMessage.value = String(error?.message || 'Gagal memuat daftar proses sertifikat.')
   } finally {
-    isLoading.value = false
+    if (!silent) isLoading.value = false
   }
 }
 
@@ -155,4 +161,8 @@ const goToDetail = (batch) => {
 }
 
 onMounted(fetchData)
+
+// Polling real-time: kartu batch disegarkan tiap 3 detik (halaman ini tanpa
+// modal/form, jadi tidak perlu isPaused — cukup guard tab & anti-tumpang tindih).
+usePolling(() => fetchData({ silent: true }))
 </script>

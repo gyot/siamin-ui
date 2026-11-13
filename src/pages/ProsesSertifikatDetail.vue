@@ -77,6 +77,7 @@
                   maxlength="150"
                   placeholder="Masukkan nomor surat resmi"
                   :disabled="!isNaskahDisetujui || isSubmittingProses"
+                  @input="nomorSuratTouched = true"
                   class="w-full px-3 py-2.5 bg-[#F0F2F5] rounded-lg border border-[#E4E6E9] focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white text-[14px] disabled:opacity-70"
                 />
                 <p class="text-[12px] text-[#65676B] mt-1">
@@ -510,6 +511,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import LoadingState from '@/components/LoadingState.vue'
+import { usePolling } from '@/composables/usePolling'
 import {
   getDetailProsesSertifikat,
   listPesertaStatusSertifikat,
@@ -529,6 +531,7 @@ const batchError = ref('')
 
 const nomorSurat = ref('draft')
 const nomorSuratError = ref('')
+const nomorSuratTouched = ref(false) // true setelah pengguna mengetik: polling tidak boleh menimpa
 const isSubmittingProses = ref(false)
 
 // ===== State: peserta (bagian bawah) =====
@@ -750,35 +753,46 @@ const allSelected = computed({
 })
 
 // ===== Ambil data =====
-const loadBatch = async () => {
-  isLoadingBatch.value = true
-  batchError.value = ''
+const loadBatch = async (options = {}) => {
+  // silent: refresh otomatis (polling) — tanpa spinner/error state dan tanpa
+  // menimpa nomor surat yang sedang diketik pengguna.
+  const silent = options?.silent === true
+  if (!silent) {
+    isLoadingBatch.value = true
+    batchError.value = ''
+  }
   try {
     batch.value = await getDetailProsesSertifikat(idBatch)
     if (batch.value) {
       const sudahDiproses = String(batch.value.status || '').toLowerCase() === 'terbit'
-      nomorSurat.value = sudahDiproses && batch.value.nomor_sertifikat
+      const nomorResmi = sudahDiproses && batch.value.nomor_sertifikat
         ? String(batch.value.nomor_sertifikat)
         : 'draft'
+      if (!silent || !nomorSuratTouched.value) nomorSurat.value = nomorResmi
     }
   } catch (error) {
-    batchError.value = errorMessageOf(error)
+    if (!silent) batchError.value = errorMessageOf(error)
   } finally {
-    isLoadingBatch.value = false
+    if (!silent) isLoadingBatch.value = false
   }
 }
 
-const loadPeserta = async () => {
-  isLoadingPeserta.value = true
-  pesertaError.value = ''
+const loadPeserta = async (options = {}) => {
+  // silent: refresh otomatis (polling) — tabel diperbarui tanpa berkedip;
+  // checkedIds/filter/sortir/halaman tidak disentuh sehingga posisi aman.
+  const silent = options?.silent === true
+  if (!silent) {
+    isLoadingPeserta.value = true
+    pesertaError.value = ''
+  }
   try {
     const result = await listPesertaStatusSertifikat(idBatch)
     pesertaRows.value = Array.isArray(result.data) ? result.data : []
     ringkasan.value = result.ringkasan || { total: 0, terbit: 0, draft: 0, dicabut: 0, belum: 0 }
   } catch (error) {
-    pesertaError.value = errorMessageOf(error)
+    if (!silent) pesertaError.value = errorMessageOf(error)
   } finally {
-    isLoadingPeserta.value = false
+    if (!silent) isLoadingPeserta.value = false
   }
 }
 
@@ -802,6 +816,7 @@ const submitProses = async () => {
   isSubmittingProses.value = true
   try {
     await prosesSertifikatBatch(batch.value.id_batch, nomor)
+    nomorSuratTouched.value = false
     showToast('Naskah sertifikat diproses dan bernomor resmi.', 'success')
     await reloadAll()
   } catch (error) {
@@ -1014,4 +1029,18 @@ const goBack = () => {
 }
 
 onMounted(reloadAll)
+
+// Polling real-time: kartu batch (atas) + tabel peserta & ringkasan disegarkan
+// tiap 3 detik. Jeda saat modal/proses terbuka — termasuk selama proses massal
+// berjalan agar popup progres dan centang checkbox tidak terganggu.
+usePolling(() => Promise.all([loadBatch({ silent: true }), loadPeserta({ silent: true })]), {
+  isPaused: () =>
+    isBulkRunning.value ||
+    showProgressPopup.value ||
+    showCabutModal.value ||
+    showBulkModal.value ||
+    isSubmittingProses.value ||
+    isSubmittingCabut.value ||
+    rowBusyId.value !== null
+})
 </script>

@@ -1415,6 +1415,7 @@ import { getKelasByKegiatan } from '@/services/kelas'
 import { saveJadwal } from '@/services/laporan'
 import { fetchAPI, postAPI } from '@/services/api'
 import { ActivityEvents } from '@/services/activityLogger'
+import { usePolling } from '@/composables/usePolling'
 import Spinner from '@/components/Spinner.vue'
 import LoadingState from '@/components/LoadingState.vue'
 import { buildPublicUrl, buildStorageUrl } from '@/utils/url'
@@ -1740,8 +1741,11 @@ export default {
     const kegiatan = ref([])
     const isLoadingKegiatan = ref(false)
 
-    const loadKegiatan = async () => {
-      isLoadingKegiatan.value = true
+    const loadKegiatan = async (options = {}) => {
+      // silent: refresh otomatis (polling) — tanpa spinner dan tanpa mengosongkan
+      // data lama bila refresh gagal, agar tampilan tidak berkedip.
+      const silent = options?.silent === true
+      if (!silent) isLoadingKegiatan.value = true
       try {
         const rows = await listKegiatanTimSaya()
         kegiatan.value = Array.isArray(rows)
@@ -1751,9 +1755,9 @@ export default {
         kegiatan.value.forEach(enrichWithLink)
       } catch (err) {
         // console.error('[Kegiatan] Failed to fetch kegiatan from API', err)
-        kegiatan.value = []
+        if (!silent) kegiatan.value = []
       } finally {
-        isLoadingKegiatan.value = false
+        if (!silent) isLoadingKegiatan.value = false
       }
     }
 
@@ -4136,6 +4140,19 @@ export default {
     const getPeranLabel = (peran) => {
       return humanizePeranPenugasan(peran) || '-'
     }
+
+    // Polling real-time: daftar kegiatan disegarkan tiap 3 detik dengan
+    // filter/pencarian/halaman yang sedang aktif (state filter tidak disentuh).
+    // Jeda saat modal/form terbuka atau proses simpan berjalan, dan saat tab
+    // tidak terlihat — lanjut lagi saat pengguna kembali.
+    usePolling(() => loadKegiatan({ silent: true }), {
+      isPaused: () =>
+        showAddModal.value ||
+        showSuratTugasModal.value ||
+        showBiodataModal.value ||
+        isSubmitting.value ||
+        submitStatus.value.visible
+    })
 
     return {
       kegiatan,

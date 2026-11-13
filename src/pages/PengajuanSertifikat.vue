@@ -345,6 +345,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import LoadingState from '@/components/LoadingState.vue'
+import { usePolling } from '@/composables/usePolling'
 import {
   listPengajuanSertifikat,
   setujuiPengajuanSertifikat,
@@ -503,17 +504,22 @@ const formatDate = (value) => {
   })
 }
 
-const fetchData = async () => {
-  isLoading.value = true
-  errorMessage.value = ''
+const fetchData = async (options = {}) => {
+  // silent: refresh otomatis (polling) — tanpa spinner/error state agar
+  // tampilan tidak berkedip dan data lama tetap tampil bila refresh gagal.
+  const silent = options?.silent === true
+  if (!silent) {
+    isLoading.value = true
+    errorMessage.value = ''
+  }
   try {
     const result = await listPengajuanSertifikat()
     batches.value = result.data
     ringkasan.value = result.ringkasan
   } catch (error) {
-    errorMessage.value = String(error?.message || 'Gagal memuat pengajuan sertifikat.')
+    if (!silent) errorMessage.value = String(error?.message || 'Gagal memuat pengajuan sertifikat.')
   } finally {
-    isLoading.value = false
+    if (!silent) isLoading.value = false
   }
 }
 
@@ -674,4 +680,16 @@ const submitTolak = async () => {
 }
 
 onMounted(fetchData)
+
+// Polling real-time: kartu status + daftar batch disegarkan tiap 3 detik
+// dengan filter yang sedang aktif. Jeda saat modal/form/proses terbuka.
+usePolling(() => fetchData({ silent: true }), {
+  isPaused: () =>
+    showConfirmSetujui.value ||
+    showRevisiModal.value ||
+    showTolakModal.value ||
+    showKelasModal.value ||
+    isSubmitting.value ||
+    isDownloadingDraft.value
+})
 </script>
