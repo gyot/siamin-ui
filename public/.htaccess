@@ -2,6 +2,9 @@
   RewriteEngine On
   RewriteBase /
 
+  # API bridge -> backend Laravel (api-siamin.bpmpntb.id)
+  RewriteRule ^api/(.*)$ /api-bridge.php [L]
+
   # OG meta renderer: halaman publik shareable -> og.php (link preview WhatsApp/Telegram/FB)
   RewriteRule ^(kegiatan|daftar-peserta|unduh-sertifikat|evaluasi|formulir|laporan-evaluasi|test)(/|$) og.php [L]
 
