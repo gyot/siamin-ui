@@ -2,6 +2,9 @@
   RewriteEngine On
   RewriteBase /
 
+  # OG meta renderer: halaman publik shareable -> og.php (link preview WhatsApp/Telegram/FB)
+  RewriteRule ^(kegiatan|daftar-peserta|unduh-sertifikat|evaluasi|formulir|laporan-evaluasi|test)(/|$) og.php [L]
+
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
