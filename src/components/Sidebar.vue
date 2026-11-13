@@ -55,6 +55,21 @@
         </div>
         <span class="text-[15px] font-medium text-[#050505]">Pengesahan</span>
       </RouterLink>
+      <RouterLink
+        to="/admin/pengajuan-sertifikat"
+        class="sidebar-item"
+        @click="handleClick"
+      >
+        <div class="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <span class="text-[15px] font-medium text-[#050505]">Pengajuan Sertifikat</span>
+        <span
+          class="ml-auto min-w-[22px] h-[22px] px-1.5 rounded-full bg-[#1877F2] text-white text-[11px] font-bold flex items-center justify-center"
+        >{{ pengajuanDiajukanCount }}</span>
+      </RouterLink>
 
       <p class="px-3 pt-3 pb-1 text-[12px] font-semibold text-[#65676B] uppercase tracking-wider">Admin</p>
       <RouterLink 
@@ -189,6 +204,7 @@
 
 <script>
 import { useAuthStore } from '@/stores/auth'
+import { fetchAPI } from '@/services/api'
 
 export default {
   name: 'Sidebar',
@@ -206,9 +222,27 @@ export default {
       default: false
     }
   },
+  data() {
+    return {
+      pengajuanDiajukanCount: 0
+    }
+  },
+  mounted() {
+    this.loadPengajuanCount()
+  },
   methods: {
     handleClick() {
       this.$emit('close')
+    },
+    async loadPengajuanCount() {
+      try {
+        // raw: true WAJIB — fetchAPI membuka wrapper respons sehingga
+        // field `ringkasan` hilang tanpa opsi ini.
+        const response = await fetchAPI('sertifikat-batch/pengajuan', { raw: true })
+        this.pengajuanDiajukanCount = Number(response?.ringkasan?.diajukan ?? 0) || 0
+      } catch {
+        this.pengajuanDiajukanCount = 0
+      }
     },
     async handleLogout() {
       const auth = useAuthStore()
