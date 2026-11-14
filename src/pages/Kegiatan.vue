@@ -227,7 +227,7 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                <tr v-for="(row, index) in kelasItems" :key="`${row.id_kelas || 'new'}-${index}`">
+                <tr v-for="(row, index) in kelasItems" :key="row._key">
                   <td class="px-4 py-2">{{ index + 1 }}</td>
                   <td class="px-4 py-2">
                     <input v-model="row.nama_kelas" type="text" placeholder="Contoh: Kelas A"
@@ -400,7 +400,7 @@
               </div>
             </div>
             <div class="md:col-span-2">
-              <div class="flex items-center justify-between mb-4">
+              <div class="flex flex-wrap items-start justify-between gap-2 mb-4">
                 <div>
                   <h5 class="text-sm font-semibold text-slate-700">Jadwal Harian</h5>
                   <p class="text-xs text-slate-400 mt-0.5">Isi jadwal per hari. Materi akan dihitung JP-nya otomatis. Istirahat tidak dihitung sebagai JP.</p>
@@ -413,61 +413,70 @@
                 </div>
               </div>
 
-              <div v-if="jadwalKelasList.length > 1" class="flex flex-wrap gap-2 mb-4">
-                <button v-for="(k, ki) in jadwalKelasList" :key="ki" type="button" @click="switchJadwalKelas(ki)"
-                  class="px-3 py-1.5 text-xs rounded-lg font-medium transition"
+              <div v-if="jadwalKelasTabs.length > 0" class="flex flex-wrap gap-2 mb-4">
+                <button v-for="(k, ki) in jadwalKelasTabs" :key="k._key" type="button" @click="switchJadwalKelas(ki)"
+                  class="max-w-full px-3 py-1.5 text-xs rounded-lg font-medium transition"
                   :class="activeJadwalKelas === ki ? 'bg-violet-600 text-white' : 'bg-violet-100 text-violet-700 hover:bg-violet-200'">
-                  {{ k.nama_kelas }}
-                  <span class="ml-1 opacity-70">({{ getJadwalForKelas(k.id_kelas).length }} hari)</span>
+                  <span class="inline-block max-w-[10rem] truncate align-bottom">{{ k.nama_kelas }}</span>
+                  <span class="ml-1 opacity-70">({{ getJadwalForKelasKey(k._key).length }} hari)</span>
                 </button>
               </div>
 
               <div v-if="jadwalHarian.length > 0" class="space-y-4">
                 <div v-for="(day, di) in jadwalHarian" :key="di" class="border border-slate-200 rounded-lg overflow-hidden">
-                  <div class="flex items-center justify-between bg-slate-50 px-4 py-3 border-b border-slate-200">
-                    <div class="flex items-center gap-3">
-                      <input v-model="day.hari" class="w-36 px-2 py-1 text-sm font-semibold border border-slate-200 rounded focus:border-blue-500 focus:outline-none" />
-                      <input type="date" v-model="day.tanggal" class="px-2 py-1 text-sm border border-slate-200 rounded focus:border-blue-500 focus:outline-none" />
-                      <span class="text-xs text-slate-400 ml-2">Total JP: {{ hitungTotalJP(day) }}</span>
+                  <div class="bg-slate-50 px-3 sm:px-4 py-3 border-b border-slate-200">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <input v-model="day.hari" class="w-full sm:w-36 px-2 py-1 text-sm font-semibold border border-slate-200 rounded focus:border-blue-500 focus:outline-none" />
+                      <input type="date" v-model="day.tanggal" class="flex-1 min-w-0 sm:flex-none px-2 py-1 text-sm border border-slate-200 rounded focus:border-blue-500 focus:outline-none" />
+                      <span class="text-xs text-slate-400 whitespace-nowrap">Total JP: {{ hitungTotalJP(day) }}</span>
+                      <button type="button" @click="removeJadwalDay(di)" class="ml-auto text-xs text-red-600 hover:text-red-700 font-medium">Hapus Hari</button>
                     </div>
-                    <button type="button" @click="removeJadwalDay(di)" class="text-xs text-red-600 hover:text-red-700 font-medium">Hapus Hari</button>
                   </div>
 
-                  <div class="p-4 space-y-2">
-                    <div v-for="(item, ii) in day.items" :key="ii" class="flex items-start gap-2 p-2 rounded-lg" :class="item.tipe === 'istirahat' ? 'bg-amber-50' : 'bg-white border border-slate-100'">
-                      <div class="flex items-center gap-1 pt-1">
-                        <span class="text-xs text-slate-400 w-5 text-center">{{ ii + 1 }}</span>
-                        <select v-model="item.tipe" class="px-1.5 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none bg-white" :class="item.tipe === 'istirahat' ? 'border-amber-300' : ''">
+                  <div class="p-2 sm:p-4 space-y-2">
+                    <!-- Satu kartu per baris jadwal: tipe di baris pertama, dua input jam
+                         berdampingan proporsional, tombol hapus selalu terjangkau. -->
+                    <div v-for="(item, ii) in day.items" :key="ii" class="rounded-lg p-2 space-y-2" :class="item.tipe === 'istirahat' ? 'bg-amber-50' : 'bg-white border border-slate-100'">
+                      <div class="flex items-center gap-2">
+                        <span class="text-xs text-slate-400 w-5 text-center shrink-0">{{ ii + 1 }}</span>
+                        <select v-model="item.tipe" class="px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none bg-white" :class="item.tipe === 'istirahat' ? 'border-amber-300' : ''">
                           <option value="materi">Materi</option>
                           <option value="istirahat">Istirahat</option>
                         </select>
+                        <span v-if="item.tipe !== 'istirahat'" class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded whitespace-nowrap">{{ item.jp || 0 }} JP</span>
+                        <button type="button" @click="day.items.splice(ii, 1)" aria-label="Hapus baris jadwal"
+                          class="ml-auto shrink-0 w-7 h-7 flex items-center justify-center rounded text-red-400 hover:text-red-600 hover:bg-red-50 text-base leading-none">&times;</button>
                       </div>
 
-                      <div class="flex-1 grid gap-2" :class="item.tipe === 'istirahat' ? 'grid-cols-[100px_100px_1fr]' : 'grid-cols-[100px_100px_60px_1fr_120px_100px]'">
-                        <input type="time" v-model="item.jam_mulai" @change="onJamMulaiChange(di, ii)" class="px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none" />
-                        <input type="time" v-model="item.jam_selesai" @change="onJamSelesaiChange(di, ii)" class="px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none" />
-                        <template v-if="item.tipe !== 'istirahat'">
-                          <div class="flex items-center">
-                            <span class="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">{{ item.jp || 0 }} JP</span>
-                          </div>
-                          <input v-model="item.kegiatan" class="px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none" placeholder="Nama materi" />
-                          <select v-model="item.kategori" class="px-1.5 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none bg-white">
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="min-w-0">
+                          <label class="block text-[10px] text-slate-400 mb-0.5 sm:hidden">Jam Mulai</label>
+                          <input type="time" v-model="item.jam_mulai" @change="onJamMulaiChange(di, ii)" class="w-full px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none" />
+                        </div>
+                        <div class="min-w-0">
+                          <label class="block text-[10px] text-slate-400 mb-0.5 sm:hidden">Jam Selesai</label>
+                          <input type="time" v-model="item.jam_selesai" @change="onJamSelesaiChange(di, ii)" class="w-full px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none" />
+                        </div>
+                      </div>
+
+                      <template v-if="item.tipe !== 'istirahat'">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <input v-model="item.kegiatan" class="col-span-2 px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none" placeholder="Nama materi" />
+                          <select v-model="item.kategori" class="px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none bg-white">
                             <option value="Umum">Umum</option>
                             <option value="Pokok">Pokok</option>
                             <option value="Penunjang">Penunjang</option>
                           </select>
                           <input v-model="item.pj" class="px-2 py-1 border border-slate-200 rounded text-xs focus:border-blue-500 focus:outline-none" placeholder="PJ" />
-                        </template>
-                        <template v-else>
-                          <input v-model="item.kegiatan" class="px-2 py-1 border border-amber-200 rounded text-xs focus:border-amber-400 focus:outline-none bg-amber-50" placeholder="Keterangan (opsional)" />
-                        </template>
-                      </div>
-
-                      <button type="button" @click="day.items.splice(ii, 1)" class="text-red-400 hover:text-red-600 pt-1">&times;</button>
+                        </div>
+                      </template>
+                      <template v-else>
+                        <input v-model="item.kegiatan" class="w-full px-2 py-1 border border-amber-200 rounded text-xs focus:border-amber-400 focus:outline-none bg-amber-50" placeholder="Keterangan (opsional)" />
+                      </template>
                     </div>
                   </div>
 
-                  <div class="flex gap-2 px-4 pb-4">
+                  <div class="flex flex-wrap gap-2 px-3 sm:px-4 pb-4">
                     <button type="button" @click="addJadwalItem(di, 'materi')" class="text-xs px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 font-medium">+ Materi</button>
                     <button type="button" @click="addJadwalItem(di, 'istirahat')" class="text-xs px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg hover:bg-amber-200 font-medium">+ Istirahat</button>
                   </div>
@@ -1909,7 +1918,14 @@ export default {
     const atkForm = ref(createEmptyAtkForm())
     const atkItems = ref([])
     const atkError = ref('')
+    // Kunci sementara untuk kelas yang belum disimpan (id_kelas masih null).
+    // Kunci ini menjadi key jadwalDataStore sehingga jadwal bisa diisi per kelas
+    // sebelum kelasnya tersimpan; saat simpan kunci dipetakan ke id_kelas asli.
+    let kelasKeySeq = 0
+    const makeKelasKey = () => `tmp-${++kelasKeySeq}`
+    const getKelasRowKey = (row) => (row?.id_kelas != null ? String(row.id_kelas) : (row?._key || 'default'))
     const createEmptyKelasRow = () => ({
+      _key: makeKelasKey(),
       id_kelas: null,
       nama_kelas: '',
       deskripsi: ''
@@ -2468,25 +2484,11 @@ export default {
         // Load jadwal from API into form state for editing
         const id = selectedKegiatan.value.id_kegiatan
         await loadKelasForJadwal(id)
+        ensureKelasItemsFromApi()
         try {
           const { getJadwal: fetchJadwal } = await import('@/services/laporan')
           const result = await fetchJadwal(id)
-          if (result.jadwal_per_kelas?.length > 0) {
-            const store = {}
-            result.jadwal_per_kelas.forEach(k => {
-              store[String(k.id_kelas)] = k.jadwal || []
-            })
-            jadwalDataStore.value = store
-            activeJadwalKelas.value = 0
-            jadwalHarian.value = store[String(result.jadwal_per_kelas[0].id_kelas)] || []
-          } else if (result.jadwal_harian?.length > 0) {
-            jadwalDataStore.value = { default: result.jadwal_harian }
-            activeJadwalKelas.value = 0
-            jadwalHarian.value = result.jadwal_harian
-          } else {
-            jadwalDataStore.value = {}
-            jadwalHarian.value = []
-          }
+          applyLoadedJadwal(result)
         } catch {
           jadwalDataStore.value = {}
           jadwalHarian.value = []
@@ -2664,6 +2666,7 @@ export default {
     }
 
     const normalizeKelasItem = (item) => ({
+      _key: item?._key || makeKelasKey(),
       id_kelas: item?.id_kelas ?? item?.id ?? null,
       nama_kelas: String(item?.nama_kelas ?? '').trim(),
       deskripsi: String(item?.deskripsi ?? '').trim()
@@ -2746,12 +2749,52 @@ export default {
     }
 
     const addKelasRow = () => {
-      kelasItems.value.push(createEmptyKelasRow())
+      const row = createEmptyKelasRow()
+      const isFirstKelas = kelasItems.value.length === 0
+      kelasItems.value.push(row)
+      const key = getKelasRowKey(row)
+      jadwalDataStore.value[key] = []
+      if (isFirstKelas && (jadwalDataStore.value.default?.length ?? 0) > 0) {
+        // Jadwal yang sudah diisi di mode "Kelas Umum" (key 'default') ikut
+        // berpindah ke kelas pertama agar tidak hilang.
+        jadwalDataStore.value[key] = jadwalDataStore.value.default
+        delete jadwalDataStore.value.default
+      }
+      // Langsung pindah ke tab kelas baru agar jadwalnya bisa langsung diisi.
+      activeJadwalKelas.value = kelasItems.value.length - 1
+      jadwalHarian.value = jadwalDataStore.value[key]
       kelasError.value = ''
     }
 
     const removeKelasRow = (index) => {
+      const row = kelasItems.value[index]
+      if (!row) return
+      const key = getKelasRowKey(row)
+      const nama = String(row.nama_kelas || '').trim() || 'Kelas ini'
+      const hasJadwal = (jadwalDataStore.value[key]?.length ?? 0) > 0
+      if (hasJadwal) {
+        if (!confirm(`Hapus ${nama}? Data jadwal milik kelas ini juga akan dihapus.`)) return
+      } else if (row.id_kelas != null) {
+        if (!confirm(`Hapus ${nama} dari daftar kelas?`)) return
+      }
       kelasItems.value.splice(index, 1)
+      if (key in jadwalDataStore.value) {
+        delete jadwalDataStore.value[key]
+      }
+      // Perbaiki tab aktif setelah baris (dan tab-nya) hilang.
+      const newLen = kelasItems.value.length
+      if (newLen === 0) {
+        activeJadwalKelas.value = 0
+        if (!jadwalDataStore.value.default) jadwalDataStore.value.default = []
+        jadwalHarian.value = jadwalDataStore.value.default
+      } else {
+        const prevActive = activeJadwalKelas.value
+        const nextActive = index < prevActive ? prevActive - 1 : Math.min(prevActive, newLen - 1)
+        activeJadwalKelas.value = nextActive
+        const nextKey = getKelasKey(nextActive)
+        if (!jadwalDataStore.value[nextKey]) jadwalDataStore.value[nextKey] = []
+        jadwalHarian.value = jadwalDataStore.value[nextKey]
+      }
     }
 
     const normalizeTpkItem = (item) => ({
@@ -2875,14 +2918,14 @@ export default {
         return days
       }
 
-      if (jadwalKelasList.value.length > 0) {
+      if (jadwalKelasTabs.value.length > 0) {
         const store = {}
-        jadwalKelasList.value.forEach(k => {
-          store[String(k.id_kelas)] = makeJadwal()
+        jadwalKelasTabs.value.forEach(k => {
+          store[k._key] = makeJadwal()
         })
         jadwalDataStore.value = store
         activeJadwalKelas.value = 0
-        jadwalHarian.value = store[String(jadwalKelasList.value[0].id_kelas)] || []
+        jadwalHarian.value = store[jadwalKelasTabs.value[0]._key] || []
       } else {
         jadwalDataStore.value = { default: makeJadwal() }
         activeJadwalKelas.value = 0
@@ -2939,15 +2982,60 @@ export default {
       jadwalHarian.value = jadwalDataStore.value[newKey]
     }
 
-    const getKelasKey = (index) => {
-      if (jadwalKelasList.value.length > 0 && jadwalKelasList.value[index]) {
-        return String(jadwalKelasList.value[index].id_kelas)
+    // Tab jadwal per kelas diturunkan langsung dari baris "Daftar Kelas"
+    // (termasuk kelas baru yang belum disimpan) sehingga penambahan, rename,
+    // dan penghapusan baris kelas langsung tercermin pada pilihan jadwal.
+    const jadwalKelasTabs = computed(() => kelasItems.value.map(row => ({
+      _key: getKelasRowKey(row),
+      id_kelas: row.id_kelas ?? null,
+      nama_kelas: String(row.nama_kelas ?? '').trim() || 'Kelas (tanpa nama)'
+    })))
+
+    // Jaga-jaga bila payload daftar_kelas tidak terbawa respons API, isi
+    // kelasItems dari daftar kelas hasil getKelasByKegiatan agar tab jadwal
+    // tetap ada dan id_kelas-nya tetap selaras dengan data tersimpan.
+    const ensureKelasItemsFromApi = () => {
+      if (kelasItems.value.length === 0 && jadwalKelasList.value.length > 0) {
+        kelasItems.value = jadwalKelasList.value.map(k => normalizeKelasItem(k))
+        kelasError.value = ''
       }
-      return 'default'
     }
 
-    const getJadwalForKelas = (idKelas) => {
-      return jadwalDataStore.value[String(idKelas)] || []
+    const getKelasKey = (index) => {
+      const tab = jadwalKelasTabs.value[index]
+      return tab ? tab._key : 'default'
+    }
+
+    const getJadwalForKelasKey = (key) => {
+      return jadwalDataStore.value[key] || []
+    }
+
+    // Muat hasil getJadwal ke state form (dipakai modal edit dari tabel & dari detail).
+    const applyLoadedJadwal = (result) => {
+      if (result.jadwal_per_kelas?.length > 0) {
+        const store = {}
+        result.jadwal_per_kelas.forEach(k => {
+          store[String(k.id_kelas)] = k.jadwal || []
+        })
+        jadwalDataStore.value = store
+        activeJadwalKelas.value = 0
+        const firstKey = getKelasKey(0)
+        if (store[firstKey]) {
+          jadwalHarian.value = store[firstKey]
+        } else if (firstKey === 'default') {
+          jadwalHarian.value = store[String(result.jadwal_per_kelas[0].id_kelas)] || []
+        } else {
+          store[firstKey] = []
+          jadwalHarian.value = store[firstKey]
+        }
+      } else if (result.jadwal_harian?.length > 0) {
+        jadwalDataStore.value = { default: result.jadwal_harian }
+        activeJadwalKelas.value = 0
+        jadwalHarian.value = result.jadwal_harian
+      } else {
+        jadwalDataStore.value = {}
+        jadwalHarian.value = []
+      }
     }
 
     const addJadwalItem = (dayIndex, tipe) => {
@@ -3134,6 +3222,50 @@ export default {
           deskripsi: item.deskripsi || null
         }))
 
+    // Petakan key jadwalDataStore ke id_kelas asli hasil simpan.
+    // - key numerik = kelas yang sudah punya id_kelas (dipertahankan backend)
+    // - key sementara 'tmp-*' = kelas baru; dicocokkan dari daftar kelas hasil
+    //   simpan berdasarkan nama (tiap id hanya dipakai sekali, urut sesuai
+    //   urutan baris sehingga kelas bernama sama tetap tertangani).
+    const buildKelasIdMap = (savedKelasRows) => {
+      const map = {}
+      const remaining = (savedKelasRows || [])
+        .filter(r => r && r.id_kelas != null)
+        .map(r => ({ id: Number(r.id_kelas), nama: String(r.nama_kelas ?? '').trim().toLowerCase() }))
+      kelasItems.value.forEach(row => {
+        if (row.id_kelas != null) {
+          map[getKelasRowKey(row)] = Number(row.id_kelas)
+          const i = remaining.findIndex(r => r.id === Number(row.id_kelas))
+          if (i !== -1) remaining.splice(i, 1)
+        }
+      })
+      kelasItems.value.forEach(row => {
+        if (row.id_kelas == null) {
+          const nama = String(row.nama_kelas ?? '').trim().toLowerCase()
+          const i = nama ? remaining.findIndex(r => r.nama === nama) : -1
+          if (i !== -1) {
+            map[getKelasRowKey(row)] = remaining[i].id
+            remaining.splice(i, 1)
+          }
+        }
+      })
+      return map
+    }
+
+    const resolveKelasIdMap = async (savedKegiatanId, savedKegiatan) => {
+      let rows = Array.isArray(savedKegiatan?.daftar_kelas) ? savedKegiatan.daftar_kelas
+        : (Array.isArray(savedKegiatan?.data?.daftar_kelas) ? savedKegiatan.data.daftar_kelas : null)
+      if (!rows || rows.length === 0) {
+        try {
+          const data = await getKelasByKegiatan(savedKegiatanId)
+          rows = Array.isArray(data) ? data : (data?.data || [])
+        } catch {
+          rows = []
+        }
+      }
+      return buildKelasIdMap(rows)
+    }
+
     const buildKegiatanPayloadObject = (data, { isUpdate = false } = {}) => {
       // Kirim hanya field yang memang diperlukan backend untuk create/update.
       // Hindari mengirim field turunan seperti link_formulir atau metadata lain.
@@ -3204,25 +3336,11 @@ export default {
 
           // Load jadwal from API into form state
           await loadKelasForJadwal(id)
+          ensureKelasItemsFromApi()
           try {
             const { getJadwal: fetchJadwal } = await import('@/services/laporan')
             const result = await fetchJadwal(id)
-            if (result.jadwal_per_kelas?.length > 0) {
-              const store = {}
-              result.jadwal_per_kelas.forEach(k => {
-                store[String(k.id_kelas)] = k.jadwal || []
-              })
-              jadwalDataStore.value = store
-              activeJadwalKelas.value = 0
-              jadwalHarian.value = store[String(result.jadwal_per_kelas[0].id_kelas)] || []
-            } else if (result.jadwal_harian?.length > 0) {
-              jadwalDataStore.value = { default: result.jadwal_harian }
-              activeJadwalKelas.value = 0
-              jadwalHarian.value = result.jadwal_harian
-            } else {
-              jadwalDataStore.value = {}
-              jadwalHarian.value = []
-            }
+            applyLoadedJadwal(result)
           } catch {
             jadwalDataStore.value = {}
             jadwalHarian.value = []
@@ -3280,6 +3398,12 @@ export default {
         // Load kelas rows from source, but strip id_kelas so the duplicate creates new kelas
         loadKegiatanKelasItems(source)
         kelasItems.value = kelasItems.value.map(row => ({ ...row, id_kelas: null }))
+        // Jadwal tidak ikut diduplikasi; bersihkan state jadwal lama agar
+        // kunci kelas sesi sebelumnya tidak ikut terkirim.
+        jadwalKelasList.value = []
+        activeJadwalKelas.value = 0
+        jadwalDataStore.value = {}
+        jadwalHarian.value = []
         // Open add modal for creating (pre-filled)
         showAddModal.value = true
       } catch (err) {
@@ -3411,6 +3535,7 @@ export default {
         }
 
         let created = null
+        let savedKegiatanResponse = null
         if (editingId.value) {
           const updated = useMultipart
             ? await postAPI(`kegiatan/${editingId.value}`, (() => {
@@ -3419,6 +3544,7 @@ export default {
               return fd
             })())
             : await updateKegiatan(editingId.value, payload)
+          savedKegiatanResponse = updated || null
           enrichWithLink(updated || {})
           const index = kegiatan.value.findIndex(k => String(k.id_kegiatan) === String(editingId.value))
           if (index !== -1) {
@@ -3439,6 +3565,7 @@ export default {
           })
         } else {
           created = await createKegiatan(payload)
+          savedKegiatanResponse = created
           enrichWithLink(created)
           kegiatan.value.push(created)
           // Log creation
@@ -3450,13 +3577,26 @@ export default {
           })
         }
 
-        // Save jadwal harian
+        // Save jadwal harian. Kelas sudah ikut tersimpan lewat payload
+        // daftar_kelas di atas; sekarang kunci sementara kelas baru dipetakan
+        // ke id_kelas hasil simpan sebelum jadwal dikirim.
         const savedKegiatanId = editingId.value || created?.id_kegiatan
         if (savedKegiatanId && Object.keys(jadwalDataStore.value).length > 0) {
           try {
+            const kelasIdMap = await resolveKelasIdMap(savedKegiatanId, savedKegiatanResponse)
             const jadwalArray = []
             for (const [kelasKey, days] of Object.entries(jadwalDataStore.value)) {
-              const idKelas = kelasKey === 'default' ? null : Number(kelasKey)
+              let idKelas = null
+              if (kelasKey !== 'default') {
+                if (/^\d+$/.test(kelasKey)) {
+                  idKelas = Number(kelasKey)
+                } else {
+                  idKelas = kelasIdMap[kelasKey] ?? null
+                  if (idKelas === null) {
+                    console.warn(`Kunci kelas sementara ${kelasKey} tidak ditemukan pada hasil simpan; jadwalnya dikirim tanpa id_kelas.`)
+                  }
+                }
+              }
               days.forEach((day, idx) => {
                 jadwalArray.push({
                   hari: day.hari,
@@ -4236,6 +4376,7 @@ export default {
       cancelEditTpk,
       removeTpkItem,
       jadwalKelasList,
+      jadwalKelasTabs,
       activeJadwalKelas,
       jadwalDataStore,
       jadwalHarian,
@@ -4244,7 +4385,7 @@ export default {
       removeJadwalDay,
       loadKelasForJadwal,
       switchJadwalKelas,
-      getJadwalForKelas,
+      getJadwalForKelasKey,
       loadJadwalForView,
       formatDateShort,
       addJadwalItem,
