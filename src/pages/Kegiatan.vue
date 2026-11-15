@@ -1045,11 +1045,11 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p class="text-xs font-medium text-slate-500 uppercase mb-1">Dibuat</p>
-              <p class="text-sm text-slate-700">{{ formatDate(selectedSuratTugas.created_at) }}</p>
+              <p class="text-sm text-slate-700">{{ formatDate(selectedSuratTugas.created_at || selectedSuratTugas.kegiatan?.created_at) }}</p>
             </div>
             <div>
               <p class="text-xs font-medium text-slate-500 uppercase mb-1">Diubah</p>
-              <p class="text-sm text-slate-700">{{ formatDate(selectedSuratTugas.updated_at) }}</p>
+              <p class="text-sm text-slate-700">{{ formatDate(selectedSuratTugas.updated_at || selectedSuratTugas.kegiatan?.updated_at) }}</p>
             </div>
           </div>
         </div>
@@ -1097,7 +1097,17 @@
 
           <!-- Form Tambah Anggota -->
           <div class="border border-slate-200 rounded-lg p-4 bg-slate-50">
-            <!-- Error messages -->
+            <!-- Peringatan bentrok penugasan -->
+            <div v-if="konflikTugas" class="mb-4 p-3 bg-amber-50 border border-amber-300 rounded-lg">
+              <div class="flex items-start gap-2">
+                <span class="text-amber-600 text-lg leading-none">⚠</span>
+                <div class="text-sm text-amber-900">
+                  <p class="font-semibold">Bentrok Penugasan</p>
+                  <p class="mt-1">{{ konflikTugas }}</p>
+                </div>
+              </div>
+            </div>
+            <!-- Error validasi -->
             <div v-if="formAnggotaErrors.length" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <ul class="list-disc list-inside text-sm text-red-800">
                 <li v-for="(error, idx) in formAnggotaErrors" :key="idx">{{ error }}</li>
@@ -1905,6 +1915,7 @@ export default {
     const templateBiodataFile = ref(null)
     const isTemplateBiodataCleared = ref(false)
     const formAnggota = ref({ id_pegawai: '', peran: '' })
+    const konflikTugas = ref('')
     const formAnggotaErrors = ref([])
     const editingAnggotaId = ref(null)
     const createEmptyAtkForm = () => ({
@@ -4159,12 +4170,15 @@ export default {
       if (overlappingAssignment) {
         const otherKegiatan = overlappingAssignment.kegiatan || {}
         const tanggal = formatDateRange(otherKegiatan.tanggal_mulai, otherKegiatan.tanggal_selesai)
-        formAnggotaErrors.value.push(
-          `Pegawai ini sudah memiliki tugas pada kegiatan ${otherKegiatan.nama_kegiatan || '-'}, ${otherKegiatan.lokasi || '-'}, ${tanggal}`
-        )
+        const nama = otherKegiatan.nama_kegiatan || 'tanpa nama'
+        const lokasi = otherKegiatan.lokasi ? ` di ${otherKegiatan.lokasi}` : ''
+        const peran = overlappingAssignment.peran ? ` sebagai ${getPeranLabel(overlappingAssignment.peran)}` : ''
+        konflikTugas.value = `Pegawai sudah memiliki tugas pada kegiatan "${nama}"${lokasi}, tanggal ${tanggal}${peran}. Pilih pegawai lain atau hapus tugas yang bentrok terlebih dahulu.`
+      } else {
+        konflikTugas.value = ''
       }
 
-      if (formAnggotaErrors.value.length > 0) return
+      if (formAnggotaErrors.value.length > 0 || konflikTugas.value) return
       try {
         if (editingAnggotaId.value) {
           // Update anggota
