@@ -4163,9 +4163,14 @@ export default {
         ?? selectedSuratTugas.value?.id_penugasan
         ?? selectedSuratTugas.value?.id_surat_tugas
 
-      const overlappingAssignment = formAnggota.value.id_pegawai && selectedId
-        ? findOverlappingKegiatanForPegawai(formAnggota.value.id_pegawai, selectedId, editingAnggotaId.value)
-        : null
+      let overlappingAssignment = null
+      try {
+        overlappingAssignment = formAnggota.value.id_pegawai && selectedId
+          ? findOverlappingKegiatanForPegawai(formAnggota.value.id_pegawai, selectedId, editingAnggotaId.value)
+          : null
+      } catch (e) {
+        overlappingAssignment = null
+      }
 
       if (overlappingAssignment) {
         const otherKegiatan = overlappingAssignment.kegiatan || {}
@@ -4440,6 +4445,7 @@ export default {
       pegawaiOptions,
       formAnggota,
       formAnggotaErrors,
+      konflikTugas,
       peranPenugasanOptions,
       addAnggota,
       removeAnggota,
