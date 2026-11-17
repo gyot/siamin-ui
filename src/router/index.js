@@ -1,6 +1,7 @@
 
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useHakAksesStore } from '@/stores/hakAkses'
 
 const AdminLayout = () => import('../layouts/AdminLayout.vue')
 const Dashboard = () => import('../pages/Dashboard.vue')
@@ -38,6 +39,7 @@ const ProsesSertifikat = () => import('../pages/ProsesSertifikat.vue')
 const ProsesSertifikatDetail = () => import('../pages/ProsesSertifikatDetail.vue')
 const ApiToken = () => import('../pages/ApiToken.vue')
 const LaporanKegiatan = () => import('../pages/LaporanKegiatan.vue')
+const HakAkses = () => import('../pages/HakAkses.vue')
 const BuatLaporan = () => import('../pages/BuatLaporan.vue')
 const KegiatanDetail = () => import('../pages/KegiatanDetail.vue')
 const PesertaLayout = () => import('../layouts/PesertaLayout.vue')
@@ -185,27 +187,28 @@ const router = createRouter({
     }
   },
   {path:'/admin',component:AdminLayout,meta:{requiresAuth:true,requiresAdmin:true},children:[
-    {path:'dashboard',name:'dashboard',component:Dashboard,meta:{title:'Dashboard',description:'Ringkasan data utama SIMAIK.'}},
-    {path:'kegiatan',name:'kegiatan',component:Kegiatan,meta:{title:'Manajemen Kegiatan',description:'Kelola seluruh kegiatan.'}},
-    {path:'kegiatan/:id/peserta',name:'kegiatan-peserta',component:KegiatanPeserta,meta:{title:'Peserta Kegiatan',description:'Kelola peserta per kegiatan.'}},
-    {path:'kegiatan/:id/test-laporan',name:'test-laporan',component:TestLaporan,meta:{title:'Laporan Test',description:'Laporan hasil test kegiatan.'}},
-    {path:'kegiatan/:id/buat-laporan',name:'buat-laporan',component:BuatLaporan,meta:{title:'Buat Laporan',description:'Buat dan preview laporan kegiatan.'}},
-    {path:'kegiatan/:id/detail',name:'kegiatan-detail',component:KegiatanDetail,meta:{title:'Detail Kegiatan',description:'Detail informasi kegiatan.'}},
-    {path:'paket-soal',name:'paket-soal',component:PaketSoal,meta:{title:'Paket Soal',description:'Kelola paket soal dan soal ujian.'}},
-    {path:'peserta',name:'peserta',component:PesertaManagement,meta:{title:'Manajemen Peserta',description:'Kelola data peserta kegiatan.'}},
-    {path:'sekolah',name:'daftar-sekolah',component:DaftarSekolah,meta:{title:'Daftar Sekolah',description:'Daftar sekolah unik berdasarkan NPSN.'}},
-    {path:'daftar-peserta',name:'daftar-peserta-all',component:DaftarPeserta,meta:{title:'Daftar Peserta',description:'Daftar peserta keseluruhan seluruh kegiatan.'}},
+    {path:'dashboard',name:'dashboard',component:Dashboard,meta:{title:'Dashboard',description:'Ringkasan data utama SIMAIK.',menu:'dashboard'}},
+    {path:'kegiatan',name:'kegiatan',component:Kegiatan,meta:{title:'Manajemen Kegiatan',description:'Kelola seluruh kegiatan.',menu:'kegiatan'}},
+    {path:'kegiatan/:id/peserta',name:'kegiatan-peserta',component:KegiatanPeserta,meta:{title:'Peserta Kegiatan',description:'Kelola peserta per kegiatan.',menu:'kegiatan'}},
+    {path:'kegiatan/:id/test-laporan',name:'test-laporan',component:TestLaporan,meta:{title:'Laporan Test',description:'Laporan hasil test kegiatan.',menu:'kegiatan'}},
+    {path:'kegiatan/:id/buat-laporan',name:'buat-laporan',component:BuatLaporan,meta:{title:'Buat Laporan',description:'Buat dan preview laporan kegiatan.',menu:'kegiatan'}},
+    {path:'kegiatan/:id/detail',name:'kegiatan-detail',component:KegiatanDetail,meta:{title:'Detail Kegiatan',description:'Detail informasi kegiatan.',menu:'kegiatan'}},
+    {path:'paket-soal',name:'paket-soal',component:PaketSoal,meta:{title:'Paket Soal',description:'Kelola paket soal dan soal ujian.',menu:'paket-soal'}},
+    {path:'peserta',name:'peserta',component:PesertaManagement,meta:{title:'Manajemen Peserta',description:'Kelola data peserta kegiatan.',menu:'daftar-peserta'}},
+    {path:'sekolah',name:'daftar-sekolah',component:DaftarSekolah,meta:{title:'Daftar Sekolah',description:'Daftar sekolah unik berdasarkan NPSN.',menu:'daftar-sekolah'}},
+    {path:'daftar-peserta',name:'daftar-peserta-all',component:DaftarPeserta,meta:{title:'Daftar Peserta',description:'Daftar peserta keseluruhan seluruh kegiatan.',menu:'daftar-peserta'}},
     {path:'sertifikat',name:'sertifikat',component:Sertifikat,meta:{title:'Sertifikat',description:'Kelola sertifikat peserta.'}},
-    {path:'pegawai',name:'pegawai',component:PegawaiManagement,meta:{title:'Pegawai',description:'Kelola data pegawai.'}},
-    {path:'unit-kerja',name:'unit-kerja',component:UnitKerjaManagement,meta:{title:'Unit Kerja',description:'Kelola unit kerja.'}},
-    {path:'anggota',name:'anggota',component:AnggotaManagement,meta:{title:'Keanggotaan Tim',description:'Kelola anggota tim kerja.'}},
-    {path:'penugasan',name:'penugasan',component:Penugasan,meta:{title:'Penugasan Pegawai',description:'Lihat dan filter penugasan pegawai.'}},
+    {path:'pegawai',name:'pegawai',component:PegawaiManagement,meta:{title:'Pegawai',description:'Kelola data pegawai.',menu:'pegawai-user'}},
+    {path:'unit-kerja',name:'unit-kerja',component:UnitKerjaManagement,meta:{title:'Unit Kerja',description:'Kelola unit kerja.',menu:'pegawai-user'}},
+    {path:'anggota',name:'anggota',component:AnggotaManagement,meta:{title:'Keanggotaan Tim',description:'Kelola anggota tim kerja.',menu:'pegawai-user'}},
+    {path:'penugasan',name:'penugasan',component:Penugasan,meta:{title:'Penugasan Pegawai',description:'Lihat dan filter penugasan pegawai.',menu:'penugasan'}},
     {path:'pengesahan',name:'pengesahan',component:Pengesahan,meta:{title:'Pengesahan',description:'Halaman pengesahan dokumen.',requiresKepala:true}},
-    {path:'pengajuan-sertifikat',name:'pengajuan-sertifikat',component:PengajuanSertifikat,meta:{title:'Pengajuan Sertifikat',description:'Meja reviewer pengajuan penerbitan sertifikat.'}},
-    {path:'proses-sertifikat',name:'proses-sertifikat',component:ProsesSertifikat,meta:{title:'Proses Sertifikat',description:'Meja persuratan penerbitan nomor resmi sertifikat.'}},
-    {path:'proses-sertifikat/:id',name:'proses-sertifikat-detail',component:ProsesSertifikatDetail,meta:{title:'Detail Proses Sertifikat',description:'Proses naskah dan pengelolaan status sertifikat peserta.'}},
-    {path:'api-token',name:'api-token',component:ApiToken,meta:{title:'API Token',description:'Kelola token API untuk integrasi aplikasi lain.',requiresAdmin:true}},
-    {path:'laporan-kegiatan',name:'laporan-kegiatan',component:LaporanKegiatan,meta:{title:'Laporan Kegiatan',description:'Preview dan download laporan kegiatan.'}},
+    {path:'pengajuan-sertifikat',name:'pengajuan-sertifikat',component:PengajuanSertifikat,meta:{title:'Pengajuan Sertifikat',description:'Meja reviewer pengajuan penerbitan sertifikat.',menu:'pengajuan-sertifikat'}},
+    {path:'proses-sertifikat',name:'proses-sertifikat',component:ProsesSertifikat,meta:{title:'Proses Sertifikat',description:'Meja persuratan penerbitan nomor resmi sertifikat.',menu:'proses-sertifikat'}},
+    {path:'proses-sertifikat/:id',name:'proses-sertifikat-detail',component:ProsesSertifikatDetail,meta:{title:'Detail Proses Sertifikat',description:'Proses naskah dan pengelolaan status sertifikat peserta.',menu:'proses-sertifikat'}},
+    {path:'api-token',name:'api-token',component:ApiToken,meta:{title:'API Token',description:'Kelola token API untuk integrasi aplikasi lain.',requiresAdmin:true,menu:'api-token'}},
+    {path:'laporan-kegiatan',name:'laporan-kegiatan',component:LaporanKegiatan,meta:{title:'Laporan Kegiatan',description:'Preview dan download laporan kegiatan.',menu:'laporan-kegiatan'}},
+    {path:'hak-akses',name:'hak-akses',component:HakAkses,meta:{title:'Hak Akses',description:'Kelola hak akses menu setiap pengguna.',menu:'hak-akses'}},
     {path:'profile',name:'profile',component:Profile,meta:{title:'Profil',description:'Kelola profil pengguna.'}}
   ]},
   {
@@ -372,6 +375,36 @@ router.beforeEach(async (to, from, next) => {
     } else if (to.meta.requiresKepala && !authStore.isKepala) {
       next('/admin/dashboard')
     } else {
+      // Cek hak akses menu (meta.menu) — halaman yang menu-nya tidak dimiliki
+      // user dialihkan ke dashboard dengan pesan akses ditolak.
+      if (to.meta.menu && to.path !== '/admin/dashboard') {
+        const hakAksesStore = useHakAksesStore()
+        if (!hakAksesStore.loaded) {
+          try {
+            await hakAksesStore.load()
+          } catch {
+            // load() sudah jatuh ke menu default; biarkan pengecekan berjalan
+          }
+        }
+        const boleh = to.meta.menu === 'hak-akses'
+          ? hakAksesStore.isSuperAdmin
+          : hakAksesStore.hasMenu(to.meta.menu)
+        if (!boleh) {
+          next({ path: '/admin/dashboard' })
+          import('sweetalert2').then(({ default: Swal }) => {
+            Swal.fire({
+              toast: true,
+              position: 'top',
+              icon: 'warning',
+              title: 'Akses ditolak',
+              text: 'Anda tidak memiliki hak akses untuk halaman tersebut.',
+              showConfirmButton: false,
+              timer: 3000
+            })
+          })
+          return
+        }
+      }
       next()
     }
   } else {

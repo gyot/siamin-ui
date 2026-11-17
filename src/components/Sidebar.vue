@@ -19,6 +19,7 @@
     <!-- Navigation -->
     <nav class="flex-1 overflow-y-auto p-3 space-y-0.5">
       <RouterLink 
+        v-if="canSee('dashboard')"
         to="/admin/dashboard" 
         class="sidebar-item"
         @click="handleClick"
@@ -31,6 +32,7 @@
         <span class="text-[15px] font-medium text-[#050505]">Dashboard</span>
       </RouterLink>
       <RouterLink 
+        v-if="canSee('kegiatan')"
         to="/admin/kegiatan" 
         class="sidebar-item"
         @click="handleClick"
@@ -56,6 +58,7 @@
         <span class="text-[15px] font-medium text-[#050505]">Pengesahan</span>
       </RouterLink>
       <RouterLink
+        v-if="canSee('pengajuan-sertifikat')"
         to="/admin/pengajuan-sertifikat"
         class="sidebar-item"
         @click="handleClick"
@@ -71,6 +74,7 @@
         >{{ pengajuanDiajukanCount }}</span>
       </RouterLink>
       <RouterLink
+        v-if="canSee('proses-sertifikat')"
         to="/admin/proses-sertifikat"
         class="sidebar-item"
         @click="handleClick"
@@ -83,8 +87,9 @@
         <span class="text-[15px] font-medium text-[#050505]">Proses Sertifikat</span>
       </RouterLink>
 
-      <p class="px-3 pt-3 pb-1 text-[12px] font-semibold text-[#65676B] uppercase tracking-wider">Admin</p>
+      <p v-if="adaMenuAdmin" class="px-3 pt-3 pb-1 text-[12px] font-semibold text-[#65676B] uppercase tracking-wider">Admin</p>
       <RouterLink 
+        v-if="canSee('pegawai-user')"
         to="/admin/pegawai" 
         class="sidebar-item"
         @click="handleClick"
@@ -97,6 +102,7 @@
         <span class="text-[15px] font-medium text-[#050505]">Pegawai & User</span>
       </RouterLink>
       <RouterLink 
+        v-if="canSee('daftar-sekolah')"
         to="/admin/sekolah" 
         class="sidebar-item"
         @click="handleClick"
@@ -109,6 +115,7 @@
         <span class="text-[15px] font-medium text-[#050505]">Daftar Sekolah</span>
       </RouterLink>
       <RouterLink 
+        v-if="canSee('daftar-peserta')"
         to="/admin/daftar-peserta" 
         class="sidebar-item"
         @click="handleClick"
@@ -121,6 +128,7 @@
         <span class="text-[15px] font-medium text-[#050505]">Daftar Peserta</span>
       </RouterLink>
       <RouterLink 
+        v-if="canSee('penugasan')"
         to="/admin/penugasan" 
         class="sidebar-item"
         @click="handleClick"
@@ -133,6 +141,7 @@
         <span class="text-[15px] font-medium text-[#050505]">Penugasan</span>
       </RouterLink>
       <RouterLink 
+        v-if="canSee('paket-soal')"
         to="/admin/paket-soal" 
         class="sidebar-item"
         @click="handleClick"
@@ -145,6 +154,7 @@
         <span class="text-[15px] font-medium text-[#050505]">Paket Soal</span>
       </RouterLink>
       <RouterLink 
+        v-if="canSee('laporan-kegiatan')"
         to="/admin/laporan-kegiatan" 
         class="sidebar-item"
         @click="handleClick"
@@ -183,19 +193,27 @@
       </nav>
     </template>
 
-    <!-- Pengaturan Sistem (admin only) -->
-    <template v-if="userRole && String(userRole).toLowerCase() === 'admin'">
+    <!-- Pengaturan Sistem (sesuai hak akses menu) -->
+    <template v-if="canSee('api-token') || isSuperAdmin">
       <div class="px-3 pt-2 pb-1">
         <p class="text-[12px] font-semibold text-[#65676B] uppercase tracking-wider">Pengaturan Sistem</p>
       </div>
       <nav class="px-3 space-y-0.5">
-        <RouterLink to="/admin/api-token" class="sidebar-item" @click="handleClick">
+        <RouterLink v-if="canSee('api-token')" to="/admin/api-token" class="sidebar-item" @click="handleClick">
           <div class="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
             <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
             </svg>
           </div>
           <span class="text-[15px] font-medium text-[#050505]">API Token</span>
+        </RouterLink>
+        <RouterLink v-if="isSuperAdmin" to="/admin/hak-akses" class="sidebar-item" @click="handleClick">
+          <div class="w-9 h-9 rounded-full bg-violet-100 flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </div>
+          <span class="text-[15px] font-medium text-[#050505]">Hak Akses</span>
         </RouterLink>
       </nav>
     </template>
@@ -216,6 +234,7 @@
 
 <script>
 import { useAuthStore } from '@/stores/auth'
+import { useHakAksesStore } from '@/stores/hakAkses'
 import { fetchAPI } from '@/services/api'
 
 export default {
@@ -239,10 +258,36 @@ export default {
       pengajuanDiajukanCount: 0
     }
   },
+  computed: {
+    isSuperAdmin() {
+      try { return useHakAksesStore().isSuperAdmin } catch { return false }
+    },
+    adaMenuAdmin() {
+      return this.canSee('pegawai-user')
+        || this.canSee('daftar-sekolah')
+        || this.canSee('daftar-peserta')
+        || this.canSee('penugasan')
+        || this.canSee('paket-soal')
+        || this.canSee('laporan-kegiatan')
+    }
+  },
   mounted() {
     this.loadPengajuanCount()
+    // Muat hak akses menu user yang sedang login (dedup otomatis di store).
+    try {
+      useHakAksesStore().load().catch(() => {})
+    } catch {
+      // store belum siap — biarkan; guard/router akan memuatnya
+    }
   },
   methods: {
+    canSee(menuKey) {
+      try {
+        return useHakAksesStore().hasMenu(menuKey)
+      } catch {
+        return true
+      }
+    },
     handleClick() {
       this.$emit('close')
     },

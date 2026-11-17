@@ -52,6 +52,7 @@ import Sidebar from '@/components/Sidebar.vue'
 import Header from '@/components/Header.vue'
 import NotifikasiBell from '@/components/NotifikasiBell.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useHakAksesStore } from '@/stores/hakAkses'
 
 export default {
   components: {
@@ -74,6 +75,12 @@ export default {
       }
     } catch (e) {
       console.debug('Auth store not available in AdminLayout.created', e)
+    }
+    // Muat hak akses menu user yang sedang login untuk sidebar + guard rute.
+    try {
+      useHakAksesStore().load().catch(() => {})
+    } catch {
+      // store belum siap — guard rute akan memuatnya saat navigasi
     }
   },
   computed: {
@@ -100,7 +107,8 @@ export default {
         'pengesahan': 'Pengesahan',
         'pegawai': 'Manajemen Pegawai & User',
         'daftar-sekolah': 'Daftar Sekolah',
-        'daftar-peserta-all': 'Daftar Peserta'
+        'daftar-peserta-all': 'Daftar Peserta',
+        'hak-akses': 'Hak Akses'
       }
       this.pageTitle = titleMap[this.$route.name] || 'Dashboard'
       this.sidebarOpen = false
